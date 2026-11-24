@@ -26,7 +26,7 @@ pub enum Vista {
     Ajustes,
 }
 
-const VISTAS: [(Vista, &str, &str); 8] = [
+pub(crate) const VISTAS: [(Vista, &str, &str); 8] = [
     (Vista::Trabajo, "🗂", "Trabajo"),
     (Vista::Correos, "✉", "Correos"),
     (Vista::Resoluciones, "⚖", "Resoluciones"),
@@ -121,6 +121,7 @@ pub struct App {
     anon_out: String,
     anon_opts: anon::Opciones,
     anon_inf: Option<anon::Informe>,
+    autodiagnostico: Option<crate::autodiagnostico::Informe>,
     descargador: crate::descargador_ui::Descargador,
     // ajustes
     texto_sel: String,
@@ -184,6 +185,7 @@ impl App {
             anon_files: vec![],
             anon_out: String::new(),
             anon_opts: anon::Opciones::default(),
+            autodiagnostico: None,
             anon_inf: None,
             descargador: Default::default(),
             texto_sel: "ESPERA.E05_PROYECTO_Y_CORREO".into(),
@@ -2991,6 +2993,23 @@ impl App {
                     });
                     ui.add_space(6.0);
                     self.editor_plantillas(ui, p);
+                    ui.add_space(10.0);
+                    theme::seccion(ui, p, "Ayuda y autodiagnóstico");
+                    for (nombre, texto) in crate::ayuda::SECCIONES {
+                        egui::CollapsingHeader::new(nombre).id_salt(("ayuda", nombre)).show(ui, |ui| {
+                            ui.label(texto);
+                        });
+                    }
+                    ui.add_space(6.0);
+                    if ui.button("Ejecutar autodiagnóstico").on_hover_text("Comprueba con datos sintéticos, en una carpeta temporal y sin red, que el paquete trae lo necesario.").clicked() {
+                        self.autodiagnostico = Some(crate::autodiagnostico::ejecutar());
+                    }
+                    if let Some(inf) = &self.autodiagnostico {
+                        for c in &inf.comprobaciones {
+                            let (marca, color) = if c.ok { ("✓", p.green) } else { ("✕", p.red) };
+                            ui.label(RichText::new(format!("{marca} {} — {}", c.nombre, c.detalle)).color(color));
+                        }
+                    }
                     ui.add_space(10.0);
                     theme::seccion(ui, p, "Carpetas");
                     ui.horizontal(|ui| {

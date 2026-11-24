@@ -4,6 +4,8 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod anon;
+mod autodiagnostico;
+mod ayuda;
 mod captura_trabajo;
 mod conciliar;
 mod config;
@@ -97,6 +99,9 @@ impl eframe::App for FlowApp {
 
 fn main() -> eframe::Result<()> {
     let args: Vec<String> = std::env::args().collect();
+    if let Some(destino) = autodiagnostico::ruta_desde_argumentos(&args) {
+        std::process::exit(autodiagnostico::por_linea_de_comandos(&destino));
+    }
     let screenshot = args.iter().position(|a| a == "--screenshot").and_then(|i| args.get(i + 1)).map(PathBuf::from);
     let vista = args.iter().position(|a| a == "--vista").and_then(|i| args.get(i + 1)).cloned();
     let abrir = args

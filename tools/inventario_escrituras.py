@@ -33,6 +33,7 @@ CLASIFICACION = {
     'descargador/lote.rs': (7, 'usuario', 'carpeta de destino del lote y subcarpeta nueva del lote (create_dir falla si existe); guardar_exclusivo nunca sobrescribe; resumen por temporal + rename; solo borra su propio archivo si la verificación falla'),
     'ui.rs': (4, 'usuario/perfil', 'carpeta de productos de Ajustes; contactos.csv por diálogo Guardar; plantillas y datos en data_dir() (solo crear carpeta)'),
     'anon.rs': (1, 'usuario', 'carpeta de salida del anonimizador (solo crear carpeta); las copias las escribe flow-anonimo en una carpeta Anonimizados_* nueva, tras verificarlas'),
+    'autodiagnostico.rs': (6, 'temporal', 'carpeta temporal propia flow-autodiagnostico-<pid> (se borra al terminar) e informe --self-test con create_new: nunca reemplaza un archivo'),
     'copia_excel.rs': (7, 'usuario/temporal', 'copia del Excel en la carpeta de productos; ~flow-* y temp_dir() se limpian; rechaza destino existente'),
     'personalizar.rs': (4, 'perfil', 'matrices Word importadas a data_dir()/plantillas (el original se respalda como .bak.docx; escritura por archivo temporal)'),
     'producto_excel.rs': (1, 'usuario', 'carpeta de productos de Ajustes; el libro se guarda en una ruta nueva (nueva_ruta nunca reemplaza un archivo)'),

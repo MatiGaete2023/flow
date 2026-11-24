@@ -164,4 +164,11 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Cambió: `app/src/anon.rs` (motor propio reemplazado por `flow_anonimo::lote::ejecutar`), filtro de archivos en `ui.rs`, `tools/inventario_escrituras.py`.
 - Acredita: `anon::tests` (texto, ZIP y paquete de captura sin identidades y con el original intacto; captura alterada sin copias) y las 38 pruebas del crate.
 - Diferencia declarada: el informe no cuenta reemplazos por tipo.
-- Pendiente: CI de Windows; E-R1 y E-R2 (adaptador de lotes); E-T5.
+- CI Windows verde (run 45457412572). Pendiente: E-R1 y E-R2 (adaptador de lotes).
+
+## 2026-11-24 · E-T5 · Autodiagnóstico y ayuda
+
+- Cambió: `app/src/autodiagnostico.rs`, `ayuda.rs`, `main.rs` (`--self-test`), Ajustes en `ui.rs`, CI y `tools/inventario_escrituras.py`.
+- Acredita: `autodiagnostico::tests` (7 comprobaciones pasan, el informe no se sobrescribe, código 2 si existe) y `ayuda::tests` (una sección por vista y reglas fijas).
+- Diferencia declarada: sin `portable/` ni instalador; el equivalente de `package_check.py` cubre lo que existe en Rust.
+- Pendiente: CI de Windows.

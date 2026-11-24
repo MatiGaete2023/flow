@@ -108,6 +108,13 @@ jobs:
           }
       - name: Compilar el ejecutable de Flow Rust
         run: cargo build --manifest-path app/Cargo.toml --locked --bin flow_rust
+      - name: Autodiagnóstico del ejecutable (datos sintéticos; el informe es nuevo)
+        shell: pwsh
+        run: |
+          $informe = Join-Path $env:RUNNER_TEMP 'autodiagnostico.json'
+          $p = Start-Process app/target/debug/flow_rust.exe -ArgumentList '--self-test', $informe -Wait -PassThru
+          Get-Content $informe
+          if ($p.ExitCode -ne 0) { exit $p.ExitCode }
       - name: Compilar el ejecutable de entrega
         if: inputs.entrega
         shell: pwsh
@@ -119,6 +126,9 @@ jobs:
           $huella = (Get-FileHash -LiteralPath (Join-Path $salida 'flow_rust.exe') -Algorithm SHA256).Hash.ToLowerInvariant()
           "$huella  flow_rust.exe`ncommit $env:GITHUB_SHA" | Set-Content -Encoding utf8 (Join-Path $salida 'SHA256.txt')
           Get-Content (Join-Path $salida 'SHA256.txt')
+          $p = Start-Process (Join-Path $salida 'flow_rust.exe') -ArgumentList '--self-test', (Join-Path $salida 'autodiagnostico.json') -Wait -PassThru
+          Get-Content (Join-Path $salida 'autodiagnostico.json')
+          if ($p.ExitCode -ne 0) { exit $p.ExitCode }
       - name: Ejecutable de prueba (debug) para la prueba corta del usuario
         if: ${{ !inputs.entrega }}
         shell: pwsh

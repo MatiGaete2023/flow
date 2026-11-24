@@ -723,7 +723,7 @@ macro_rules! matriz {
         ($t, $k, include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/../src/nurus/personal/plantillas_word/", $t, "/", $k, ".docx")).as_slice())
     };
 }
-const MATRICES: [(&str, &str, &[u8]); 6] = [
+pub(crate) const MATRICES: [(&str, &str, &[u8]); 6] = [
     matriz!("LAJA", "PC_IE"),
     matriz!("LAJA", "PC_INFO"),
     matriz!("LAJA", "NOMENCL"),
