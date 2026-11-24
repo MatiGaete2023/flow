@@ -31,3 +31,5 @@ P6b: el diario ficticio requiere lectura previa completa y reciente antes de res
 P6c: conciliación ficticia por identidad, texto y recibo a una copia XLSX simple. Prueba: `python -m unittest discover -s registrador_rus/tests -p test_reconcile_excel.py -v`. Requiere openpyxl 3.1 (ya dependencia de Flow) y sistema de archivos que admita hardlink local. No sobrescribe; archivos complejos, XLS/XLSM y Excel nativo Windows no verificados. No equivale a certificación de fidelidad universal.
 
 P7a: puente localhost de simulación, sin consumidor real. Prueba: `python -m unittest discover -s registrador_rus/tests -p test_bridge.py -v`. El ack solo confirma recepción categórica; no acredita registro. No admite write_one.
+
+P7b/P8-sim: controlador de simulación sin red y adaptador ficticio cerrado. `python -m unittest discover -s registrador_rus/tests -p test_simulation.py -v`. Todos los guardados y confirmaciones son ficticios; no instalar ni habilitar RUS.
