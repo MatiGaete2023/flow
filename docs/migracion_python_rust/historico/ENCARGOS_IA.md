@@ -10,7 +10,7 @@ Vigente desde la auditoría del turno 17 (23 de noviembre de 2026), sobre `f6a8f
 
 ## Reglas de entrega (obligatorias)
 
-1. Leer `AGENTS.md`, este archivo, el encargo y las secciones de [VERIFICACION.md](VERIFICACION.md) que cite.
+1. Leer `AGENTS.md`, este archivo, el encargo y las secciones de [VERIFICACION.md](VERIFICACION_20261123.md) que cite.
 2. Un `PASA` solo vale con evidencia reproducible:
    - commit probado;
    - entorno (L, W o V de [PLAN_PRUEBAS.md](PLAN_PRUEBAS.md));
@@ -23,7 +23,7 @@ Vigente desde la auditoría del turno 17 (23 de noviembre de 2026), sobre `f6a8f
 6. No cambiar reglas, umbrales ni textos tradicionales (`config.rs`, `textos_base.json`). Si una prueba muestra una diferencia de redacción no aprobada, se registra como decisión del usuario.
 7. Datos solo sintéticos. RIT ficticios con año 2099. Antes de publicar, `python tools/check_real_ids.py app/src app/tests` y `python tools/check_contactos.py app/src`.
 8. Al terminar:
-   - agregar al [registro](REGISTRO_IMPLEMENTACION.md) una sección `Entrega · <encargo>` con la plantilla de abajo;
+   - agregar al [registro](REGISTRO_hasta_20261124.md) una sección `Entrega · <encargo>` con la plantilla de abajo;
    - cambiar el estado del encargo a `ENTREGADO`, nunca a `APROBADO`;
    - publicar en la misma rama, sin `--force`, sin fusionar a `main` y sin releases.
 

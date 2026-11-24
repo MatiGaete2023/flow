@@ -6,7 +6,7 @@ Plan para que otras IA ejecuten, cada una por separado, las pruebas que quedaron
 
 ## Reglas comunes para todos los paquetes
 
-- Leer primero `AGENTS.md`, el [registro](REGISTRO_IMPLEMENTACION.md) y la [verificación](VERIFICACION.md).
+- Leer primero `AGENTS.md`, el [registro](REGISTRO_hasta_20261124.md) y la [verificación](VERIFICACION_20261123.md).
 - Usar solo datos sintéticos. No usar HAR, HTML, PDF, Excel ni capturas reales, ni credenciales. No escribir en RUS ni en SATURNO. Outlook solo genera borradores.
 - No crear ramas, no fusionar a `main`, no usar `--force` y no crear releases.
 - No marcar nada como «aceptado» ni «institucional».
@@ -16,7 +16,7 @@ Plan para que otras IA ejecuten, cada una por separado, las pruebas que quedaron
 
 ## Entornos
 
-- **L · Linux sin escritorio.** Usar el crate aislado `.aislado/` descrito en [Verificación](VERIFICACION.md). Debe incluir los módulos `anon`, `captura_trabajo`, `config`, `copia_excel`, `demo`, `lectura`, `motor`, `productos`, `trabajo` y `util`. Así corren el motor, Trabajo y la biblioteca, pero no la interfaz egui.
+- **L · Linux sin escritorio.** Usar el crate aislado `.aislado/` descrito en [Verificación](VERIFICACION_20261123.md). Debe incluir los módulos `anon`, `captura_trabajo`, `config`, `copia_excel`, `demo`, `lectura`, `motor`, `productos`, `trabajo` y `util`. Así corren el motor, Trabajo y la biblioteca, pero no la interfaz egui.
 - **W · Windows.** Usar el flujo «Flow Rust local · Windows» de GitHub Actions (push o `workflow_dispatch`) o un equipo Windows con Rust, Python 3.12 y Excel de escritorio cuando el paquete lo pida.
 - **V · Revisión visual.** Una sesión que pueda descargar artefactos de GitHub Actions. La sesión en la nube del turno 13 no podía: el proxy bloquea el almacenamiento de artefactos.
 
@@ -120,7 +120,7 @@ Criterio: los tres puntos PASA. Registrar el SHA-256 del ejecutable usado.
 ## Paquete E · Revisión visual (entorno V)
 
 1. Descargar `Flow_Rust_Local_Capturas_Windows` de la corrida del commit probado.
-2. Comparar las cinco vistas y `trabajo-contexto.png` con [Diseño](DISENO.md): jerarquía, navegación lateral, tabla, paneles, tarjetas y acciones.
+2. Comparar las cinco vistas y `trabajo-contexto.png` con [Diseño](../DISENO.md): jerarquía, navegación lateral, tabla, paneles, tarjetas y acciones.
 3. Revisar en especial que la tarjeta de Umbrales de Ajustes no desborde con 16 filas y el buscador, y que la sección «Otro programa vigente» use el tema vigente.
 
 Criterio: sin cambios de jerarquía ni contenido respecto del diseño. Las diferencias de fecha, escala o fuente se anotan aparte.

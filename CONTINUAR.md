@@ -2,7 +2,7 @@
 
 La rama de migración es `estudio/paridad-python-rust-20261119`. La aplicación vigente está en `app/`.
 
-Estado y pendientes resumidos en [docs/migracion_python_rust/CONTINUAR.md](docs/migracion_python_rust/CONTINUAR.md). Empezar por el [registro de implementación](docs/migracion_python_rust/REGISTRO_IMPLEMENTACION.md), luego consultar el [diseño](docs/migracion_python_rust/DISENO.md) y el [plan](docs/migracion_python_rust/PLAN.md).
+Estado, pendientes y siguiente paso: [docs/migracion_python_rust/ESTADO.md](docs/migracion_python_rust/ESTADO.md). Encargos: [docs/migracion_python_rust/PLAN.md](docs/migracion_python_rust/PLAN.md).
 
 ## Referencia del proyecto Python
 
