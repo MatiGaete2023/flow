@@ -21,7 +21,7 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Cambió: `estadisticas.rs` (nuevo), `config.rs` (`metricas_locales`) y `ui.rs` (tarjeta en Resultados, exportar resumen, opción en Ajustes y registro de importación, exportación y borrador); oráculo `app/qa/generar_estadisticas.py` → `app/tests/datos/estadisticas.json`, agregado a la regeneración de la CI.
 - Acredita: `ESTADISTICAS: 14/14` contra `statistics.summarize`, `export_summary` y `review_metrics` (conteos, hojas, límite de 60 ciclos, archivo dañado, opción apagada); `oraculo_de_estadisticas_detecta_alteraciones` y `el_resumen_de_un_trabajo_cuenta_lo_que_la_persona_completo`; `tools/probar_app.sh todo`: 64 y 71 pruebas, 0 fallos; `inventario_escrituras` PASA (78 en 21).
 - Diferencias declaradas: las de [PLAN.md](PLAN.md).
-- Pendiente: CI de Windows.
+- CI de Windows en verde (run 45447605617).
 
 ## 2026-11-24 · E-T2: formularios manuales
 
