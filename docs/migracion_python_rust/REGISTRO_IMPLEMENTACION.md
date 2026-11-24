@@ -213,5 +213,5 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Cambió: `app/qa/generar_meta4.py` (22 casos, `meta4.json`, entrada nueva en el workflow), `meta4.rs` (mensajes de lote y de tribunales como `_lote`, `pruebas_oraculo`).
 - Acredita: `meta4_del_descargador_igual_a_python` (22 casos, 7 errores iguales, 30 filas, 5 casos con libros y reporte) y `oraculo_de_meta4_detecta_alteraciones`. `probar_app.sh todo`: 72 y 84 pruebas, 0 fallos; clippy limpio.
 - Diferencias: 9 hojas auxiliares de los productos del crate (fijadas en `HOJAS_DECLARADAS`); `requieren_revision` suma alertas.
-- Pendiente: CI de Windows verde de este commit; decisión D-13.
+- CI: run 45487699648 verde (`linux` y `validar`, `meta4.json` regenerado en Windows). Pendiente: decisión D-13.
 
