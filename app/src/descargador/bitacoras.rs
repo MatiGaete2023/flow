@@ -919,12 +919,35 @@ pub fn diagnostico_anonimo(datos: &Value) -> Value {
             })
         })
         .collect();
+    // Calendario e histórico por ingreso: solo estados y códigos fijos, nunca el texto del error.
+    const CODIGOS_CALENDARIO: [(&str, &str); 10] = [
+        ("fecha ilegible", "CAL_FECHA_ILEGIBLE"),
+        ("no concuerdan", "CAL_ESTADO_FECHA"),
+        ("Estado de calendario no reconocido", "CAL_ESTADO"),
+        ("estructura del calendario", "CAL_ESTRUCTURA"),
+        ("Fila de calendario incompleta", "CAL_FILA"),
+        ("máximo de lecturas", "CAL_TOPE"),
+        ("no corresponde al ingreso", "CAL_OTRO_INGRESO"),
+        ("incompleta", "CAL_INCOMPLETA"),
+        ("ingreso de SITFA", "CAL_SESION"),
+        ("no coincide con la solicitud", "CAL_RESPUESTA"),
+    ];
+    let estado_lectura = |v: &Value| ["LEIDA", "FALLIDA", "PENDIENTE"].iter().find(|e| v == **e).map_or("OTRO", |e| *e).to_string();
+    let calendarios = contar(&mut registros.iter().filter(|r| r["calendario"].is_array()).map(|r| {
+        if r["calendario_lectura"].is_object() { estado_lectura(&r["calendario_lectura"]["estado"]) } else { "NO_INTENTADO".into() }
+    }));
+    let errores_calendario = contar(&mut registros.iter().filter(|r| matches!(r["calendario_lectura"]["estado"].as_str(), Some("FALLIDA" | "PENDIENTE"))).map(|r| {
+        let texto = r["calendario_lectura"]["error"].as_str().unwrap_or("");
+        CODIGOS_CALENDARIO.iter().find(|(c, _)| texto.contains(c)).map_or("CAL_OTRA", |(_, k)| *k).to_string()
+    }));
+    let historicos = contar(&mut registros.iter().filter(|r| r["historico_lectura"].is_object()).map(|r| estado_lectura(&r["historico_lectura"]["estado"])));
     let lote = datos["estado"].as_str().filter(|e| ["COMPLETA", "INCOMPLETA", "CANCELADA", "EN_CURSO"].contains(e));
     json!({
         "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO", "version": 1, "estado_lote": lote.unwrap_or("OTRO"),
         "descargador_version": version(&datos["origen"]["version"]), "descargador_commit": commit(&datos["origen"]["commit"]),
         "extension_version": version(&datos["extension"]["version"]), "registros": registros.len(), "estados": estados,
-        "diagnosticos_sin_vinculo": vinculos, "errores_extension": extension, "consultas": consultas,
+        "diagnosticos_sin_vinculo": vinculos, "errores_extension": extension, "calendarios": calendarios, "errores_calendario": errores_calendario,
+        "historicos": historicos, "consultas": consultas,
         "anteriores_no_reenumeradas": datos["anteriores_no_reenumeradas"].as_array().map_or(0, Vec::len),
         "contiene_identificadores_personales": false,
     })
@@ -1194,6 +1217,23 @@ fn abrir(s: &mut Sesion<'_>, i: usize, params: &Value) -> Result<(), Detencion> 
 mod tests {
     use super::*;
     use std::cell::RefCell;
+
+    /// Mismo caso que `test_diagnostico_cuenta_calendarios_e_historicos` de Flow Python: estados y códigos, sin texto.
+    #[test]
+    fn diagnostico_cuenta_calendarios_e_historicos_sin_texto_libre() {
+        let datos = json!({"estado": "COMPLETA", "consultas": [], "registros": [
+            {"estado": "LEIDA", "calendario": [1], "historico_lectura": {"estado": "LEIDA"},
+             "calendario_lectura": {"estado": "FALLIDA", "error": "El calendario contiene una fecha ilegible en «Fecha Informe» (forma «- x -»)."}},
+            {"estado": "LEIDA", "calendario": [1], "calendario_lectura": {"estado": "LEIDA"}},
+            {"estado": "LEIDA", "calendario": [1], "calendario_lectura": {"estado": "PENDIENTE", "error": "Pendiente: se alcanzó el máximo de lecturas del lote."}},
+            {"estado": "LEIDA", "calendario": [1]},
+            {"estado": "LEIDA"}]});
+        let d = diagnostico_anonimo(&datos);
+        assert_eq!(d["calendarios"], json!({"FALLIDA": 1, "LEIDA": 1, "NO_INTENTADO": 1, "PENDIENTE": 1}));
+        assert_eq!(d["errores_calendario"], json!({"CAL_FECHA_ILEGIBLE": 1, "CAL_TOPE": 1}));
+        assert_eq!(d["historicos"], json!({"LEIDA": 1}));
+        assert!(!d.to_string().contains("Fecha Informe"));
+    }
 
     /// Reproduce las respuestas que Flow Python recibió del puente ficticio, en el mismo orden.
     struct Guion {

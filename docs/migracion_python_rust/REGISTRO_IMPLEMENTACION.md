@@ -172,3 +172,10 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Acredita: `autodiagnostico::tests` (7 comprobaciones pasan, el informe no se sobrescribe, código 2 si existe) y `ayuda::tests` (una sección por vista y reglas fijas).
 - Diferencia declarada: sin `portable/` ni instalador; el equivalente de `package_check.py` cubre lo que existe en Rust.
 - CI Windows verde (run 45458302666).
+
+## 2026-11-24 · Diagnóstico anónimo con calendarios e históricos
+
+- Cambió: `descargador/lectura_bitacoras.py` y `app/src/descargador/bitacoras.rs` (`calendarios`, `errores_calendario` con códigos `CAL_*`, `historicos`; sin texto libre).
+- Motivo: el diagnóstico del lote del 24-nov (114 bitácoras, 92 historias y 114 históricos, todo LEIDA) no mostraba calendarios, y las lecturas parciales que reporta el usuario salen de ahí o del calendario de informes por mes.
+- Acredita: `test_diagnostico_cuenta_calendarios_e_historicos` (Python) y `diagnostico_cuenta_calendarios_e_historicos_sin_texto_libre` (Rust), mismo caso y mismos conteos.
+- Pendiente: un diagnóstico nuevo del usuario con estos campos; luego E-R1.

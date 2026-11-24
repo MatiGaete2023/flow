@@ -671,3 +671,22 @@ def test_e3f_control_historico_corrupto_no_invalida_bitacora(tmp_path):
     registros = json.loads(Path(result['manifest']).read_text(encoding='utf-8'))['registros']
     assert registros and all(r['estado'] == 'LEIDA' and r['archivo'] for r in registros)
     assert all(r['historico_lectura']['error'] == 'HISTORICO_RESPALDO_INVALIDO' for r in registros)
+
+
+def test_diagnostico_cuenta_calendarios_e_historicos():
+    from lectura_bitacoras import anonymous_diagnostic
+
+    data = {'estado': 'COMPLETA', 'consultas': [], 'registros': [
+        {'estado': 'LEIDA', 'calendario': [1], 'historico_lectura': {'estado': 'LEIDA'},
+         'calendario_lectura': {'estado': 'FALLIDA',
+                                'error': 'El calendario contiene una fecha ilegible en «Fecha Informe» (forma «- x -»).'}},
+        {'estado': 'LEIDA', 'calendario': [1], 'calendario_lectura': {'estado': 'LEIDA'}},
+        {'estado': 'LEIDA', 'calendario': [1],
+         'calendario_lectura': {'estado': 'PENDIENTE', 'error': 'Pendiente: se alcanzó el máximo de lecturas del lote.'}},
+        {'estado': 'LEIDA', 'calendario': [1]},
+        {'estado': 'LEIDA'}]}
+    d = anonymous_diagnostic(data)
+    assert d['calendarios'] == {'FALLIDA': 1, 'LEIDA': 1, 'NO_INTENTADO': 1, 'PENDIENTE': 1}
+    assert d['errores_calendario'] == {'CAL_FECHA_ILEGIBLE': 1, 'CAL_TOPE': 1}
+    assert d['historicos'] == {'LEIDA': 1}
+    assert 'Fecha Informe' not in json.dumps(d, ensure_ascii=False)
