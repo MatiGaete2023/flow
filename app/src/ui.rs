@@ -98,6 +98,8 @@ pub struct App {
     nuevo_prog: String,
     nuevo_mail: String,
     nuevo_alias: String,
+    /// Órdenes de búsqueda con avisos del paquete abierto (se recalculan al abrir y al cambiar el corte).
+    ordenes: Vec<crate::ordenes::OrdenConAvisos>,
     /// Formularios manuales (correo libre y Word libre o con matriz), recuperados al abrir.
     manual: crate::manual::Actual,
     manual_estado: Option<Result<String, String>>,
@@ -165,6 +167,7 @@ impl App {
             productos: vec![],
             nuevo_prog: String::new(),
             nuevo_alias: String::new(),
+            ordenes: Vec::new(),
             manual: crate::manual::Actual::cargar(),
             manual_estado: None,
             nombre_favorito: String::new(),
@@ -385,10 +388,16 @@ impl App {
         self.revision_bitacoras = None;
         self.revision += 1;
         self.aviso(format!("{n} registros de {modo} analizados en {ms} ms."), false);
+        self.recalcular_ordenes();
         if let Some(w) = self.work.as_ref().filter(|w| w.paquete.is_some()) {
             let filas: Vec<(String, bool)> = w.registros.iter().map(|r| (w.id_registro(r).unwrap_or_default(), crate::conciliar::editada(r))).collect();
             crate::estadisticas::registrar_importacion(&crate::estadisticas::directorio_metricas(), self.cfg.metricas_locales, &filas, w.cambios.as_ref());
         }
+    }
+
+    fn recalcular_ordenes(&mut self) {
+        let corte = self.corte();
+        self.ordenes = self.work.as_ref().map(|w| crate::ordenes::ordenes_del_paquete(w, corte)).unwrap_or_default();
     }
 
     /// Guarda la sesión con los productos preparados de ahora (correos y proyectos).
@@ -524,6 +533,7 @@ impl App {
             let ms = w.analisis_ms;
             let n = w.registros.len();
             self.aviso(format!("Reglas aplicadas de nuevo a {n} registros ({ms} ms). Tus ediciones se conservan."), false);
+            self.recalcular_ordenes();
         }
     }
 
@@ -890,6 +900,58 @@ impl App {
         out
     }
 
+    /// Edición masiva de las filas marcadas (también las que el filtro oculta) y su «Deshacer».
+    fn barra_masiva(&mut self, ui: &mut egui::Ui, p: &Pal) {
+        use crate::trabajo::AccionMasiva;
+        let visibles: std::collections::BTreeSet<usize> = self.filtrados().into_iter().collect();
+        let Some(w) = self.work.as_ref() else { return };
+        let marcadas: Vec<usize> = w.registros.iter().enumerate().filter(|(_, r)| r.seleccionada).map(|(i, _)| i).collect();
+        if marcadas.is_empty() && w.historial.is_empty() {
+            return;
+        }
+        let ocultas = marcadas.iter().filter(|i| !visibles.contains(i)).count();
+        let puede_deshacer = !w.historial.is_empty();
+        let mut accion: Option<AccionMasiva> = None;
+        let mut deshacer = false;
+        ui.horizontal_wrapped(|ui| {
+            ui.label(RichText::new(format!("{} marcadas", marcadas.len())).strong());
+            if ocultas > 0 {
+                ui.label(RichText::new(format!("({ocultas} ocultas por el filtro: también se editan)")).color(p.amber).size(12.5));
+            }
+            ui.add_enabled_ui(!marcadas.is_empty(), |ui| {
+                if ui.button("Revisar marcadas").clicked() {
+                    accion = Some(AccionMasiva::Revisada(true));
+                }
+                egui::ComboBox::from_id_salt("res masivo").selected_text("RES de las marcadas…").show_ui(ui, |ui| {
+                    if ui.selectable_label(false, "Automático").clicked() {
+                        accion = Some(AccionMasiva::Res(String::new()));
+                    }
+                    for (k, l) in TIPOS {
+                        if ui.selectable_label(false, l).clicked() {
+                            accion = Some(AccionMasiva::Res(k.into()));
+                        }
+                    }
+                });
+            });
+            deshacer = ui.add_enabled(puede_deshacer, egui::Button::new("↶ Deshacer")).on_hover_text("Vuelve atrás la última edición masiva").clicked();
+        });
+        let mensaje = if let Some(a) = accion {
+            self.work.as_mut().map(|w| w.aplicar_masivo(&marcadas, &a).map(|n| format!("{n} filas cambiadas. Puedes deshacerlo.")))
+        } else if deshacer {
+            self.work.as_mut().map(|w| Ok(if w.deshacer() { "Edición masiva deshecha.".to_string() } else { "No hay nada que deshacer.".to_string() }))
+        } else {
+            None
+        };
+        match mensaje {
+            Some(Ok(t)) => {
+                self.aviso(t, false);
+                self.marcar_sucio();
+            }
+            Some(Err(e)) => self.aviso(e, true),
+            None => {}
+        }
+    }
+
     fn vacio(&mut self, ui: &mut egui::Ui, p: &Pal) {
         ui.add_space(30.0);
         ui.vertical_centered(|ui| {
@@ -987,6 +1049,17 @@ impl App {
             .show(ui, |ui| {
                 for e in &egresados {
                     ui.label(RichText::new(e).color(p.muted).size(12.5));
+                }
+            });
+        }
+        let ordenes = self.ordenes.clone();
+        if !ordenes.is_empty() {
+            egui::CollapsingHeader::new(format!("Órdenes de búsqueda con avisos · {}", ordenes.len())).id_salt("ordenes de busqueda").show(ui, |ui| {
+                for o in &ordenes {
+                    ui.label(RichText::new(format!("{} · {}", o.rit, o.nombre)).strong());
+                    for a in &o.avisos {
+                        ui.label(RichText::new(a).color(p.muted).size(12.5));
+                    }
                 }
             });
         }
@@ -1108,14 +1181,14 @@ impl App {
         if marcar_visibles {
             let ids = self.filtrados();
             if let Some(w) = &mut self.work {
-                for i in ids {
-                    if !w.registros[i].excluido {
-                        w.registros[i].revisada = true;
-                    }
+                match w.aplicar_masivo(&ids, &crate::trabajo::AccionMasiva::Revisada(true)) {
+                    Ok(n) => self.aviso(format!("{n} filas marcadas como revisadas. Puedes deshacerlo."), false),
+                    Err(e) => self.aviso(e, true),
                 }
             }
             self.marcar_sucio();
         }
+        self.barra_masiva(ui, p);
         ui.add_space(4.0);
         let ids = self.filtrados();
         // Navegación con teclado

@@ -78,6 +78,23 @@ impl Estado {
     }
 }
 
+/// Lo editable de una fila antes de una edición masiva (`record_edits.undo`).
+#[derive(Clone, Debug)]
+pub struct InstantaneaFila {
+    pub fila: usize,
+    pub editada: Option<String>,
+    pub revisada: bool,
+    pub res: String,
+}
+
+/// Edición que se aplica a varias filas a la vez. La observación se edita fila por fila.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum AccionMasiva {
+    Revisada(bool),
+    /// Tipo de resolución (`PC_IE`, `PC_INFO`, `NOMENCL`) o vacío para dejar el automático.
+    Res(String),
+}
+
 #[derive(Default)]
 pub struct Trabajo {
     pub path: PathBuf,
@@ -103,6 +120,8 @@ pub struct Trabajo {
     pub cambios: Option<crate::conciliar::Cambios>,
     /// Correos y proyectos preparados, con sus recibos, para recuperarlos al reabrir la sesión.
     pub preparados: crate::preparados::Preparados,
+    /// Estado previo de las filas tocadas por cada edición masiva, para «Deshacer» (no se guarda en la sesión).
+    pub historial: Vec<Vec<InstantaneaFila>>,
     /// P1: otros programas consignados por el funcionario, por identificador de registro del paquete. Se guardan en
     /// la sesión y sobreviven al recálculo; la propuesta deja de repetir esa constancia.
     pub consignaciones: BTreeMap<String, Vec<String>>,
@@ -351,6 +370,58 @@ impl Trabajo {
             r.seleccionada = false;
         }
         self.analizar(cfg);
+    }
+
+    /// `record_edits.apply` sobre varias filas: todo o nada y con la posibilidad de deshacer. Las filas excluidas no
+    /// se revisan. Devuelve cuántas filas cambiaron.
+    pub fn aplicar_masivo(&mut self, filas: &[usize], accion: &AccionMasiva) -> Result<usize, String> {
+        if filas.is_empty() || filas.iter().any(|i| *i >= self.registros.len()) {
+            return Err("Selecciona registros del trabajo actual.".into());
+        }
+        if let AccionMasiva::Res(r) = accion {
+            if !r.is_empty() && !["PC_IE", "PC_INFO", "NOMENCL"].contains(&r.as_str()) {
+                return Err("Tipo de resolución no válido.".into());
+            }
+        }
+        let mut previas = Vec::new();
+        for &i in filas {
+            let r = &self.registros[i];
+            let cambia = match accion {
+                AccionMasiva::Revisada(v) => !r.excluido && r.revisada != *v,
+                AccionMasiva::Res(res) => r.res != *res,
+            };
+            if cambia && !previas.iter().any(|p: &InstantaneaFila| p.fila == i) {
+                previas.push(InstantaneaFila { fila: i, editada: r.editada.clone(), revisada: r.revisada, res: r.res.clone() });
+            }
+        }
+        for p in &previas {
+            let r = &mut self.registros[p.fila];
+            match accion {
+                AccionMasiva::Revisada(v) => r.revisada = *v,
+                AccionMasiva::Res(res) => r.res = res.clone(),
+            }
+        }
+        let n = previas.len();
+        if n > 0 {
+            self.historial.push(previas);
+            if self.historial.len() > 20 {
+                self.historial.remove(0);
+            }
+        }
+        Ok(n)
+    }
+
+    /// `record_edits.undo`: devuelve las filas de la última edición masiva a como estaban.
+    pub fn deshacer(&mut self) -> bool {
+        let Some(previas) = self.historial.pop() else { return false };
+        for p in previas {
+            if let Some(r) = self.registros.get_mut(p.fila) {
+                r.editada = p.editada;
+                r.revisada = p.revisada;
+                r.res = p.res;
+            }
+        }
+        true
     }
 
     pub fn mode(&self) -> Mode {
@@ -774,6 +845,37 @@ mod tests {
         w.analizar(&cfg);
         assert!(w.registros[0].propuesta.ends_with("vence el 1 de noviembre de 2026."));
         assert_eq!(w.registros[0].acciones, acciones);
+    }
+
+    #[test]
+    fn la_edicion_masiva_cambia_solo_lo_pedido_y_se_deshace() {
+        use crate::trabajo::AccionMasiva::{Res, Revisada};
+        let cfg = Config::default();
+        let p = crate::demo::libro(Mode::Espera, hoy()).unwrap();
+        let bytes = std::fs::read(&p).unwrap();
+        let mut w = Trabajo::abrir(p, bytes, Some(Mode::Espera), hoy(), &cfg).unwrap();
+        w.registros[1].editada = Some("Edición propia".into());
+        w.registros[2].excluido = true;
+        // Revisar: las filas excluidas no se tocan y la observación editada se conserva.
+        assert_eq!(w.aplicar_masivo(&[0, 1, 2, 3], &Revisada(true)), Ok(3));
+        assert!(w.registros[0].revisada && w.registros[1].revisada && !w.registros[2].revisada && w.registros[3].revisada);
+        assert_eq!(w.registros[1].editada.as_deref(), Some("Edición propia"));
+        // Repetir no cambia nada ni suma al historial.
+        assert_eq!(w.aplicar_masivo(&[0, 1, 2, 3], &Revisada(true)), Ok(0));
+        assert_eq!(w.historial.len(), 1);
+        // RES para varias filas; un tipo inválido o una selección vacía se rechazan sin tocar nada.
+        assert_eq!(w.aplicar_masivo(&[0, 1], &Res("PC_IE".into())), Ok(2));
+        assert_eq!(w.aplicar_masivo(&[0], &Res("OTRO".into())), Err("Tipo de resolución no válido.".into()));
+        assert_eq!(w.aplicar_masivo(&[], &Revisada(true)), Err("Selecciona registros del trabajo actual.".into()));
+        assert_eq!(w.aplicar_masivo(&[10_000], &Revisada(true)), Err("Selecciona registros del trabajo actual.".into()));
+        assert_eq!((w.registros[0].res.as_str(), w.registros[3].res.as_str()), ("PC_IE", ""));
+        // Deshacer vuelve atrás de a una edición masiva.
+        assert!(w.deshacer());
+        assert!(w.registros[0].res.is_empty() && w.registros[1].res.is_empty() && w.registros[0].revisada);
+        assert!(w.deshacer());
+        assert!(!w.registros[0].revisada && !w.registros[3].revisada);
+        assert_eq!(w.registros[1].editada.as_deref(), Some("Edición propia"));
+        assert!(!w.deshacer());
     }
 
     #[test]

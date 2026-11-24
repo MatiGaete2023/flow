@@ -983,3 +983,141 @@ mod pruebas_word {
         assert!(texto.contains("Personas comprendidas: "));
     }
 }
+
+/// E-A5 (F12): la preparación de correos de Rust contra `outputs.prepare_drafts` de Flow Python.
+#[cfg(test)]
+mod cotejo_correos {
+    use super::*;
+    use crate::motor::Mode;
+    use serde_json::Value;
+
+    fn texto(v: &Value) -> String {
+        v.as_str().map(str::to_string).unwrap_or_else(|| v.to_string())
+    }
+
+    fn trabajo(datos: &Value, modo: &str, cfg: &Config) -> Trabajo {
+        let t = &datos["trabajos"][modo];
+        let mut libro = Workbook::new();
+        let hoja = libro.add_worksheet();
+        hoja.set_name("informe_1").unwrap();
+        hoja.write_string(0, 0, "Reporte").unwrap();
+        for (c, h) in t["encabezados"].as_array().unwrap().iter().enumerate() {
+            hoja.write_string(2, c as u16, h.as_str().unwrap()).unwrap();
+        }
+        for (i, fila) in t["filas"].as_array().unwrap().iter().enumerate() {
+            for (c, v) in fila.as_array().unwrap().iter().enumerate() {
+                match v.as_f64() {
+                    Some(n) => hoja.write_number(3 + i as u32, c as u16, n).unwrap(),
+                    None => hoja.write_string(3 + i as u32, c as u16, v.as_str().unwrap()).unwrap(),
+                };
+            }
+        }
+        let modo = match modo {
+            "ESPERA" => Mode::Espera,
+            "CUMPLIMIENTO" => Mode::Cumplimiento,
+            _ => Mode::Informes,
+        };
+        let corte = NaiveDate::parse_from_str(datos["corte"].as_str().unwrap(), "%Y-%m-%d").unwrap();
+        Trabajo::abrir(PathBuf::from("origen.xlsx"), libro.save_to_buffer().unwrap(), Some(modo), corte, cfg).unwrap()
+    }
+
+    fn configuracion(datos: &Value, caso: &Value) -> Config {
+        let mut cfg = Config::default();
+        cfg.contactos = datos["contactos"].as_object().unwrap().iter().map(|(k, v)| (k.clone(), texto(v))).collect();
+        for (k, v) in datos["tribunales"].as_object().unwrap() {
+            cfg.tribunales.get_mut(k).unwrap().para = texto(v);
+        }
+        cfg.firma = if caso["firma"].as_bool().unwrap() { texto(&datos["firma"]) } else { String::new() };
+        cfg.cc_adicional = if caso["cc_adicional"].as_bool().unwrap() { texto(&datos["cc_adicional"]) } else { String::new() };
+        cfg
+    }
+
+    fn comparar(datos: &Value, caso: &Value) -> Vec<String> {
+        let cfg = configuracion(datos, caso);
+        let mut w = trabajo(datos, caso["modo"].as_str().unwrap(), &cfg);
+        if let Some(rits) = caso["rits"].as_array() {
+            for r in w.registros.iter_mut() {
+                r.seleccionada = rits.iter().any(|x| x == &Value::String(w_rit(&r.values, &caso["modo"], datos)));
+            }
+        }
+        let todas = ["RES", "AMB", "FAE", "DCE"];
+        let claves: Vec<String> = caso["modalidades"].as_array().map(|a| a.iter().map(texto).collect()).unwrap_or_default();
+        let modalidades: Vec<&str> = if claves.is_empty() { todas.to_vec() } else { todas.iter().copied().filter(|k| claves.contains(&k.to_string())).collect() };
+        let tribunales: Vec<String> = caso["tribunales"].as_array().map(|a| a.iter().map(texto).collect()).unwrap_or_default();
+        let o = OpcionesCorreo { modalidades: &modalidades, tribunales: &tribunales, solo_seleccionadas: caso["rits"].is_array() };
+        let obtenidos = preparar_borradores(&w, &cfg, &o);
+        let rit = |b: &Borrador| {
+            let mut v: Vec<String> = b.registros.iter().map(|i| w.value(&w.registros[*i], "rit")).collect();
+            v.sort();
+            v
+        };
+        let mut rust: Vec<Value> = obtenidos
+            .iter()
+            .map(|b| serde_json::json!({"tipo": b.kind, "asunto": b.asunto, "para": b.para, "cc": b.cc, "cuerpo": b.cuerpo, "rits": rit(b), "obligatorio": b.adjunto_obligatorio}))
+            .collect();
+        rust.sort_by_key(|b| (texto(&b["tipo"]), texto(&b["asunto"])));
+        // Diferencia declarada (ESTADO.md): la plantilla «Cumplimiento» de Python dice «modulo» sin tilde; Flow Rust dice «módulo».
+        let python: Vec<Value> = caso["borradores"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|b| {
+                let cuerpo = texto(&b["cuerpo"]);
+                let cuerpo = if b["tipo"] == "cumplimiento" { cuerpo.replace("del modulo RUS", "del módulo RUS") } else { cuerpo };
+                serde_json::json!({"tipo": b["tipo"], "asunto": b["asunto"], "para": b["para"], "cc": b["cc"], "cuerpo": cuerpo, "rits": b["rits"], "obligatorio": b["obligatorio"]})
+            })
+            .collect();
+        let mut d = Vec::new();
+        if rust.len() != python.len() {
+            let cab = |v: &[Value]| v.iter().map(|b| format!("{}|{}|{}", texto(&b["tipo"]), texto(&b["asunto"]), b["rits"])).collect::<Vec<_>>();
+            d.push(format!("cantidad Rust {} · Python {}\n   Rust {:?}\n   Python {:?}", rust.len(), python.len(), cab(&rust), cab(&python)));
+        }
+        for (r, p) in rust.iter().zip(&python) {
+            for k in ["tipo", "asunto", "para", "cc", "cuerpo", "rits", "obligatorio"] {
+                if r[k] != p[k] {
+                    d.push(format!("{} · {k}: Rust {} · Python {}", texto(&p["asunto"]), r[k], p[k]));
+                }
+            }
+        }
+        d
+    }
+
+    fn w_rit(valores: &[Cell], modo: &Value, datos: &Value) -> String {
+        let _ = (modo, datos);
+        valores.first().map(Cell::display).unwrap_or_default()
+    }
+
+    #[test]
+    fn correos_iguales_a_python() {
+        let datos: Value = serde_json::from_str(include_str!("../tests/datos/correos.json")).unwrap();
+        let (mut iguales, mut fallos) = (0, Vec::new());
+        let casos = datos["casos"].as_array().unwrap();
+        for caso in casos {
+            let d = comparar(&datos, caso);
+            if d.is_empty() {
+                iguales += 1;
+            } else {
+                fallos.push(format!("{}:\n  {}", caso["nombre"], d.join("\n  ")));
+            }
+        }
+        for f in &fallos {
+            println!("FALLA {f}");
+        }
+        println!("CORREOS: {iguales}/{}, fallos {}", casos.len(), fallos.len());
+        let sin_tilde = casos.iter().flat_map(|c| c["borradores"].as_array().unwrap()).filter(|b| b["tipo"] == "cumplimiento" && texto(&b["cuerpo"]).contains("del modulo RUS")).count();
+        println!("DIFERENCIA_DECLARADA modulo/módulo: {sin_tilde} correos de Cumplimiento");
+        assert!(sin_tilde > 0, "la diferencia declarada debe estar en el oráculo");
+        assert_eq!(casos.len(), 18, "el oráculo debe traer 18 casos");
+        assert!(fallos.is_empty());
+    }
+
+    #[test]
+    fn oraculo_de_correos_detecta_alteraciones() {
+        let datos: Value = serde_json::from_str(include_str!("../tests/datos/correos.json")).unwrap();
+        let mut caso = datos["casos"][0].clone();
+        let antes = comparar(&datos, &caso);
+        assert!(antes.is_empty(), "{antes:?}");
+        caso["borradores"][0]["para"] = Value::String("otro@ejemplo.invalid".into());
+        assert!(!comparar(&datos, &caso).is_empty(), "un destinatario esperado alterado no se detecta");
+    }
+}

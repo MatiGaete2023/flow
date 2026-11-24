@@ -1,6 +1,6 @@
 # Estado de Flow Rust
 
-Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q7 el producto de Trabajo sin consolidado (E-W1) E-A1, E-U1, E-A2, E-A3, E-A4, E-T1, E-T2 y E-T3. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
+Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q7 el producto de Trabajo sin consolidado (E-W1) E-A1, E-U1, E-A2, E-A3, E-A4, E-T1, E-T2, E-T3 y E-A5. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
 
 - Aplicación: `app/` (`flow_rust.exe`). Referencia funcional: rama `flow-python`.
 - Rama única: `estudio/paridad-python-rust-20261119`.
@@ -23,17 +23,17 @@ Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q
 ### Asistente
 
 - **F01 Lectura de hojas — Sí.** `lectura.rs`.
-- **F02 Trabajo y cruces — Parcial.** Tres etapas, Hoja 2, calendario 91 y CAL-03. Faltan Egresados, OB e identidad multifila.
+- **F02 Trabajo y cruces — Parcial.** Tres etapas, Hoja 2, calendario 91 y CAL-03. Egresados (E-A2) y avisos de órdenes de búsqueda OB-01 a OB-05 (E-A5, 21 casos contra Python; se listan en Trabajo para los paquetes con Litigantes). Falta la identidad multifila: no hay en Python un comportamiento distinto del ya cotejado en el corpus multifila de E3.
 - **F03 Reglas de Excel — Sí.** `oraculo_python`, 174 casos.
 - **F04 Contexto de causa — Sí.** `oraculo_historia`, 2.585 casos; paquete C con ZIP de Flow Python.
 - **F05 Otro programa, reiteración y Escritos — Sí.** Cronología con 181 casos, R5 parcial y consignación con deshacer.
 - **F06 Revisión de bitácoras — Sí.** V1 y V2 contrastadas en la CI.
 - **F07 Importación de paquetes — Sí.** Conciliación entre capturas (E-A2): las decisiones pasan a las filas con la misma identidad remota, los conflictos se resuelven en pantalla y Trabajo muestra qué filas son nuevas, tienen fuente o reglas cambiadas y cuáles egresaron. Contrastado con Python en 12 casos. Trabajo concilia la etapa abierta; las decisiones de otras etapas del paquete anterior no se trasladan.
-- **F08 Edición y revisión — Parcial.** Sin cotejo de edición masiva, deshacer ni selecciones ocultas.
+- **F08 Edición y revisión — Parcial.** Edición masiva de las filas marcadas (revisar y RES), también las ocultas por el filtro, y «Deshacer» (E-A5); se prueba su comportamiento, sin oráculo. Faltan las anulaciones de columnas de origen y las decisiones de correo por fila.
 - **F09 Sesión y vigencia — Sí, sin oráculo de huellas.** Los correos y proyectos preparados se sellan con la huella de lo que leen (registros, plantillas, contactos, firma, captura); si eso cambia quedan «desactualizados» y no se guardan. Cada borrador guardado deja un recibo y uno idéntico no se crea dos veces. La sesión recupera los productos preparados y sus recibos; al conciliar capturas pasan marcados para revisar. Las huellas son propias de Rust (no coinciden byte a byte con Python); su comportamiento se prueba de punta a punta. Sin estado «incierto» tras un fallo de Outlook.
 - **F10 Excel preservado — Parcial.** «Actualizar desde Excel» (E-A1) trae la revisión de la copia (observación, `FECHA_OBS`, `TT`, `CC`, `RES`) con asociación por identidad y conflictos que se resuelven en pantalla, contrastado con Python en 12 casos. Falta recalcular cuando se editan columnas de origen en Excel y combinar `NURUS_DECISIONES`. Sin libro base (paquete sin consolidado), el producto sale como libro nuevo con la estructura de `FAE_RES` (hojas de servicio, todas las columnas del registro, las 10 columnas de revisión en el orden del usuario y `NURUS_CLAVE_INGRESO`); la copia preservada sigue exigiendo Windows y Excel de escritorio.
 - **F11 Configuración y contactos — Parcial.** 16 umbrales y textos con verificador. Alias de contactos con las mismas colisiones que Python, editor de plantillas de correo con selector de variables, duplicar, archivar y restaurar, e importación de matrices Word desde un ZIP (E-A4), contrastados con Python en 44 casos. Falta el importador de matrices de contactos y paquetes de plantillas con revisión empaquetada (`install_bundled_templates`, no aplica a Rust). Una copia de plantilla sirve para «Gestión particular»; el correo automático por programa sigue usando las plantillas base.
-- **F12 Correos y nómina — Parcial.** Sin cotejo de agrupación, firma y alcance.
+- **F12 Correos y nómina — Sí.** Agrupación, destinatarios, CC, firma y alcance contrastados con `prepare_drafts` de Python en 18 casos (E-A5). Diferencia declarada: la plantilla «Cumplimiento» de Python dice «modulo» sin tilde y Flow Rust «módulo».
 - **F13 Borradores Outlook — Parcial.** EML y Outlook con cuenta elegible (E-T1): solo `Save()`, CC fijo, y un fallo antes de guardar se distingue de uno posterior (queda «incierto» y no se reintenta hasta revisar Borradores). Contrastado por pruebas de la salida de PowerShell; sin prueba con Outlook real.
 - **F14 Proyectos Word — Sí.** Matrices de Laja y Mulchén. Por confirmar con el usuario: un `.docx` por proyecto.
 - **F15 Formularios manuales — Sí.** Correo manual con adjuntos (huella de lo revisado, CC fijo, sin Excel) y Word libre o con matriz `{{CAMPO}}`, bloques favoritos con variables y recuperación de lo escrito (E-T2); 19 casos contrastados con Python. Sin la mejora de paginación de Python.
@@ -60,6 +60,7 @@ Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q
 
 - R1 a R6 y el orden de columnas NURUS: decisiones del usuario (ver [PLAN.md](PLAN.md)).
 - D-3: mensaje propio de Rust ante un XML 2003 con entidad externa.
+- Correos: «módulo» con tilde en la plantilla de Cumplimiento (Python: «modulo»). Decisión del usuario pendiente.
 - Carga en XLS BIFF: Python escribe `5.0` y Rust `5`. En HTML y XLSX coinciden.
 - Historia: Rust la lee siempre que se elige «Historia de la causa»; Python solo al retomar.
 - Lecturas: el puente de Rust no trae el `code` de la extensión, y las fallas quedan con el código genérico.

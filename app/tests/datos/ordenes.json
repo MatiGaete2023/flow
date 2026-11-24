@@ -1,0 +1,317 @@
+{
+ "corte": "2026-11-20",
+ "casos": [
+  {
+   "nombre": "sin_avisos",
+   "valores": {
+    "ESTADO O B": "Activa",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "10/11/2026",
+    "FEC NACIMIENTO": "10/05/2012",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "(13624088-9)Persona Ficticia",
+    "PROX AUDS": ""
+   },
+   "avisos": []
+  },
+  {
+   "nombre": "sin_resultado_hace_mas_de_60_dias",
+   "valores": {
+    "ESTADO O B": "Activa",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "01/09/2026",
+    "FEC NACIMIENTO": "10/05/2012",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "(13624088-9)Persona Ficticia",
+    "PROX AUDS": ""
+   },
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de septiembre de 2026 (80 días)."
+   ]
+  },
+  {
+   "nombre": "sin_resultado_hace_60_dias_exactos",
+   "valores": {
+    "ESTADO O B": "Activa",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "21/09/2026",
+    "FEC NACIMIENTO": "10/05/2012",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "(13624088-9)Persona Ficticia",
+    "PROX AUDS": ""
+   },
+   "avisos": []
+  },
+  {
+   "nombre": "sin_resultado_hace_61_dias",
+   "valores": {
+    "ESTADO O B": "Activa",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "20/09/2026",
+    "FEC NACIMIENTO": "10/05/2012",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "(13624088-9)Persona Ficticia",
+    "PROX AUDS": ""
+   },
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 20 de septiembre de 2026 (61 días)."
+   ]
+  },
+  {
+   "nombre": "con_resultado",
+   "valores": {
+    "ESTADO O B": "Activa",
+    "RESULTADO": "Ubicado",
+    "FECHA TRAMITE": "01/01/2026",
+    "FEC NACIMIENTO": "10/05/2012",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "(13624088-9)Persona Ficticia",
+    "PROX AUDS": ""
+   },
+   "avisos": []
+  },
+  {
+   "nombre": "resultado_con_guiones",
+   "valores": {
+    "ESTADO O B": "Activa",
+    "RESULTADO": "---",
+    "FECHA TRAMITE": "01/01/2026",
+    "FEC NACIMIENTO": "10/05/2012",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "(13624088-9)Persona Ficticia",
+    "PROX AUDS": ""
+   },
+   "avisos": [
+    "OB-01: orden de búsqueda activa sin resultado desde el 1 de enero de 2026 (323 días)."
+   ]
+  },
+  {
+   "nombre": "mayor_de_edad",
+   "valores": {
+    "ESTADO O B": "Activa",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "10/11/2026",
+    "FEC NACIMIENTO": "10/05/2005",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "(13624088-9)Persona Ficticia",
+    "PROX AUDS": ""
+   },
+   "avisos": [
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 10 de mayo de 2023."
+   ]
+  },
+  {
+   "nombre": "cumple_18_hoy",
+   "valores": {
+    "ESTADO O B": "Activa",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "10/11/2026",
+    "FEC NACIMIENTO": "20/11/2008",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "(13624088-9)Persona Ficticia",
+    "PROX AUDS": ""
+   },
+   "avisos": [
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 20 de noviembre de 2026."
+   ]
+  },
+  {
+   "nombre": "nacida_el_29_de_febrero",
+   "valores": {
+    "ESTADO O B": "Activa",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "10/11/2026",
+    "FEC NACIMIENTO": "29/02/2008",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "(13624088-9)Persona Ficticia",
+    "PROX AUDS": ""
+   },
+   "avisos": [
+    "OB-02: orden de búsqueda activa y la persona cumplió 18 años el 28 de febrero de 2026."
+   ]
+  },
+  {
+   "nombre": "envio_pendiente",
+   "valores": {
+    "ESTADO O B": "Activa",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "10/11/2026",
+    "FEC NACIMIENTO": "10/05/2012",
+    "ESTADO ENVIO": "Pendiente",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "(13624088-9)Persona Ficticia",
+    "PROX AUDS": ""
+   },
+   "avisos": [
+    "OB-03: el envío de la orden no figura como realizado (Pendiente)."
+   ]
+  },
+  {
+   "nombre": "envio_vacio",
+   "valores": {
+    "ESTADO O B": "Activa",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "10/11/2026",
+    "FEC NACIMIENTO": "10/05/2012",
+    "ESTADO ENVIO": "",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "(13624088-9)Persona Ficticia",
+    "PROX AUDS": ""
+   },
+   "avisos": [
+    "OB-03: el envío de la orden no figura como realizado (sin estado)."
+   ]
+  },
+  {
+   "nombre": "sin_curador_nino",
+   "valores": {
+    "ESTADO O B": "Activa",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "10/11/2026",
+    "FEC NACIMIENTO": "10/05/2012",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "",
+    "PROX AUDS": ""
+   },
+   "avisos": [
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado."
+   ]
+  },
+  {
+   "nombre": "sin_curador_adolescente",
+   "valores": {
+    "ESTADO O B": "Activa",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "10/11/2026",
+    "FEC NACIMIENTO": "10/05/2012",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Adolescente",
+    "CURADOR": "---",
+    "PROX AUDS": ""
+   },
+   "avisos": [
+    "OB-04: orden de búsqueda activa de un niño, niña o adolescente sin curador ad litem registrado."
+   ]
+  },
+  {
+   "nombre": "sin_curador_adulto",
+   "valores": {
+    "ESTADO O B": "Activa",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "10/11/2026",
+    "FEC NACIMIENTO": "10/05/2012",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Adulto",
+    "CURADOR": "",
+    "PROX AUDS": ""
+   },
+   "avisos": []
+  },
+  {
+   "nombre": "audiencia_futura",
+   "valores": {
+    "ESTADO O B": "Activa",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "10/11/2026",
+    "FEC NACIMIENTO": "10/05/2012",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "(13624088-9)Persona Ficticia",
+    "PROX AUDS": "25/11/2026"
+   },
+   "avisos": [
+    "OB-05: audiencia fijada para el 25 de noviembre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "nombre": "audiencias_varias",
+   "valores": {
+    "ESTADO O B": "Activa",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "10/11/2026",
+    "FEC NACIMIENTO": "10/05/2012",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "(13624088-9)Persona Ficticia",
+    "PROX AUDS": "10/11/2026, 05/12/2026, 25/11/2026"
+   },
+   "avisos": [
+    "OB-05: audiencia fijada para el 25 de noviembre de 2026 con orden de búsqueda activa."
+   ]
+  },
+  {
+   "nombre": "audiencia_pasada",
+   "valores": {
+    "ESTADO O B": "Activa",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "10/11/2026",
+    "FEC NACIMIENTO": "10/05/2012",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "(13624088-9)Persona Ficticia",
+    "PROX AUDS": "10/11/2026"
+   },
+   "avisos": []
+  },
+  {
+   "nombre": "orden_no_activa",
+   "valores": {
+    "ESTADO O B": "Cerrada",
+    "RESULTADO": "",
+    "FECHA TRAMITE": "01/01/2026",
+    "FEC NACIMIENTO": "10/05/2005",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "(13624088-9)Persona Ficticia",
+    "PROX AUDS": ""
+   },
+   "avisos": []
+  },
+  {
+   "nombre": "sin_columna_de_estado",
+   "valores": {
+    "RESULTADO": "",
+    "FECHA TRAMITE": "10/11/2026",
+    "FEC NACIMIENTO": "10/05/2012",
+    "ESTADO ENVIO": "Realizada",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "(13624088-9)Persona Ficticia",
+    "PROX AUDS": ""
+   },
+   "avisos": []
+  },
+  {
+   "nombre": "columnas_ausentes",
+   "valores": {
+    "ESTADO O B": "Activa",
+    "TIPO LITIGANTE": "Niño",
+    "CURADOR": "(13624088-9)Persona Ficticia"
+   },
+   "avisos": []
+  },
+  {
+   "nombre": "titulos_con_tildes_y_puntos",
+   "valores": {
+    "Estado O.B.": "Activa",
+    "Resultado": "",
+    "Fecha Trámite": "10/11/2026",
+    "Fec. Nacimiento": "10/05/2012",
+    "Estado Envío": "Realizada",
+    "Tipo Litigante": "Niño",
+    "Curador": "(13624088-9)Persona Ficticia",
+    "Prox. Auds.": ""
+   },
+   "avisos": []
+  }
+ ]
+}
