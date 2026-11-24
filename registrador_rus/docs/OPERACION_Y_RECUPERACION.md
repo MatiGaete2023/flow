@@ -35,3 +35,7 @@ La primera instrucción necesita pantalla Tk y dependencias de prueba; en Linux 
 ## Puerta de uso productivo: no cumplida
 
 No habilitar el escritor real. Faltan: comprobación puntual autorizada del DOM (editor, casilla, vínculo, identidad y Estado), evidencia viva de relectura, exportación Flow y aprobación vigente, revisión humana exacta del lote, política de custodia/retención y ruta privada única, instalación Chrome y Windows, conciliación de Excel nativo/compatibilidad, piloto unitario autorizado y verificación posterior. No se fusiona a flow-python ni se publica release productiva. No existe acción de guardado remoto en esta versión.
+
+## Vista previa desde Trabajo del Asistente (código fuente de esta rama)
+
+En un paquete ficticio del Descargador importado al Asistente con copia vigente, selecciona 1–400 filas visibles de una misma vista y abre Trabajo > Más > Vista previa de lote RUS. Escoge origen y destino y un código de Estado explícito (para pruebas ficticias, no se conoce aún el catálogo vivo). Pulsa Preparar revisión, revisa todas las operaciones, marca la confirmación de previsualización y pulsa Confirmar vista previa. El lote se serializa y deserializa únicamente en memoria; no hay archivo de transferencia, importación al registrador ni permiso de guardado. Si cambia selección, texto, destino, estado o fuente, exige nueva revisión. No usa selecciones ocultas. La opción está probada desde código fuente en CI; no se ha validado un ejecutable instalado ni uso real. No introducir datos institucionales para probar este prototipo.

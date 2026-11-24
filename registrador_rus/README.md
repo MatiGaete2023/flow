@@ -55,3 +55,5 @@ Revisión masiva Work y transferencia de previsualización: app/flow_batch.py y 
 Vista previa local del Asistente: Trabajo > Más > Vista previa de lote RUS (ejecución desde fuente de esta rama). Selección visible de 1–400 filas, origen/destino/Estado explícitos, sin guardar ni conectar a RUS. Estado real y distribución instalada pendientes.
 
 CI de revisión masiva: [71/71](https://github.com/MatiGaete2023/flow/actions/runs/45430566709). CI con diálogo y catálogo de procedencia: [74/74](https://github.com/MatiGaete2023/flow/actions/runs/45431004257).
+
+Resultado CI final de esta etapa: [76/76](https://github.com/MatiGaete2023/flow/actions/runs/45431222606); menú del Asistente desde fuente y bloqueo sin paquete verificados. No hay transferencia de archivos ni uso real.
