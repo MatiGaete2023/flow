@@ -45,3 +45,5 @@ Detector estructural complementario: extension/structure.js, exclusivamente pasi
 Adaptador Work→RegistroFlowV1: app/flow_export.py, solo contrato y prueba con dobles de Work/Row. `python -m unittest discover -s registrador_rus/tests -p test_flow_export.py -v`. No conectado a Flow ni autorizado para RUS.
 
 Revisión persistente del lote: app/batch_store.py (SQLite, ficticia, aún no conectada al diario ni UI). `python -m unittest discover -s registrador_rus/tests -p test_batch_store.py -v`. No autoriza un intento individual.
+
+La demo incluye botón Revisar lote ficticio; el diálogo y su registro SQLite pasaron pruebas independientes (test_batch_dialog.py, requiere pantalla Tk). La conexión con la aplicación completa aún requiere una prueba integrada. La revisión no equivale a autorización individual y la sesión demo se elimina al cerrar.

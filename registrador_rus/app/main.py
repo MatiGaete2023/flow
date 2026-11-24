@@ -2,9 +2,12 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import tkinter as tk
+from uuid import uuid4
 from tkinter import ttk, messagebox
 
 from .bridge import LocalBridge
+from .batch_store import SimulationBatchStore
+from .batch_dialog import BatchReviewDialog
 from .journal import SimulationJournal, JournalError
 from .scheduler import ScheduleConfig, ScheduleError
 from .simulation import demo_operations, FakeClock, FakeRus, SimulationController, FAULTS
@@ -21,11 +24,14 @@ class DemoApp:
         self.fake = FakeRus(self.clock, self.ops.values())
         self.journal = SimulationJournal(Path(self.temp.name) / 'demo.sqlite', clock=self.clock)
         self.controller = SimulationController(self.journal, self.fake)
+        self.batch_store = SimulationBatchStore(self.journal.db)
+        self.batch_store.initialize()
         self.bridge = None
         self.confirmed = set()
         self.closed = False
         self.status = tk.StringVar(value='Sin selección. No se conecta a RUS.')
         self.browser_status = tk.StringVar(value='Puente de demostración desconectado')
+        self.batch_status = tk.StringVar(value='Lote ficticio sin revisión registrada')
         self.fault = tk.StringVar(value='OK')
         self.limit = tk.StringVar(value='')
         self.mode = tk.StringVar(value='none')
@@ -47,6 +53,9 @@ class DemoApp:
                               ('Simular intento', self.execute), ('Recuperar por lectura', self.recover)]:
             ttk.Button(controls, text=label, command=lambda f=action: self.run(f)).pack(side='left', padx=2)
         ttk.Combobox(controls, textvariable=self.fault, values=FAULTS, state='readonly', width=14).pack(side='left', padx=5)
+        batch = ttk.Frame(body); batch.pack(fill='x', pady=3)
+        ttk.Button(batch, text='Revisar lote ficticio', command=lambda: self.run(self.review_batch)).pack(side='left')
+        ttk.Label(batch, textvariable=self.batch_status).pack(side='left', padx=8)
         schedule = ttk.LabelFrame(body, text='Ritmo simulado — reloj virtual'); schedule.pack(fill='x', pady=3)
         for label, variable, width in [('Cupo/h (vacío = sin límite)', self.limit, 6), ('Mínimo/fijo s', self.interval, 5), ('Máximo s', self.maximum, 5)]:
             ttk.Label(schedule, text=label).pack(side='left', padx=2); ttk.Entry(schedule, textvariable=variable, width=width).pack(side='left')
@@ -93,6 +102,19 @@ class DemoApp:
         try: action()
         except (ValueError, RuntimeError) as exc: messagebox.showwarning('Simulación detenida', str(exc), parent=self.root)
         finally: self.refresh()
+
+    def review_batch(self):
+        operations = tuple(self.ops.values())
+        review_id = uuid4().hex
+
+        def record(digest):
+            current = tuple(self.ops.values())
+            with self.journal._tx():
+                self.batch_store.record(review_id, current, displayed_digest=digest, actor='actor-ficticio',
+                                        confirmed=True, now=self.clock())
+            self.batch_status.set(f'Revisión ficticia registrada: {len(current)} operaciones; no autoriza intentos')
+
+        return BatchReviewDialog(self.root, operations, record)
 
     def prepare(self): self.controller.prepare(self.selected())
 
