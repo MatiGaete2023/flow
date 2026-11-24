@@ -67,6 +67,8 @@ class WorkPreviewDialog:
         row.pack(fill='x',pady=5)
         self.confirm_button=ttk.Button(row,text='Confirmar vista previa',state='disabled',command=lambda:self.run(self.confirm))
         self.confirm_button.pack(side='right')
+        self.live_button=ttk.Button(row,text='Validar ingreso abierto (solo lectura)',state='disabled',command=lambda:self.run(self.open_live_read))
+        self.live_button.pack(side='left')
         ttk.Button(row,text='Cerrar',command=self.window.destroy).pack(side='right',padx=4)
         ttk.Label(body,textvariable=self.status,wraplength=700).pack(anchor='w')
         for var in (self.origin,self.destination):
@@ -95,6 +97,11 @@ class WorkPreviewDialog:
 
     def toggle(self):
         self.confirm_button.configure(state='normal' if self.frozen is not None and self.accepted.get() else 'disabled')
+        self.live_button.configure(state='normal' if self.confirmed_preview is not None and len(self.ids)==1 else 'disabled')
+
+    def open_live_read(self):
+        from .live_read_dialog import LiveReadDialog
+        return LiveReadDialog(self)
 
     def current_requests(self):
         work=self.app._require_work()

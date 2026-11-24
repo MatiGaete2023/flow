@@ -1,0 +1,12 @@
+{
+  "manifest_version": 3,
+  "name": "Flow — Adaptador RUS: validación local",
+  "version": "0.3.0",
+  "description": "Comprueba identidad y lectura de una bitácora abierta. No modifica ni guarda observaciones.",
+  "permissions": ["scripting"],
+  "host_permissions": ["http://127.0.0.1/*"],
+  "optional_host_permissions": ["https://familia.pjud.cl/*"],
+  "action": {"default_title": "Validar ingreso RUS"},
+  "background": {"service_worker": "background.js"},
+  "content_security_policy": {"extension_pages": "script-src 'self'; object-src 'none'; connect-src http://127.0.0.1:*;"}
+}

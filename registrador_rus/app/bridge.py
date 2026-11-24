@@ -100,9 +100,11 @@ class Mailbox:
 
 
 class LocalBridge:
-    def __init__(self, origin, mailbox=None):
+    def __init__(self, origin, mailbox=None, *, max_body=MAX_BODY):
         if not isinstance(origin, str) or not re.fullmatch(r'chrome-extension://[a-p]{32}', origin):
             raise BridgeError('ORIGEN_EXTENSION_INVALIDO')
+        if type(max_body) is not int or not MAX_BODY <= max_body <= 16*1024*1024:
+            raise BridgeError('LIMITE_TRANSPORTE_INVALIDO')
         self.origin = origin
         self.mailbox = mailbox or Mailbox()
         self.token = secrets.token_urlsafe(32)
@@ -155,7 +157,7 @@ class LocalBridge:
                     return self._reply(404, cors=True)
                 lengths = self.headers.get_all('Content-Length') or []
                 if (self.headers.get('Transfer-Encoding') is not None or len(lengths) != 1 or
-                        not re.fullmatch(r'\d{1,5}', lengths[0]) or not 0 < int(lengths[0]) <= MAX_BODY or
+                        not re.fullmatch(r'\d{1,8}', lengths[0]) or not 0 < int(lengths[0]) <= max_body or
                         self.headers.get_all('Content-Type') != ['application/json']):
                     return self._reply(400, cors=True)
                 try:
