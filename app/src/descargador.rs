@@ -13,6 +13,7 @@ pub mod historico;
 pub mod lecturas;
 pub mod vinculos;
 pub mod lote;
+pub mod paquete;
 pub mod preferencias;
 mod puente;
 pub mod sitfa;

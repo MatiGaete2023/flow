@@ -26,6 +26,13 @@ pub struct Libro {
     grilla: Grilla,
 }
 
+impl Libro {
+    /// La grilla completa del listado reconocido (`ExcelInfo.grid`).
+    pub fn grilla(&self) -> &[Vec<String>] {
+        &self.grilla
+    }
+}
+
 pub fn huella(datos: &[u8]) -> String {
     format!("{:x}", Sha256::digest(datos))
 }

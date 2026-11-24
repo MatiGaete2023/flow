@@ -89,7 +89,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           python tools/inventario_escrituras.py
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          foreach ($o in @('a78', 'lecturas', 'vinculos', 'bitacoras')) {
+          foreach ($o in @('a78', 'lecturas', 'vinculos', 'bitacoras', 'lote', 'paquete')) {
             $salida = Join-Path $env:RUNNER_TEMP "$o.json"
             if ($o -eq 'vinculos') {
               python app/qa/generar_vinculos.py
