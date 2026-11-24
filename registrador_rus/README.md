@@ -1,6 +1,6 @@
 # Registrador RUS — prototipo aislado
 
-El usuario autorizó desarrollar escritura con autorización humana exclusivamente en esta rama (24 de noviembre de 2026); ver excepción en AGENTS y PLAN_VIGENTE. La versión actual no es software productivo ni acredita permiso institucional. No conecta a RUS. No instala extensión, no escribe en la bitácora ni integra Flow.
+El usuario autorizó desarrollar escritura con autorización humana exclusivamente en esta rama (24 de noviembre de 2026); ver excepción en AGENTS y PLAN_VIGENTE. La versión actual no es software productivo ni acredita permiso institucional. El registrador no conecta a RUS ni escribe en la bitácora. Integra la revisión local del Asistente desde fuente; el inspector independiente de solo lectura sí fue usado por el operador en las cuatro vistas. No existe escritor real ni instalador productivo.
 
 P1 valida la estructura cerrada de RegistroFlowV1, identidad completa (no acredita identidad remota), texto exacto UTF-8 y SHA-256, destino y estado independientes, fecha UTC y versión positiva. Las capacidades están desactivadas. Comparar la aprobación congelada contra la versión vigente usando require_same_approval; la procedencia y autorización reales no se autentican con el hash. No se impone el contador nominal de 2000 hasta verificar la UI.
 
@@ -42,17 +42,17 @@ Revisión de lote: app/batch_review.py comprueba selección inmutable y genera r
 
 Detector estructural complementario: extension/structure.js, exclusivamente pasivo, reconstruido a partir de la evidencia sanitaria V1.5/V1.6. Prueba: `python registrador_rus/tests/run_structure.py` (Playwright/Chromium solo desarrollo). Ver [evidencia estructural](docs/EVIDENCIA_ESTRUCTURAL.md). No se carga en la extensión de demostración ni habilita uso en RUS.
 
-Adaptador Work→RegistroFlowV1: app/flow_export.py, solo contrato y prueba con dobles de Work/Row. `python -m unittest discover -s registrador_rus/tests -p test_flow_export.py -v`. No conectado a Flow ni autorizado para RUS.
+Adaptador Work→RegistroFlowV1: app/flow_export.py, solo contrato y prueba con dobles de Work/Row. `python -m unittest discover -s registrador_rus/tests -p test_flow_export.py -v`. Integrado posteriormente a Work y a su vista previa local; no autorizado para RUS.
 
 Revisión persistente del lote: app/batch_store.py (SQLite, ficticia, aún no conectada al diario ni UI). `python -m unittest discover -s registrador_rus/tests -p test_batch_store.py -v`. No autoriza un intento individual.
 
 La demo incluye botón Revisar lote ficticio; el diálogo y su registro SQLite pasaron pruebas independientes (test_batch_dialog.py, requiere pantalla Tk). La conexión con la aplicación completa aún requiere una prueba integrada. La revisión no equivale a autorización individual y la sesión demo se elimina al cerrar.
 
-Puerta Work real (app/flow_work.py) y pruebas de procedencia/lector/diálogo: verificadas en [CI 45426816043](https://github.com/MatiGaete2023/flow/actions/runs/45426816043), 68/68 pruebas Python. No se ha conectado a la UI del Asistente ni a RUS.
+Puerta Work real (app/flow_work.py) y pruebas de procedencia/lector/diálogo: verificadas en [CI 45426816043](https://github.com/MatiGaete2023/flow/actions/runs/45426816043), 68/68 pruebas Python. La UI del Asistente se integró en etapas posteriores; no hay conexión del registrador a RUS.
 
 Revisión masiva Work y transferencia de previsualización: app/flow_batch.py y app/transfer.py; solo en memoria. Hasta 400 operaciones, una validación de fuente por fase. La recepción no autoriza intentos. Prueba de integración: test_flow_batch.py (fixture de Flow, CI pendiente).
 
-Vista previa local del Asistente: Trabajo > Más > Vista previa de lote RUS (ejecución desde fuente de esta rama). Selección visible de 1–400 filas, origen/destino/Estado explícitos, sin guardar ni conectar a RUS. Estado real y distribución instalada pendientes.
+Vista previa local del Asistente: Trabajo > Más > Vista previa de lote RUS (ejecución desde fuente de esta rama). Selección visible de 1–400 filas, origen/destino explícitos y Estado automático por origen, sin guardar ni conectar a RUS. Estado real y distribución instalada pendientes.
 
 CI de revisión masiva: [71/71](https://github.com/MatiGaete2023/flow/actions/runs/45430566709). CI con diálogo y catálogo de procedencia: [74/74](https://github.com/MatiGaete2023/flow/actions/runs/45431004257).
 
@@ -61,3 +61,7 @@ Resultado CI final de esta etapa: [76/76](https://github.com/MatiGaete2023/flow/
 Transferencia ficticia entre procesos: `python -m registrador_rus.app.demo_transfer lote.flow-demo.json --count 400` y `python -m registrador_rus.app.main --demo-batch lote.flow-demo.json`. También menú del Asistente para generar datos inventados. Sin importación judicial ni permisos de envío.
 
 Transferencia ficticia: CI 80/80 aprobada. Inspector separado en registrador_rus/inspector: solo lectura focalizada, 9 pruebas de núcleo, instalación y RUS vivo pendientes; ver manual.
+
+## Estado vigente al 24-11-2026
+
+La política del operador impone ESPERA=4 Gestión Previa, CUMPLIMIENTO=6 Realizada, INFORMES_POR_VENCER e INFORMES_VENCIDOS=9 Realizada. El destino es independiente (CC0/CC1). No elegir alternativa si la opción obligatoria no está disponible. La vista previa real desde un ZIP ficticio se verificó en CI 45458456242. La preparación en dos documentos ficticios y el detector de las cuatro vistas pasaron en [CI 45459077137](https://github.com/MatiGaete2023/flow/actions/runs/45459077137): 83 Python, 50 Node, 45 Chromium y 8 Windows (186 comprobaciones, con repeticiones por plataforma). La nueva prueba conjunta DOM-diario-parser se encuentra en [CI 45460844644](https://github.com/MatiGaete2023/flow/actions/runs/45460844644); no es un piloto real. Ver CONTINUAR para el resultado y límites. No introducir datos judiciales ni usar la demo como escritor.
