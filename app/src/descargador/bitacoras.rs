@@ -205,7 +205,7 @@ fn sha256(datos: &[u8]) -> String {
 }
 
 /// `bitacora_html.visible_identity_warnings`.
-fn advertencias(leida: &Value, rit: &str, nombre: &str) -> Vec<String> {
+pub(crate) fn advertencias(leida: &Value, rit: &str, nombre: &str) -> Vec<String> {
     let mut a = Vec::new();
     if lecturas::normalizar(leida["rit"].as_str().unwrap_or("")) != lecturas::normalizar(rit) {
         a.push("Advertencia: RIT visible de bitácora distinto al listado; revisar el ingreso.".to_string());
