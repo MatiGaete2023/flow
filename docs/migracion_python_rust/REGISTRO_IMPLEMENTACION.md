@@ -16,6 +16,13 @@ Una entrada por encargo, de diez líneas como máximo, la más reciente arriba:
 
 No se copian salidas completas ni listas de mutaciones: la prueba afirma sus conteos y la CI del commit es la evidencia.
 
+## 2026-11-24 · E-R0
+
+- Cambió: `app/Cargo.toml` y `app/Cargo.lock` (dependencias por ruta `flow-meta4` y `flow-anonimo`); la CI de Windows corre sus pruebas.
+- Acredita: `tools/probar_app.sh todo` sin cambios (64 y 43); `cargo test -p flow-meta4` y `-p flow-anonimo` con `serde_json/preserve_order`: 29 y 38 pruebas, 0 fallos.
+- Diferencias declaradas: dos versiones de `rust_xlsxwriter` y de `quick-xml` en el ejecutable; `calamine` con `dates` unificado (sin efecto en la suite).
+- Pendiente: compilación y pruebas en Windows (CI).
+
 ## 2026-11-24 · E-Q7
 
 - Cambió: `descargador/bitacoras.rs` (`ejecutar_con_avance`, eventos `query`, `diary_progress` y `warning`) y `descargador_ui.rs` (filas revisadas, estado y avisos).

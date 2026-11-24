@@ -86,6 +86,13 @@ jobs:
           python tools/check_contactos.py app/src
       - name: Probar la aplicación desde app
         run: cargo test --manifest-path app/Cargo.toml --locked --all-targets
+      - name: E-R0 · Meta 4 y Anonimizador reutilizados (sus pruebas con las características de app/)
+        shell: pwsh
+        run: |
+          foreach ($crate in 'flow-meta4', 'flow-anonimo') {
+            cargo test --manifest-path rust/Cargo.toml --locked -p $crate --features serde_json/preserve_order
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
       - name: Comprobar ZIP sintéticos de Python
         shell: pwsh
         run: |
