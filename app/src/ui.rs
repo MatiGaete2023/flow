@@ -49,6 +49,13 @@ pub struct Screenshot {
     pub pedido: bool,
 }
 
+/// Conflictos entre la captura abierta y la nueva: el trabajo nuevo espera las respuestas de la persona.
+struct DialogoConciliacion {
+    nuevo: Trabajo,
+    conflictos: Vec<crate::conciliar::Conflicto>,
+    conservar: Vec<bool>,
+}
+
 /// Conflictos de «Actualizar desde Excel» a la espera de la decisión de la persona.
 struct DialogoSincronia {
     conflictos: Vec<crate::sincronizar::Conflicto>,
@@ -105,6 +112,7 @@ pub struct App {
     confirmar_reinicio: bool,
     revision_bitacoras: Option<crate::revision_ui::Dialogo>,
     sincronia: Option<DialogoSincronia>,
+    conciliacion: Option<DialogoConciliacion>,
     ultimo_tema: Option<bool>,
 }
 
@@ -153,6 +161,7 @@ impl App {
             confirmar_reinicio: false,
             revision_bitacoras: None,
             sincronia: None,
+            conciliacion: None,
             ultimo_tema: None,
         };
         if let Some(e) = err {
@@ -228,12 +237,99 @@ impl App {
         if !self.guardar_pendiente() {
             return;
         }
-        match Trabajo::abrir_archivo(p, self.pedida, self.corte(), &self.cfg) {
+        // Un paquete nuevo con otro paquete abierto continúa su trabajo en la misma etapa (conciliación entre capturas).
+        let previo_paquete = self.work.as_ref().is_some_and(|w| w.paquete.is_some()) && crate::captura_trabajo::es_zip(&p);
+        let pedida = if previo_paquete { self.work.as_ref().map(|w| w.mode()) } else { self.pedida };
+        match Trabajo::abrir_archivo(p.clone(), pedida, self.corte(), &self.cfg) {
+            Ok(w) if previo_paquete && w.paquete.is_some() => self.conciliar_con_anterior(w, Default::default()),
             Ok(w) => {
                 self.work = Some(w);
                 self.activar_trabajo();
             }
+            Err(e) if previo_paquete && pedida.is_some() => match Trabajo::abrir_archivo(p, self.pedida, self.corte(), &self.cfg) {
+                Ok(w) => self.conciliar_con_anterior(w, Default::default()),
+                Err(_) => self.aviso(e, true),
+            },
             Err(e) => self.aviso(e, true),
+        }
+    }
+
+    /// Pasa a `nuevo` las decisiones del trabajo abierto; con conflictos, pide las respuestas antes de cambiar nada.
+    fn conciliar_con_anterior(&mut self, mut nuevo: Trabajo, respuestas: crate::conciliar::Respuestas) {
+        let Some(previo) = self.work.take() else {
+            self.work = Some(nuevo);
+            self.activar_trabajo();
+            return;
+        };
+        match crate::conciliar::conciliar(&mut nuevo, &previo, &respuestas, &self.cfg) {
+            Ok(r) => {
+                let mut texto = String::new();
+                if let Some(c) = &nuevo.cambios {
+                    let m = c.resumen();
+                    texto = format!(
+                        " Frente a la captura anterior: {} nuevas, {} con fuente cambiada, {} con reglas cambiadas, {} egresadas.",
+                        m["Nuevas"], m["Fuente"], m["Reglas"], m["Egresados"]
+                    );
+                }
+                let n = nuevo.registros.iter().filter(|r| r.editada.is_some() || r.revisada || !r.res.is_empty()).count();
+                self.work = Some(nuevo);
+                self.activar_trabajo();
+                self.conciliacion = None;
+                if r.continuada {
+                    self.aviso(format!("Paquete conciliado: {} filas continúan y {n} conservan decisiones.{texto}", r.emparejadas.len()), false);
+                }
+            }
+            Err(crate::conciliar::Error::Conflictos(conflictos)) => {
+                let conservar = conflictos.iter().map(|c| c.puede_conservar).collect();
+                self.work = Some(previo);
+                self.conciliacion = Some(DialogoConciliacion { nuevo, conflictos, conservar });
+            }
+            Err(crate::conciliar::Error::Respuesta(m)) => {
+                self.work = Some(previo);
+                self.aviso(m, true);
+            }
+        }
+    }
+
+    fn dialogo_conciliacion(&mut self, ctx: &egui::Context, p: &Pal) {
+        let Some(d) = self.conciliacion.as_mut() else { return };
+        let mut abierto = true;
+        let (mut aplicar, mut cancelar) = (false, false);
+        egui::Window::new("Conciliar capturas").open(&mut abierto).default_width(680.0).show(ctx, |ui| {
+            ui.label(format!("{} filas con decisiones tuyas cambiaron entre las dos capturas. Elige qué hacer con cada una; el trabajo anterior sigue intacto hasta aplicar.", d.conflictos.len()));
+            egui::ScrollArea::vertical().max_height(380.0).show(ui, |ui| {
+                for (c, conservar) in d.conflictos.iter().zip(&mut d.conservar) {
+                    ui.separator();
+                    ui.label(RichText::new(&c.motivo).strong());
+                    if !c.campos.is_empty() {
+                        ui.label(format!("Campos distintos: {}", c.campos.join(", ")));
+                        for k in &c.campos {
+                            ui.label(RichText::new(format!("{k}: {} → {}", c.antes.get(k).map(texto_json).unwrap_or_default(), c.despues.get(k).map(texto_json).unwrap_or_default())).color(p.muted).size(12.0));
+                        }
+                    } else {
+                        ui.label(RichText::new("No hay una correspondencia única: no se trasladarán decisiones automáticamente.").color(p.muted));
+                    }
+                    ui.add_enabled_ui(c.puede_conservar, |ui| ui.radio_value(conservar, true, "Conservar mis decisiones"));
+                    ui.radio_value(conservar, false, "Usar la nueva evaluación");
+                }
+            });
+            ui.label(RichText::new("Los productos preparados con la captura anterior deben actualizarse.").color(p.muted).size(12.0));
+            ui.horizontal(|ui| {
+                aplicar = theme::primary(ui, p, "Aplicar elecciones").clicked();
+                cancelar = ui.button("Cancelar importación").clicked();
+            });
+        });
+        if cancelar || !abierto {
+            self.conciliacion = None;
+        } else if aplicar {
+            let d = self.conciliacion.take().unwrap();
+            let respuestas = d
+                .conflictos
+                .iter()
+                .zip(&d.conservar)
+                .map(|(c, conservar)| (c.id.clone(), if *conservar { crate::conciliar::Respuesta::Conservar } else { crate::conciliar::Respuesta::Reiniciar }))
+                .collect();
+            self.conciliar_con_anterior(d.nuevo, respuestas);
         }
     }
 
@@ -523,6 +619,7 @@ impl App {
         }
         self.avisos_panel(ctx, &p);
         self.dialogo_sincronia(ctx, &p);
+        self.dialogo_conciliacion(ctx, &p);
         egui::CentralPanel::default()
             .frame(egui::Frame::new().fill(p.bg).inner_margin(egui::Margin::symmetric(18, 12)))
             .show(ctx, |ui| match self.vista {
@@ -809,6 +906,20 @@ impl App {
         }
         if self.work.as_ref().is_some_and(|w| w.copia.is_some()) && ui.button("Actualizar desde Excel").on_hover_text("Trae a Trabajo la revisión hecha en la última copia de Excel guardada: observación, FECHA_OBS, TT, CC y RES").clicked() {
             self.actualizar_desde_excel(None, Default::default());
+        }
+        if let Some(c) = self.work.as_ref().and_then(|w| w.cambios.as_ref()) {
+            let m = c.resumen();
+            let egresados: Vec<String> = c.egresados.iter().map(|e| format!("{} · {} · {}", e.rit, e.nombre, e.programa)).collect();
+            egui::CollapsingHeader::new(format!(
+                "Frente a la captura anterior · {} nuevas · {} con fuente cambiada · {} con reglas cambiadas · {} egresadas",
+                m["Nuevas"], m["Fuente"], m["Reglas"], m["Egresados"]
+            ))
+            .id_salt("cambios de captura")
+            .show(ui, |ui| {
+                for e in &egresados {
+                    ui.label(RichText::new(e).color(p.muted).size(12.5));
+                }
+            });
         }
         let avisos = self.work.as_ref().and_then(|w| w.paquete.as_ref()).map(|p| p.avisos_agrupados()).unwrap_or_default();
         if !avisos.is_empty() {
@@ -1112,6 +1223,12 @@ impl App {
                 });
                 ui.label(RichText::new(if nombre.is_empty() { "(sin nombre)".to_string() } else { nombre }).size(18.0).strong());
                 ui.label(RichText::new(format!("{rit}  ·  {rut}")).monospace().color(p.muted));
+                if let Some(c) = w.cambios.as_ref().zip(w.id_registro(&w.registros[i])).and_then(|(c, id)| c.filas.get(&id)) {
+                    if c.tipo != crate::conciliar::Tipo::SinCambio {
+                        let campos = if c.campos.is_empty() { String::new() } else { format!(" · {}", c.campos.join(", ")) };
+                        ui.label(RichText::new(format!("Frente a la captura anterior: {}{campos}", c.tipo.etiqueta())).color(p.amber).size(12.5));
+                    }
+                }
                 ui.label(RichText::new(format!("{prog}  ·  {trib}")).color(p.muted));
                 ui.add_space(8.0);
                 theme::seccion(ui, p, "Observación");
@@ -2341,6 +2458,10 @@ fn plantilla_usa(trib: &str, tipo: &str, var: &str) -> bool {
     }
 }
 
+fn texto_json(v: &serde_json::Value) -> String {
+    v.as_str().map(str::to_string).unwrap_or_else(|| v.to_string())
+}
+
 pub fn abrir_en_sistema(p: &std::path::Path) {
     #[cfg(target_os = "windows")]
     let _ = std::process::Command::new("explorer").arg(p).spawn();
@@ -2546,6 +2667,70 @@ mod pruebas_sincronia {
         w.copia = Some(truncada);
         app.actualizar_desde_excel(None, Default::default());
         assert!(app.avisos.iter().any(|(t, error, _)| *error && t.contains("Faltan registros en la copia")), "{:?}", app.avisos);
+        let _ = std::fs::remove_dir_all(&base);
+    }
+}
+
+/// E-A2: abrir un paquete nuevo con otro abierto conserva las decisiones y pide respuesta ante un conflicto.
+#[cfg(test)]
+mod pruebas_conciliacion {
+    use super::*;
+    use base64::Engine;
+    use flow_rust::descargador::paquete::{self, Opciones};
+    use serde_json::Value;
+
+    fn lote_a_zip(base: &std::path::Path, nombre: &str, lote: &Value) -> PathBuf {
+        let carpeta = base.join(nombre).join(lote["carpeta"].as_str().unwrap());
+        for (ruta, b64) in lote["archivos"].as_object().unwrap() {
+            let ruta = carpeta.join(ruta);
+            std::fs::create_dir_all(ruta.parent().unwrap()).unwrap();
+            std::fs::write(ruta, base64::engine::general_purpose::STANDARD.decode(b64.as_str().unwrap()).unwrap()).unwrap();
+        }
+        let zip = base.join(nombre).join("captura.zip");
+        paquete::exportar_con(&[carpeta], &zip, &Opciones::default()).unwrap();
+        zip
+    }
+
+    #[test]
+    fn un_paquete_nuevo_conserva_decisiones_y_pide_respuesta_ante_un_conflicto() {
+        let (_candado, perfil) = crate::prueba_entorno::perfil_aislado();
+        let paquetes: Value = serde_json::from_str(include_str!("../tests/datos/paquete.json")).unwrap();
+        let conciliacion: Value = serde_json::from_str(include_str!("../tests/datos/conciliacion.json")).unwrap();
+        let listados = paquetes["escenarios"].as_array().unwrap().iter().find(|e| e["escenario"] == "listados").unwrap()["lote"].clone();
+        let base = perfil.join("conciliacion-ui");
+        let _ = std::fs::remove_dir_all(&base);
+        let anterior = lote_a_zip(&base, "anterior", &listados);
+        let nuevo = lote_a_zip(&base, "nuevo", &conciliacion["lote_programa_cambiado"]);
+        let mut app = App::new(None);
+        app.cfg = Config::default();
+        app.corte_txt = "08/10/2026".into();
+        app.abrir(anterior);
+        let w = app.work.as_mut().unwrap();
+        assert_eq!(w.registros.len(), 2);
+        w.registros[0].editada = Some("Edición de la primera".into());
+        w.registros[1].editada = Some("Edición de la segunda".into());
+        w.registros[1].revisada = true;
+        // La segunda persona cambió de programa: conflicto; el trabajo abierto sigue intacto y nada se aplicó.
+        app.abrir(nuevo);
+        let d = app.conciliacion.as_ref().expect("diálogo de conciliación");
+        assert_eq!(d.conflictos.len(), 1);
+        assert_eq!((d.conflictos[0].motivo.as_str(), d.conflictos[0].puede_conservar), ("Datos fuente modificados.", true));
+        assert_eq!(d.conflictos[0].campos, ["Derivación"]);
+        let w = app.work.as_ref().unwrap();
+        assert_eq!(w.registros[1].editada.as_deref(), Some("Edición de la segunda"));
+        assert!(w.cambios.is_none());
+        // Conservar mis decisiones: las dos ediciones pasan al trabajo nuevo, con la fuente nueva y su comparación.
+        let d = app.conciliacion.take().unwrap();
+        let respuestas = d.conflictos.iter().map(|c| (c.id.clone(), crate::conciliar::Respuesta::Conservar)).collect();
+        app.conciliar_con_anterior(d.nuevo, respuestas);
+        assert!(app.conciliacion.is_none());
+        let w = app.work.as_ref().unwrap();
+        assert_eq!(w.registros[0].editada.as_deref(), Some("Edición de la primera"));
+        assert_eq!(w.registros[1].editada.as_deref(), Some("Edición de la segunda"));
+        assert!(w.registros[1].revisada && !w.registros[0].revisada);
+        assert!(w.value(&w.registros[1], "programa").contains("Cambiado"), "la fuente nueva debe verse");
+        let resumen = w.cambios.as_ref().unwrap().resumen();
+        assert_eq!((resumen["Fuente"], resumen["Sin cambio"], resumen["Egresados"]), (1, 1, 0));
         let _ = std::fs::remove_dir_all(&base);
     }
 }

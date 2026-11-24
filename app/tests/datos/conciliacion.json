@@ -1,0 +1,401 @@
+{
+ "corte": "2026-10-08",
+ "lote_programa_cambiado": {
+  "carpeta": "2026-10-08 13-00-00",
+  "archivos": {
+   "CUMP Ambulatorio Jdo Familia Tome 1.xls": "PGh0bWw+PG1ldGEgY2hhcnNldD0idXRmLTgiPjx0YWJsZSBpZD0ieCI+PHRyPjx0aD5SSVQ8L3RoPjx0aD5SVVQ8L3RoPjx0aD5Ob21icmU8L3RoPjx0aD5EZXJpdmFjacOzbjwvdGg+PHRoPkFjY2lvbmVzPC90aD48L3RyPjx0cj48dGQ+WC0xLTIwOTk8L3RkPjx0ZD4xMTExMTExMS0wPC90ZD48dGQ+UGVyc29uYSBGaWN0aWNpYSAxPC90ZD48dGQ+UFJNIENlbnRybyBGaWN0aWNpbzwvdGQ+PHRkPjwvdGQ+PC90cj48L3RhYmxlPjwvaHRtbD4=",
+   "CUMP Ambulatorio Jdo Familia Tome 2.xls": "PGh0bWw+PG1ldGEgY2hhcnNldD0idXRmLTgiPjx0YWJsZSBpZD0ieCI+PHRyPjx0aD5SSVQ8L3RoPjx0aD5SVVQ8L3RoPjx0aD5Ob21icmU8L3RoPjx0aD5EZXJpdmFjacOzbjwvdGg+PHRoPkFjY2lvbmVzPC90aD48L3RyPjx0cj48dGQ+WC0yLTIwOTk8L3RkPjx0ZD4xMTExMTExMi0wPC90ZD48dGQ+UGVyc29uYSBGaWN0aWNpYSAyPC90ZD48dGQ+UFJNIENlbnRybyBDYW1iaWFkbzwvdGQ+PHRkPjwvdGQ+PC90cj48L3RhYmxlPjwvaHRtbD4=",
+   "resumen.json": "ewogICJ2ZXJzaW9uX2NvbnRyYXRvIjogMSwKICAiZmVjaGFfaG9yYSI6ICIyMDI2LTEwLTA4VDEzOjAwOjAwLjEyMzQ1Ni0wMzowMCIsCiAgImVzdGFkbyI6ICJWQUxJREFEQSIsCiAgInBsYW4iOiBbCiAgICB7CiAgICAgICJ0cmlidW5hbCI6ICI0OSIsCiAgICAgICJ0YWIiOiAiQ3VtcGxpbWllbnRvIiwKICAgICAgIm1vZGFsaXR5IjogIjIiLAogICAgICAicmVwb3J0IjogbnVsbCwKICAgICAgInNjcmVlbiI6ICJzZWd1aW1pZW50byIsCiAgICAgICJzdGF0ZSI6ICIxIiwKICAgICAgIm1vbnRoIjogbnVsbCwKICAgICAgInllYXIiOiBudWxsLAogICAgICAic3RhcnQiOiBudWxsLAogICAgICAiZW5kIjogbnVsbCwKICAgICAgInRyaWJ1bmFsX25vbWJyZSI6ICJKdXpnYWRvIGRlIEZhbWlsaWEgVG9tw6kiLAogICAgICAibW9kYWxpZGFkX25vbWJyZSI6ICJBbWJ1bGF0b3JpbyIsCiAgICAgICJmZWNoYV9kZXNjYXJnYSI6ICIyMDI2LTEwLTA4VDEzOjAwOjAwLjEyMzQ1Ni0wMzowMCIKICAgIH0KICBdLAogICJjb25zdWx0YXNfZXNwZXJhZGFzIjogMSwKICAiY29uc3VsdGFzX2NvbXBsZXRhZGFzIjogMSwKICAiY29uc3VsdGFzIjogWwogICAgewogICAgICAiY29uc3VsdGEiOiAiSnV6Z2FkbyBkZSBGYW1pbGlhIFRvbcOpIC8gQ3VtcGxpbWllbnRvIC8gQW1idWxhdG9yaW8iLAogICAgICAiZXN0YWRvIjogIlZBTElEQURBIiwKICAgICAgInBhZ2luYXMiOiAyLAogICAgICAicmVnaXN0cm9zIjogMiwKICAgICAgInZlcmlmaWNhY2lvbiI6ICJ2ZXJpZmljYWNpb24gMDAxLmpzb24iLAogICAgICAic2VsZWNjaW9uIjogewogICAgICAgICJ0cmlidW5hbCI6ICI0OSIsCiAgICAgICAgInRhYiI6ICJDdW1wbGltaWVudG8iLAogICAgICAgICJtb2RhbGl0eSI6ICIyIiwKICAgICAgICAicmVwb3J0IjogbnVsbCwKICAgICAgICAic2NyZWVuIjogInNlZ3VpbWllbnRvIiwKICAgICAgICAic3RhdGUiOiAiMSIsCiAgICAgICAgIm1vbnRoIjogbnVsbCwKICAgICAgICAieWVhciI6IG51bGwsCiAgICAgICAgInN0YXJ0IjogbnVsbCwKICAgICAgICAiZW5kIjogbnVsbCwKICAgICAgICAidHJpYnVuYWxfbm9tYnJlIjogIkp1emdhZG8gZGUgRmFtaWxpYSBUb23DqSIsCiAgICAgICAgIm1vZGFsaWRhZF9ub21icmUiOiAiQW1idWxhdG9yaW8iLAogICAgICAgICJmZWNoYV9kZXNjYXJnYSI6ICIyMDI2LTEwLTA4VDEzOjAwOjAwLjEyMzQ1Ni0wMzowMCIKICAgICAgfQogICAgfQogIF0sCiAgImZpbHRyb19mZWNoYSI6IG51bGwsCiAgIm90cm9zX2ZpbHRyb3MiOiAidG9kb3MgbG9zIHJlZ2lzdHJvcyIKfQ==",
+   "verificacion 001.json": "ewogICJmZWNoYV9ob3JhIjogIjIwMjYtMTAtMDhUMTM6MDA6MDAuMTIzNDU2LTAzOjAwIiwKICAiY2FzbyI6ICJUNDktQ3VtcGxpbWllbnRvLU0yIiwKICAiY29uc3VsdGEiOiAiSnV6Z2FkbyBkZSBGYW1pbGlhIFRvbcOpIC8gQ3VtcGxpbWllbnRvIC8gQW1idWxhdG9yaW8iLAogICJlc3RhZG8iOiAiVkFMSURBREEiLAogICJwYWdpbmFzX2VzcGVyYWRhcyI6IDIsCiAgInBhZ2luYXNfdmVyaWZpY2FkYXMiOiAyLAogICJhcmNoaXZvcyI6IFsKICAgIHsKICAgICAgInBhZ2luYSI6IDEsCiAgICAgICJ0b3RhbCI6IDIsCiAgICAgICJhcmNoaXZvIjogIkNVTVAgQW1idWxhdG9yaW8gSmRvIEZhbWlsaWEgVG9tZSAxLnhscyIsCiAgICAgICJieXRlcyI6IDI1MSwKICAgICAgInNoYTI1NiI6ICIxNjg3NmZhNzdmOTYzMjNjZTdlMTM1MGVkODI2NjdiYWIwYzUxNzk0NjFkMzJmZDM2MmRjNDVmM2EyMDM4MzAyIiwKICAgICAgImZvcm1hdG8iOiAiSFRNTC10YWJ1bGFyLWNvbi1leHRlbnNpb24teGxzIiwKICAgICAgInJlZ2lzdHJvcyI6IDEsCiAgICAgICJjb2luY2lkZV9jb25faHRtbCI6IHRydWUsCiAgICAgICJlc3RhZG8iOiAiT0siLAogICAgICAidmluY3Vsb3NfaW5ncmVzbyI6IFsKICAgICAgICB7CiAgICAgICAgICAicml0IjogIlgtMS0yMDk5IiwKICAgICAgICAgICJub21icmUiOiAiUGVyc29uYSBGaWN0aWNpYSAxIiwKICAgICAgICAgICJydXQiOiAiMTExMTExMTEtMCIsCiAgICAgICAgICAicHJvZ3JhbWEiOiAiUFJNIENlbnRybyBGaWN0aWNpbyIsCiAgICAgICAgICAidHJpYnVuYWxfY29kaWdvIjogIjQ5IiwKICAgICAgICAgICJjYXVzYV9pZCI6ICIxMDEiLAogICAgICAgICAgImluZ3Jlc29faWQiOiAiMjAxIiwKICAgICAgICAgICJldGFwYSI6ICIzIiwKICAgICAgICAgICJhbnRpZ3VvIjogIjAiLAogICAgICAgICAgInRpcG9fcG9wdXAiOiAiMTIiLAogICAgICAgICAgInBlcnNvbmFfaWQiOiAiMzAwIiwKICAgICAgICAgICJjZW50cm9faWQiOiAiNDAwIiwKICAgICAgICAgICJjYWxlbmRhcmlvIjogWwogICAgICAgICAgICAiMTAxIiwKICAgICAgICAgICAgIjMwMCIsCiAgICAgICAgICAgICI0OSIsCiAgICAgICAgICAgICI0MDAiLAogICAgICAgICAgICAiWC0xLTIwOTkiLAogICAgICAgICAgICAiMDEvMDMvMjAyNiIsCiAgICAgICAgICAgICJQUk0gQ2VudHJvIEZpY3RpY2lvIiwKICAgICAgICAgICAgIlBlcnNvbmEgRmljdGljaWEgMSIsCiAgICAgICAgICAgICI2IE1lc2VzIiwKICAgICAgICAgICAgIjMgTWVzZXMiLAogICAgICAgICAgICAiMjAxIiwKICAgICAgICAgICAgIjEiCiAgICAgICAgICBdCiAgICAgICAgfQogICAgICBdCiAgICB9LAogICAgewogICAgICAicGFnaW5hIjogMiwKICAgICAgInRvdGFsIjogMiwKICAgICAgImFyY2hpdm8iOiAiQ1VNUCBBbWJ1bGF0b3JpbyBKZG8gRmFtaWxpYSBUb21lIDIueGxzIiwKICAgICAgImJ5dGVzIjogMjUxLAogICAgICAic2hhMjU2IjogImZhMmUxMTYzNGJmNDU4YTlmMzIzYWVhN2FkYWNhNTA4OTIwNDRjNzFhN2Q3NmUxNzVhY2E2NzBlY2FiOTcxZDMiLAogICAgICAiZm9ybWF0byI6ICJIVE1MLXRhYnVsYXItY29uLWV4dGVuc2lvbi14bHMiLAogICAgICAicmVnaXN0cm9zIjogMSwKICAgICAgImNvaW5jaWRlX2Nvbl9odG1sIjogdHJ1ZSwKICAgICAgImVzdGFkbyI6ICJPSyIsCiAgICAgICJ2aW5jdWxvc19pbmdyZXNvIjogWwogICAgICAgIHsKICAgICAgICAgICJyaXQiOiAiWC0yLTIwOTkiLAogICAgICAgICAgIm5vbWJyZSI6ICJQZXJzb25hIEZpY3RpY2lhIDIiLAogICAgICAgICAgInJ1dCI6ICIxMTExMTExMi0wIiwKICAgICAgICAgICJwcm9ncmFtYSI6ICJQUk0gQ2VudHJvIENhbWJpYWRvIiwKICAgICAgICAgICJ0cmlidW5hbF9jb2RpZ28iOiAiNDkiLAogICAgICAgICAgImNhdXNhX2lkIjogIjEwMiIsCiAgICAgICAgICAiaW5ncmVzb19pZCI6ICIyMDIiLAogICAgICAgICAgImV0YXBhIjogIjMiLAogICAgICAgICAgImFudGlndW8iOiAiMCIsCiAgICAgICAgICAidGlwb19wb3B1cCI6ICIxMiIsCiAgICAgICAgICAicGVyc29uYV9pZCI6ICIzMDAiLAogICAgICAgICAgImNlbnRyb19pZCI6ICI0MDAiLAogICAgICAgICAgImNhbGVuZGFyaW8iOiBbCiAgICAgICAgICAgICIxMDIiLAogICAgICAgICAgICAiMzAwIiwKICAgICAgICAgICAgIjQ5IiwKICAgICAgICAgICAgIjQwMCIsCiAgICAgICAgICAgICJYLTItMjA5OSIsCiAgICAgICAgICAgICIwMS8wMy8yMDI2IiwKICAgICAgICAgICAgIlBSTSBDZW50cm8gQ2FtYmlhZG8iLAogICAgICAgICAgICAiUGVyc29uYSBGaWN0aWNpYSAyIiwKICAgICAgICAgICAgIjYgTWVzZXMiLAogICAgICAgICAgICAiMyBNZXNlcyIsCiAgICAgICAgICAgICIyMDIiLAogICAgICAgICAgICAiMSIKICAgICAgICAgIF0KICAgICAgICB9CiAgICAgIF0KICAgIH0KICBdLAogICJzZWxlY2Npb24iOiB7CiAgICAidHJpYnVuYWwiOiAiNDkiLAogICAgInRhYiI6ICJDdW1wbGltaWVudG8iLAogICAgIm1vZGFsaXR5IjogIjIiLAogICAgInJlcG9ydCI6IG51bGwsCiAgICAic2NyZWVuIjogInNlZ3VpbWllbnRvIiwKICAgICJzdGF0ZSI6ICIxIiwKICAgICJtb250aCI6IG51bGwsCiAgICAieWVhciI6IG51bGwsCiAgICAic3RhcnQiOiBudWxsLAogICAgImVuZCI6IG51bGwsCiAgICAidHJpYnVuYWxfbm9tYnJlIjogIkp1emdhZG8gZGUgRmFtaWxpYSBUb23DqSIsCiAgICAibW9kYWxpZGFkX25vbWJyZSI6ICJBbWJ1bGF0b3JpbyIsCiAgICAiZmVjaGFfZGVzY2FyZ2EiOiAiMjAyNi0xMC0wOFQxMzowMDowMC4xMjM0NTYtMDM6MDAiCiAgfSwKICAiZmlsdHJvX2ZlY2hhIjogbnVsbAp9"
+  }
+ },
+ "casos": [
+  {
+   "escenario": "mismo_paquete_con_ediciones",
+   "previo": "listados",
+   "nuevo": "listados",
+   "ediciones": [
+    [
+     "49-101-201|CUMPLIMIENTO|2",
+     "OBSERVACION",
+     "Observación local uno"
+    ],
+    [
+     "49-102-202|CUMPLIMIENTO|2",
+     "RES",
+     "PC_IE"
+    ]
+   ],
+   "respuestas": {},
+   "resultado": "ok",
+   "continuada": true,
+   "emparejadas": [
+    "49-101-201|CUMPLIMIENTO|2",
+    "49-102-202|CUMPLIMIENTO|2"
+   ],
+   "revision": {
+    "49-101-201|CUMPLIMIENTO|2": {
+     "OBSERVACION": "Observación local uno",
+     "RES": ""
+    },
+    "49-102-202|CUMPLIMIENTO|2": {
+     "OBSERVACION": "",
+     "RES": "PC_IE"
+    }
+   },
+   "cambios": {
+    "49-101-201|CUMPLIMIENTO|2": "SIN_CAMBIO",
+    "49-102-202|CUMPLIMIENTO|2": "SIN_CAMBIO"
+   },
+   "campos": {},
+   "egresados": []
+  },
+  {
+   "escenario": "identidad_perdida_sin_ediciones",
+   "previo": "listados",
+   "nuevo": "modificado",
+   "ediciones": [],
+   "respuestas": {},
+   "resultado": "ok",
+   "continuada": true,
+   "emparejadas": [
+    "49-101-201|CUMPLIMIENTO|2"
+   ],
+   "revision": {
+    "49-101-201|CUMPLIMIENTO|2": {
+     "OBSERVACION": "",
+     "RES": ""
+    },
+    "fisica|CUMP Ambulatorio Jdo Familia Tome 2.xls#2|CUMPLIMIENTO": {
+     "OBSERVACION": "",
+     "RES": ""
+    }
+   },
+   "cambios": {
+    "49-101-201|CUMPLIMIENTO|2": "SIN_CAMBIO",
+    "fisica|CUMP Ambulatorio Jdo Familia Tome 2.xls#2|CUMPLIMIENTO": "NUEVO"
+   },
+   "campos": {},
+   "egresados": [
+    "49-102-202|CUMPLIMIENTO|2"
+   ]
+  },
+  {
+   "escenario": "identidad_perdida_con_edicion",
+   "previo": "listados",
+   "nuevo": "modificado",
+   "ediciones": [
+    [
+     "49-102-202|CUMPLIMIENTO|2",
+     "OBSERVACION",
+     "Observación local dos"
+    ]
+   ],
+   "respuestas": {},
+   "resultado": "conflictos",
+   "conflictos": [
+    [
+     "missing:49-102-202|CUMPLIMIENTO|2",
+     "Registro anterior no presente.",
+     false,
+     []
+    ]
+   ]
+  },
+  {
+   "escenario": "identidad_perdida_reiniciada",
+   "previo": "listados",
+   "nuevo": "modificado",
+   "ediciones": [
+    [
+     "49-102-202|CUMPLIMIENTO|2",
+     "OBSERVACION",
+     "Observación local dos"
+    ]
+   ],
+   "respuestas": {
+    "missing:49-102-202|CUMPLIMIENTO|2": "RESET"
+   },
+   "resultado": "ok",
+   "continuada": true,
+   "emparejadas": [
+    "49-101-201|CUMPLIMIENTO|2"
+   ],
+   "revision": {
+    "49-101-201|CUMPLIMIENTO|2": {
+     "OBSERVACION": "",
+     "RES": ""
+    },
+    "fisica|CUMP Ambulatorio Jdo Familia Tome 2.xls#2|CUMPLIMIENTO": {
+     "OBSERVACION": "",
+     "RES": ""
+    }
+   },
+   "cambios": {
+    "49-101-201|CUMPLIMIENTO|2": "SIN_CAMBIO",
+    "fisica|CUMP Ambulatorio Jdo Familia Tome 2.xls#2|CUMPLIMIENTO": "NUEVO"
+   },
+   "campos": {},
+   "egresados": [
+    "49-102-202|CUMPLIMIENTO|2"
+   ]
+  },
+  {
+   "escenario": "fuente_cambiada_sin_ediciones",
+   "previo": "listados",
+   "nuevo": "programa_cambiado",
+   "ediciones": [],
+   "respuestas": {},
+   "resultado": "ok",
+   "continuada": true,
+   "emparejadas": [
+    "49-101-201|CUMPLIMIENTO|2"
+   ],
+   "revision": {
+    "49-101-201|CUMPLIMIENTO|2": {
+     "OBSERVACION": "",
+     "RES": ""
+    },
+    "49-102-202|CUMPLIMIENTO|2": {
+     "OBSERVACION": "",
+     "RES": ""
+    }
+   },
+   "cambios": {
+    "49-101-201|CUMPLIMIENTO|2": "SIN_CAMBIO",
+    "49-102-202|CUMPLIMIENTO|2": "NUEVO"
+   },
+   "campos": {},
+   "egresados": [
+    "49-102-202|CUMPLIMIENTO|2"
+   ]
+  },
+  {
+   "escenario": "edicion_en_fila_sin_cambios",
+   "previo": "listados",
+   "nuevo": "programa_cambiado",
+   "ediciones": [
+    [
+     "49-101-201|CUMPLIMIENTO|2",
+     "OBSERVACION",
+     "Observación local uno"
+    ]
+   ],
+   "respuestas": {},
+   "resultado": "ok",
+   "continuada": true,
+   "emparejadas": [
+    "49-101-201|CUMPLIMIENTO|2"
+   ],
+   "revision": {
+    "49-101-201|CUMPLIMIENTO|2": {
+     "OBSERVACION": "Observación local uno",
+     "RES": ""
+    },
+    "49-102-202|CUMPLIMIENTO|2": {
+     "OBSERVACION": "",
+     "RES": ""
+    }
+   },
+   "cambios": {
+    "49-101-201|CUMPLIMIENTO|2": "SIN_CAMBIO",
+    "49-102-202|CUMPLIMIENTO|2": "NUEVO"
+   },
+   "campos": {},
+   "egresados": [
+    "49-102-202|CUMPLIMIENTO|2"
+   ]
+  },
+  {
+   "escenario": "fuente_cambiada_con_edicion",
+   "previo": "listados",
+   "nuevo": "programa_cambiado",
+   "ediciones": [
+    [
+     "49-102-202|CUMPLIMIENTO|2",
+     "OBSERVACION",
+     "Observación local dos"
+    ]
+   ],
+   "respuestas": {},
+   "resultado": "conflictos",
+   "conflictos": [
+    [
+     "49-102-202|CUMPLIMIENTO|2",
+     "Datos fuente modificados.",
+     true,
+     [
+      "Derivación"
+     ]
+    ]
+   ]
+  },
+  {
+   "escenario": "conflicto_conservar",
+   "previo": "listados",
+   "nuevo": "programa_cambiado",
+   "ediciones": [
+    [
+     "49-102-202|CUMPLIMIENTO|2",
+     "OBSERVACION",
+     "Observación local dos"
+    ]
+   ],
+   "respuestas": {
+    "49-102-202|CUMPLIMIENTO|2": "KEEP"
+   },
+   "resultado": "ok",
+   "continuada": true,
+   "emparejadas": [
+    "49-101-201|CUMPLIMIENTO|2",
+    "49-102-202|CUMPLIMIENTO|2"
+   ],
+   "revision": {
+    "49-101-201|CUMPLIMIENTO|2": {
+     "OBSERVACION": "",
+     "RES": ""
+    },
+    "49-102-202|CUMPLIMIENTO|2": {
+     "OBSERVACION": "Observación local dos",
+     "RES": ""
+    }
+   },
+   "cambios": {
+    "49-101-201|CUMPLIMIENTO|2": "SIN_CAMBIO",
+    "49-102-202|CUMPLIMIENTO|2": "CAMBIO_FUENTE"
+   },
+   "campos": {
+    "49-102-202|CUMPLIMIENTO|2": [
+     "Derivación"
+    ]
+   },
+   "egresados": []
+  },
+  {
+   "escenario": "conflicto_reiniciar",
+   "previo": "listados",
+   "nuevo": "programa_cambiado",
+   "ediciones": [
+    [
+     "49-102-202|CUMPLIMIENTO|2",
+     "OBSERVACION",
+     "Observación local dos"
+    ],
+    [
+     "49-102-202|CUMPLIMIENTO|2",
+     "RES",
+     "PC_IE"
+    ]
+   ],
+   "respuestas": {
+    "49-102-202|CUMPLIMIENTO|2": "RESET"
+   },
+   "resultado": "ok",
+   "continuada": true,
+   "emparejadas": [
+    "49-101-201|CUMPLIMIENTO|2"
+   ],
+   "revision": {
+    "49-101-201|CUMPLIMIENTO|2": {
+     "OBSERVACION": "",
+     "RES": ""
+    },
+    "49-102-202|CUMPLIMIENTO|2": {
+     "OBSERVACION": "",
+     "RES": ""
+    }
+   },
+   "cambios": {
+    "49-101-201|CUMPLIMIENTO|2": "SIN_CAMBIO",
+    "49-102-202|CUMPLIMIENTO|2": "NUEVO"
+   },
+   "campos": {},
+   "egresados": [
+    "49-102-202|CUMPLIMIENTO|2"
+   ]
+  },
+  {
+   "escenario": "respuesta_ajena",
+   "previo": "listados",
+   "nuevo": "listados",
+   "ediciones": [
+    [
+     "49-101-201|CUMPLIMIENTO|2",
+     "OBSERVACION",
+     "Observación local uno"
+    ]
+   ],
+   "respuestas": {
+    "49-102-202|CUMPLIMIENTO|2": "RESET"
+   },
+   "resultado": "error",
+   "error": "Respuesta de conciliación ajena o innecesaria; trabajo anterior intacto."
+  },
+  {
+   "escenario": "faltante_editado",
+   "previo": "listados_dos_pestanas",
+   "nuevo": "listados",
+   "ediciones": [
+    [
+     "49-101-201|CUMPLIMIENTO|1",
+     "OBSERVACION",
+     "Observación local"
+    ]
+   ],
+   "respuestas": {},
+   "resultado": "conflictos",
+   "conflictos": [
+    [
+     "missing:49-101-201|CUMPLIMIENTO|1",
+     "Registro anterior no presente.",
+     false,
+     []
+    ]
+   ]
+  },
+  {
+   "escenario": "faltante_reiniciado",
+   "previo": "listados_dos_pestanas",
+   "nuevo": "listados",
+   "ediciones": [
+    [
+     "49-101-201|CUMPLIMIENTO|1",
+     "OBSERVACION",
+     "Observación local"
+    ]
+   ],
+   "respuestas": {
+    "missing:49-101-201|CUMPLIMIENTO|1": "RESET"
+   },
+   "resultado": "ok",
+   "continuada": true,
+   "emparejadas": [
+    "49-101-201|CUMPLIMIENTO|2",
+    "49-102-202|CUMPLIMIENTO|2"
+   ],
+   "revision": {
+    "49-101-201|CUMPLIMIENTO|2": {
+     "OBSERVACION": "",
+     "RES": ""
+    },
+    "49-102-202|CUMPLIMIENTO|2": {
+     "OBSERVACION": "",
+     "RES": ""
+    }
+   },
+   "cambios": {
+    "49-101-201|CUMPLIMIENTO|2": "SIN_CAMBIO",
+    "49-102-202|CUMPLIMIENTO|2": "SIN_CAMBIO"
+   },
+   "campos": {},
+   "egresados": [
+    "49-101-201|CUMPLIMIENTO|1",
+    "49-101-201|ESPERA|1",
+    "49-101-201|ESPERA|2",
+    "49-102-202|CUMPLIMIENTO|1",
+    "49-102-202|ESPERA|1",
+    "49-102-202|ESPERA|2"
+   ]
+  }
+ ]
+}

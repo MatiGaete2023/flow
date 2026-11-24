@@ -1,6 +1,6 @@
 # Estado de Flow Rust
 
-Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q7 el producto de Trabajo sin consolidado (E-W1) y E-A1. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
+Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q7 el producto de Trabajo sin consolidado (E-W1) E-A1, E-U1 y E-A2. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
 
 - Aplicación: `app/` (`flow_rust.exe`). Referencia funcional: rama `flow-python`.
 - Rama única: `estudio/paridad-python-rust-20261119`.
@@ -28,7 +28,7 @@ Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q
 - **F04 Contexto de causa — Sí.** `oraculo_historia`, 2.585 casos; paquete C con ZIP de Flow Python.
 - **F05 Otro programa, reiteración y Escritos — Sí.** Cronología con 181 casos, R5 parcial y consignación con deshacer.
 - **F06 Revisión de bitácoras — Sí.** V1 y V2 contrastadas en la CI.
-- **F07 Importación de paquetes — Parcial.** Falta la conciliación entre capturas.
+- **F07 Importación de paquetes — Sí.** Conciliación entre capturas (E-A2): las decisiones pasan a las filas con la misma identidad remota, los conflictos se resuelven en pantalla y Trabajo muestra qué filas son nuevas, tienen fuente o reglas cambiadas y cuáles egresaron. Contrastado con Python en 12 casos. Trabajo concilia la etapa abierta; las decisiones de otras etapas del paquete anterior no se trasladan.
 - **F08 Edición y revisión — Parcial.** Sin cotejo de edición masiva, deshacer ni selecciones ocultas.
 - **F09 Sesión y vigencia — Parcial.** Faltan recibos, vigencia y recuperación.
 - **F10 Excel preservado — Parcial.** «Actualizar desde Excel» (E-A1) trae la revisión de la copia (observación, `FECHA_OBS`, `TT`, `CC`, `RES`) con asociación por identidad y conflictos que se resuelven en pantalla, contrastado con Python en 12 casos. Falta recalcular cuando se editan columnas de origen en Excel y combinar `NURUS_DECISIONES`. Sin libro base (paquete sin consolidado), el producto sale como libro nuevo con la estructura de `FAE_RES` (hojas de servicio, todas las columnas del registro, las 10 columnas de revisión en el orden del usuario y `NURUS_CLAVE_INGRESO`); la copia preservada sigue exigiendo Windows y Excel de escritorio.

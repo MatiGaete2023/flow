@@ -99,6 +99,8 @@ pub struct Trabajo {
     pub paquete: Option<PaqueteTrabajo>,
     /// Última copia de Excel que se guardó desde este trabajo (para «Actualizar desde Excel»).
     pub copia: Option<PathBuf>,
+    /// Comparación con la captura anterior cuando este trabajo continúa otro (`capture_changes`).
+    pub cambios: Option<crate::conciliar::Cambios>,
     /// P1: otros programas consignados por el funcionario, por identificador de registro del paquete. Se guardan en
     /// la sesión y sobreviven al recálculo; la propuesta deja de repetir esa constancia.
     pub consignaciones: BTreeMap<String, Vec<String>>,

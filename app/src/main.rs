@@ -5,6 +5,7 @@
 
 mod anon;
 mod captura_trabajo;
+mod conciliar;
 mod config;
 mod copia_excel;
 mod demo;

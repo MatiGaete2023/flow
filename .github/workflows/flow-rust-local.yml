@@ -165,7 +165,7 @@ jobs:
           PYTHONUTF8: '1'
         run: |
           $lista = '${{ steps.cambios.outputs.lista }}'
-          foreach ($o in @('a78', 'lecturas', 'vinculos', 'bitacoras', 'lote', 'paquete', 'excel', 'resultados', 'sync')) {
+          foreach ($o in @('a78', 'lecturas', 'vinculos', 'bitacoras', 'lote', 'paquete', 'excel', 'resultados', 'sync', 'conciliacion')) {
             if ($lista -ne 'todos' -and (($lista -split ',') -notcontains $o)) { continue }
             $salida = Join-Path $env:RUNNER_TEMP "$o.json"
             if ($o -eq 'vinculos') {

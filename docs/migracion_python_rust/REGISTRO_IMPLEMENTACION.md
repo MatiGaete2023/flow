@@ -16,6 +16,13 @@ Una entrada por encargo, de diez líneas como máximo, la más reciente arriba:
 
 No se copian salidas completas ni listas de mutaciones: la prueba afirma sus conteos y la CI del commit es la evidencia.
 
+## 2026-11-24 · E-A2: conciliación entre capturas
+
+- Cambió: `conciliar.rs` (nuevo), `ui.rs` (abrir un paquete con otro abierto, diálogo «Conciliar capturas», resumen «Frente a la captura anterior» y etiqueta por fila), `Trabajo.cambios` y el oráculo `app/qa/generar_conciliacion.py` → `app/tests/datos/conciliacion.json`, agregado a la regeneración de la CI.
+- Acredita: `CONCILIACION: 12/12` contra `capture_reconciliation.reconcile` (mismo paquete, identidad perdida, fuente cambiada con y sin edición, conservar, reiniciar, respuesta ajena, faltantes); `oraculo_de_conciliacion_detecta_alteraciones`; flujo `un_paquete_nuevo_conserva_decisiones_y_pide_respuesta_ante_un_conflicto`; `tools/probar_app.sh todo`: 64 y 54 pruebas, 0 fallos.
+- Diferencias declaradas: las de [PLAN.md](PLAN.md).
+- Pendiente: CI de Windows.
+
 ## 2026-11-24 · E-U1: Abrir en Trabajo (D-9)
 
 - Cambió: `descargador_ui.rs` (botón «Abrir en Trabajo» bajo el paquete creado y `paquete_para_trabajo`) y `ui.rs` (abre el paquete y pasa a Trabajo).
