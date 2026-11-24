@@ -428,7 +428,7 @@ mod pruebas {
             let r = creado(&h);
             assert_eq!(r.len(), 1, "{boton}");
             assert_eq!(r[0].extension().and_then(|e| e.to_str()), Some(extension), "{boton}");
-            assert!(r[0].is_file() && r[0].starts_with(f.lote("carga", 1)), "{boton}: {}", r[0].display());
+            assert!(r[0].is_file() && r[0].starts_with(f.lote("carga", 1).canonicalize().unwrap()), "{boton}: {}", r[0].display());
         }
         // Un lote con vencimientos sí da su calendario.
         h.state_mut().carpeta = f.lote("calendario_informes", 0).display().to_string();
