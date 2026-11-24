@@ -1,0 +1,59 @@
+# Verificación de la aplicación vigente en Windows
+
+Desde la raíz del repositorio, fijar los corpus. En la carpeta local que proviene del ZIP, asignar esas dos variables a las mismas subcarpetas de la copia de Flow Python.
+
+```powershell
+$env:FLOW_CASOS = (Resolve-Path rust/casos).Path
+$env:FLOW_FIXTURES = (Resolve-Path rust/crates/flow-tabular/tests/datos).Path
+$env:FLOW_REFERENCIA = (Get-Location).Path
+cargo test --manifest-path app/Cargo.toml --locked --all-targets
+cargo run --manifest-path app/Cargo.toml --locked --example verificar_paquete -- contracts/csmp_capture_v1/fixtures/completa.zip
+cargo run --manifest-path app/Cargo.toml --locked --example verificar_paquete -- contracts/csmp_capture_v1/fixtures/parcial.zip
+cargo build --manifest-path app/Cargo.toml --locked --bin flow_rust
+python app/qa/capturar_windows.py --exe app/target/debug/flow_rust.exe --salida app/target/capturas
+```
+
+`FLOW_CASOS` y `FLOW_FIXTURES` son necesarios para ejecutar los contrastes. Las pruebas históricas del workspace están en el [commit anterior](https://github.com/MatiGaete2023/flow/blob/ed6a0e43f8efa0856e0294af92ac8e0317c69df7/docs/migracion_python_rust/VERIFICACION.md).
+
+El flujo de GitHub Actions «Flow Rust local · Windows» compila `app/` y genera `Flow_Rust_Local_Capturas_Windows`. Comparar las cinco imágenes con [Diseño](../DISENO.md). El modo captura ajusta la escala si la pantalla virtual es menor que la ventana inicial de 1440 × 900 puntos. Mantener fecha y diferencias de escala separadas de cambios en jerarquía y contenido. Registrar el SHA, el entorno y cada vista revisada.
+
+El ejemplo `verificar_paquete` valida la estructura, las tablas y la procedencia. `FLOW_REFERENCIA` habilita las pruebas sintéticas del lector, de apertura desde Trabajo y de exportación de bitácoras. En una carpeta local proveniente de ZIP, apunta esa variable a la raíz de la copia de Flow Python.
+
+Para repetir el contraste V2 con el mismo ZIP P2, usar Python 3.12 y un checkout de Flow Python en `afc4d12ae1adabf21049c809c0d0d8f747e2e306`. Sustituir la carpeta de ejemplo por la ruta de esa referencia.
+
+```powershell
+python -m pip install --require-hashes -r referencia-python-ci/requirements/windows-py312.lock
+cargo build --manifest-path app/Cargo.toml --locked --example revisar_bitacoras
+python app/qa/contrastar_bitacoras.py app/target/debug/examples/revisar_bitacoras.exe referencia-python-ci
+```
+
+Para cotejar los ZIP V1 que genera el productor nativo histórico, ejecutar en el checkout completo de la rama:
+
+```powershell
+$env:FLOW_RUST_REVISAR_V1 = (Resolve-Path app/target/debug/examples/revisar_bitacoras.exe).Path
+cargo test --manifest-path rust/Cargo.toml --locked -p flow ventana_completa_de_sitfa_acredita_ausencia_y_activa_el_motor -- --nocapture
+```
+
+Los casos de contexto de Trabajo usan ZIP sintéticos generados con el productor de Flow Python. Comprueban asociaciones por causa, persona e ingreso, discordancias, cronología, el próximo informe de Cumplimiento, CAL-03, reiteración, otros programas vigentes y el folio de Espera con correo DCE.
+
+```powershell
+$e3 = Join-Path (Resolve-Path app/target).Path ("contexto-e3-" + [guid]::NewGuid())
+python app/qa/generar_contexto_e3.py referencia-python-ci $e3
+$env:FLOW_E3_PAQUETE = (Resolve-Path (Join-Path $e3 "contexto-e3.zip")).Path
+cargo test --manifest-path app/Cargo.toml --locked --bin flow_rust contexto_e3_del_exportador_python
+```
+
+Con `FLOW_E3_PAQUETE` configurado, `app/qa/capturar_windows.py` agrega `trabajo-contexto.png`. La captura abre el ZIP ficticio al corte del caso y muestra la cronología en el detalle de Trabajo.
+
+## Biblioteca en Linux (sin escritorio)
+
+`app/` usa eframe sin backend X11/Wayland y solo compila el binario para Windows. Para revisar desde Linux:
+
+```bash
+rustup target add x86_64-pc-windows-gnu
+cargo check --manifest-path app/Cargo.toml --locked --target x86_64-pc-windows-gnu --all-targets
+```
+
+Las pruebas de `captura` y `descargador` corren en un crate aislado que enlaza `app/src/lib.rs`, `captura*` y `descargador*` con las dependencias de `app/Cargo.toml` salvo eframe, egui y rfd, y copia `app/Cargo.lock`. Ejecutar `cargo test --lib` y `cargo clippy --lib --tests -- -D warnings` en ese crate.
+
+Las pruebas del motor (`motor::` y `motor::historia::`, incluidos `oraculo_python` y `oraculo_historia`) corren en Linux con un binario aislado. Crear `.aislado/` en la raíz del repositorio, excluido en `.git/info/exclude`. Debe tener un `Cargo.toml` con `name = "flow_rust"`, `[lib] path = "../app/src/lib.rs"` y las dependencias de `app/Cargo.toml` sin eframe, egui, egui_extras ni rfd. Agregar una copia de `app/Cargo.lock` y enlaces en `src/` a `captura_trabajo`, `config`, `lectura`, `motor` y `util`, cada uno como `.rs` y carpeta. `src/main.rs` declara esos cinco módulos y un `main` vacío. Luego ejecutar `FLOW_CASOS=$PWD/../rust/casos cargo test --bin motor_aislado`.

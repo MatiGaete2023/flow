@@ -1,15 +1,15 @@
 # Flow Rust · migración funcional
 
-La aplicación Rust vigente de esta rama es [`app/`](app/), el proyecto de escritorio eframe/egui de la carpeta local Flow Rust. Su entrada es `app/src/main.rs` y el ejecutable es `flow_rust.exe`. La referencia funcional es [`flow-python`](https://github.com/MatiGaete2023/flow/tree/flow-python).
+La aplicación Rust vigente de esta rama es [`app/`](app/), el proyecto de escritorio eframe/egui. Su entrada es `app/src/main.rs` y el ejecutable es `flow_rust.exe`. La referencia funcional es [`flow-python`](https://github.com/MatiGaete2023/flow/tree/flow-python).
 
 | Documento | Contenido |
 |---|---|
-| [Plan vigente](docs/migracion_python_rust/PLAN.md) | Orden de implementación y contratos que se deben conservar |
-| [Diseño vigente](docs/migracion_python_rust/DISENO.md) | Pantallas, componentes visuales y comprobación del ejecutable correcto |
-| [Matriz de paridad](docs/migracion_python_rust/MATRIZ.md) | Las 28 capacidades y su situación en `app/` |
-| [Registro y continuidad](docs/migracion_python_rust/REGISTRO_IMPLEMENTACION.md) | Evidencia transferible y siguiente cambio |
-| [Verificación](docs/migracion_python_rust/VERIFICACION.md) | Pruebas y comandos reproducibles |
-| [Encargos para IA](docs/migracion_python_rust/ENCARGOS_IA.md) | Estado auditado de las pruebas, encargos abiertos, reglas de entrega y decisiones del usuario |
-| [Plan de pruebas](docs/migracion_python_rust/PLAN_PRUEBAS.md) | Paquetes de prueba para ejecutar por separado (23-nov-2026) |
+| [Estado](docs/migracion_python_rust/ESTADO.md) | Qué hay en `app/`, qué falta, siguiente paso y pendientes del usuario |
+| [Plan](docs/migracion_python_rust/PLAN.md) | Encargos abiertos por tramo y decisiones del usuario |
+| [Verificación](docs/migracion_python_rust/VERIFICACION.md) | Comandos de prueba por nivel |
+| [Diseño](docs/migracion_python_rust/DISENO.md) | Pantallas y referencia visual |
+| [Registro](docs/migracion_python_rust/REGISTRO_IMPLEMENTACION.md) | Entradas cortas por encargo desde el 24-nov-2026 |
+| [Revisión del 24-nov](docs/migracion_python_rust/REVISION_20261124.md) | Fundamento de la consolidación y propuestas pendientes |
+| [Histórico](docs/migracion_python_rust/historico/) | Registro, encargos, matriz e informes anteriores |
 
-El [cierre del estudio anterior](https://github.com/MatiGaete2023/flow/tree/ed6a0e43f8efa0856e0294af92ac8e0317c69df7) conserva las pruebas y los cambios de `rust/crates/`. Se pueden trasladar comportamientos y casos sintéticos que coincidan con Python. Sus resultados y su artefacto visual corresponden a esa implementación.
+El workspace `rust/` es la implementación anterior. Aporta crates y oráculos reutilizables, y los datos de prueba `rust/casos`.

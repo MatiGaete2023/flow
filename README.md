@@ -1,42 +1,19 @@
-# Flow Rust · Asistente CSMP
+# Flow Rust · Asistente CSMP y Descargador
 
-La aplicación vigente de esta rama es el escritorio de la carpeta local **Flow Rust**. Compila [`app/`](app/) y ejecuta `flow_rust.exe`.
+La aplicación vigente de esta rama es el escritorio [`app/`](app/), que compila `flow_rust.exe`.
 
 ```powershell
 cargo run --manifest-path app/Cargo.toml --locked
 ```
 
-[Plan y continuidad](MIGRACION_RUST.md) · [Capturas del diseño local](docs/migracion_python_rust/DISENO.md) · [Verificación Windows](docs/migracion_python_rust/VERIFICACION.md)
+- [Estado y siguiente paso](docs/migracion_python_rust/ESTADO.md)
+- [Plan y decisiones](docs/migracion_python_rust/PLAN.md)
+- [Verificación](docs/migracion_python_rust/VERIFICACION.md)
+- [Diseño](docs/migracion_python_rust/DISENO.md)
+- [Índice de la migración](MIGRACION_RUST.md)
+
+No envía correos (solo borradores con CC fijo), no escribe en RUS ni en SATURNO y solo usa datos sintéticos en el repositorio.
 
 ## Referencia funcional Python
 
-Herramientas de uso personal para el seguimiento de medidas (CSMP): el **Descargador** lee SITFA con la sesión
-del usuario y entrega Excel, bitácoras y un ZIP; el **Asistente** (Windows) lee ese Excel o ZIP, aplica las reglas
-tradicionales de Laja, Mulchén y Tomé y prepara Excel, nóminas, Word y borradores de Outlook.
-No envía correos, no escribe en RUS/SATURNO y no navega SITFA.
-
-### Instalar
-
-- **Asistente:** `Instalar_CSMP.bat` (Python 3.12 primero; dependencias fijadas con hash) y luego `Abrir_CSMP.bat`,
-  o el instalador `Instalar_CSMP_<versión>_Windows.exe` de la CI.
-- **Descargador:** `descargador/Iniciar.cmd`, o el EXE `SITFA_Descargador` de la CI; cargar su extensión de la
-  misma versión en `chrome://extensions`. Ver [descargador/README.md](descargador/README.md).
-- **Desarrollo (Linux):** `pip install --require-hashes -r requirements/linux-py312.lock` y
-  `pip install --no-deps --no-build-isolation -e .`; verificación: `python tools/verificar_wp.py`.
-
-### Flujo
-
-1. **Descargador:** consulta, lee bitácoras y crea el paquete ZIP para el Asistente.
-2. **Trabajo:** importar el ZIP o el Excel, revisar observaciones (Ctrl+O elige un Excel; Ctrl+K busca acciones).
-3. **Correos:** preparar borradores con CC fijo `ucc_concepcion@pjud.cl`; también **Correo libre**.
-4. **Resoluciones:** preparar, revisar y generar proyectos Word; también **Word manual**.
-5. **Resultados:** productos, incidencias y lo que falta para terminarlos.
-
-Todo se guarda localmente en Windows.
-
-### Documentos
-
-- [PLAN_VIGENTE.md](PLAN_VIGENTE.md): esencia, prohibiciones, prioridades y decisiones del usuario.
-- [CONTINUAR.md](CONTINUAR.md) y [estado de la implementación](docs/implementacion/ESTADO.json).
-- [Índice de documentación vigente](docs/INDICE_DOCUMENTACION.md) · [historial](docs/HISTORIAL.md).
-- [Manual ilustrado del Descargador](docs/manual_descargador_2_7_4/README.md).
+El código Python de esta rama (`src/`, `descargador/`, `descargador_lite/`, `anonimizador/`, `META4_Bitacoras/`, `tests/`, `tools/`) se conserva porque los oráculos de `app/qa/` y `rust/oraculo/` lo ejecutan. Su documentación, manuales, plan y pruebas completas están en la rama [`flow-python`](https://github.com/MatiGaete2023/flow/tree/flow-python); aquí se retiraron el 24 de noviembre de 2026. Las pruebas Python que leen esos documentos se ejecutan en `flow-python`, no en esta rama.

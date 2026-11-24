@@ -1,1 +1,0 @@
-OK: GET de lectura, identidad, modalidad, pestaña y duplicados; ningún guardado RUS.

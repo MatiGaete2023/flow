@@ -15,4 +15,4 @@ Informado por el usuario en la conversación, sin datos personales. Instalador: 
 | A-09 | PASA | Sin duplicados |
 | A-11 | PASA | Resoluciones |
 | A-02, A-06, A-10, A-12..A-15, N-01 | NO_INFORMADO | |
-| C-01 | FALLA | «Última obs. centro» vacía en ingresos con observaciones; ver [WP-99](../implementacion/wp/WP-99.md) |
+| C-01 | FALLA | «Última obs. centro» vacía en ingresos con observaciones; ver [WP-99](https://github.com/MatiGaete2023/flow/blob/flow-python/docs/implementacion/wp/WP-99.md) |

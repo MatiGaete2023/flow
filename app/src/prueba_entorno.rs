@@ -7,7 +7,7 @@ use std::ffi::OsString;
 /// Devuelve la variable o falla con el mensaje único de las pruebas condicionadas.
 pub(crate) fn requerida(nombre: &str) -> OsString {
     std::env::var_os(nombre).unwrap_or_else(|| {
-        panic!("{nombre} es obligatoria para esta prueba (ver docs/migracion_python_rust/REGISTRO_IMPLEMENTACION.md)")
+        panic!("{nombre} es obligatoria para esta prueba (ver docs/migracion_python_rust/VERIFICACION.md)")
     })
 }
 
