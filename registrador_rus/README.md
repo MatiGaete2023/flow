@@ -37,3 +37,5 @@ P7b/P8-sim: controlador de simulación sin red y adaptador ficticio cerrado. `py
 P7c: UI ficticia: `python -m registrador_rus.app.main` desde raíz. Prueba GUI (requiere pantalla Tk): `python -m unittest discover -s registrador_rus/tests -p test_demo_ui.py -v`. Ocho operaciones ficticias y puente opcional. Extensión de demostración en extension/, sin acceso a RUS. `python -m registrador_rus.tests.run_browser_demo` verifica puente y DOM mediante transporte de prueba; carga MV3 nativa pendiente por política del Chromium de desarrollo. El ack nunca autoriza ni registra.
 
 P9-sim: esquemas de configuración y puente, prueba de 400 operaciones ficticias y batería transversal. Ver [Manual de demostración](docs/OPERACION_Y_RECUPERACION.md) y [Evidencia sintética](docs/EVIDENCIA_SINTETICA.md). No hay escritor real ni release productiva.
+
+Revisión de lote: app/batch_review.py comprueba selección inmutable y genera resumen categórico del diario ficticio. Prueba focalizada: `python -m unittest discover -s registrador_rus/tests -p test_batch_review.py -v`. No integrada a UI ni autoridad real.
