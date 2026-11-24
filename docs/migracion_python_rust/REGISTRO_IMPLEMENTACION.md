@@ -16,6 +16,13 @@ Una entrada por encargo, de diez líneas como máximo, la más reciente arriba:
 
 No se copian salidas completas ni listas de mutaciones: la prueba afirma sus conteos y la CI del commit es la evidencia.
 
+## 2026-11-24 · E-A3: recibos, vigencia y recuperación
+
+- Cambió: `preparados.rs` (nuevo), `ui.rs` (sellado al preparar, aviso «desactualizado», bloqueo al guardar, borradores repetidos, recibos, guardado y recuperación de la sesión), `conciliar.rs` (los productos pasan a la captura nueva marcados `REVISAR_CAPTURA_ANTERIOR`), `productos.rs` y `trabajo.rs` (`Preparados` en la sesión).
+- Acredita: `un_producto_desactualizado_no_se_guarda_y_uno_repetido_tampoco` (editar un registro desactualiza el producto, no se guarda, volver a prepararlo sí, el mismo contenido no se duplica, la sesión recupera productos y recibos) y la extensión del flujo de conciliación; `tools/probar_app.sh todo`: 64 y 55 pruebas, 0 fallos.
+- Diferencias declaradas: huellas propias de Rust; sin estado «incierto» ante un fallo de Outlook.
+- Pendiente: CI de Windows.
+
 ## 2026-11-24 · E-A2: conciliación entre capturas
 
 - Cambió: `conciliar.rs` (nuevo), `ui.rs` (abrir un paquete con otro abierto, diálogo «Conciliar capturas», resumen «Frente a la captura anterior» y etiqueta por fila), `Trabajo.cambios` y el oráculo `app/qa/generar_conciliacion.py` → `app/tests/datos/conciliacion.json`, agregado a la regeneración de la CI.

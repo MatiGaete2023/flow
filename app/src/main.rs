@@ -14,6 +14,7 @@ mod descargador_ui;
 mod lectura;
 mod motor;
 mod producto_excel;
+mod preparados;
 mod productos;
 mod revision_ui;
 mod sincronizar;

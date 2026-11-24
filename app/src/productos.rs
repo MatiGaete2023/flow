@@ -156,14 +156,14 @@ pub fn excel_observaciones(w: &Trabajo, dir: &Path) -> Result<PathBuf, String> {
 
 // ── correos ──────────────────────────────────────────────────────────────────
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct Nomina {
     pub headers: Vec<String>,
     pub rows: Vec<Vec<String>>,
     pub incluir: Vec<bool>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
 pub struct Borrador {
     pub kind: String,
     pub titulo: String,
@@ -178,6 +178,9 @@ pub struct Borrador {
     pub registros: Vec<usize>,
     pub guardado: Option<PathBuf>,
     pub incluir: bool,
+    /// Huella de lo que el borrador lee (`product_state.fingerprint`); vacía si aún no se selló.
+    #[serde(default)]
+    pub dependencia: String,
 }
 
 fn render_vars(t: &str, vars: &BTreeMap<&str, String>) -> String {
@@ -288,6 +291,7 @@ pub fn preparar_borradores(w: &Trabajo, cfg: &Config, o: &OpcionesCorreo) -> Vec
                 registros: items.iter().map(|(i, _)| *i).collect(),
                 guardado: None,
                 incluir: true,
+                dependencia: String::new(),
             });
         }
     }
@@ -321,6 +325,7 @@ pub fn preparar_borradores(w: &Trabajo, cfg: &Config, o: &OpcionesCorreo) -> Vec
                 registros: ids,
                 guardado: None,
                 incluir: true,
+                dependencia: String::new(),
             });
         }
     }
@@ -364,6 +369,7 @@ pub fn borrador_plantilla(w: Option<&Trabajo>, cfg: &Config, kind: &str, filas: 
         registros: filas.to_vec(),
         guardado: None,
         incluir: true,
+        dependencia: String::new(),
     })
 }
 
@@ -500,7 +506,7 @@ pub const TIPOS: [(&str, &str); 3] = [
     ("NOMENCL", "NOMENCL — Nomenclatura"),
 ];
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct Proyecto {
     pub tribunal: String,
     pub tribunal_clave: String,
@@ -509,6 +515,9 @@ pub struct Proyecto {
     pub vars: BTreeMap<String, String>,
     pub registros: Vec<usize>,
     pub incluir: bool,
+    /// Huella de lo que el proyecto lee; vacía si aún no se selló.
+    #[serde(default)]
+    pub dependencia: String,
 }
 
 pub fn res_tipo(txt: &str) -> Option<&'static str> {
@@ -643,6 +652,7 @@ pub fn preparar_proyectos(w: &Trabajo, cfg: &Config, solo_seleccionadas: bool) -
                 vars,
                 registros: ids,
                 incluir: true,
+                dependencia: String::new(),
             }
         })
         .collect()
@@ -974,7 +984,7 @@ mod pruebas_word {
         ] {
             vars.insert(k.to_string(), v.to_string());
         }
-        Proyecto { tribunal: trib.into(), tribunal_clave: trib.into(), rit: "P-1-2099".into(), tipo: tipo.into(), vars, registros: vec![0], incluir: true }
+        Proyecto { tribunal: trib.into(), tribunal_clave: trib.into(), rit: "P-1-2099".into(), tipo: tipo.into(), vars, registros: vec![0], incluir: true, dependencia: String::new() }
     }
 
     fn documento(datos: &[u8]) -> String {

@@ -79,6 +79,8 @@ pub struct App {
     cache_key: String,
     cache: Vec<usize>,
     revision: u64,
+    /// Qué productos preparados quedaron desactualizados (se recalcula cuando cambia `revision`).
+    obsoletos: (u64, Vec<bool>, Vec<bool>),
     trib_cache: (u64, Vec<String>),
     // correos
     modalidades: [bool; 4],
@@ -135,6 +137,7 @@ impl App {
             cache_key: String::new(),
             cache: vec![],
             revision: 0,
+            obsoletos: (u64::MAX, Vec::new(), Vec::new()),
             trib_cache: (u64::MAX, vec![]),
             modalidades: [true; 4],
             tribunales_sel: BTreeSet::new(),
@@ -256,11 +259,13 @@ impl App {
 
     /// Pasa a `nuevo` las decisiones del trabajo abierto; con conflictos, pide las respuestas antes de cambiar nada.
     fn conciliar_con_anterior(&mut self, mut nuevo: Trabajo, respuestas: crate::conciliar::Respuestas) {
-        let Some(previo) = self.work.take() else {
+        let Some(mut previo) = self.work.take() else {
             self.work = Some(nuevo);
             self.activar_trabajo();
             return;
         };
+        previo.preparados.borradores = self.borradores.clone();
+        previo.preparados.proyectos = self.proyectos.clone();
         match crate::conciliar::conciliar(&mut nuevo, &previo, &respuestas, &self.cfg) {
             Ok(r) => {
                 let mut texto = String::new();
@@ -345,23 +350,55 @@ impl App {
             self.aviso(aviso, false);
         }
         self.sel = (n > 0).then_some(0);
-        self.borradores.clear();
-        self.bsel = None;
-        self.proyectos.clear();
-        self.psel = None;
+        let (preparados_b, preparados_p) = self.work.as_ref().map(|w| (w.preparados.borradores.clone(), w.preparados.proyectos.clone())).unwrap_or_default();
+        self.borradores = preparados_b;
+        self.bsel = (!self.borradores.is_empty()).then_some(0);
+        self.proyectos = preparados_p;
+        self.psel = (!self.proyectos.is_empty()).then_some(0);
         self.vista = Vista::Trabajo;
         self.revision_bitacoras = None;
         self.revision += 1;
         self.aviso(format!("{n} registros de {modo} analizados en {ms} ms."), false);
     }
 
+    /// Guarda la sesión con los productos preparados de ahora (correos y proyectos).
+    fn guardar_sesion_actual(&mut self) -> Result<(), String> {
+        let Some(w) = self.work.as_mut() else { return Ok(()) };
+        w.preparados.borradores = self.borradores.clone();
+        w.preparados.proyectos = self.proyectos.clone();
+        w.guardar_sesion()
+    }
+
+    /// Sella con su dependencia los productos recién preparados.
+    fn sellar_preparados(&mut self) {
+        let Some(w) = self.work.as_ref() else { return };
+        for b in self.borradores.iter_mut().filter(|b| b.dependencia.is_empty()) {
+            crate::preparados::sellar_borrador(w, &self.cfg, b);
+        }
+        for p in self.proyectos.iter_mut().filter(|p| p.dependencia.is_empty()) {
+            crate::preparados::sellar_proyecto(w, &self.cfg, p);
+        }
+    }
+
+    /// Recalcula, solo cuando algo cambió, qué productos preparados dejaron de estar vigentes.
+    fn actualizar_obsoletos(&mut self) {
+        let largo = (self.borradores.len(), self.proyectos.len());
+        if self.obsoletos.0 == self.revision && (self.obsoletos.1.len(), self.obsoletos.2.len()) == largo {
+            return;
+        }
+        let Some(w) = self.work.as_ref() else { return };
+        self.obsoletos = (
+            self.revision,
+            self.borradores.iter().map(|b| crate::preparados::borrador_obsoleto(w, &self.cfg, b)).collect(),
+            self.proyectos.iter().map(|p| crate::preparados::proyecto_obsoleto(w, &self.cfg, p)).collect(),
+        );
+    }
+
     fn guardar_pendiente(&mut self) -> bool {
         if self.sucio.is_some() && self.screenshot.is_none() {
-            if let Some(w) = &self.work {
-                if let Err(e) = w.guardar_sesion() {
-                    self.aviso(format!("No se pudo guardar la sesión: {e}"), true);
-                    return false;
-                }
+            if let Err(e) = self.guardar_sesion_actual() {
+                self.aviso(format!("No se pudo guardar la sesión: {e}"), true);
+                return false;
             }
             self.sucio = None;
         }
@@ -399,6 +436,7 @@ impl App {
                     self.proyectos = productos::preparar_proyectos(w, &self.cfg, false);
                     self.psel = if self.proyectos.is_empty() { None } else { Some(0) };
                 }
+                self.sellar_preparados();
                 self.vista = Vista::Resoluciones;
             }
             "cumplimiento" => self.cargar_ejemplo(Mode::Cumplimiento),
@@ -602,10 +640,8 @@ impl App {
         // Guardado automático de decisiones
         if let Some(t) = self.sucio {
             if t.elapsed().as_millis() > 800 && self.screenshot.is_none() {
-                if let Some(w) = &self.work {
-                    if let Err(e) = w.guardar_sesion() {
-                        self.aviso(format!("No se pudo guardar la sesión: {e}"), true);
-                    }
+                if let Err(e) = self.guardar_sesion_actual() {
+                    self.aviso(format!("No se pudo guardar la sesión: {e}"), true);
                 }
                 self.sucio = None;
             } else {
@@ -857,6 +893,8 @@ impl App {
         let seleccionadas = w.reemplazar_seleccion(filas);
         let Some(&primera) = seleccionadas.first() else { return false; };
         if self.screenshot.is_none() {
+            w.preparados.borradores = self.borradores.clone();
+            w.preparados.proyectos = self.proyectos.clone();
             if let Err(error) = w.guardar_sesion() {
                 for (r, marcada) in w.registros.iter_mut().zip(anteriores) {
                     r.seleccionada = marcada;
@@ -1492,6 +1530,8 @@ impl App {
     // ── Correos ──────────────────────────────────────────────────────────────
 
     fn v_correos(&mut self, ui: &mut egui::Ui, p: &Pal) {
+        self.actualizar_obsoletos();
+        let obsoletos_b = self.obsoletos.1.clone();
         theme::titulo(ui, p, "Correos", "Borradores listos para revisar: en Borradores de Outlook o como .eml sin enviar. Nunca se envían. Todos llevan CC a ucc_concepcion@pjud.cl.");
         let mut accion: Option<&'static str> = None;
         let mut guardar_destino = false;
@@ -1603,6 +1643,9 @@ impl App {
                                 }
                                 if b.guardado.is_some() {
                                     ui.label(RichText::new("✔ guardado").size(12.0).color(p.green));
+                                }
+                                if obsoletos_b.get(j).copied().unwrap_or(false) {
+                                    ui.label(RichText::new("⚠ desactualizado").size(12.0).color(p.amber)).on_hover_text(crate::preparados::OBSOLETO);
                                 }
                             });
                         }));
@@ -1729,6 +1772,7 @@ impl App {
         let n = out.len();
         let sin = out.iter().filter(|b| b.para.trim().is_empty()).count();
         self.borradores = out;
+        self.sellar_preparados();
         self.bsel = if n > 0 { Some(0) } else { None };
         if n == 0 {
             self.aviso("No hay correos para las modalidades y tribunales elegidos.", false);
@@ -1774,6 +1818,7 @@ impl App {
         if let Some(b) = productos::borrador_plantilla(self.work.as_ref(), &self.cfg, kind, &filas) {
             self.borradores.push(b);
             self.bsel = Some(self.borradores.len() - 1);
+            self.sellar_preparados();
         }
     }
 
@@ -1781,6 +1826,7 @@ impl App {
         let Some(dir) = self.carpeta_productos() else { return };
         let dir = dir.join(format!("Borradores_{}", chrono::Local::now().format("%Y-%m-%d")));
         let mut ok = 0;
+        let mut duplicados = 0;
         let mut errores = Vec::new();
         let idx: Vec<usize> = match solo {
             Some(j) => vec![j],
@@ -1788,12 +1834,26 @@ impl App {
         };
         let outlook = self.cfg.destino_outlook;
         for j in idx {
+            let huella = crate::preparados::huella_borrador(&self.borradores[j]);
+            if let Some(w) = self.work.as_ref() {
+                if crate::preparados::borrador_obsoleto(w, &self.cfg, &self.borradores[j]) {
+                    errores.push(format!("«{}»: {}", self.borradores[j].titulo, crate::preparados::OBSOLETO));
+                    continue;
+                }
+                // Un borrador con el mismo contenido que otro ya guardado no se crea dos veces.
+                if let Some(r) = w.preparados.guardado(&huella) {
+                    self.borradores[j].guardado = Some(PathBuf::from(&r.ruta));
+                    duplicados += 1;
+                    continue;
+                }
+            }
+            let mut guardado: Option<(String, bool)> = None;
             if outlook {
                 match productos::guardar_outlook(&self.borradores[j]) {
                     Ok(()) => {
                         self.borradores[j].guardado = Some(PathBuf::from("Outlook: Borradores"));
+                        guardado = Some(("Outlook: Borradores".into(), true));
                         ok += 1;
-                        continue;
                     }
                     // Si Outlook falla, queda una copia .eml de respaldo y se sigue con los demás.
                     Err(e) => errores.push(e),
@@ -1803,11 +1863,19 @@ impl App {
                 Ok(pth) => {
                     if !outlook {
                         self.borradores[j].guardado = Some(pth.clone());
+                        guardado = Some((pth.display().to_string(), true));
                         ok += 1;
                     }
                     self.registrar(pth, if outlook { "Copia .eml de respaldo" } else { "Borrador de correo" });
                 }
                 Err(e) => errores.push(e),
+            }
+            if let Some((ruta, _)) = guardado {
+                if let Some(w) = self.work.as_mut() {
+                    let ids = crate::preparados::ids_registros(w, &self.borradores[j].registros);
+                    w.preparados.anotar("borrador", "creado", ids, &huella, &ruta);
+                }
+                self.marcar_sucio();
             }
         }
         let sin_destinatario = (0..self.borradores.len())
@@ -1816,11 +1884,14 @@ impl App {
         if sin_destinatario > 0 {
             self.aviso(format!("{sin_destinatario} borrador(es) quedaron sin destinatario: complétalo en Outlook antes de enviar."), false);
         }
+        if duplicados > 0 {
+            self.aviso(format!("{duplicados} borrador(es) ya estaban guardados con el mismo contenido y no se crearon de nuevo."), false);
+        }
         if ok > 0 && outlook {
             self.aviso(format!("{ok} borradores guardados en Borradores de Outlook. Revísalos y envíalos tú."), false);
         } else if ok > 0 {
             self.aviso(format!("{ok} borradores guardados en {}. Ábrelos con Outlook, revísalos y envíalos tú.", dir.display()), false);
-        } else if errores.is_empty() {
+        } else if errores.is_empty() && duplicados == 0 {
             self.aviso("No hay borradores pendientes marcados (los ya guardados se omiten).", false);
         }
         for e in errores {
@@ -1831,6 +1902,8 @@ impl App {
     // ── Resoluciones ─────────────────────────────────────────────────────────
 
     fn v_resoluciones(&mut self, ui: &mut egui::Ui, p: &Pal) {
+        self.actualizar_obsoletos();
+        let obsoletos_p = self.obsoletos.2.clone();
         theme::titulo(ui, p, "Resoluciones", "Un proyecto por tribunal, RIT y tipo con todas las personas de la causa. Lo que falte queda como [COMPLETAR …] en el documento.");
         let mut preparar = false;
         let mut generar = false;
@@ -1861,15 +1934,28 @@ impl App {
             if let Some(w) = &self.work {
                 self.proyectos = productos::preparar_proyectos(w, &self.cfg, self.solo_sel_res);
                 self.psel = if self.proyectos.is_empty() { None } else { Some(0) };
+                self.sellar_preparados();
                 let n = self.proyectos.len();
                 self.aviso(if n == 0 { "No hay registros que pidan proyecto (PC_IE, PC_INFO o NOMENCL).".to_string() } else { format!("{n} proyectos preparados.") }, false);
             }
         }
         if generar {
-            if let Some(dir) = self.carpeta_productos() {
+            let desactualizados: Vec<String> = match self.work.as_ref() {
+                Some(w) => self.proyectos.iter().filter(|p| p.incluir && crate::preparados::proyecto_obsoleto(w, &self.cfg, p)).map(|p| format!("{} · {}", p.tipo, p.rit)).collect(),
+                None => Vec::new(),
+            };
+            if !desactualizados.is_empty() {
+                self.aviso(format!("{} Proyectos: {}.", crate::preparados::OBSOLETO, desactualizados.join(", ")), true);
+            } else if let Some(dir) = self.carpeta_productos() {
                 match productos::generar_word(&self.proyectos, &dir, self.corte()) {
                     Ok(pth) => {
                         self.aviso(format!("Proyectos generados con la matriz de cada tribunal (un Word por proyecto) en {}", pth.display()), false);
+                        if let Some(w) = self.work.as_mut() {
+                            let registros: Vec<usize> = self.proyectos.iter().filter(|p| p.incluir).flat_map(|p| p.registros.clone()).collect();
+                            let ids = crate::preparados::ids_registros(w, &registros);
+                            w.preparados.anotar("word", "creado", ids, "", &pth.display().to_string());
+                        }
+                        self.marcar_sucio();
                         self.registrar(pth, "Proyectos de resolución (Word)");
                     }
                     Err(e) => self.aviso(e, true),
@@ -1900,6 +1986,9 @@ impl App {
                             });
                             ui.add(egui::Label::new(RichText::new(&pr.vars["NOMBRE"]).size(12.5)).truncate());
                             ui.label(RichText::new(&pr.tribunal).size(12.0).color(p.muted));
+                            if obsoletos_p.get(j).copied().unwrap_or(false) {
+                                ui.label(RichText::new("⚠ desactualizado").size(12.0).color(p.amber)).on_hover_text(crate::preparados::OBSOLETO);
+                            }
                             let faltan: Vec<&str> = pr
                                 .vars
                                 .iter()
@@ -2710,6 +2799,9 @@ mod pruebas_conciliacion {
         w.registros[0].editada = Some("Edición de la primera".into());
         w.registros[1].editada = Some("Edición de la segunda".into());
         w.registros[1].revisada = true;
+        w.registros.iter_mut().for_each(|r| r.seleccionada = true);
+        app.preparar_tipo("cumplimiento");
+        assert_eq!(app.borradores.len(), 1);
         // La segunda persona cambió de programa: conflicto; el trabajo abierto sigue intacto y nada se aplicó.
         app.abrir(nuevo);
         let d = app.conciliacion.as_ref().expect("diálogo de conciliación");
@@ -2729,8 +2821,110 @@ mod pruebas_conciliacion {
         assert_eq!(w.registros[1].editada.as_deref(), Some("Edición de la segunda"));
         assert!(w.registros[1].revisada && !w.registros[0].revisada);
         assert!(w.value(&w.registros[1], "programa").contains("Cambiado"), "la fuente nueva debe verse");
+        // El correo preparado con la captura anterior sigue ahí, pero hay que prepararlo de nuevo.
+        assert_eq!(app.borradores.len(), 1);
+        assert_eq!(app.borradores[0].dependencia, "REVISAR_CAPTURA_ANTERIOR");
+        assert!(crate::preparados::borrador_obsoleto(w, &app.cfg, &app.borradores[0]));
         let resumen = w.cambios.as_ref().unwrap().resumen();
         assert_eq!((resumen["Fuente"], resumen["Sin cambio"], resumen["Egresados"]), (1, 1, 0));
+        let _ = std::fs::remove_dir_all(&base);
+    }
+}
+
+/// E-A3: huella, vigencia, recibos y recuperación de los correos y proyectos preparados.
+#[cfg(test)]
+mod pruebas_vigencia {
+    use super::*;
+    use base64::Engine;
+    use flow_rust::descargador::paquete::{self, Opciones};
+    use serde_json::Value;
+
+    fn abrir_listados(base: &std::path::Path) -> App {
+        let paquetes: Value = serde_json::from_str(include_str!("../tests/datos/paquete.json")).unwrap();
+        let lote = paquetes["escenarios"].as_array().unwrap().iter().find(|e| e["escenario"] == "listados").unwrap()["lote"].clone();
+        let carpeta = base.join("lote").join(lote["carpeta"].as_str().unwrap());
+        if !carpeta.exists() {
+            for (ruta, b64) in lote["archivos"].as_object().unwrap() {
+                let ruta = carpeta.join(ruta);
+                std::fs::create_dir_all(ruta.parent().unwrap()).unwrap();
+                std::fs::write(ruta, base64::engine::general_purpose::STANDARD.decode(b64.as_str().unwrap()).unwrap()).unwrap();
+            }
+        }
+        let zip = base.join("captura.zip");
+        if !zip.exists() {
+            paquete::exportar_con(&[carpeta], &zip, &Opciones::default()).unwrap();
+        }
+        let mut app = App::new(None);
+        app.cfg = Config::default();
+        app.cfg.carpeta_productos = base.join("productos").display().to_string();
+        app.corte_txt = "08/10/2026".into();
+        app.abrir(zip);
+        app
+    }
+
+    fn emls(base: &std::path::Path) -> usize {
+        let Ok(dirs) = std::fs::read_dir(base.join("productos")) else { return 0 };
+        dirs.flatten()
+            .filter(|d| d.file_name().to_string_lossy().starts_with("Borradores_"))
+            .flat_map(|d| std::fs::read_dir(d.path()).into_iter().flatten().flatten())
+            .filter(|f| f.path().extension().is_some_and(|e| e == "eml"))
+            .count()
+    }
+
+    #[test]
+    fn un_producto_desactualizado_no_se_guarda_y_uno_repetido_tampoco() {
+        let (_candado, perfil) = crate::prueba_entorno::perfil_aislado();
+        let base = perfil.join("vigencia");
+        let _ = std::fs::remove_dir_all(&base);
+        let mut app = abrir_listados(&base);
+        app.work.as_mut().unwrap().registros.iter_mut().for_each(|r| r.seleccionada = true);
+        app.preparar_tipo("cumplimiento");
+        assert_eq!(app.borradores.len(), 1);
+        assert!(!app.borradores[0].dependencia.is_empty(), "el borrador preparado queda sellado");
+        let w = app.work.as_ref().unwrap();
+        assert!(!crate::preparados::borrador_obsoleto(w, &app.cfg, &app.borradores[0]));
+        // Cambiar un registro del que depende lo deja desactualizado; editar su propio texto no.
+        app.borradores[0].cuerpo.push_str(" (editado)");
+        assert!(!crate::preparados::borrador_obsoleto(app.work.as_ref().unwrap(), &app.cfg, &app.borradores[0]));
+        app.work.as_mut().unwrap().registros[0].editada = Some("Observación cambiada después de preparar".into());
+        app.marcar_sucio();
+        app.actualizar_obsoletos();
+        assert_eq!(app.obsoletos.1, [true]);
+        app.guardar_borradores(None);
+        assert_eq!(emls(&base), 0, "un borrador desactualizado no se guarda");
+        assert!(app.borradores[0].guardado.is_none());
+        assert!(app.avisos.iter().any(|(t, error, _)| *error && t.contains("necesita actualizarse")), "{:?}", app.avisos);
+        // Prepararlo de nuevo lo deja vigente y se guarda con su recibo.
+        app.borradores.clear();
+        app.preparar_tipo("cumplimiento");
+        app.guardar_borradores(None);
+        assert_eq!(emls(&base), 1);
+        let ruta = app.borradores[0].guardado.clone().expect("guardado");
+        let recibos = &app.work.as_ref().unwrap().preparados.recibos;
+        assert_eq!(recibos.len(), 1);
+        let r = recibos.values().next().unwrap();
+        assert_eq!((r.tipo.as_str(), r.estado.as_str(), r.ruta.as_str()), ("borrador", "creado", ruta.display().to_string().as_str()));
+        assert_eq!(r.registros.len(), 2);
+        // El mismo contenido no se crea dos veces aunque el borrador se haya vuelto a preparar.
+        app.borradores.clear();
+        app.preparar_tipo("cumplimiento");
+        app.guardar_borradores(None);
+        assert_eq!(emls(&base), 1, "no debe haber un segundo .eml idéntico");
+        assert_eq!(app.work.as_ref().unwrap().preparados.recibos.len(), 1);
+        assert!(app.avisos.iter().any(|(t, _, _)| t.contains("ya estaban guardados")), "{:?}", app.avisos);
+        // Con otro texto es otro borrador y sí se guarda.
+        app.borradores.clear();
+        app.preparar_tipo("cumplimiento");
+        app.borradores[0].cuerpo.push_str("\nPárrafo nuevo.");
+        app.guardar_borradores(None);
+        assert_eq!(emls(&base), 2);
+        // La sesión conserva los productos y sus recibos.
+        app.guardar_sesion_actual().unwrap();
+        let reabierta = abrir_listados(&base);
+        assert_eq!(reabierta.borradores.len(), 1);
+        assert!(reabierta.borradores[0].guardado.is_some());
+        assert_eq!(reabierta.work.as_ref().unwrap().preparados.recibos.len(), 2);
+        assert!(!crate::preparados::borrador_obsoleto(reabierta.work.as_ref().unwrap(), &reabierta.cfg, &reabierta.borradores[0]));
         let _ = std::fs::remove_dir_all(&base);
     }
 }

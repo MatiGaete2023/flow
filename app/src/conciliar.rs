@@ -281,6 +281,35 @@ pub fn conciliar(nuevo: &mut Trabajo, previo: &Trabajo, respuestas: &Respuestas,
     if mismos_bytes {
         nuevo.copia = previo.copia.clone();
     }
+    // Correos y proyectos preparados con la captura anterior siguen disponibles, pero marcados para revisar: dependen de
+    // registros que pueden haber cambiado (`REVISAR_CAPTURA_ANTERIOR`).
+    if continuada {
+        let a_nuevo: BTreeMap<usize, usize> = mapa.iter().map(|(&n, &i)| (i, n)).collect();
+        let remapear = |registros: &[usize]| -> Option<Vec<usize>> { registros.iter().map(|i| a_nuevo.get(i).copied()).collect() };
+        let sello = |dep: &str| if mismos_bytes { dep.to_string() } else { "REVISAR_CAPTURA_ANTERIOR".to_string() };
+        for b in &previo.preparados.borradores {
+            if let Some(registros) = remapear(&b.registros) {
+                let mut b = b.clone();
+                b.registros = registros;
+                b.dependencia = sello(&b.dependencia);
+                nuevo.preparados.borradores.push(b);
+            }
+        }
+        for p in &previo.preparados.proyectos {
+            if let Some(registros) = remapear(&p.registros) {
+                let mut p = p.clone();
+                p.registros = registros;
+                p.dependencia = sello(&p.dependencia);
+                nuevo.preparados.proyectos.push(p);
+            }
+        }
+        let renombre: BTreeMap<&String, &String> = mapa.iter().map(|(&n, &i)| (&ids_viejos[i], &ids_nuevos[n])).collect();
+        for (clave, r) in &previo.preparados.recibos {
+            let mut r = r.clone();
+            r.registros = r.registros.iter().map(|id| renombre.get(id).map_or(id.clone(), |n| (*n).clone())).collect();
+            nuevo.preparados.recibos.insert(clave.clone(), r);
+        }
+    }
     // `capture_changes.compare`.
     let mut cambios = Cambios::default();
     for (n, id) in ids_nuevos.iter().enumerate() {

@@ -101,6 +101,8 @@ pub struct Trabajo {
     pub copia: Option<PathBuf>,
     /// Comparación con la captura anterior cuando este trabajo continúa otro (`capture_changes`).
     pub cambios: Option<crate::conciliar::Cambios>,
+    /// Correos y proyectos preparados, con sus recibos, para recuperarlos al reabrir la sesión.
+    pub preparados: crate::preparados::Preparados,
     /// P1: otros programas consignados por el funcionario, por identificador de registro del paquete. Se guardan en
     /// la sesión y sobreviven al recálculo; la propuesta deja de repetir esa constancia.
     pub consignaciones: BTreeMap<String, Vec<String>>,
@@ -133,6 +135,8 @@ struct Sesion {
     decisiones: BTreeMap<usize, Decision>,
     #[serde(default)]
     consignaciones: BTreeMap<String, Vec<String>>,
+    #[serde(default)]
+    preparados: crate::preparados::Preparados,
 }
 
 impl Trabajo {
@@ -437,6 +441,7 @@ impl Trabajo {
             corte: self.corte.map(|c| c.to_string()).unwrap_or_default(),
             guardada: chrono::Local::now().to_rfc3339(),
             consignaciones: self.consignaciones.clone(),
+            preparados: self.preparados.clone(),
             ..Default::default()
         };
         for r in &self.registros {
@@ -468,6 +473,7 @@ impl Trabajo {
             return;
         };
         self.consignaciones = s.consignaciones;
+        self.preparados = s.preparados;
         let mut n = 0;
         for r in &mut self.registros {
             if let Some(d) = s.decisiones.get(&r.fila_excel) {
