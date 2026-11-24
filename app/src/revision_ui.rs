@@ -350,15 +350,9 @@ fn exportar(
                 None
             }
             Err(aviso) => {
-                let (mut encabezados, mut datos) = crate::productos::tabla_observaciones(
-                    w,
-                    lecturas.iter().map(|r| &w.registros[r.indice]),
-                );
-                encabezados.extend(COLUMNAS_BITACORA.map(str::to_owned));
-                for (fila, lectura) in datos.iter_mut().zip(&lecturas) {
-                    fila.extend([lectura.clasificacion.into(), lectura.motivo.into()]);
-                }
-                crate::productos::escribir_xlsx(&[(w.mode().label(), encabezados, datos)], &excel)?;
+                let indices: Vec<usize> = lecturas.iter().map(|r| r.indice).collect();
+                let extras: Vec<Vec<String>> = lecturas.iter().map(|l| vec![l.clasificacion.into(), l.motivo.into()]).collect();
+                crate::producto_excel::exportar_subconjunto(w, &indices, &COLUMNAS_BITACORA, &extras, &excel)?;
                 Some(aviso)
             }
         };

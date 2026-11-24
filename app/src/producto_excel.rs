@@ -282,58 +282,22 @@ pub fn filas(w: &Trabajo) -> Vec<Vec<Cell>> {
         .collect()
 }
 
-/// Escribe el producto y devuelve su ruta (nueva: nunca reemplaza un archivo).
-pub fn exportar(w: &Trabajo, dir: &Path, motivo: Option<&str>) -> Result<PathBuf, String> {
-    std::fs::create_dir_all(dir).map_err(|e| format!("No se pudo crear la carpeta de productos: {e}"))?;
-    let fecha = w.corte.map(|c| c.format("%Y-%m-%d").to_string()).unwrap_or_default();
-    let ruta = nueva_ruta(dir, &format!("Observaciones_{}_{}", w.mode().label().to_uppercase(), fecha), "xlsx");
-    let hoja = w.mode().label().to_uppercase();
-    let h = encabezados(w);
-    let datos = filas(w);
-    let etapa_revisada = w.registros.iter().any(revisada);
+/// Hoja de datos del producto: encabezado, valores con su tipo, filtro, panel congelado, columnas ocultas, lista de
+/// RES y las filas excluidas sombreadas. La usan el producto general y la revisión de bitácoras.
+pub fn hoja_datos(nombre: &str, h: &[String], datos: &[Vec<Cell>], excluidas: &[bool]) -> Result<Worksheet, String> {
     let f = Formatos::nuevos();
-    let mut libro = Workbook::new();
-
-    // NURUS_LISTAS y NURUS_TRAZABILIDAD: ocultas, como en la copia preservada.
-    let mut listas = Worksheet::new();
-    listas.set_name("NURUS_LISTAS").map_err(err)?;
-    escribir_texto(&mut listas, 0, 0, "TIPOS_RES")?;
-    for (i, t) in TIPOS_RES.iter().enumerate() {
-        escribir_texto(&mut listas, i as u32 + 1, 0, t)?;
-    }
-    listas.set_hidden(true);
-    libro.push_worksheet(listas);
-
-    let mut traza = Worksheet::new();
-    traza.set_name("NURUS_TRAZABILIDAD").map_err(err)?;
-    for (i, fila) in trazabilidad(w, &hoja, etapa_revisada, motivo).iter().enumerate() {
-        for (c, v) in fila.iter().enumerate() {
-            escribir_texto(&mut traza, i as u32, c as u16, v)?;
-        }
-    }
-    traza.set_hidden(true);
-    libro.push_worksheet(traza);
-
-    let fu = fuentes(w, &hoja);
-    for (nombre, filas) in [("Resumen", fu.resumen), ("SITFA_ARCHIVOS", fu.archivos)] {
-        let mut ws = Worksheet::new();
-        ws.set_name(nombre).map_err(err)?;
-        tabla(&mut ws, &f, &filas, true)?;
-        libro.push_worksheet(ws);
-    }
-
     let mut ws = Worksheet::new();
-    ws.set_name(&hoja).map_err(err)?;
+    ws.set_name(nombre).map_err(err)?;
     for (c, t) in h.iter().enumerate() {
         ws.write_string_with_format(0, c as u16, t, &f.cabecera).map_err(err)?;
         let ancho = datos.iter().map(|r| r.get(c).map_or(0, |v| v.display().chars().count())).max().unwrap_or(0).max(t.chars().count());
         ws.set_column_width(c as u16, (ancho as f64 + 2.0).clamp(10.0, 70.0)).map_err(err)?;
     }
-    for (i, (fila, r)) in datos.iter().zip(&w.registros).enumerate() {
+    for (i, (fila, excluido)) in datos.iter().zip(excluidas).enumerate() {
         let n = i as u32 + 1;
         for (c, v) in fila.iter().enumerate() {
             let c = c as u16;
-            if r.excluido {
+            if *excluido {
                 ws.write_string_with_format(n, c, &v.display(), &f.exclusion).map_err(err)?;
                 continue;
             }
@@ -378,7 +342,52 @@ pub fn exportar(w: &Trabajo, dir: &Path, motivo: Option<&str>) -> Result<PathBuf
         ws.add_data_validation(1, i as u16, datos.len() as u32, i as u16, &lista).map_err(err)?;
         ws.set_column_width(i as u16, 14).map_err(err)?;
     }
-    libro.push_worksheet(ws);
+
+    Ok(ws)
+}
+
+/// Escribe el producto y devuelve su ruta (nueva: nunca reemplaza un archivo).
+pub fn exportar(w: &Trabajo, dir: &Path, motivo: Option<&str>) -> Result<PathBuf, String> {
+    std::fs::create_dir_all(dir).map_err(|e| format!("No se pudo crear la carpeta de productos: {e}"))?;
+    let fecha = w.corte.map(|c| c.format("%Y-%m-%d").to_string()).unwrap_or_default();
+    let ruta = nueva_ruta(dir, &format!("Observaciones_{}_{}", w.mode().label().to_uppercase(), fecha), "xlsx");
+    let hoja = w.mode().label().to_uppercase();
+    let h = encabezados(w);
+    let datos = filas(w);
+    let etapa_revisada = w.registros.iter().any(revisada);
+    let f = Formatos::nuevos();
+    let excluidas: Vec<bool> = w.registros.iter().map(|r| r.excluido).collect();
+    let mut libro = Workbook::new();
+
+    // NURUS_LISTAS y NURUS_TRAZABILIDAD: ocultas, como en la copia preservada.
+    let mut listas = Worksheet::new();
+    listas.set_name("NURUS_LISTAS").map_err(err)?;
+    escribir_texto(&mut listas, 0, 0, "TIPOS_RES")?;
+    for (i, t) in TIPOS_RES.iter().enumerate() {
+        escribir_texto(&mut listas, i as u32 + 1, 0, t)?;
+    }
+    listas.set_hidden(true);
+    libro.push_worksheet(listas);
+
+    let mut traza = Worksheet::new();
+    traza.set_name("NURUS_TRAZABILIDAD").map_err(err)?;
+    for (i, fila) in trazabilidad(w, &hoja, etapa_revisada, motivo).iter().enumerate() {
+        for (c, v) in fila.iter().enumerate() {
+            escribir_texto(&mut traza, i as u32, c as u16, v)?;
+        }
+    }
+    traza.set_hidden(true);
+    libro.push_worksheet(traza);
+
+    let fu = fuentes(w, &hoja);
+    for (nombre, filas) in [("Resumen", fu.resumen), ("SITFA_ARCHIVOS", fu.archivos)] {
+        let mut ws = Worksheet::new();
+        ws.set_name(nombre).map_err(err)?;
+        tabla(&mut ws, &f, &filas, true)?;
+        libro.push_worksheet(ws);
+    }
+
+    libro.push_worksheet(hoja_datos(&hoja, &h, &datos, &excluidas)?);
 
     let mut venc = Worksheet::new();
     venc.set_name("Vencimientos").map_err(err)?;
@@ -389,4 +398,23 @@ pub fn exportar(w: &Trabajo, dir: &Path, motivo: Option<&str>) -> Result<PathBuf
     libro.worksheet_from_name(&hoja).map_err(err)?.set_active(true);
     libro.save(&ruta).map_err(|e| format!("No se pudo guardar {}: {e}", ruta.display()))?;
     Ok(ruta)
+}
+
+/// Excel de la revisión de bitácoras sin libro base: las filas elegidas del producto general, con la misma hoja de datos,
+/// y al final las columnas de la revisión.
+pub fn exportar_subconjunto(w: &Trabajo, indices: &[usize], extras: &[&str], valores: &[Vec<String>], ruta: &Path) -> Result<(), String> {
+    let mut h = encabezados(w);
+    h.extend(extras.iter().map(|t| t.to_string()));
+    let todas = filas(w);
+    let mut datos = Vec::with_capacity(indices.len());
+    let mut excluidas = Vec::with_capacity(indices.len());
+    for (&i, extra) in indices.iter().zip(valores) {
+        let mut fila = todas.get(i).cloned().ok_or("La selección contiene una fila que ya no está en Trabajo.")?;
+        fila.extend(extra.iter().map(|v| Cell::Text(v.clone())));
+        datos.push(fila);
+        excluidas.push(w.registros[i].excluido);
+    }
+    let mut libro = Workbook::new();
+    libro.push_worksheet(hoja_datos(&w.mode().label().to_uppercase(), &h, &datos, &excluidas)?);
+    libro.save(ruta).map_err(|e| format!("No se pudo guardar {}: {e}", ruta.display()))
 }
