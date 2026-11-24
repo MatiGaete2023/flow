@@ -21,7 +21,7 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Cambió: `ordenes.rs` (nuevo; lista en Trabajo), `trabajo.rs` (`aplicar_masivo`, `deshacer`), `ui.rs` (barra de edición masiva) y los oráculos `app/qa/generar_correos.py` y `app/qa/generar_ordenes.py`, agregados a la regeneración de la CI.
 - Acredita: `CORREOS: 18/18` contra `prepare_drafts` (con 14 correos de Cumplimiento que difieren solo en «modulo»/«módulo», declarado); `ORDENES: 21/21` contra `avisos_orden`; `la_edicion_masiva_cambia_solo_lo_pedido_y_se_deshace`; los dos `oraculo_de_*_detecta_alteraciones`; `tools/probar_app.sh todo`: 64 y 76 pruebas, 0 fallos.
 - Diferencias declaradas: las de [ESTADO.md](ESTADO.md) (F02, F08 y F12).
-- Pendiente: CI de Windows; decisión del usuario sobre la tilde de «módulo».
+- CI de Windows en verde (run 45449454854). Pendiente: decisión del usuario sobre la tilde de «módulo».
 
 ## 2026-11-24 · E-T3: estadísticas y métricas
 
