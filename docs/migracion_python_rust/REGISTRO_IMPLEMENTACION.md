@@ -171,4 +171,4 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Cambió: `app/src/autodiagnostico.rs`, `ayuda.rs`, `main.rs` (`--self-test`), Ajustes en `ui.rs`, CI y `tools/inventario_escrituras.py`.
 - Acredita: `autodiagnostico::tests` (7 comprobaciones pasan, el informe no se sobrescribe, código 2 si existe) y `ayuda::tests` (una sección por vista y reglas fijas).
 - Diferencia declarada: sin `portable/` ni instalador; el equivalente de `package_check.py` cubre lo que existe en Rust.
-- Pendiente: CI de Windows.
+- CI Windows verde (run 45458302666).

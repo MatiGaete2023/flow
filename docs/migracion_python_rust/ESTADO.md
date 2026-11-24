@@ -51,10 +51,10 @@ Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q
 
 ### Otras herramientas
 
-- **F23 y F24 Meta 4 — No** en `app/`. Existe en `rust/crates/flow-meta4` con 29 pruebas.
+- **F23 y F24 Meta 4 — No** en `app/`. Existe en `rust/crates/flow-meta4` con 29 pruebas, pero lee el formato nativo histórico de lote (`flow_captura::lotes::Resumen`: `lote`, `terminadas`, `archivos`, `lecturas`). El Descargador de Flow Python y el de `app/` escriben otro (`resumen.json` con `plan`/`consultas`, `verificacion NNN.json` con `vinculos_ingreso` y `bitacoras.json`), que es el que lee `META4_Bitacoras/scripts/meta4_bitacoras.py`. Falta un lector de ese formato (no un simple renombrado de campos) y su oráculo; decisión de alcance pendiente del usuario.
 - **F25 Anonimizador — Implementado (E-T4, `HECHO`: CI Windows verde).** `app/src/anon.rs` delega en `flow-anonimo`: tablas, texto, JSON, ICS, Word, ZIP y paquetes de captura (contrato, huellas y referencias se reconstruyen), con verificación de cada copia antes de publicarla y carpeta `Anonimizados_*` nueva. Paridad con Python en las 38 pruebas del crate (`tests/paridad.rs`); en `app/`, tres pruebas (`anon::tests`). Diferencia: el informe ya no cuenta reemplazos por tipo; entrega avisos y la nota de revisión manual.
-- **F26 Distribución — Parcial (E-T5, pendiente CI).** El `.exe` de la CI ahora corre `--self-test` (autodiagnóstico sintético, informe nuevo, código 0/1/2) antes de entregarse, junto con su SHA-256 y commit. Sin instalador ni paquete portable propio; sin firma Authenticode.
-- **F28 Utilidades y ayuda — Parcial (E-T5, pendiente CI).** Ajustes trae la ayuda por vista y las reglas fijas, y el botón «Ejecutar autodiagnóstico» (matrices Word, CC fijo, flujo de las tres etapas con producto Excel y Anonimizador). Sin manuales aparte.
+- **F26 Distribución — Parcial (E-T5, `HECHO`: CI Windows verde).** El `.exe` de la CI ahora corre `--self-test` (autodiagnóstico sintético, informe nuevo, código 0/1/2) antes de entregarse, junto con su SHA-256 y commit. Sin instalador ni paquete portable propio; sin firma Authenticode.
+- **F28 Utilidades y ayuda — Parcial (E-T5, `HECHO`: CI Windows verde).** Ajustes trae la ayuda por vista y las reglas fijas, y el botón «Ejecutar autodiagnóstico» (matrices Word, CC fijo, flujo de las tres etapas con producto Excel y Anonimizador). Sin manuales aparte.
 
 ## Diferencias declaradas frente a Python
 
