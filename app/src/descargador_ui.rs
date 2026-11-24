@@ -137,6 +137,8 @@ struct Contexto {
     estado: String,
     bitacoras: Option<Value>,
     paquete: Option<Value>,
+    /// El paquete recién creado que la persona pidió abrir en Trabajo (lo recoge `App`).
+    abrir_en_trabajo: Option<PathBuf>,
     error: Option<String>,
     /// Filas revisadas (`diary_progress`: página, registros, «RIT · estado») y avisos del lote en curso.
     filas: Vec<(String, String)>,
@@ -158,6 +160,7 @@ impl Contexto {
             estado: String::new(),
             bitacoras: None,
             paquete: None,
+            abrir_en_trabajo: None,
             error: None,
             filas: Vec::new(),
             avisos: Vec::new(),
@@ -445,11 +448,18 @@ impl Contexto {
             if r["historico_incompleto"].as_bool() == Some(true) {
                 ui.label(RichText::new("El Ingreso Histórico quedó incompleto: revisa sus incidencias en el paquete.").color(p.amber));
             }
-            if let Some(carpeta) = r["path"].as_str().map(PathBuf::from).and_then(|r| r.parent().map(Path::to_path_buf)) {
-                if ui.button("Abrir carpeta del paquete").clicked() {
-                    crate::ui::abrir_en_sistema(&carpeta);
+            ui.horizontal_wrapped(|ui| {
+                if let Some(ruta) = r["path"].as_str().map(PathBuf::from) {
+                    if theme::primary(ui, p, "Abrir en Trabajo").on_hover_text("Abre este paquete en Trabajo para analizarlo y exportar su Excel").clicked() {
+                        self.abrir_en_trabajo = Some(ruta.clone());
+                    }
+                    if let Some(carpeta) = ruta.parent() {
+                        if ui.button("Abrir carpeta del paquete").clicked() {
+                            crate::ui::abrir_en_sistema(carpeta);
+                        }
+                    }
                 }
-            }
+            });
         }
         if let Some(e) = &self.error {
             ui.label(RichText::new(e).color(p.amber));
@@ -902,6 +912,11 @@ impl Descargador {
         self.lote_desde.clear();
         self.lote_hasta.clear();
         self.plan = None;
+    }
+
+    /// El paquete que la persona pidió abrir en Trabajo desde «Crear paquete de este lote…».
+    pub fn paquete_para_trabajo(&mut self) -> Option<PathBuf> {
+        self.ejecucion.contexto.abrir_en_trabajo.take()
     }
 
     pub fn mostrar(&mut self, ui: &mut Ui, p: &Pal) {
@@ -1525,6 +1540,13 @@ mod pruebas_interfaz {
         assert!(h.query_by_label(e["resultado"]["reuse"].as_str().unwrap()).is_some());
         assert!(h.query_by_label("El Ingreso Histórico quedó incompleto: revisa sus incidencias en el paquete.").is_some());
         assert!(h.query_by_label("Abrir carpeta del paquete").is_some());
+        // «Abrir en Trabajo» deja el paquete listo para que `App` lo abra, una sola vez.
+        assert!(h.state().contexto.abrir_en_trabajo.is_none());
+        h.get_by_label("Abrir en Trabajo").click();
+        h.run();
+        assert_eq!(h.state().contexto.abrir_en_trabajo.as_deref(), Some(destino.as_path()));
+        assert_eq!(h.state_mut().contexto.abrir_en_trabajo.take().as_deref(), Some(destino.as_path()));
+        assert!(h.state().contexto.abrir_en_trabajo.is_none());
         // Con «XLSX consolidado», el lote de contexto no es apto para CSMP: el paquete sale sin libro y lo dice.
         h.state_mut().contexto.consolidado = true;
         let con_libro = base.join("Captura_CSMP_consolidado.zip");

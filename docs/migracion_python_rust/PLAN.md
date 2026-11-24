@@ -42,9 +42,7 @@ Qué se compara con Python:
   - `descargador/excel.rs` y `descargador/resultados.rs`, con el oráculo `app/qa/generar_excel.py`.
   - `include_originals` no se porta: ninguna ruta de Python lo activa.
 - **E-Q7 · Avance por fila de la lectura — `HECHO` en Linux.** `bitacoras::ejecutar_con_avance` emite `query`, `diary_progress` y `warning` como `DiaryRunner`; la sección «Bitácoras y paquete» muestra las filas revisadas, el estado y los avisos.
-- **E-U1 · Intercambio entre herramientas (F27) — `ABIERTO`, por especificar.**
-  - Python: `download_link.py`, `download_transfer.py` y `capture/temporal.py`.
-  - Restricción vigente: el Asistente no navega SITFA ni inicia el Descargador. Antes de implementar, proponer al usuario cómo se expresa en un solo ejecutable (devolución del paquete a Trabajo, procedencia, cancelación y comparación temporal).
+- **E-U1 · Intercambio entre herramientas (F27) — `HECHO` con la opción B (D-9); falta su CI de Windows.** «Abrir en Trabajo» junto al paquete recién creado en el Descargador abre el ZIP en Trabajo (guarda antes la sesión pendiente). No hay archivos de solicitud ni de respuesta: el contrato es el paquete (D-5), y el Asistente sigue sin navegar SITFA ni iniciar el Descargador. `capture/temporal.py` no era parte de F27: su cronología ya está portada.
 - **Prueba del usuario:** la de [ESTADO.md](ESTADO.md).
 
 ## Tramo 2 · Exportaciones de lote
@@ -101,6 +99,7 @@ En este orden, salvo que el usuario indique otro:
 - **D-5 (24-nov):** «El Descargador recolecta toda la información que Flow necesita para analizar. Descargador recolecta info, Flow la procesa.» Interpretación aplicada en este plan, por confirmar: el contrato es el paquete, y los archivos internos del lote no necesitan ser idénticos a los de Python.
 - **D-6 (24-nov):** F27 se mantiene en el alcance.
 - **D-7 (24-nov):** orden Descargador, exportaciones de lote, Asistente.
+- **D-9 (24-nov):** F27 se resuelve con la opción B: un botón «Abrir en Trabajo» tras «Crear paquete», sin solicitudes ni recuperación entre herramientas. Si se necesitara recuperar una descarga a medias, se retoma como encargo nuevo.
 - **D-8 (24-nov):** se retira de esta rama la documentación del proyecto Python; sigue en `flow-python`. El árbol de código Python se conserva hasta cerrar E-V1.
 
 El detalle de las decisiones del 20 de noviembre está en el [informe de fallas](historico/INFORME_FALLAS_20261120.md#decisiones-del-usuario--20-nov-2026).

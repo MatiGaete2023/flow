@@ -47,7 +47,7 @@ Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q
 - **F20 Escritos — Sí** dentro de la lectura de historia.
 - **F21 Histórico de Protección — Sí**, con suspensión por fallas.
 - **F22 Exportaciones de lote — Sí** en Linux. Paquete `CSMP_CAPTURE` desde el lote (5 escenarios), `Bitacoras_RUS.xlsx` e `Historia_SITFA.xlsx` (`EXCEL_BITACORAS` 3/3), libro consolidado y «Para CSMP» (`LIBROS` 14/14), y CSV, ICS, ZIP de entrega y comparador (`PRODUCTOS` 13/13). Sección «Resultados del lote» en el Descargador con consolidado, Libro CSMP, cruce, comparación, CSV, ICS y ZIP (sin el doble clic para abrir el primer archivo ni «Preparar pendientes», que ya cubre «Recuperar pendientes de un lote…»). Falta la CI de Windows.
-- **F27 Intercambio entre herramientas — No.** Sigue en el alcance (D-6).
+- **F27 Intercambio entre herramientas — Sí, opción B (D-9).** «Abrir en Trabajo» tras crear el paquete. Sin solicitudes ni recuperación entre herramientas.
 
 ### Otras herramientas
 

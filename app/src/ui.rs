@@ -535,6 +535,9 @@ impl App {
                 Vista::Descargador => self.descargador.mostrar(ui, &p),
                 Vista::Ajustes => self.v_ajustes(ui, &p),
             });
+        if let Some(paquete) = self.descargador.paquete_para_trabajo() {
+            self.abrir(paquete);
+        }
         if self.confirmar_reinicio {
             self.dialogo_reinicio(ctx, &p);
         }
