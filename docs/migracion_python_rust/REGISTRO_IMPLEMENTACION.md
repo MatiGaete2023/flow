@@ -181,3 +181,4 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Pendiente: un diagnóstico nuevo del usuario con este archivo; luego E-R1.
 - CI: los runs 45461517036 (verificador de la referencia congelada) y 45462587676 fallaron; este último por el detector de oráculos, que comparó contra el push anterior (donde `descargador/` había cambiado y se restauró) y regeneró «todos», incluido `a78`, que no es idéntico byte a byte desde antes. Sin cambios de código en la corrección.
 - CI: con «todos» ya no se regenera `a78` (ZIP en base64 no reproducible entre ejecutores); se contrasta cuando cambian su generador o sus datos.
+- CI Windows verde (run 45463811153, commit `8cd013b`).
