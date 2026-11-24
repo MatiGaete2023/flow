@@ -12,7 +12,7 @@
     ...identity(x?.remote_identity),x?.origin,x?.destination,x?.observation_state,x?.approved_text,x?.approved_text_sha256,
     x?.approved_by,x?.approved_at_utc,x?.approval_version]);
   const sameIdentity=(a,b)=>a?.system==='SITFA'&&b?.system==='SITFA'&&keys.slice(1).every(k=>numeric(a[k])&&a[k]===b[k]);
-  function prepare(listDoc,popupDoc,op,current){
+  function prepareSession(listDoc,popupDoc,op,current){
     if(listDoc===popupDoc||listDoc.location.href!=='about:blank'||listDoc.documentElement.dataset.fixture!=='P3'||
       popupDoc.location.href!=='about:blank'||popupDoc.documentElement.dataset.fixture!=='OBSERVED_PREPARATION')fail('ENTORNO_NO_SINTETICO');
     // Python debe haber validado RegistroFlowV1. Aquí se comprueba la invariancia local.
@@ -67,10 +67,16 @@
     set(editor,'value',op.approved_text);
     set(state,'value',op.observation_state);
     set(checkbox,'checked',desired);
-    check();
-    if(editor.value!==op.approved_text||state.value!==op.observation_state||checkbox.checked!==desired||checkbox.indeterminate)fail('VALORES_NO_COINCIDEN');
-    return Object.freeze({schema:'ObservedPreparationSimulationV1',operation_id:op.operation_id,origin:op.origin,
-      observation_state:op.observation_state,destination:op.destination,checked:desired,cc:Number(desired),saved:false,write_enabled:false});
+    function verify(latest){
+      if(canonical(latest)!==frozen)fail('APROBACION_CAMBIADA');
+      check();
+      if(editor.value!==op.approved_text||state.value!==op.observation_state||checkbox.checked!==desired||checkbox.indeterminate)fail('VALORES_NO_COINCIDEN');
+      return Object.freeze({schema:'ObservedPreparationSimulationV1',operation_id:op.operation_id,origin:op.origin,
+        observation_state:op.observation_state,destination:op.destination,checked:desired,cc:Number(desired),saved:false,write_enabled:false});
+    }
+    const report=verify(current);
+    return Object.freeze({report,verify});
   }
-  globalThis.RegistradorObservedPreparation=Object.freeze({prepare});
+  function prepare(listDoc,popupDoc,op,current){return prepareSession(listDoc,popupDoc,op,current).report;}
+  globalThis.RegistradorObservedPreparation=Object.freeze({prepare,prepareSession});
 })();

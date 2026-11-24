@@ -38,6 +38,7 @@ jobs:
           test -n "$REGISTRADOR_CHROMIUM"
           python registrador_rus/tests/run_observed_form.py
           python registrador_rus/tests/run_observed_prepare.py
+          python registrador_rus/tests/run_observed_journal.py
   windows-transfer:
     runs-on: windows-latest
     timeout-minutes: 12

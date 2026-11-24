@@ -32,47 +32,51 @@ def fixture(origin,destination):
         approved_by='fixture',approved_at_utc='2026-11-24T00:00:00Z',approval_version=1)
     return dict(listed=listed,popup=popup,op=op)
 
-with sync_playwright() as p:
-    browser=p.chromium.launch(headless=True,**({'executable_path':os.environ['REGISTRADOR_CHROMIUM']} if os.getenv('REGISTRADOR_CHROMIUM') else {}))
-    context=browser.new_context();context.route('**/*',lambda r:r.abort())
-    page=context.new_page()
-    count=0
-    def check(origin='ESPERA',destination='ADMINISTRATIVA',change='',reason=None,partial=False):
-        global count
-        page.goto('about:blank');page.set_content('<iframe></iframe><iframe></iframe>')
-        for js in SCRIPTS:page.add_script_tag(content=js)
-        page.evaluate("""data=>{
-            window.L=document.querySelectorAll('iframe')[0].contentDocument;
-            window.P=document.querySelectorAll('iframe')[1].contentDocument;
-            L.documentElement.dataset.fixture='P3';L.body.dataset.menu='89';L.body.dataset.origin=data.op.origin;L.body.dataset.modality='2';L.body.innerHTML=data.listed;
-            P.documentElement.dataset.fixture='OBSERVED_PREPARATION';P.body.innerHTML=data.popup;
-            window.op=data.op;window.current=JSON.parse(JSON.stringify(op));
-            window.events={submit:0,click:0,input:0,change:0};
-            for(const d of [L,P])for(const e of Object.keys(events))d.addEventListener(e,ev=>{events[e]++;if(e==='submit')ev.preventDefault()},true);
-        }""",fixture(origin,destination))
-        if change:page.evaluate(change)
-        before=page.evaluate("()=>({editor:P.querySelector('#GLS_ObsCentro_Nueva').value,checkbox:P.querySelector('[name=chkBitacora]').checked,state:P.querySelector('select').value})")
-        result=page.evaluate("()=>{try{return RegistradorObservedPreparation.prepare(L,P,op,current)}catch(e){return {reason:e.message}}}")
-        after=page.evaluate("()=>({editor:P.querySelector('#GLS_ObsCentro_Nueva').value,checkbox:P.querySelector('[name=chkBitacora]').checked,state:P.querySelector('select').value})")
-        assert page.evaluate("events.submit===0&&events.click===0&&P.querySelector('[name=chkBitacoraEdit]').checked&&P.querySelector('[name=GLS_Observacion]').value==='Edición ficticia intacta'")
-        if reason:
-            assert result=={'reason':reason},result
-            if not partial:assert before==after,(before,after,result)
-        else:
-            assert result['saved'] is False and result['write_enabled'] is False and result['cc']==int(destination=='AL_TRIBUNAL'),result
-            assert after==dict(editor=TEXT,checkbox=destination=='AL_TRIBUNAL',state=CATALOGS[origin][0]),after
-        count+=1
-    for origin in CATALOGS:
-        for destination in ('ADMINISTRATIVA','AL_TRIBUNAL'):check(origin,destination)
-    for key in CONTEXT:
-        check(change=f"P.querySelector('[name={key}]').value='999999'",reason='CONTEXTO_NO_COINCIDE')
-    check(change="current.approved_text='Otra'",reason='APROBACION_INVALIDA')
-    check(change="op.observation_state=current.observation_state='3'",reason='APROBACION_INVALIDA')
-    check(change="P.querySelector('#GLS_ObsCentro_Nueva').value='Borrador previo'",reason='BORRADOR_EXISTENTE')
-    check(change="P.querySelector('#GLS_ObsCentro_Nueva').maxLength=2",reason='TEXTO_NO_REPRESENTABLE')
-    check(change="P.querySelector('option[value=\"4\"]').disabled=true",reason='ESTADO_OBLIGATORIO_NO_DISPONIBLE')
-    check(change="P.documentElement.dataset.fixture='wrong'",reason='ENTORNO_NO_SINTETICO')
-    check(change="L.querySelector('tbody').append(L.querySelector('tr').cloneNode(true))",reason='INGRESO_NO_UNICO')
-    check(change="P.querySelector('textarea').addEventListener('change',()=>P.querySelector('[name=ID_Ingreso]').value='999999')",reason='CONTEXTO_NO_COINCIDE',partial=True)
-    check(change="P.querySelector('textarea').addEventListener('input',e=>e.target.value='Alterado')",reason='VALORES_NO_COINCIDEN',partial=True)
-    browser.close();print(f'PASS {count} observed preparation checks')
+def load_fixture(page,origin,destination):
+    page.goto('about:blank');page.set_content('<iframe></iframe><iframe></iframe>')
+    for js in SCRIPTS:page.add_script_tag(content=js)
+    page.evaluate("""data=>{
+        window.L=document.querySelectorAll('iframe')[0].contentDocument;
+        window.P=document.querySelectorAll('iframe')[1].contentDocument;
+        L.documentElement.dataset.fixture='P3';L.body.dataset.menu='89';L.body.dataset.origin=data.op.origin;L.body.dataset.modality='2';L.body.innerHTML=data.listed;
+        P.documentElement.dataset.fixture='OBSERVED_PREPARATION';P.body.innerHTML=data.popup;
+        window.op=data.op;window.current=JSON.parse(JSON.stringify(op));
+        window.events={submit:0,click:0,input:0,change:0};
+        for(const d of [L,P])for(const e of Object.keys(events))d.addEventListener(e,ev=>{events[e]++;if(e==='submit')ev.preventDefault()},true);
+    }""",fixture(origin,destination))
+
+if __name__=='__main__':
+    with sync_playwright() as p:
+        browser=p.chromium.launch(headless=True,**({'executable_path':os.environ['REGISTRADOR_CHROMIUM']} if os.getenv('REGISTRADOR_CHROMIUM') else {}))
+        context=browser.new_context();context.route('**/*',lambda r:r.abort())
+        page=context.new_page()
+        count=0
+        def check(origin='ESPERA',destination='ADMINISTRATIVA',change='',reason=None,partial=False):
+            global count
+            load_fixture(page,origin,destination)
+            if change:page.evaluate(change)
+            before=page.evaluate("()=>({editor:P.querySelector('#GLS_ObsCentro_Nueva').value,checkbox:P.querySelector('[name=chkBitacora]').checked,state:P.querySelector('select').value})")
+            result=page.evaluate("()=>{try{return RegistradorObservedPreparation.prepare(L,P,op,current)}catch(e){return {reason:e.message}}}")
+            after=page.evaluate("()=>({editor:P.querySelector('#GLS_ObsCentro_Nueva').value,checkbox:P.querySelector('[name=chkBitacora]').checked,state:P.querySelector('select').value})")
+            assert page.evaluate("events.submit===0&&events.click===0&&P.querySelector('[name=chkBitacoraEdit]').checked&&P.querySelector('[name=GLS_Observacion]').value==='Edición ficticia intacta'")
+            if reason:
+                assert result=={'reason':reason},result
+                if not partial:assert before==after,(before,after,result)
+            else:
+                assert result['saved'] is False and result['write_enabled'] is False and result['cc']==int(destination=='AL_TRIBUNAL'),result
+                assert after==dict(editor=TEXT,checkbox=destination=='AL_TRIBUNAL',state=CATALOGS[origin][0]),after
+            count+=1
+        for origin in CATALOGS:
+            for destination in ('ADMINISTRATIVA','AL_TRIBUNAL'):check(origin,destination)
+        for key in CONTEXT:
+            check(change=f"P.querySelector('[name={key}]').value='999999'",reason='CONTEXTO_NO_COINCIDE')
+        check(change="current.approved_text='Otra'",reason='APROBACION_INVALIDA')
+        check(change="op.observation_state=current.observation_state='3'",reason='APROBACION_INVALIDA')
+        check(change="P.querySelector('#GLS_ObsCentro_Nueva').value='Borrador previo'",reason='BORRADOR_EXISTENTE')
+        check(change="P.querySelector('#GLS_ObsCentro_Nueva').maxLength=2",reason='TEXTO_NO_REPRESENTABLE')
+        check(change="P.querySelector('option[value=\"4\"]').disabled=true",reason='ESTADO_OBLIGATORIO_NO_DISPONIBLE')
+        check(change="P.documentElement.dataset.fixture='wrong'",reason='ENTORNO_NO_SINTETICO')
+        check(change="L.querySelector('tbody').append(L.querySelector('tr').cloneNode(true))",reason='INGRESO_NO_UNICO')
+        check(change="P.querySelector('textarea').addEventListener('change',()=>P.querySelector('[name=ID_Ingreso]').value='999999')",reason='CONTEXTO_NO_COINCIDE',partial=True)
+        check(change="P.querySelector('textarea').addEventListener('input',e=>e.target.value='Alterado')",reason='VALORES_NO_COINCIDEN',partial=True)
+        browser.close();print(f'PASS {count} observed preparation checks')
