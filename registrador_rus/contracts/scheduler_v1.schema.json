@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ScheduleConfigV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "hourly_limit", "interval", "max_concurrent_writes", "stop_on_critical_error", "require_verified_identity", "require_readback"],
+  "properties": {
+    "schema": {"const": "ScheduleConfigV1"},
+    "hourly_limit": {
+      "type": "object", "additionalProperties": false,
+      "required": ["enabled", "max_attempt_starts", "window_seconds"],
+      "properties": {"enabled": {"type": "boolean"}, "max_attempt_starts": {}, "window_seconds": {"const": 3600}},
+      "if": {"properties": {"enabled": {"const": true}}},
+      "then": {"properties": {"max_attempt_starts": {"type": "integer", "minimum": 1, "maximum": 2147483647}}},
+      "else": {"properties": {"max_attempt_starts": {"type": "null"}}}
+    },
+    "interval": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "fixed_seconds", "min_seconds", "max_seconds"],
+      "properties": {"mode": {"enum": ["none", "fixed", "bounded_variable"]}, "fixed_seconds": {}, "min_seconds": {}, "max_seconds": {}},
+      "oneOf": [
+        {"properties": {"mode": {"const": "none"}, "fixed_seconds": {"type": "null"}, "min_seconds": {"type": "null"}, "max_seconds": {"type": "null"}}},
+        {"properties": {"mode": {"const": "fixed"}, "fixed_seconds": {"$ref": "#/$defs/seconds"}, "min_seconds": {"type": "null"}, "max_seconds": {"type": "null"}}},
+        {"properties": {"mode": {"const": "bounded_variable"}, "fixed_seconds": {"type": "null"}, "min_seconds": {"$ref": "#/$defs/seconds"}, "max_seconds": {"$ref": "#/$defs/seconds"}}}
+      ]
+    },
+    "max_concurrent_writes": {"const": 1},
+    "stop_on_critical_error": {"const": true},
+    "require_verified_identity": {"const": true},
+    "require_readback": {"const": true}
+  },
+  "$defs": {"seconds": {"type": "integer", "minimum": 0, "maximum": 2147483647}},
+  "description": "La validación Python también exige min_seconds <= max_seconds y tipos enteros estrictos. No es autorización institucional."
+}

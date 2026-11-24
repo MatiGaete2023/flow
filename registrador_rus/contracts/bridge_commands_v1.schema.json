@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BridgeCommandV1 (solo simulación)",
+  "type": "object", "additionalProperties": false,
+  "required": ["schema", "session_id", "command_id", "command", "simulation_only"],
+  "properties": {
+    "schema": {"const": "BridgeCommandV1"},
+    "session_id": {"$ref": "#/$defs/id"},
+    "command_id": {"$ref": "#/$defs/id"},
+    "simulation_only": {"const": true},
+    "command": {"enum": ["get_capabilities", "inspect_current", "locate_exact_row", "open_bitacora", "prepare", "readback"]},
+    "operation_id": {"type": "string", "minLength": 1},
+    "remote_identity": {"type": "object", "additionalProperties": false, "required": ["system", "tribunal_id", "causa_id", "ingreso_id"], "properties": {"system": {"const": "SITFA"}, "tribunal_id": {"type": "string", "minLength": 1}, "causa_id": {"type": "string", "minLength": 1}, "ingreso_id": {"type": "string", "minLength": 1}}},
+    "origin": {"enum": ["ESPERA", "CUMPLIMIENTO", "INFORMES_POR_VENCER", "INFORMES_VENCIDOS"]},
+    "approval_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "approved_operation": {"type": "object"}
+  },
+  "if": {"properties": {"command": {"const": "get_capabilities"}}},
+  "then": {"not": {"anyOf": [{"required": ["operation_id"]}, {"required": ["remote_identity"]}, {"required": ["origin"]}, {"required": ["approval_digest"]}, {"required": ["approved_operation"]}]}},
+  "else": {"required": ["operation_id", "remote_identity", "origin", "approval_digest"], "if": {"properties": {"command": {"const": "prepare"}}}, "then": {"required": ["approved_operation"]}, "else": {"not": {"required": ["approved_operation"]}}},
+  "$defs": {"id": {"type": "string", "pattern": "^[0-9a-f]{32}$"}},
+  "description": "approved_operation debe pasar RegistroFlowV1 y concordar con el sobre; la validación Python y el consumidor controlan hash, sesión y demo. No habilita write_one."
+}
