@@ -6,6 +6,9 @@ from .flow_export import candidate, approve_candidate, ReviewCandidate
 TABS = {'ESPERA': 'Espera', 'CUMPLIMIENTO': 'Cumplimiento',
         'INFORMES_POR_VENCER': 'Informes', 'INFORMES_VENCIDOS': 'Informes'}
 REPORT_LABELS = {'INFORMES_POR_VENCER': 'Por vencer (a 25 días)', 'INFORMES_VENCIDOS': 'Vencidos'}
+# Evidencia del recurso descargador/fixtures/selector_vencimiento_sitfa.js,
+# rama tdInforme. Solo para comprobar procedencia histórica, no catálogo vivo.
+REPOSITORY_REPORT_CATALOG = {'1': 'Por vencer (a 25 días)', '2': 'Vencidos', '3': 'Recibidos'}
 
 
 def _one(rows, key, value):

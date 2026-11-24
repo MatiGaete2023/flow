@@ -63,9 +63,10 @@ def confirm_review(work, frozen, requests, *, displayed_digest, confirmed, actor
     if current != frozen:
         raise ContractError('LOTE_CAMBIADO_REVISAR')
     result = []
+    digest = current.digest
     for c in current.candidates:
         # ID estable para mismo contenido/versión, sin reintento implícito.
-        operation_id = _digest([current.digest,c.row_ref,version])
+        operation_id = _digest([digest,c.row_ref,version])
         result.append(approve_candidate(work,c,displayed_digest=c.digest,destination=c.destination,
             observation_state=c.observation_state,actor=actor,stamp=stamp,version=version,
             operation_id=operation_id,confirmed=True))

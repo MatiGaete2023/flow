@@ -133,6 +133,17 @@ def build(app):
 
     # P2: separar registros con observación, sin observación y no verificables.
     more.add_command(label='Revisión de bitácoras…', command=lambda: app._guard(revision_bitacoras))
+
+    def preview_registrador():
+        try:
+            from registrador_rus.app.work_preview import open_work_preview
+        except ModuleNotFoundError as exc:
+            if exc.name == 'registrador_rus':
+                raise ValueError('Vista previa del registrador disponible solo en el código fuente de esta rama.') from None
+            raise
+        open_work_preview(app)
+
+    more.add_command(label='Vista previa de lote RUS…', command=lambda: app._guard(preview_registrador))
     more.add_separator()
     more.add_command(label='Archivo y opciones…', command=toggle_file)
     app.work_more_button = view_button(
