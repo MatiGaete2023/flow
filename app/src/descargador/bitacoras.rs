@@ -64,6 +64,21 @@ pub struct LoteBitacoras {
 }
 
 impl LoteBitacoras {
+    /// `saved_batch(load(carpeta / 'bitacoras.json'))`: el alcance guardado de un lote de bitácoras, para retomarlo.
+    pub fn guardado(carpeta: &Path) -> Result<Self, String> {
+        let datos = cargar(&carpeta.join(MANIFIESTO))?;
+        let s = &datos["seleccion"];
+        if s["screen"] != "seguimiento" {
+            return Err("Selecciona Seguimiento para leer bitácoras.".into());
+        }
+        let lista = |k: &str| -> Result<Vec<String>, String> {
+            s[k].as_array().ok_or("El lote recuperado no trae su alcance.")?.iter()
+                .map(|v| v.as_str().map(str::to_string).ok_or_else(|| "El lote recuperado no trae su alcance.".to_string()))
+                .collect()
+        };
+        Ok(Self { tribunales: lista("tribunals")?, modalidades: lista("modalities")?, pestanas: lista("tabs")? })
+    }
+
     /// `asdict(batch)`.
     fn seleccion(&self) -> Value {
         json!({"tribunals": self.tribunales, "modalities": self.modalidades, "tabs": self.pestanas, "report": "1",

@@ -1002,8 +1002,80 @@ La prueba reproduce las respuestas grabadas y compara, en cada escenario:
 - Los Excel `Bitacoras_RUS.xlsx` e `Historia_SITFA.xlsx` pasan a E-Q5, porque comparten `import_lotes`.
 - La interfaz es E-Q6.
 
+## Entrega · E-Q5 y E-Q6 (24 de noviembre de 2026, ejecutadas por la auditoría)
+
+### Commits
+
+- `61b307c` `vinculos_ingreso` en el lote de listados y oráculo del lote (`LOTE: 2/2`).
+- `8814173` E-Q5a: paquete desde lotes de listados.
+- `8655610` E-Q5c: bitácoras, calendario por ingreso, historia, Escritos e histórico (`package_current_lot`).
+- `44ebe91` E-Q5b: calendario de informes con su asociación y Carga.
+- El commit de esta entrega: E-Q6, interfaz del Descargador.
+
+### Código
+
+- `app/src/descargador/paquete.rs`: `export_capture` completo salvo `include_originals` y el XLSX consolidado.
+  - Contrato `CSMP_CAPTURE` 1.0.0/1.2.0 (`write_capture`), validado con el lector del Asistente y guardado sin sobrescribir.
+  - `import_lote`/`import_lotes` (`_merge_snapshot`, `_calendar`), `earliest`, `historias.cargar`, `contexto_anterior` (CONTEXTO), `_historia`, `_escritos`, `_historico_pendientes`, `_historico` y `_persona_por_rut`.
+  - `calendar_date`, `asociar_calendarios` y la tabla de alias de `nurus.rus.columns` con el rechazo por ambigüedad.
+  - Carga: `carga.HEADERS` y filas con RIT canónico; `xls::grilla_carga`.
+  - `exportar_con(Opciones)` y `empaquetar_lote` (`package_current_lot`).
+- `app/src/descargador_ui.rs`: sección «Bitácoras y paquete» (Integral, Seguimiento).
+  - Opciones con los rótulos de Python: «Reutilizar bitácoras de hoy», «Calendario de informes», «Historia de la causa (prueba)», «Historia en el paquete», «Ingreso Histórico (Mejor Niñez)» y «Meses de bitácora».
+  - «Leer bitácoras del lote» (verifica Integral y corre `bitacoras::ejecutar` en segundo plano, cancelable).
+  - «Reintentar lecturas fallidas…» (`resume_diary`, alcance desde `LoteBitacoras::guardado`).
+  - «Crear paquete de este lote…» (destino nuevo; con bitácoras usa `empaquetar_lote`, sin ellas `exportar`) y «Abrir carpeta del paquete».
+- `app/src/descargador/preferencias.rs`: `reutilizar_bitacoras`, `leer_calendarios`, `leer_historia`, `leer_historico`, `historia_en_paquete` y `meses_atras`, con las claves y valores por omisión de `preferencias.py`.
+
+### Oráculo
+
+`app/qa/generar_paquete.py` → `app/tests/datos/paquete.json`, regenerado byte a byte dos veces (determinista):
+- `listados` y `listados_dos_pestanas` (E-Q5a);
+- `contexto`: `BatchRunner` + `DiaryRunner` con calendario, historia e histórico y `package_current_lot`. El puente usa una persona por página, trámites de contexto anteriores a la ventana y una bitácora a medianoche;
+- `calendario_informes`: un calendario asociado, otro sin ingreso y otro con empate entre dos lotes;
+- `carga`: HTML tabular con el título «Concepción» y XLSX con fechas y números.
+
+### Evidencia (L)
+
+- `PAQUETE: 5/5, fallos 0`: `manifest.json`, cada CSV byte a byte y el resultado de `package_current_lot`.
+- Python `read_capture` e `import_capture` abren los cinco ZIP de Rust (`FLOW_PAQUETE_SALIDA`).
+- Mutaciones detectadas (todas revertidas):
+  - contexto anterior y su elección del más reciente;
+  - precisión DIA;
+  - histórico PARCIAL y persona;
+  - plazos del calendario;
+  - huella MATCH e HISTORICO;
+  - `revision_bitacoras` y su `completa`;
+  - nombre del lote;
+  - asociación, empate y fecha de vencimiento;
+  - fecha literal de Carga, originales y filtro RIT;
+  - histórico e historia en el paquete de la interfaz.
+- Sobreviven, sin caso en el oráculo:
+  - re-derivar `HISTORIA_FECHA_POSTERIOR`: no-op cuando `historias.json` ya lo registra;
+  - historia CANCELADA;
+  - clave con partes vacías: el lector de listados rechaza las filas sin nombre.
+- Interfaz: `ui_descargador_bitacoras_y_paquete` (kittest, perfil aislado) comprueba:
+  - valores por omisión y persistencia de las opciones;
+  - impedimentos sin extensión;
+  - el alcance guardado para retomar;
+  - que el paquete creado desde la vista tenga el mismo `manifest.json` y resultado que Python;
+  - el rechazo de un destino existente.
+- Biblioteca `57 passed; 1 ignored`; binario con las variables de E-L `51 passed` (2 omitidas por diseño).
+- `clippy --lib -D warnings` limpio, sin hallazgos nuevos en `--all-targets` (los 33 previos del binario siguen igual); `inventario_escrituras` PASA (62 en 14); `verificar_textos_umbrales` PASA.
+
+### Diferencias declaradas
+
+- XLS BIFF de Carga: `xlrd` entrega números como `float` (`5.0`) y Rust escribe `5`. SITFA entrega HTML tabular, y en HTML y XLSX coinciden.
+- Historia: la lectura manual de Python solo arma `LectorHistoria` al retomar. Rust la lee siempre que se elige «Historia de la causa». «Crear paquete» la incluye si se marca «Historia en el paquete», mientras que el `create_package` manual de Python pasa `historia=None`.
+- Sin `include_originals` ni XLSX consolidado (E-Q5d).
+
+### Pendiente
+
+- E-Q5d: `Bitacoras_RUS.xlsx`, `Historia_SITFA.xlsx` y el XLSX consolidado.
+- E-Q6: avance por fila de la lectura y prueba con la extensión real en Windows (W, usuario).
+
 ## Siguiente paso exacto
 
 1. Usuario: revisar el run de «Flow Rust local · Windows» del último commit (verde, `Flow_Rust_Windows_exe` y SHA-256) y hacer E-E (capturas `Flow_Rust_Local_Capturas_Windows`) y el paquete H con el checklist de E-I.
-2. Siguiente encargo: E-Q5 (paquete CSMP con `import_lotes`, `export_capture_with_note` y los dos Excel de E-Q4). Después, E-Q6, E-R1, E-R2, E-S1 y E-T, en el orden de `ENCARGOS_IA.md`.
+2. Siguiente encargo: E-Q5d (los Excel del lote de bitácoras y el XLSX consolidado). Después, E-R1, E-R2, E-S1 y E-T, en el orden de `ENCARGOS_IA.md`.
 3. D-1 y D-2 resueltas: sin cambios de código.

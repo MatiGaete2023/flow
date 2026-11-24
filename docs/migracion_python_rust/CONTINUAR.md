@@ -1,6 +1,6 @@
 # Continuar en Flow Rust
 
-Actualizado: 23 de noviembre de 2026. Rama de trabajo única: `estudio/paridad-python-rust-20261119` de `MatiGaete2023/flow`. No crear ramas, no `--force`, no merge a `main`, no releases.
+Actualizado: 24 de noviembre de 2026. Rama de trabajo única: `estudio/paridad-python-rust-20261119` de `MatiGaete2023/flow`. No crear ramas, no `--force`, no merge a `main`, no releases.
 
 ## Estado (N1, auditado sobre `f6a8f28`)
 
@@ -11,7 +11,7 @@ Actualizado: 23 de noviembre de 2026. Rama de trabajo única: `estudio/paridad-p
 
 ## Pendiente (en orden)
 
-1. Siguiente: revisión del usuario (run de la CI Windows, E-E y paquete H) D-3 (opción a) y D-4 (integrar todo) quedaron resueltas. E-Q1 a E-Q4 quedaron `ENTREGADO` (E-Q4 sin los Excel, que pasan a E-Q5); sigue E-Q5 (paquete CSMP, ver `ENCARGOS_IA.md`). E-A78 y E-G quedaron `ENTREGADO`. E-D e E-I quedaron `ENTREGADO` el 23 de noviembre; E-B, E-J, E-K, E-C, E-L y E-F quedaron cerrados por la auditoría del 23 de noviembre. Luego, los demás encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md), cada uno a cargo de una IA ejecutora. La auditoría revisa cada entrega antes de cambiar su estado.
+1. Siguiente: revisión del usuario (run de la CI Windows, E-E y paquete H) D-3 (opción a) y D-4 (integrar todo) quedaron resueltas. E-Q1 a E-Q6 quedaron `ENTREGADO`. E-Q5 queda sin los Excel ni el XLSX consolidado, que pasan a E-Q5d. E-Q6 queda sin el avance por fila. Sigue E-Q5d y después E-R1 (ver `ENCARGOS_IA.md`). E-A78 y E-G quedaron `ENTREGADO`. E-D e E-I quedaron `ENTREGADO` el 23 de noviembre; E-B, E-J, E-K, E-C, E-L y E-F quedaron cerrados por la auditoría del 23 de noviembre. Luego, los demás encargos de [ENCARGOS_IA.md](ENCARGOS_IA.md), cada uno a cargo de una IA ejecutora. La auditoría revisa cada entrega antes de cambiar su estado.
 2. Decisiones D-1 (conservar el guion) y D-2 (`keep_filters` igual que Python) resueltas el 23 de noviembre; ver [ENCARGOS_IA.md](ENCARGOS_IA.md).
 3. Paquete H: acta del usuario con su PC autorizado, sesión SITFA y Outlook local ([guía](../aceptacion/GUIA_PRUEBAS_USUARIO_20261013.md)).
 

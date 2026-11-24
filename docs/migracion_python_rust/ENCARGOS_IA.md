@@ -185,7 +185,7 @@ En orden de dependencia:
   - escribir **el mismo formato en disco que Python**.
 - **Oráculo:** ejecutar `DiaryRunner` de Python y el de Rust sobre el mismo SITFA ficticio (`descargador/test_lotes.py::CATALOG`, `test_lectura_historia.FakeBridge` y `bitacora_fixtures`) y comparar los manifiestos, salvo marcas de tiempo declaradas. Además, `package_current_lot` de Python debe aceptar la carpeta producida por Rust.
 
-### E-Q5 · Paquete CSMP desde el lote — `ABIERTO` (L), tras E-Q4
+### E-Q5 · Paquete CSMP desde el lote — `ENTREGADO` salvo los Excel y el XLSX consolidado (24-nov-2026, `8814173`, `8655610`, `44ebe91`, por la auditoría); los Excel quedan en E-Q5d
 
 - Incluye también los Excel de E-Q4: `Bitacoras_RUS.xlsx` (`nurus.capture.diaries.export_diaries`) e `Historia_SITFA.xlsx` (`nurus.capture.historias.export_historias`). Los dos dependen de `import_lotes`, el mismo análisis que usa el paquete. Se comparan las celdas con openpyxl y calamine.
 
@@ -193,10 +193,16 @@ En orden de dependencia:
 - Hacer: el mismo ZIP `CSMP_CAPTURE` 1.2.0 desde la carpeta del lote de listados más la de bitácoras.
 - **Oráculo:** sobre las mismas carpetas ficticias, Python y Rust dan las mismas tablas y el mismo manifiesto (salvo la procedencia no determinista, como en E-C). `nurus.capture.read_capture` y `import_capture` de Python abren el ZIP de Rust, y el paquete C de `app/` sigue en `fallos 0` con él.
 
-### E-Q6 · Interfaz del Descargador para las lecturas y el paquete — `ABIERTO` (W/L), tras E-Q5
+### E-Q5d · Excel del lote de bitácoras y XLSX consolidado — `ABIERTO` (L)
+
+- `Bitacoras_RUS.xlsx` (`nurus.capture.diaries.export_diaries`, con las hojas extra de `import_lote`), `Historia_SITFA.xlsx` (`nurus.capture.historias.export_historias`) y el XLSX consolidado del paquete (`consolidated_workbook`, `resultados.export_book(csmp=True)`).
+- Oráculo: celdas comparadas con openpyxl y calamine sobre las carpetas de `app/tests/datos/paquete.json` (escenario «contexto»).
+
+### E-Q6 · Interfaz del Descargador para las lecturas y el paquete — `ENTREGADO` salvo el avance por fila (24-nov-2026, por la auditoría)
 
 - Opciones de lectura (bitácoras, historia, calendario, histórico y escritos), progreso, tope y reanudación, y botón «Crear paquete».
 - Pruebas `egui_kittest` en un perfil aislado.
+- Pendiente: avance por fila de la lectura (hoy, indicador de actividad y resumen al terminar) y prueba de la lectura real con la extensión en Windows (W).
 
 ### E-R1 · Meta 4: cálculo — `ABIERTO` (L)
 

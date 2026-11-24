@@ -1,7 +1,10 @@
 use crate::theme::{self, Pal};
 use crate::util::parse_date_text;
 use egui::{ComboBox, RichText, Ui};
+use flow_rust::descargador::bitacoras::{self, LoteBitacoras};
 use flow_rust::descargador::lote::{self, Evento, Fin, Opciones};
+use flow_rust::descargador::paquete;
+use serde_json::Value;
 use flow_rust::descargador::preferencias::{self, Preferencias, PAUSA_MAXIMA_S, PAUSA_MINIMA_S};
 use flow_rust::descargador::{
     Catalogo, Edicion, Pantalla, Perfil, PlanLote, Puente, Seleccion, SeleccionLote, MODALIDADES,
@@ -68,6 +71,7 @@ struct Ejecucion {
     error: Option<String>,
     fin: Option<Fin>,
     carpeta: Option<PathBuf>,
+    contexto: Contexto,
 }
 
 impl Default for Ejecucion {
@@ -96,6 +100,297 @@ impl Default for Ejecucion {
             error: None,
             fin: None,
             carpeta: None,
+            contexto: Contexto::desde(&guardadas_contexto()),
+        }
+    }
+}
+
+fn guardadas_contexto() -> Preferencias {
+    Preferencias::cargar(&Preferencias::ruta())
+}
+
+enum Trabajo {
+    Bitacoras(Result<Value, String>),
+    Paquete(Result<Value, String>),
+}
+
+/// E-Q6 · Lecturas de contexto del lote (Integral, Seguimiento) y paquete del Asistente: `start_diary` y
+/// `create_package` de Flow Python. Lee con la sesión del usuario a través de la extensión; nada se escribe en SITFA.
+struct Contexto {
+    reutilizar: bool,
+    calendarios: bool,
+    historia: bool,
+    historia_en_paquete: bool,
+    historico: bool,
+    meses: u32,
+    recepcion: Option<mpsc::Receiver<Trabajo>>,
+    cancelar: Option<Arc<AtomicBool>>,
+    estado: String,
+    bitacoras: Option<Value>,
+    paquete: Option<Value>,
+    error: Option<String>,
+}
+
+impl Contexto {
+    fn desde(p: &Preferencias) -> Self {
+        Self {
+            reutilizar: p.reutilizar_bitacoras,
+            calendarios: p.leer_calendarios,
+            historia: p.leer_historia,
+            historia_en_paquete: p.historia_en_paquete,
+            historico: p.leer_historico,
+            meses: p.meses_atras,
+            recepcion: None,
+            cancelar: None,
+            estado: String::new(),
+            bitacoras: None,
+            paquete: None,
+            error: None,
+        }
+    }
+
+    fn activa(&self) -> bool {
+        self.recepcion.is_some()
+    }
+
+    fn guardar_preferencias(&self) -> Option<String> {
+        let ruta = Preferencias::ruta();
+        let mut p = Preferencias::cargar(&ruta);
+        p.reutilizar_bitacoras = self.reutilizar;
+        p.leer_calendarios = self.calendarios;
+        p.leer_historia = self.historia;
+        p.historia_en_paquete = self.historia_en_paquete;
+        p.leer_historico = self.historico;
+        p.meses_atras = self.meses;
+        p.guardar(&ruta).err()
+    }
+
+    fn recibir(&mut self) {
+        let Some(recepcion) = &self.recepcion else { return };
+        let mensajes: Vec<Trabajo> = recepcion.try_iter().collect();
+        let desconectado = matches!(recepcion.try_recv(), Err(mpsc::TryRecvError::Disconnected));
+        for m in mensajes {
+            self.recepcion = None;
+            self.cancelar = None;
+            self.estado.clear();
+            match m {
+                Trabajo::Bitacoras(Ok(v)) => self.bitacoras = Some(v),
+                Trabajo::Paquete(Ok(v)) => self.paquete = Some(v),
+                Trabajo::Bitacoras(Err(e)) | Trabajo::Paquete(Err(e)) => self.error = Some(e),
+            }
+        }
+        if desconectado && self.recepcion.is_some() {
+            self.recepcion = None;
+            self.cancelar = None;
+            self.error = Some("Se interrumpió la operación.".into());
+        }
+    }
+
+    /// `start_diary`: bitácoras del alcance del lote (más calendario, historia e histórico si se eligieron) en una
+    /// subcarpeta nueva del destino.
+    /// Con `retomar`, el alcance es el guardado en esa carpeta (`resume_diary`): no se reutilizan lecturas de otros
+    /// lotes y la historia ya leída se toma de su `historias.json`.
+    #[allow(clippy::too_many_arguments)]
+    fn leer(
+        &mut self,
+        ctx: &egui::Context,
+        puente: Arc<Puente>,
+        catalogo: Catalogo,
+        alcance: LoteBitacoras,
+        destino: PathBuf,
+        pausa: f64,
+        retomar: Option<PathBuf>,
+    ) {
+        self.error = self.guardar_preferencias().map(|e| format!("No se guardaron las preferencias del Descargador: {e}"));
+        self.bitacoras = None;
+        self.paquete = None;
+        let historia_anterior = retomar.as_ref().map(|r| r.join("historia").join("historias.json")).filter(|h| self.historia && h.is_file());
+        let opciones = bitacoras::Opciones {
+            pausa: Duration::from_secs_f64(pausa),
+            reutilizar_base: (self.reutilizar && retomar.is_none()).then(|| destino.clone()),
+            retomar,
+            calendarios: self.calendarios,
+            historico: self.historico,
+            historia: self.historia.then_some(self.meses),
+            historia_anterior,
+            ..Default::default()
+        };
+        let cancelar = Arc::new(AtomicBool::new(false));
+        let (envio, recepcion) = mpsc::channel();
+        self.recepcion = Some(recepcion);
+        self.cancelar = Some(cancelar.clone());
+        self.estado = "Leyendo y copiando bitácoras. Las fallas quedan en el control del lote.".into();
+        let ctx = ctx.clone();
+        std::thread::spawn(move || {
+            let resultado = puente
+                .verificar(Edicion::Integral)
+                .and_then(|()| bitacoras::ejecutar(puente.as_ref(), &catalogo, &alcance, &destino, &opciones, &cancelar));
+            let _ = envio.send(Trabajo::Bitacoras(resultado));
+            ctx.request_repaint();
+        });
+    }
+
+    /// `create_package`: paquete del Asistente con el lote de listados y, si se leyeron, sus bitácoras (y el
+    /// histórico e historia del mismo lote de bitácoras). El destino debe ser nuevo.
+    fn crear_paquete(&mut self, ctx: &egui::Context, listados: PathBuf, destino: PathBuf) {
+        self.error = None;
+        self.paquete = None;
+        if destino.exists() {
+            self.error = Some("Ese archivo ya existe. Elige un nombre nuevo para no reemplazar otro paquete.".into());
+            return;
+        }
+        let manifiesto = self.bitacoras.as_ref().and_then(|b| b["manifest"].as_str()).map(PathBuf::from);
+        let historia = manifiesto.as_ref().and_then(|m| m.parent()).map(|c| c.join("historia").join("historias.json"))
+            .filter(|h| self.historia_en_paquete && h.is_file());
+        let historico = manifiesto.as_ref().and_then(|m| m.parent()).map(Path::to_path_buf)
+            .filter(|c| c.join("historico.json").is_file());
+        let meses = self.meses;
+        let (envio, recepcion) = mpsc::channel();
+        self.recepcion = Some(recepcion);
+        self.estado = "Creando el paquete…".into();
+        let ctx = ctx.clone();
+        std::thread::spawn(move || {
+            let resultado = match &manifiesto {
+                Some(m) => paquete::empaquetar_lote(&listados, m, &destino, historia.as_deref(), historico.as_deref(), meses, &[]),
+                None => paquete::exportar(&[listados], &destino).map(|r| {
+                    serde_json::json!({"path": r.display().to_string(), "reuse": "Sin bitácoras añadidas."})
+                }),
+            };
+            let _ = envio.send(Trabajo::Paquete(resultado));
+            ctx.request_repaint();
+        });
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn mostrar(
+        &mut self,
+        ui: &mut Ui,
+        p: &Pal,
+        catalogo: &Catalogo,
+        lote: &SeleccionLote,
+        puente: Option<Arc<Puente>>,
+        listados: Option<PathBuf>,
+        destino: &str,
+        pausa: f64,
+        ocupado: bool,
+    ) {
+        self.recibir();
+        ui.add_space(8.0);
+        theme::seccion(ui, p, "Bitácoras y paquete");
+        let activa = self.activa();
+        ui.add_enabled_ui(!activa && !ocupado, |ui| {
+            ui.horizontal_wrapped(|ui| {
+                ui.checkbox(&mut self.reutilizar, "Reutilizar bitácoras de hoy")
+                    .on_hover_text("Solo lecturas del mismo día y de menos de 12 h, con su huella comprobada");
+                ui.checkbox(&mut self.calendarios, "Calendario de informes")
+                    .on_hover_text("Calendario de cada ingreso de Cumplimiento e Informes; cuenta en el máximo de lecturas del lote");
+                ui.checkbox(&mut self.historia, "Historia de la causa (prueba)");
+                if self.historia {
+                    ui.checkbox(&mut self.historia_en_paquete, "Historia en el paquete");
+                }
+                ui.checkbox(&mut self.historico, "Ingreso Histórico (Mejor Niñez)");
+                ui.label(RichText::new("Meses de bitácora").color(p.muted));
+                ComboBox::from_id_salt("meses de bitácora").selected_text(self.meses.to_string()).width(40.0).show_ui(ui, |ui| {
+                    for m in 1..=4 {
+                        ui.selectable_value(&mut self.meses, m, m.to_string());
+                    }
+                });
+            });
+        });
+        let conectado = puente.as_ref().is_some_and(|b| b.conectado());
+        let alcance = LoteBitacoras {
+            tribunales: lote.tribunales.clone(),
+            modalidades: lote.modalidades.clone(),
+            pestanas: lote.pestanas.clone(),
+        };
+        let impedimento_lectura = if !conectado {
+            Some("Conecta la extensión Integral desde la pestaña SITFA.")
+        } else if alcance.tribunales.is_empty() || alcance.modalidades.is_empty() || alcance.pestanas.is_empty() {
+            Some("Selecciona tribunales, modalidades y pestañas.")
+        } else if destino.trim().is_empty() {
+            Some("Elige la carpeta de destino.")
+        } else {
+            None
+        };
+        ui.add_space(4.0);
+        ui.horizontal_wrapped(|ui| {
+            if activa {
+                if let Some(c) = &self.cancelar {
+                    let pedido = c.load(Ordering::SeqCst);
+                    if ui.add_enabled(!pedido, egui::Button::new("Cancelar lectura")).clicked() {
+                        c.store(true, Ordering::SeqCst);
+                    }
+                }
+                ui.spinner();
+                ui.label(&self.estado);
+                return;
+            }
+            let libre = !ocupado;
+            if ui.add_enabled(libre && impedimento_lectura.is_none(), egui::Button::new("Leer bitácoras del lote")).clicked() {
+                if let Some(puente) = puente.clone() {
+                    self.leer(ui.ctx(), puente, catalogo.clone(), alcance.clone(), PathBuf::from(destino.trim()), pausa, None);
+                }
+            }
+            if ui.add_enabled(libre && conectado, egui::Button::new("Reintentar lecturas fallidas…")).clicked() {
+                if let (Some(puente), Some(carpeta)) = (
+                    puente.clone(),
+                    rfd::FileDialog::new().set_title("Carpeta del lote de bitácoras a reintentar").pick_folder(),
+                ) {
+                    match LoteBitacoras::guardado(&carpeta) {
+                        Ok(guardado) => self.leer(ui.ctx(), puente, catalogo.clone(), guardado, PathBuf::from(destino.trim()), pausa, Some(carpeta)),
+                        Err(e) => self.error = Some(e),
+                    }
+                }
+            }
+            let boton = ui.add_enabled(libre && listados.is_some(), egui::Button::new("Crear paquete de este lote…"));
+            if boton.clicked() {
+                if let Some(carpeta) = listados.clone() {
+                    let nombre = format!("Captura_CSMP_{}.zip", chrono::Local::now().format("%Y-%m-%d_%H%M"));
+                    if let Some(destino) = rfd::FileDialog::new()
+                        .set_title("Guardar paquete para el Asistente")
+                        .add_filter("Paquete CSMP", &["zip"])
+                        .set_file_name(&nombre)
+                        .save_file()
+                    {
+                        self.crear_paquete(ui.ctx(), carpeta, destino);
+                    }
+                }
+            }
+            if let Some(texto) = impedimento_lectura {
+                ui.label(RichText::new(texto).color(p.muted));
+            }
+            if listados.is_none() {
+                ui.label(RichText::new("Descarga el lote para crear su paquete.").color(p.muted));
+            }
+        });
+        if let Some(b) = &self.bitacoras {
+            let n = |k: &str| b[k].as_u64().unwrap_or(0);
+            let mut texto = format!("Bitácoras: {} leídas · {} fallidas", n("leidas"), n("fallidas"));
+            if self.calendarios {
+                texto.push_str(&format!(" · calendarios {} leídos, {} fallidos", n("calendarios_leidos"), n("calendarios_fallidos")));
+            }
+            let color = if n("fallidas") == 0 && n("consultas_fallidas") == 0 { p.green } else { p.amber };
+            ui.label(RichText::new(texto).color(color));
+            if let Some(d) = b["detalle"].as_str().filter(|d| !d.is_empty()) {
+                ui.label(RichText::new(d).color(p.amber));
+            }
+        }
+        if let Some(r) = &self.paquete {
+            ui.label(RichText::new(format!("Paquete creado: {}", r["path"].as_str().unwrap_or(""))).color(p.green));
+            if let Some(reuse) = r["reuse"].as_str() {
+                ui.label(RichText::new(reuse).color(p.muted));
+            }
+            if r["historico_incompleto"].as_bool() == Some(true) {
+                ui.label(RichText::new("El Ingreso Histórico quedó incompleto: revisa sus incidencias en el paquete.").color(p.amber));
+            }
+            if let Some(carpeta) = r["path"].as_str().map(PathBuf::from).and_then(|r| r.parent().map(Path::to_path_buf)) {
+                if ui.button("Abrir carpeta del paquete").clicked() {
+                    crate::ui::abrir_en_sistema(&carpeta);
+                }
+            }
+        }
+        if let Some(e) = &self.error {
+            ui.label(RichText::new(e).color(p.amber));
         }
     }
 }
@@ -250,6 +545,7 @@ impl Ejecucion {
         plan: Option<&PlanLote>,
         puente: Option<Arc<Puente>>,
         remoto: bool,
+        lote: &SeleccionLote,
     ) {
         ui.add_space(8.0);
         theme::seccion(ui, p, "Ejecutar lote");
@@ -363,6 +659,12 @@ impl Ejecucion {
             if ui.button("Abrir carpeta del lote").clicked() {
                 crate::ui::abrir_en_sistema(&carpeta);
             }
+        }
+        if edicion == Edicion::Integral && catalogo.pantalla == Pantalla::Seguimiento && remoto {
+            // El paquete se arma desde un lote terminado: sin `fin`, una carpeta a medias no se ofrece.
+            let listados = self.carpeta.clone().filter(|_| !activa && self.fin.is_some());
+            let pausa = preferencias::limitar_pausa(f64::from(self.pausa));
+            self.contexto.mostrar(ui, p, catalogo, lote, puente, listados, &self.destino, pausa, activa);
         }
     }
 }
@@ -644,6 +946,7 @@ impl Descargador {
                                 plan,
                                 self.conexion.puente.clone(),
                                 self.catalogo_remoto,
+                                &self.lote,
                             );
                         });
                 });
@@ -1016,5 +1319,131 @@ mod pruebas_interfaz {
             resultados.push(format!("{pedida}->{}", vista.ejecucion.pausa));
         }
         println!("D2_DESCARGADOR: pausas {}, destino y PDF conservados", resultados.join(" "));
+    }
+
+    struct Vista {
+        contexto: Contexto,
+        catalogo: Catalogo,
+        lote: SeleccionLote,
+        listados: Option<PathBuf>,
+        destino: String,
+    }
+
+    fn reconstruir(destino: &Path, archivos: &Value) {
+        use base64::Engine;
+        for (ruta, b64) in archivos.as_object().unwrap() {
+            let ruta = destino.join(ruta);
+            std::fs::create_dir_all(ruta.parent().unwrap()).unwrap();
+            std::fs::write(ruta, base64::engine::general_purpose::STANDARD.decode(b64.as_str().unwrap()).unwrap()).unwrap();
+        }
+    }
+
+    /// E-Q6: la sección «Bitácoras y paquete» del Descargador (Integral, Seguimiento). Opciones con los valores por
+    /// omisión de Python y persistentes; sin extensión no se puede leer; «Crear paquete» arma el paquete del lote con
+    /// sus bitácoras, historia e histórico (carpetas del oráculo `paquete.json`, escenario «contexto») y lo informa.
+    #[test]
+    fn ui_descargador_bitacoras_y_paquete() {
+        use egui_kittest::kittest::Queryable;
+        use egui_kittest::Harness;
+        let (_candado, perfil) = crate::prueba_entorno::perfil_aislado();
+        let datos: Value = serde_json::from_str(include_str!("../tests/datos/paquete.json")).unwrap();
+        let e = datos["escenarios"].as_array().unwrap().iter().find(|e| e["escenario"] == "contexto").unwrap();
+        let base = perfil.join("eq6");
+        let _ = std::fs::remove_dir_all(&base);
+        let listados = base.join("lotes").join(e["lote"]["carpeta"].as_str().unwrap());
+        let bitacoras = base.join("bitacoras").join(e["bitacoras"]["carpeta"].as_str().unwrap());
+        reconstruir(&listados, &e["lote"]["archivos"]);
+        reconstruir(&bitacoras, &e["bitacoras"]["archivos"]);
+        let catalogo: Catalogo = serde_json::from_value(serde_json::json!({
+            "pantalla": "seguimiento", "tribunales": {"49": "Juzgado de Familia Tomé"}, "pestanas": ["Cumplimiento"],
+            "modalidades": {"2": "Ambulatorio"}, "informes": {"1": "Por vencer"}, "medidas": {"4": "Medidas por vencer"},
+        }))
+        .unwrap();
+        let vista = Vista {
+            contexto: Contexto::desde(&Preferencias::cargar(&Preferencias::ruta())),
+            catalogo,
+            lote: SeleccionLote {
+                tribunales: vec!["49".into()],
+                pestanas: vec!["Cumplimiento".into()],
+                modalidades: vec!["2".into()],
+                ..Default::default()
+            },
+            listados: None,
+            destino: base.display().to_string(),
+        };
+        let pal = theme::pal(false);
+        let mut h = Harness::builder().with_size(egui::Vec2::new(1200.0, 700.0)).build_ui_state(
+            move |ui, v: &mut Vista| {
+                let Vista { contexto, catalogo, lote, listados, destino } = v;
+                contexto.mostrar(ui, &pal, catalogo, lote, None, listados.clone(), destino, 1.0, false);
+            },
+            vista,
+        );
+        h.run();
+        // Valores por omisión de `preferencias.py`: reutilizar sí; calendario, historia e histórico no; 4 meses.
+        let c = &h.state().contexto;
+        assert_eq!((c.reutilizar, c.calendarios, c.historia, c.historico, c.historia_en_paquete, c.meses), (true, false, false, false, true, 4));
+        assert!(h.query_by_label("Historia en el paquete").is_none(), "«Historia en el paquete» solo con la historia elegida");
+        h.get_by_label("Historia de la causa (prueba)").click();
+        h.run();
+        assert!(h.query_by_label("Historia en el paquete").is_some());
+        assert!(h.query_by_label("Conecta la extensión Integral desde la pestaña SITFA.").is_some());
+        assert!(h.query_by_label("Descarga el lote para crear su paquete.").is_some());
+        let leer = h.get_by_label("Leer bitácoras del lote");
+        assert!(leer.is_disabled(), "sin extensión no se leen bitácoras");
+        assert!(h.get_by_label("Reintentar lecturas fallidas…").is_disabled(), "sin extensión no se retoma");
+        // `saved_batch`: el alcance para retomar sale del manifiesto del lote de bitácoras.
+        let guardado = LoteBitacoras::guardado(&bitacoras).unwrap();
+        assert_eq!((guardado.tribunales, guardado.modalidades, guardado.pestanas),
+                   (vec!["49".to_string()], vec!["2".to_string()], vec!["Cumplimiento".to_string()]));
+        assert!(LoteBitacoras::guardado(&listados).is_err(), "una carpeta de listados no es un lote de bitácoras");
+        // Preferencias: se guardan con las claves de Python y se recuperan al reconstruir la vista.
+        h.state_mut().contexto.historico = true;
+        h.state_mut().contexto.meses = 2;
+        assert!(h.state().contexto.guardar_preferencias().is_none());
+        let guardadas = Preferencias::cargar(&Preferencias::ruta());
+        assert!(guardadas.leer_historia && guardadas.leer_historico && guardadas.meses_atras == 2);
+        let crudo: Value = serde_json::from_slice(&std::fs::read(Preferencias::ruta()).unwrap()).unwrap();
+        for clave in ["reutilizar_bitacoras", "leer_calendarios", "leer_historia", "leer_historico", "historia_en_paquete", "meses_atras"] {
+            assert!(crudo.get(clave).is_some(), "falta la preferencia {clave}");
+        }
+        // Paquete del lote con las bitácoras recién leídas (el mismo `package_current_lot` que Python, 4 meses).
+        h.state_mut().contexto.meses = 4;
+        h.state_mut().listados = Some(listados.clone());
+        h.state_mut().contexto.bitacoras = Some(serde_json::json!({
+            "manifest": bitacoras.join("bitacoras.json").display().to_string(), "leidas": 2, "fallidas": 0, "consultas_fallidas": 0,
+        }));
+        h.run();
+        assert!(!h.get_by_label("Crear paquete de este lote…").is_disabled());
+        let destino = base.join("Captura_CSMP_prueba.zip");
+        let ctx = h.ctx.clone();
+        h.state_mut().contexto.crear_paquete(&ctx, listados.clone(), destino.clone());
+        let inicio = std::time::Instant::now();
+        while h.state().contexto.paquete.is_none() && h.state().contexto.error.is_none() {
+            assert!(inicio.elapsed() < Duration::from_secs(30), "el paquete no terminó");
+            std::thread::sleep(Duration::from_millis(20));
+            h.step(); // el spinner repinta sin parar mientras trabaja el hilo
+        }
+        h.run();
+        assert_eq!(h.state().contexto.error, None);
+        let mut esperado = e["resultado"].clone();
+        esperado["path"] = serde_json::json!(destino.to_string_lossy());
+        assert_eq!(h.state().contexto.paquete.as_ref(), Some(&esperado), "resultado distinto de package_current_lot");
+        let mut zip = zip::ZipArchive::new(std::fs::File::open(&destino).unwrap()).unwrap();
+        let manifiesto: Value = serde_json::from_reader(zip.by_name("manifest.json").unwrap()).unwrap();
+        assert_eq!(manifiesto, e["paquete"]["manifest.json"], "el paquete de la interfaz difiere del de Flow Python");
+        assert!(h.query_by_label(&format!("Paquete creado: {}", destino.display())).is_some());
+        assert!(h.query_by_label(e["resultado"]["reuse"].as_str().unwrap()).is_some());
+        assert!(h.query_by_label("El Ingreso Histórico quedó incompleto: revisa sus incidencias en el paquete.").is_some());
+        assert!(h.query_by_label("Abrir carpeta del paquete").is_some());
+        // Un destino existente nunca se reemplaza.
+        h.state_mut().contexto.crear_paquete(&ctx, listados, destino.clone());
+        h.run();
+        assert_eq!(
+            h.state().contexto.error.as_deref(),
+            Some("Ese archivo ya existe. Elige un nombre nuevo para no reemplazar otro paquete.")
+        );
+        let _ = std::fs::remove_dir_all(&base);
+        println!("E-Q6_DESCARGADOR: opciones, preferencias, impedimentos y paquete del lote verificados");
     }
 }

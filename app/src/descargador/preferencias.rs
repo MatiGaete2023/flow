@@ -46,6 +46,13 @@ pub struct Preferencias {
     pub pdf_sin_registros: bool,
     pub pausa_consultas: f64,
     pub favoritos: BTreeMap<String, Favorito>,
+    /// Lecturas de contexto del lote de bitácoras (`preferencias.py`, mismas claves y valores por omisión).
+    pub reutilizar_bitacoras: bool,
+    pub leer_calendarios: bool,
+    pub leer_historia: bool,
+    pub leer_historico: bool,
+    pub historia_en_paquete: bool,
+    pub meses_atras: u32,
 }
 
 impl Default for Preferencias {
@@ -55,6 +62,12 @@ impl Default for Preferencias {
             pdf_sin_registros: true,
             pausa_consultas: PAUSA_DEFECTO_S,
             favoritos: BTreeMap::new(),
+            reutilizar_bitacoras: true,
+            leer_calendarios: false,
+            leer_historia: false,
+            leer_historico: false,
+            historia_en_paquete: true,
+            meses_atras: 4,
         }
     }
 }
@@ -72,6 +85,9 @@ impl Preferencias {
             .and_then(|b| serde_json::from_slice(&b).ok())
             .unwrap_or_default();
         p.pausa_consultas = limitar_pausa(p.pausa_consultas);
+        if !(1..=4).contains(&p.meses_atras) {
+            p.meses_atras = 4;
+        }
         p
     }
 
@@ -202,6 +218,9 @@ mod tests {
             pdf_sin_registros: false,
             pausa_consultas: 3.5,
             favoritos: BTreeMap::new(),
+            leer_historico: true,
+            meses_atras: 2,
+            ..Default::default()
         };
         prefs.favoritos.insert("fav1".into(), Favorito {
             pantalla: Pantalla::Seguimiento,
@@ -354,5 +373,24 @@ mod tests {
         assert_eq!(err_pantalla, Err("Selecciona la pantalla del lote y carga sus opciones primero.".into()));
 
         let _ = std::fs::remove_dir_all(&temp_dir);
+    }
+
+    /// E-Q6 · `preferencias.py`: valores por omisión de las lecturas de contexto y `meses_atras` fuera de 1–4 vuelve a 4.
+    #[test]
+    fn eq6_preferencias_de_lecturas() {
+        let d = Preferencias::default();
+        assert_eq!(
+            (d.reutilizar_bitacoras, d.leer_calendarios, d.leer_historia, d.leer_historico, d.historia_en_paquete, d.meses_atras),
+            (true, false, false, false, true, 4)
+        );
+        let carpeta = std::env::temp_dir().join(format!("flow-eq6-prefs-{}", std::process::id()));
+        std::fs::create_dir_all(&carpeta).unwrap();
+        let ruta = carpeta.join("p.json");
+        for (meses, esperado) in [(0, 4), (1, 1), (4, 4), (9, 4)] {
+            std::fs::write(&ruta, format!("{{\"meses_atras\": {meses}, \"leer_historia\": true}}")).unwrap();
+            let p = Preferencias::cargar(&ruta);
+            assert_eq!((p.meses_atras, p.leer_historia, p.historia_en_paquete), (esperado, true, true), "meses {meses}");
+        }
+        let _ = std::fs::remove_dir_all(&carpeta);
     }
 }
