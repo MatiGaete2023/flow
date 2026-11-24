@@ -72,3 +72,7 @@ Sustituye el inspector previo por 0.2.0. Con la bitácora de Espera ya abierta y
 ### Inspector 0.2.1 — bitácora como ventana emergente
 
 Sustituir solo el inspector por 0.2.1. Abrir UNA bitácora desde Espera y regresar al listado sin cerrarla. Abrir icono y pulsar Localizar e inspeccionar bitácora abierta. Chrome puede pedir permiso opcional para familia.pjud.cl (origen completo); aceptar solo si está institucionalmente autorizado. El inspector localiza una candidata por ruta de apertura documentada o ventana popup en destino POST; no inspecciona otras rutas ni abre ventanas. Si hay varias candidatas, cerrar las demás manualmente. Si el diálogo de permiso cierra el popup de extensión, volver a abrirlo. Se intenta retirar permiso al finalizar; comprobar aviso. Si acceso sigue activo, retirarlo desde configuración de la extensión. Si política impide permiso, detenerse. Compartir únicamente IntegralEvidenceV1 revisado o código de bloqueo; nunca guardar una observación para probar.
+
+### Resultado de la inspección 0.2.1
+
+La captura de la ventana emergente real ya identificó los campos de Espera. No repetir inspector para estos atributos. Los estados observados son 3 Ingreso Efectivo y 4 Gestión Previa; no asignar automáticamente un estado, comprobar disponibilidad por origen. La acción irAccion no es única por nombre, distinguir el submit visible Nueva obs del oculto de edición. Preparación/escritura real continúa bloqueada; ver EVIDENCIA_ESTRUCTURAL.md.
