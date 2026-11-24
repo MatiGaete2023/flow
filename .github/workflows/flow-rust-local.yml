@@ -177,6 +177,8 @@ jobs:
           $lista = '${{ steps.cambios.outputs.lista }}'
           foreach ($o in @('a78', 'lecturas', 'vinculos', 'bitacoras', 'lote', 'paquete', 'excel', 'resultados', 'sync', 'conciliacion', 'personalizacion', 'estadisticas', 'correos', 'ordenes')) {
             if ($lista -ne 'todos' -and (($lista -split ',') -notcontains $o)) { continue }
+            # a78 lleva ZIP en base64 que cambia byte a byte entre ejecutores: solo se contrasta cuando se pide por nombre.
+            if ($o -eq 'a78' -and $lista -eq 'todos') { continue }
             $salida = Join-Path $env:RUNNER_TEMP "$o.json"
             if ($o -eq 'vinculos') {
               python app/qa/generar_vinculos.py
