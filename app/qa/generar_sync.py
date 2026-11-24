@@ -8,10 +8,13 @@ Uso (desde la raíz): python app/qa/generar_sync.py [salida.json]   (por omisió
 """
 
 import base64
+import io
 import json
+import re
 import sys
 import tempfile
-from datetime import date
+import zipfile
+from datetime import date, datetime
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[2]
@@ -41,9 +44,25 @@ def origen(carpeta):
     hoja.append(['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'DERIVACION', 'T ESPERA'])
     for fila in FILAS:
         hoja.append(list(fila))
+    libro.properties.created = libro.properties.modified = datetime(2026, 1, 1)
     ruta = carpeta / 'origen.xlsx'
     libro.save(ruta)
+    ruta.write_bytes(fijar_fechas(ruta.read_bytes()))
     return ruta
+
+
+def fijar_fechas(contenido):
+    """Mismo libro con las fechas del ZIP fijas: el oráculo se regenera byte a byte."""
+    salida = io.BytesIO()
+    with zipfile.ZipFile(io.BytesIO(contenido)) as origen_zip, zipfile.ZipFile(salida, 'w', zipfile.ZIP_DEFLATED) as destino:
+        for info in origen_zip.infolist():
+            nueva = zipfile.ZipInfo(info.filename, date_time=(2026, 1, 1, 0, 0, 0))
+            nueva.compress_type = zipfile.ZIP_DEFLATED
+            datos = origen_zip.read(info.filename)
+            if info.filename == 'docProps/core.xml':
+                datos = re.sub(rb'(<dcterms:(?:created|modified)[^>]*>)[^<]*', rb'\g<1>2026-01-01T00:00:00Z', datos)
+            destino.writestr(nueva, datos)
+    return salida.getvalue()
 
 
 def texto(valor):
