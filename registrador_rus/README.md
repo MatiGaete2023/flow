@@ -53,3 +53,5 @@ Puerta Work real (app/flow_work.py) y pruebas de procedencia/lector/diálogo: ve
 Revisión masiva Work y transferencia de previsualización: app/flow_batch.py y app/transfer.py; solo en memoria. Hasta 400 operaciones, una validación de fuente por fase. La recepción no autoriza intentos. Prueba de integración: test_flow_batch.py (fixture de Flow, CI pendiente).
 
 Vista previa local del Asistente: Trabajo > Más > Vista previa de lote RUS (ejecución desde fuente de esta rama). Selección visible de 1–400 filas, origen/destino/Estado explícitos, sin guardar ni conectar a RUS. Estado real y distribución instalada pendientes.
+
+CI de revisión masiva: [71/71](https://github.com/MatiGaete2023/flow/actions/runs/45430566709). CI con diálogo y catálogo de procedencia: [74/74](https://github.com/MatiGaete2023/flow/actions/runs/45431004257).

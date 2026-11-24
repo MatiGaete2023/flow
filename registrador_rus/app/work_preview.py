@@ -22,6 +22,8 @@ class WorkPreviewDialog:
     def __init__(self, app):
         self.app = app
         self.work = app._require_work()
+        if getattr(self.work,'source_scope','') != 'PAQUETE' or not getattr(self.work,'capture_digest',''):
+            raise ContractError('SE_REQUIERE_TRABAJO_DE_PAQUETE_VERIFICADO')
         self.ids = visible_selection(app)
         self.work_id = getattr(self.work,'capture_id','') or self.work.capture_digest
         self.frozen = None

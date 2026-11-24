@@ -83,3 +83,35 @@ class WorkPreviewTests(TestCase):
         q=source|dict(screen='seguimiento',filters_json='{"report":"3"}')
         with self.assertRaises(ContractError):
             verify_origin(source,[q],'INFORMES_VENCIDOS',report_catalog=REPOSITORY_REPORT_CATALOG)
+
+    def test_no_package_blocks_before_dialog(self):
+        self.work.source_scope='SOLO_PLANILLA'
+        with self.assertRaisesRegex(ContractError,'SE_REQUIERE_TRABAJO_DE_PAQUETE_VERIFICADO'):
+            open_work_preview(self.root)
+
+    def test_real_assistant_menu(self):
+        # Aislar Tcl/CustomTkinter tal como tests/test_integral_ui.py.
+        import os
+        import subprocess
+        import sys
+        script = """
+from pathlib import Path
+from unittest.mock import patch
+from nurus.personal.config import Configuration
+from nurus.personal.app import App
+import sys
+app=App(Configuration(Path(sys.argv[1])/'config'))
+try:
+    app.update_idletasks()
+    menu=app.work_more_menu
+    matches=[i for i in range(menu.index('end')+1) if menu.type(i)=='command' and menu.entrycget(i,'label')=='Vista previa de lote RUS…']
+    assert len(matches)==1, matches
+    with patch('registrador_rus.app.work_preview.open_work_preview') as opened:
+        menu.invoke(matches[0])
+        opened.assert_called_once_with(app)
+finally:
+    app.destroy()
+"""
+        env=dict(os.environ,PYTHONPATH=os.pathsep.join([str(Path.cwd()/'src'),str(Path.cwd())]))
+        result=subprocess.run([sys.executable,'-c',script,self.temp.name],env=env,capture_output=True,text=True,timeout=45)
+        self.assertEqual(result.returncode,0,result.stdout+'\n'+result.stderr)
