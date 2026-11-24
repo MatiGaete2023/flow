@@ -123,6 +123,7 @@ struct Contexto {
     historia_en_paquete: bool,
     historico: bool,
     meses: u32,
+    consolidado: bool,
     recepcion: Option<mpsc::Receiver<Trabajo>>,
     cancelar: Option<Arc<AtomicBool>>,
     estado: String,
@@ -140,6 +141,7 @@ impl Contexto {
             historia_en_paquete: p.historia_en_paquete,
             historico: p.leer_historico,
             meses: p.meses_atras,
+            consolidado: p.paquete_consolidado,
             recepcion: None,
             cancelar: None,
             estado: String::new(),
@@ -162,6 +164,7 @@ impl Contexto {
         p.historia_en_paquete = self.historia_en_paquete;
         p.leer_historico = self.historico;
         p.meses_atras = self.meses;
+        p.paquete_consolidado = self.consolidado;
         p.guardar(&ruta).err()
     }
 
@@ -245,16 +248,20 @@ impl Contexto {
         let historico = manifiesto.as_ref().and_then(|m| m.parent()).map(Path::to_path_buf)
             .filter(|c| c.join("historico.json").is_file());
         let meses = self.meses;
+        let consolidado = self.consolidado;
         let (envio, recepcion) = mpsc::channel();
         self.recepcion = Some(recepcion);
         self.estado = "Creando el paquete…".into();
         let ctx = ctx.clone();
         std::thread::spawn(move || {
             let resultado = match &manifiesto {
-                Some(m) => paquete::empaquetar_lote(&listados, m, &destino, historia.as_deref(), historico.as_deref(), meses, &[]),
-                None => paquete::exportar(&[listados], &destino).map(|r| {
-                    serde_json::json!({"path": r.display().to_string(), "reuse": "Sin bitácoras añadidas."})
-                }),
+                Some(m) => paquete::empaquetar_lote(&listados, m, &destino, historia.as_deref(), historico.as_deref(), meses, &[], consolidado),
+                None => {
+                    let opciones = paquete::Opciones { consolidado, meses, ..Default::default() };
+                    paquete::exportar_con(&[listados], &destino, &opciones).map(|r| {
+                        serde_json::json!({"path": r.ruta.display().to_string(), "reuse": format!("Sin bitácoras añadidas.{}", r.nota)})
+                    })
+                }
             };
             let _ = envio.send(Trabajo::Paquete(resultado));
             ctx.request_repaint();
@@ -289,6 +296,8 @@ impl Contexto {
                     ui.checkbox(&mut self.historia_en_paquete, "Historia en el paquete");
                 }
                 ui.checkbox(&mut self.historico, "Ingreso Histórico (Mejor Niñez)");
+                ui.checkbox(&mut self.consolidado, "XLSX consolidado")
+                    .on_hover_text("El paquete lleva solo el XLSX «Para CSMP» (nunca HTML ni PDF); si el lote no es apto, se informa");
                 ui.label(RichText::new("Meses de bitácora").color(p.muted));
                 ComboBox::from_id_salt("meses de bitácora").selected_text(self.meses.to_string()).width(40.0).show_ui(ui, |ui| {
                     for m in 1..=4 {
@@ -1382,7 +1391,8 @@ mod pruebas_interfaz {
         h.run();
         // Valores por omisión de `preferencias.py`: reutilizar sí; calendario, historia e histórico no; 4 meses.
         let c = &h.state().contexto;
-        assert_eq!((c.reutilizar, c.calendarios, c.historia, c.historico, c.historia_en_paquete, c.meses), (true, false, false, false, true, 4));
+        assert_eq!((c.reutilizar, c.calendarios, c.historia, c.historico, c.historia_en_paquete, c.meses, c.consolidado),
+                   (true, false, false, false, true, 4, true));
         assert!(h.query_by_label("Historia en el paquete").is_none(), "«Historia en el paquete» solo con la historia elegida");
         h.get_by_label("Historia de la causa (prueba)").click();
         h.run();
@@ -1409,6 +1419,7 @@ mod pruebas_interfaz {
         }
         // Paquete del lote con las bitácoras recién leídas (el mismo `package_current_lot` que Python, 4 meses).
         h.state_mut().contexto.meses = 4;
+        h.state_mut().contexto.consolidado = false; // el oráculo de Python se generó sin consolidado
         h.state_mut().listados = Some(listados.clone());
         h.state_mut().contexto.bitacoras = Some(serde_json::json!({
             "manifest": bitacoras.join("bitacoras.json").display().to_string(), "leidas": 2, "fallidas": 0, "consultas_fallidas": 0,
@@ -1436,6 +1447,20 @@ mod pruebas_interfaz {
         assert!(h.query_by_label(e["resultado"]["reuse"].as_str().unwrap()).is_some());
         assert!(h.query_by_label("El Ingreso Histórico quedó incompleto: revisa sus incidencias en el paquete.").is_some());
         assert!(h.query_by_label("Abrir carpeta del paquete").is_some());
+        // Con «XLSX consolidado», el lote de contexto no es apto para CSMP: el paquete sale sin libro y lo dice.
+        h.state_mut().contexto.consolidado = true;
+        let con_libro = base.join("Captura_CSMP_consolidado.zip");
+        h.state_mut().contexto.crear_paquete(&ctx, listados.clone(), con_libro.clone());
+        let inicio = std::time::Instant::now();
+        while h.state().contexto.activa() {
+            assert!(inicio.elapsed() < Duration::from_secs(30), "el paquete no terminó");
+            std::thread::sleep(Duration::from_millis(20));
+            h.step();
+        }
+        h.run();
+        let reuse = h.state().contexto.paquete.as_ref().unwrap()["reuse"].as_str().unwrap().to_string();
+        assert!(reuse.contains(" Sin XLSX consolidado: No apto para CSMP"), "{reuse}");
+        assert!(h.query_by_label(&reuse).is_some());
         // Un destino existente nunca se reemplaza.
         h.state_mut().contexto.crear_paquete(&ctx, listados, destino.clone());
         h.run();
