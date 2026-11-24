@@ -1,6 +1,6 @@
 # Estado de Flow Rust
 
-Actualizado: 24 de noviembre de 2026, tras E-R1 y E-R2, E-S1 (con su vista), E-V1 a E-V3, E-Q7 el producto de Trabajo sin consolidado (E-W1) E-A1, E-U1, E-A2, E-A3, E-A4, E-T1, E-T2, E-T3 y E-A5. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
+Actualizado: 24 de noviembre de 2026, tras E-X1, E-X2, E-R1 y E-R2, E-S1 (con su vista), E-V1 a E-V3, E-Q7 el producto de Trabajo sin consolidado (E-W1) E-A1, E-U1, E-A2, E-A3, E-A4, E-T1, E-T2, E-T3 y E-A5. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
 
 - Aplicación: `app/` (`flow_rust.exe`). Referencia funcional: rama `flow-python`.
 - Rama única: `estudio/paridad-python-rust-20261119`.
@@ -15,6 +15,8 @@ Actualizado: 24 de noviembre de 2026, tras E-R1 y E-R2, E-S1 (con su vista), E-V
 4. **Usuario:** decidir D-10, D-11 y D-12 del [análisis del informe RUS/SITFA](ANALISIS_INFORME_RUS_SITFA_20261124.md). E-X1 (guardia de solo lectura) y E-X2 (diagnóstico de Notificación y Diligencias) no requieren decisión.
 
 ## Pendiente del usuario
+
+- **Diagnóstico de Notificación y Diligencias (E-X2):** tras un lote con «Historia de la causa», enviar el contenido de `historia/estructura_pestanas.json` (solo estructura, sin datos). Dice si esas tablas llegan en la respuesta ya descargada.
 
 - **Prueba corta del tramo 1** con el `.exe` de un run de «Flow Rust local · Windows» lanzado a mano con `entrega` (Actions › Run workflow): un lote Integral de Seguimiento con Chrome y la sesión SITFA propia, «Leer bitácoras del lote», «Crear paquete de este lote…», abrir el ZIP en Trabajo y guardar el Excel. Anotar lo que falle; no hace falta acta.
 - Revisión visual de las capturas del run (antes E-E) y paquete H: acta de uso real.

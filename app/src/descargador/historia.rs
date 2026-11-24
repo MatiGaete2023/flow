@@ -186,6 +186,72 @@ pub fn estructura_pestana(datos: &[u8]) -> Result<Value, String> {
     }))
 }
 
+/// Clave de un encabezado: minúsculas, sin tildes ni signos («Esta.Not.» → `estanot`).
+fn clave_encabezado(t: &str) -> String {
+    lecturas::normalizar(t).chars().filter(|c| c.is_ascii_alphanumeric()).collect()
+}
+
+/// E-X2 · Forma anónima de las pestañas de la respuesta de una causa: qué tablas de Historia, Notificación y
+/// Diligencias trae, con sus encabezados y el número de filas, sin ningún valor. Sirve para saber si Notificación y
+/// Diligencias llegan en la misma respuesta ya descargada (V06 y V07 del informe técnico RUS/SITFA).
+pub fn pestanas_causa(datos: &[u8]) -> Value {
+    let Ok(texto) = lecturas::decodificar(datos) else { return json!({"legible": false}) };
+    let doc = Html::parse_document(&texto);
+    let celdas = |f: ElementRef<'_>| -> Vec<String> {
+        f.select(&sel("th, td")).map(|c| c.text().collect::<String>().split_whitespace().collect::<Vec<_>>().join(" ")).collect()
+    };
+    let mut salida = Map::new();
+    salida.insert("legible".into(), json!(true));
+    for (nombre, requeridas) in [
+        ("historia", &["folio", "tramite"][..]),
+        ("notificacion", &["estanot", "fecnot"][..]),
+        ("diligencias", &["estdil", "tipodediligencia"][..]),
+    ] {
+        let (mut tablas, mut filas, mut encabezados) = (0u64, 0u64, Vec::<Value>::new());
+        for tabla in doc.select(&sel("table")) {
+            let todas: Vec<ElementRef<'_>> = tabla.select(&sel("tr")).collect();
+            let Some(cabecera) = todas.iter().map(|f| celdas(*f)).find(|c| c.len() > 2) else { continue };
+            let claves: BTreeSet<String> = cabecera.iter().map(|h| clave_encabezado(h)).collect();
+            if !requeridas.iter().all(|r| claves.contains(*r)) {
+                continue;
+            }
+            tablas += 1;
+            let con_datos = todas.iter().map(|f| celdas(*f)).filter(|c| c.len() == cabecera.len() && *c != cabecera && c.iter().any(|v| !v.is_empty())).count();
+            filas += con_datos as u64;
+            let e = json!(cabecera);
+            if !encabezados.contains(&e) {
+                encabezados.push(e);
+            }
+        }
+        salida.insert(nombre.into(), json!({"tablas": tablas, "filas": filas, "encabezados": encabezados}));
+    }
+    Value::Object(salida)
+}
+
+/// E-X2 · Resumen por lote de `pestanas_causa`: en cuántas causas aparece cada tabla y con qué encabezados.
+pub fn resumen_pestanas(causas: &[Value]) -> Value {
+    let mut salida = Map::new();
+    for nombre in ["historia", "notificacion", "diligencias"] {
+        let con: Vec<&Value> = causas.iter().filter(|c| c[nombre]["tablas"].as_u64().unwrap_or(0) > 0).collect();
+        let mut encabezados: Vec<Value> = Vec::new();
+        for c in &con {
+            for e in c[nombre]["encabezados"].as_array().into_iter().flatten() {
+                if !encabezados.contains(e) {
+                    encabezados.push(e.clone());
+                }
+            }
+        }
+        salida.insert(
+            nombre.into(),
+            json!({"causas_con_tabla": con.len(), "causas_sin_tabla": causas.len() - con.len(),
+                "filas_total": con.iter().map(|c| c[nombre]["filas"].as_u64().unwrap_or(0)).sum::<u64>(), "encabezados": encabezados}),
+        );
+    }
+    json!({"tipo": "ESTRUCTURA_PESTANAS_CAUSA", "version": 1, "causas_leidas": causas.len(),
+        "causas_ilegibles": causas.iter().filter(|c| c["legible"] == false).count(), "pestanas": salida,
+        "contiene_identificadores_personales": false})
+}
+
 /// `json.dumps(params)` de Python (separadores «, » y «: », claves en el orden dado).
 fn json_objeto_python(pares: &[(&str, &str)]) -> String {
     let partes: Vec<String> = pares
@@ -206,6 +272,8 @@ pub struct LectorHistoria {
     causas_por_rit: BTreeMap<(String, String), BTreeSet<String>>,
     rits_por_causa: BTreeMap<String, BTreeSet<String>>,
     fallo_persistencia: bool,
+    /// E-X2: forma anónima de las pestañas de cada causa leída (`estructura_pestanas.json`).
+    pestanas: Vec<Value>,
     /// `resultado['excel']`: el `Historia_SITFA.xlsx` generado al cerrar.
     pub excel: Option<PathBuf>,
     /// Desfase de la hora local con que Python expresa `leida` (`astimezone()`).
@@ -227,6 +295,7 @@ impl LectorHistoria {
             causas_por_rit: BTreeMap::new(),
             rits_por_causa: BTreeMap::new(),
             fallo_persistencia: false,
+            pestanas: Vec::new(),
             excel: None,
             desfase,
         })
@@ -419,6 +488,7 @@ impl LectorHistoria {
             let hoy = leida.date_naive();
             let [dentro, anteriores, posteriores, sin_fecha] = lecturas::separar_ventana(&filas, hoy, meses)?;
             let escritos = estado_escritos(&datos);
+            let pestanas = pestanas_causa(&datos);
             if escritos["estado"] == "SIN_TABLA" {
                 let destino = carpeta.join("estructura_escritos.json");
                 if !destino.exists() {
@@ -435,6 +505,7 @@ impl LectorHistoria {
             }
             let mut m = Map::new();
             m.insert("escritos".into(), escritos);
+            m.insert("_pestanas".into(), pestanas);
             for (k, v) in [
                 ("estado", json!(if lectura["vacio_explicito"] == true { "VACIA_COMPROBADA" } else { "LEIDA" })),
                 ("error", json!("")),
@@ -452,6 +523,12 @@ impl LectorHistoria {
             }
             Ok(m)
         })();
+        let resultado = resultado.map(|mut m| {
+            if let Some(p) = m.remove("_pestanas") {
+                self.pestanas.push(p);
+            }
+            m
+        });
         let destino = self.estado["causas"][clave].as_object_mut().unwrap();
         match resultado {
             Ok(m) => {
@@ -499,6 +576,13 @@ impl LectorHistoria {
             "errores_listado": self.estado["errores_listado"].as_array().map_or(0, Vec::len),
             "tope_alcanzado": self.estado["tope_alcanzado"] == true, "escritos": resumen_escritos(&causas),
         });
+        // E-X2: una sola forma por lote, sin valores de causas. No altera `historias.json` ni el diagnóstico de Python.
+        let estructura = resumen_pestanas(&self.pestanas);
+        let ruta_pestanas = self.carpeta.join("estructura_pestanas.json");
+        let _ = serde_json::to_vec_pretty(&estructura)
+            .map_err(std::io::Error::other)
+            .and_then(|b| std::fs::write(ruta_pestanas.with_extension("tmp"), b))
+            .and_then(|_| std::fs::rename(ruta_pestanas.with_extension("tmp"), &ruta_pestanas));
         let ruta = self.carpeta.join("diagnostico_historia.json");
         let escrito = serde_json::to_vec_pretty(&diagnostico)
             .map_err(std::io::Error::other)
@@ -520,5 +604,37 @@ impl LectorHistoria {
             }
         }
         self.persistir();
+    }
+}
+
+#[cfg(test)]
+mod pruebas_pestanas {
+    use super::*;
+
+    const HTML: &str = "<html><body>\
+        <table><tr><th>Folio</th><th>Doc.</th><th>Sel</th><th>Anexo</th><th>Etapa</th><th>Trámite</th><th>Desc. Trámite</th><th>Referencia</th><th>Fecha Tram</th></tr>\
+        <tr><td>1</td><td></td><td></td><td></td><td>E</td><td>T</td><td>D</td><td>R</td><td>01/10/2026</td></tr></table>\
+        <table><tr><th>Esta.Not.</th><th>Fec.Not.</th><th>Tipo Not.</th><th>Ente Not.</th><th>RIT</th><th>RUC</th><th>Fec.Tram.</th><th>Tip.Part.</th><th>Nombre</th><th>Trámite</th><th>Observación</th></tr>\
+        <tr><td>Realizada</td><td>02/10/2026</td><td>X</td><td>Y</td><td>X-1-2099</td><td>1</td><td>01/10/2026</td><td>P</td><td>Persona</td><td>T</td><td></td></tr>\
+        <tr><td>Fallida</td><td>03/10/2026</td><td>X</td><td>Y</td><td>X-1-2099</td><td>1</td><td>01/10/2026</td><td>P</td><td>Persona</td><td>T</td><td></td></tr></table>\
+        <table><tr><th>Folio</th><th>Doc.</th><th>Resp.</th><th>Est.Dil.</th><th>Int.</th><th>Tipo de Diligencia</th><th>Fec.Trm.</th><th>Observación</th></tr></table>\
+        <table><tr><th>Otra</th><th>Cosa</th><th>Más</th></tr><tr><td>a</td><td>b</td><td>c</td></tr></table></body></html>";
+
+    #[test]
+    fn las_pestanas_de_la_causa_se_describen_sin_valores() {
+        let a = pestanas_causa(HTML.as_bytes());
+        assert_eq!((a["historia"]["tablas"].as_u64(), a["historia"]["filas"].as_u64()), (Some(1), Some(1)));
+        assert_eq!((a["notificacion"]["tablas"].as_u64(), a["notificacion"]["filas"].as_u64()), (Some(1), Some(2)));
+        // Diligencias con encabezado y cero filas: la tabla está, vacía en ese instante.
+        assert_eq!((a["diligencias"]["tablas"].as_u64(), a["diligencias"]["filas"].as_u64()), (Some(1), Some(0)));
+        let texto = a.to_string();
+        assert!(!texto.contains("Persona") && !texto.contains("X-1-2099") && !texto.contains("Fallida"), "{texto}");
+        let sin = pestanas_causa(b"<html><body><table><tr><th>Folio</th><th>Doc.</th><th>Tr\xc3\xa1mite</th></tr></table></body></html>");
+        assert_eq!((sin["historia"]["tablas"].as_u64(), sin["notificacion"]["tablas"].as_u64(), sin["diligencias"]["tablas"].as_u64()), (Some(1), Some(0), Some(0)));
+        let r = resumen_pestanas(&[a, sin]);
+        assert_eq!(r["causas_leidas"], 2);
+        assert_eq!((r["pestanas"]["notificacion"]["causas_con_tabla"].as_u64(), r["pestanas"]["notificacion"]["causas_sin_tabla"].as_u64()), (Some(1), Some(1)));
+        assert_eq!(r["pestanas"]["notificacion"]["filas_total"], 2);
+        assert_eq!(r["pestanas"]["notificacion"]["encabezados"][0][0], "Esta.Not.");
     }
 }

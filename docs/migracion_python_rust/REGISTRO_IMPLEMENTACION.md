@@ -199,3 +199,10 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Acredita: `meta4::tests` (lote y bitácoras de Flow Python pasados a Residencia: registros, identidad visible, lecturas, inventario, publicación de los cinco productos, rechazo de lote duplicado, tribunal ajeno, lote incompleto y bitácoras ausentes) y `meta4_ui::pruebas` (genera y regenera). `tools/probar_app.sh todo`: 68 y 84 pruebas, 0 fallos; clippy de la biblioteca limpio.
 - Diferencias declaradas: no lee `bitacoras_meta4.json` ni carpetas de reportes Excel sueltos; sin `PERIODO_INCOMPLETO` (Python no lo tiene).
 - Pendiente: oráculo R1b (`meta4_bitacoras.generar` sobre un lote del Descargador, fila a fila) y CI de Windows.
+
+## 2026-11-24 · E-X1 y E-X2 · Guardia de solo lectura y diagnóstico de pestañas de la causa
+
+- Cambió: `tools/verificar_solo_lectura.py` (con `--autoprueba`) y su paso en la CI; `descargador/historia.rs` (`pestanas_causa`, `resumen_pestanas`, `estructura_pestanas.json` al cerrar); `tools/inventario_escrituras.py` (+2 escrituras).
+- Acredita: `--autoprueba` (cada control prohibido y `.Send(` se detectan; los módulos de prueba se ignoran), `pruebas_pestanas` (tablas, filas y encabezados sin valores; vacía frente a ausente) y los oráculos de bitácoras e historia sin cambios. `probar_app.sh todo`: 69 y 84 pruebas, 0 fallos; clippy limpio.
+- Origen: análisis del informe técnico RUS/SITFA del usuario.
+- Pendiente: el usuario envía `estructura_pestanas.json` de un lote real; de ahí sale la decisión sobre un lector de Notificación y Diligencias.

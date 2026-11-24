@@ -37,6 +37,8 @@ jobs:
           python3 tools/check_contactos.py app/src
           python3 tools/verificar_textos_umbrales.py
           python3 tools/inventario_escrituras.py
+          python3 tools/verificar_solo_lectura.py --autoprueba
+          python3 tools/verificar_solo_lectura.py
           python3 tools/verificar_referencia_python.py
 
   validar:
