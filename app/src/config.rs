@@ -104,6 +104,12 @@ pub struct PlantillaCorreo {
     pub destino: String,
     pub adjunto: bool,
     pub usa_modalidades: bool,
+    /// Una plantilla archivada no se ofrece para preparar correos (`archivada`).
+    #[serde(default)]
+    pub archivada: bool,
+    /// Comportamiento operativo cuando la plantilla es una copia (`categoria`); vacío: el de su clave.
+    #[serde(default)]
+    pub categoria: String,
 }
 
 pub fn plantillas_base() -> BTreeMap<String, PlantillaCorreo> {
@@ -118,6 +124,8 @@ pub fn plantillas_base() -> BTreeMap<String, PlantillaCorreo> {
                 destino: destino.into(),
                 adjunto,
                 usa_modalidades: modal,
+                archivada: false,
+                categoria: String::new(),
             },
         );
     };
@@ -208,6 +216,10 @@ pub struct Config {
     pub cc_adicional: String,
     pub firma: String,
     pub plantillas: BTreeMap<String, PlantillaCorreo>,
+    /// Alias → nombre del contacto (programa) al que apuntan.
+    pub aliases: BTreeMap<String, String>,
+    /// Versión anterior de cada plantilla editada, para «Restaurar» (`template_backups`).
+    pub plantillas_anteriores: BTreeMap<String, PlantillaCorreo>,
     pub carpeta_productos: String,
     pub tema_oscuro: bool,
     pub periodo: String,
@@ -232,6 +244,8 @@ impl Default for Config {
             cc_adicional: String::new(),
             firma: String::new(),
             plantillas: plantillas_base(),
+            aliases: BTreeMap::new(),
+            plantillas_anteriores: BTreeMap::new(),
             carpeta_productos: String::new(),
             tema_oscuro: false,
             periodo: "el período revisado".into(),
@@ -272,12 +286,17 @@ impl Config {
     }
 
     /// Correo de un programa (comparación sin tildes ni mayúsculas).
+    /// Correos de un programa; si el nombre es un alias, los del contacto al que apunta.
     pub fn contacto_programa(&self, programa: &str) -> String {
-        let k = crate::util::clave(programa);
-        self.contactos
-            .iter()
-            .find(|(n, _)| crate::util::clave(n) == k)
-            .map(|(_, v)| v.clone())
+        let buscar = |nombre: &str| {
+            let k = crate::util::clave(nombre);
+            self.contactos.iter().find(|(n, _)| crate::util::clave(n) == k).map(|(_, v)| v.clone())
+        };
+        buscar(programa)
+            .or_else(|| {
+                let k = crate::util::clave(programa);
+                self.aliases.iter().find(|(a, _)| crate::util::clave(a) == k).and_then(|(_, destino)| buscar(destino))
+            })
             .unwrap_or_default()
     }
 

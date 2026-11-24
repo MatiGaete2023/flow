@@ -264,7 +264,7 @@ pub fn preparar_borradores(w: &Trabajo, cfg: &Config, o: &OpcionesCorreo) -> Vec
             let prog = if kind == "medidas" { String::new() } else { w.value(r, "programa") };
             grupos.entry((w.tribunal_clave(r), clave(&prog))).or_default().push((*i, r));
         }
-        let Some(tpl) = cfg.plantillas.get(kind) else { continue };
+        let Some(tpl) = cfg.plantillas.get(kind).filter(|t| !t.archivada) else { continue };
         for ((trib, _), items) in grupos {
             let first = items[0].1;
             let programa = if kind == "medidas" { String::new() } else { w.value(first, "programa") };
@@ -296,7 +296,7 @@ pub fn preparar_borradores(w: &Trabajo, cfg: &Config, o: &OpcionesCorreo) -> Vec
         }
     }
     // Informativo de la etapa a cada tribunal con registros revisados en el alcance.
-    if let Some(tpl) = cfg.plantillas.get(w.mode().key()) {
+    if let Some(tpl) = cfg.plantillas.get(w.mode().key()).filter(|t| !t.archivada) {
         let mut por_trib: BTreeMap<String, Vec<usize>> = BTreeMap::new();
         for (i, r) in &regs {
             por_trib.entry(w.tribunal_clave(r)).or_default().push(*i);
@@ -334,7 +334,7 @@ pub fn preparar_borradores(w: &Trabajo, cfg: &Config, o: &OpcionesCorreo) -> Vec
 
 /// Borrador libre (gestión particular u otra plantilla) para las filas dadas.
 pub fn borrador_plantilla(w: Option<&Trabajo>, cfg: &Config, kind: &str, filas: &[usize]) -> Option<Borrador> {
-    let tpl = cfg.plantillas.get(kind)?;
+    let tpl = cfg.plantillas.get(kind).filter(|t| !t.archivada)?;
     let fecha = chrono::Local::now().format("%d/%m/%Y").to_string();
     let (trib, trib_nombre) = match (w, filas.first()) {
         (Some(w), Some(i)) => {

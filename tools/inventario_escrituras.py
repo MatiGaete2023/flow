@@ -34,6 +34,7 @@ CLASIFICACION = {
     'ui.rs': (4, 'usuario/perfil', 'carpeta de productos de Ajustes; contactos.csv por diálogo Guardar; plantillas y datos en data_dir() (solo crear carpeta)'),
     'anon.rs': (3, 'usuario', 'carpeta de salida del anonimizador; nombres nuevos con productos::nueva_ruta'),
     'copia_excel.rs': (7, 'usuario/temporal', 'copia del Excel en la carpeta de productos; ~flow-* y temp_dir() se limpian; rechaza destino existente'),
+    'personalizar.rs': (4, 'perfil', 'matrices Word importadas a data_dir()/plantillas (el original se respalda como .bak.docx; escritura por archivo temporal)'),
     'producto_excel.rs': (1, 'usuario', 'carpeta de productos de Ajustes; el libro se guarda en una ruta nueva (nueva_ruta nunca reemplaza un archivo)'),
     'productos.rs': (9, 'usuario/temporal', 'EML/XLSX/resoluciones en la carpeta de productos (nombres nuevos, carpeta Resoluciones_* nueva); borrador Outlook vía temp_dir() que se limpia'),
     'revision_ui.rs': (5, 'usuario', 'carpeta nueva de la revisión de bitácoras (create_dir falla si existe); ante error borra solo lo propio'),

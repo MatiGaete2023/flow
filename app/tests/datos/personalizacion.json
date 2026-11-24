@@ -1,0 +1,474 @@
+{
+ "contactos": [
+  {
+   "nombre": "Programa Uno",
+   "direccion": "uno@ejemplo.cl",
+   "alias": [],
+   "previo": null,
+   "contactos": {},
+   "aliases": {},
+   "resultado": {
+    "contactos": {
+     "Programa Uno": "uno@ejemplo.cl"
+    },
+    "aliases": {},
+    "tribunales": {}
+   }
+  },
+  {
+   "nombre": "Programa Uno",
+   "direccion": "uno@ejemplo.cl; dos@ejemplo.cl, UNO@ejemplo.cl\ntres@ejemplo.cl",
+   "alias": [],
+   "previo": null,
+   "contactos": {},
+   "aliases": {},
+   "resultado": {
+    "contactos": {
+     "Programa Uno": "uno@ejemplo.cl; dos@ejemplo.cl; tres@ejemplo.cl"
+    },
+    "aliases": {},
+    "tribunales": {}
+   }
+  },
+  {
+   "nombre": "",
+   "direccion": "uno@ejemplo.cl",
+   "alias": [],
+   "previo": null,
+   "contactos": {},
+   "aliases": {},
+   "error": "Indica un nombre para el contacto."
+  },
+  {
+   "nombre": "Programa Uno",
+   "direccion": "no es un correo",
+   "alias": [],
+   "previo": null,
+   "contactos": {},
+   "aliases": {},
+   "error": "Dirección inválida: no es un correo"
+  },
+  {
+   "nombre": "Tribunal: LAJA",
+   "direccion": "laja@ejemplo.cl; laja2@ejemplo.cl",
+   "alias": [],
+   "previo": null,
+   "contactos": {},
+   "aliases": {},
+   "resultado": {
+    "contactos": {},
+    "aliases": {},
+    "tribunales": {
+     "LAJA": "laja@ejemplo.cl; laja2@ejemplo.cl"
+    }
+   }
+  },
+  {
+   "nombre": "Tribunal: INEXISTENTE",
+   "direccion": "x@ejemplo.cl",
+   "alias": [],
+   "previo": null,
+   "contactos": {},
+   "aliases": {},
+   "error": "Tribunal no reconocido."
+  },
+  {
+   "nombre": "Programa Nuevo",
+   "direccion": "x@ejemplo.cl",
+   "alias": [],
+   "previo": "Tribunal: LAJA",
+   "contactos": {},
+   "aliases": {},
+   "error": "La clave del tribunal se conserva; selecciona Nuevo para crear un programa."
+  },
+  {
+   "nombre": "Programa Dos",
+   "direccion": "dos@ejemplo.cl",
+   "alias": [
+    "PD",
+    "Prog 2",
+    "PD",
+    " "
+   ],
+   "previo": null,
+   "contactos": {},
+   "aliases": {},
+   "resultado": {
+    "contactos": {
+     "Programa Dos": "dos@ejemplo.cl"
+    },
+    "aliases": {
+     "PD": "Programa Dos",
+     "Prog 2": "Programa Dos"
+    },
+    "tribunales": {}
+   }
+  },
+  {
+   "nombre": "Programa Uno",
+   "direccion": "otro@ejemplo.cl",
+   "alias": [],
+   "previo": null,
+   "contactos": {
+    "Programa Uno": "uno@ejemplo.cl"
+   },
+   "aliases": {},
+   "error": "Ya existe otro contacto con ese nombre. No se reemplazó."
+  },
+  {
+   "nombre": "programa uno",
+   "direccion": "otro@ejemplo.cl",
+   "alias": [],
+   "previo": null,
+   "contactos": {
+    "Programa Uno": "uno@ejemplo.cl"
+   },
+   "aliases": {},
+   "error": "Ya existe otro contacto con ese nombre. No se reemplazó."
+  },
+  {
+   "nombre": "Programa Uno Renombrado",
+   "direccion": "uno@ejemplo.cl",
+   "alias": [],
+   "previo": "Programa Uno",
+   "contactos": {
+    "Programa Uno": "uno@ejemplo.cl"
+   },
+   "aliases": {
+    "PU": "Programa Uno"
+   },
+   "resultado": {
+    "contactos": {
+     "Programa Uno Renombrado": "uno@ejemplo.cl"
+    },
+    "aliases": {},
+    "tribunales": {}
+   }
+  },
+  {
+   "nombre": "PU",
+   "direccion": "x@ejemplo.cl",
+   "alias": [],
+   "previo": null,
+   "contactos": {
+    "Programa Uno": "uno@ejemplo.cl"
+   },
+   "aliases": {
+    "PU": "Programa Uno"
+   },
+   "error": "El nombre ya es alias de otro contacto: PU"
+  },
+  {
+   "nombre": "Programa Tres",
+   "direccion": "tres@ejemplo.cl",
+   "alias": [
+    "Programa Uno"
+   ],
+   "previo": null,
+   "contactos": {
+    "Programa Uno": "uno@ejemplo.cl"
+   },
+   "aliases": {},
+   "error": "El alias coincide con otro contacto: Programa Uno"
+  },
+  {
+   "nombre": "Programa Tres",
+   "direccion": "tres@ejemplo.cl",
+   "alias": [
+    "PU"
+   ],
+   "previo": null,
+   "contactos": {
+    "Programa Uno": "uno@ejemplo.cl"
+   },
+   "aliases": {
+    "PU": "Programa Uno"
+   },
+   "error": "El alias ya pertenece a otro contacto: PU"
+  },
+  {
+   "nombre": "Programa Uno",
+   "direccion": "uno@ejemplo.cl",
+   "alias": [
+    "PU",
+    "P1"
+   ],
+   "previo": "Programa Uno",
+   "contactos": {
+    "Programa Uno": "uno@ejemplo.cl"
+   },
+   "aliases": {
+    "PU": "Programa Uno",
+    "Viejo": "Programa Uno"
+   },
+   "resultado": {
+    "contactos": {
+     "Programa Uno": "uno@ejemplo.cl"
+    },
+    "aliases": {
+     "P1": "Programa Uno",
+     "PU": "Programa Uno"
+    },
+    "tribunales": {}
+   }
+  }
+ ],
+ "plantillas": [
+  {
+   "operacion": "duplicar",
+   "clave": "programa_espera",
+   "nombre": "Mi plantilla",
+   "respaldo": null,
+   "prefijo": "particular_",
+   "largo_sufijo": 10,
+   "plantilla": {
+    "nombre": "Mi plantilla",
+    "asunto": "Lista de espera — {PROGRAMA} — {TRIBUNAL}",
+    "cuerpo": "Buen día:\n\nJunto con saludar, se acompaña nómina de registros en lista de espera de {PROGRAMA}, correspondientes a {TRIBUNAL}. Se solicita informar la fecha estimada de ingreso efectivo y el estado de las gestiones realizadas.\n\nAtentamente,",
+    "archivada": false,
+    "categoria": "programa_espera"
+   }
+  },
+  {
+   "operacion": "duplicar",
+   "clave": "programa_espera",
+   "nombre": "  ",
+   "respaldo": null,
+   "prefijo": "particular_",
+   "largo_sufijo": 10,
+   "plantilla": {
+    "nombre": "Lista de espera · programa · copia",
+    "asunto": "Lista de espera — {PROGRAMA} — {TRIBUNAL}",
+    "cuerpo": "Buen día:\n\nJunto con saludar, se acompaña nómina de registros en lista de espera de {PROGRAMA}, correspondientes a {TRIBUNAL}. Se solicita informar la fecha estimada de ingreso efectivo y el estado de las gestiones realizadas.\n\nAtentamente,",
+    "archivada": false,
+    "categoria": "programa_espera"
+   }
+  },
+  {
+   "operacion": "duplicar",
+   "clave": "espera",
+   "nombre": "Otra",
+   "respaldo": null,
+   "prefijo": "particular_",
+   "largo_sufijo": 10,
+   "plantilla": {
+    "nombre": "Otra",
+    "asunto": "Revisión pestaña \"Espera\" del módulo RUS — {TRIBUNAL}",
+    "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña espera del módulo RUS en SITFA, se revisaron todos los registros pertenecientes a {ALCANCE_MODALIDADES} y se registraron observaciones en bitácora.\n\nAtte. a Ud.,",
+    "archivada": false,
+    "categoria": "espera"
+   }
+  },
+  {
+   "operacion": "duplicar",
+   "clave": "inexistente",
+   "nombre": "X",
+   "respaldo": null,
+   "error": "KeyError"
+  },
+  {
+   "operacion": "archivar",
+   "clave": "medidas",
+   "nombre": "",
+   "respaldo": null,
+   "plantilla": {
+    "nombre": "Medidas sin vigencia y por vencer",
+    "asunto": "Medidas sin vigencia y por vencer — {TRIBUNAL} — {FECHA}",
+    "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día {FECHA} en {ALCANCE_MODALIDADES}.\n\nAtte. a Ud.,",
+    "archivada": true,
+    "categoria": null
+   }
+  },
+  {
+   "operacion": "desarchivar",
+   "clave": "medidas",
+   "nombre": "",
+   "respaldo": null,
+   "plantilla": {
+    "nombre": "Medidas sin vigencia y por vencer",
+    "asunto": "Medidas sin vigencia y por vencer — {TRIBUNAL} — {FECHA}",
+    "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día {FECHA} en {ALCANCE_MODALIDADES}.\n\nAtte. a Ud.,",
+    "archivada": false,
+    "categoria": null
+   }
+  },
+  {
+   "operacion": "restaurar",
+   "clave": "medidas",
+   "nombre": "",
+   "respaldo": null,
+   "plantilla": {
+    "nombre": "Medidas sin vigencia y por vencer",
+    "asunto": "Medidas sin vigencia y por vencer — {TRIBUNAL} — {FECHA}",
+    "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día {FECHA} en {ALCANCE_MODALIDADES}.\n\nAtte. a Ud.,",
+    "archivada": false,
+    "categoria": null
+   }
+  },
+  {
+   "operacion": "restaurar",
+   "clave": "inexistente",
+   "nombre": "",
+   "respaldo": null,
+   "error": "Esta plantilla todavía no tiene una versión anterior guardada."
+  },
+  {
+   "operacion": "restaurar",
+   "clave": "medidas",
+   "nombre": "",
+   "respaldo": {
+    "nombre": "Anterior",
+    "asunto": "Asunto anterior {TRIBUNAL}",
+    "cuerpo": "Cuerpo anterior {FECHA}",
+    "adjunto": "opcional",
+    "usa_modalidades": true,
+    "archivada": true
+   },
+   "plantilla": {
+    "nombre": "Anterior",
+    "asunto": "Asunto anterior {TRIBUNAL}",
+    "cuerpo": "Cuerpo anterior {FECHA}",
+    "archivada": false,
+    "categoria": null
+   }
+  }
+ ],
+ "gramatica": [
+  {
+   "texto": "Hola {TRIBUNAL}, {FECHA}",
+   "variables": [
+    "FECHA",
+    "TRIBUNAL"
+   ]
+  },
+  {
+   "texto": "Sin variables",
+   "variables": []
+  },
+  {
+   "texto": "{{TRIBUNAL}} literal y {PROGRAMA}",
+   "variables": [
+    "PROGRAMA"
+   ]
+  },
+  {
+   "texto": "{TRIBUNAL",
+   "error": "Plantilla con llaves incompletas: expected '}' before end of string"
+  },
+  {
+   "texto": "TRIBUNAL}",
+   "error": "Plantilla con llaves incompletas: Single '}' encountered in format string"
+  },
+  {
+   "texto": "{TRIBUNAL!r}",
+   "error": "Variable de plantilla inválida: {TRIBUNAL}. Usa solo los nombres ofrecidos, sin formatos ni conversiones."
+  },
+  {
+   "texto": "{TRIBUNAL:>10}",
+   "error": "Variable de plantilla inválida: {TRIBUNAL}. Usa solo los nombres ofrecidos, sin formatos ni conversiones."
+  },
+  {
+   "texto": "{}",
+   "error": "Variable de plantilla inválida: {}. Usa solo los nombres ofrecidos, sin formatos ni conversiones."
+  },
+  {
+   "texto": "{DESCONOCIDA}",
+   "error": "Variable de plantilla inválida: {DESCONOCIDA}. Usa solo los nombres ofrecidos, sin formatos ni conversiones."
+  },
+  {
+   "texto": "{TRIBUNAL} {TRIBUNAL}",
+   "variables": [
+    "TRIBUNAL"
+   ]
+  },
+  {
+   "texto": "a { b",
+   "error": "Plantilla con llaves incompletas: expected '}' before end of string"
+  },
+  {
+   "texto": "{{",
+   "variables": []
+  },
+  {
+   "texto": "}}",
+   "variables": []
+  },
+  {
+   "texto": "{TABLA_REGISTROS}",
+   "variables": [
+    "TABLA_REGISTROS"
+   ]
+  }
+ ],
+ "matrices": [
+  {
+   "nombres": [
+    "LAJA_PC_IE.docx",
+    "MULCHEN PC INFO.docx",
+    "tomé/NOMENCLATURA TOME.docx"
+   ],
+   "invalidos": [],
+   "importadas": [
+    "LAJA/PC_IE.docx",
+    "MULCHEN/PC_INFO.docx",
+    "TOME/NOMENCL.docx"
+   ],
+   "sin_clasificar": []
+  },
+  {
+   "nombres": [
+    "Plantillas/laja/PC_IE.docx",
+    "Mulchén_pc_info.docx",
+    "Sin sentido.docx",
+    "leeme.txt"
+   ],
+   "invalidos": [],
+   "importadas": [
+    "LAJA/PC_IE.docx",
+    "MULCHEN/PC_INFO.docx"
+   ],
+   "sin_clasificar": [
+    "Sin sentido.docx"
+   ]
+  },
+  {
+   "nombres": [
+    "LAJA_PC_IE.docx",
+    "LAJA PC IE copia.docx"
+   ],
+   "invalidos": [],
+   "error": "Hay dos matrices para LAJA/PC_IE. Conserva una versión por tipo."
+  },
+  {
+   "nombres": [
+    "LAJA_PC_IE.docx"
+   ],
+   "invalidos": [
+    "LAJA_PC_IE.docx"
+   ],
+   "error": "BadZipFile"
+  },
+  {
+   "nombres": [
+    "LAJA_MULCHEN_PC_IE.docx"
+   ],
+   "invalidos": [],
+   "importadas": [],
+   "sin_clasificar": [
+    "LAJA_MULCHEN_PC_IE.docx"
+   ]
+  },
+  {
+   "nombres": [
+    "TOME_NOMENCL.docx",
+    "TOME_PC_IE.docx"
+   ],
+   "invalidos": [],
+   "importadas": [
+    "TOME/NOMENCL.docx",
+    "TOME/PC_IE.docx"
+   ],
+   "sin_clasificar": []
+  }
+ ]
+}

@@ -16,6 +16,13 @@ Una entrada por encargo, de diez líneas como máximo, la más reciente arriba:
 
 No se copian salidas completas ni listas de mutaciones: la prueba afirma sus conteos y la CI del commit es la evidencia.
 
+## 2026-11-24 · E-A4: ajustes
+
+- Cambió: `personalizar.rs` (nuevo), `config.rs` (alias, plantillas anteriores, archivada y categoría), `ui.rs` (alias en Contactos, editor de plantillas, importar matrices y plantilla de «Gestión particular») y `productos.rs` (una plantilla archivada no prepara correos); oráculo `app/qa/generar_personalizacion.py` → `app/tests/datos/personalizacion.json`, agregado a la regeneración de la CI.
+- Acredita: `AJUSTES: 44/44` contra `save_contact`, `duplicate_template`, `archive_template`, `restore_template`, `template_validation.variables` e `import_templates`; `oraculo_de_ajustes_detecta_alteraciones`; `una_copia_de_plantilla_sirve_para_gestion_particular_y_una_archivada_no`; `tools/probar_app.sh todo`: 64 y 59 pruebas, 0 fallos; `inventario_escrituras` PASA (71 en 18).
+- Diferencias declaradas: las de [PLAN.md](PLAN.md).
+- Pendiente: CI de Windows.
+
 ## 2026-11-24 · E-A3: recibos, vigencia y recuperación
 
 - Cambió: `preparados.rs` (nuevo), `ui.rs` (sellado al preparar, aviso «desactualizado», bloqueo al guardar, borradores repetidos, recibos, guardado y recuperación de la sesión), `conciliar.rs` (los productos pasan a la captura nueva marcados `REVISAR_CAPTURA_ANTERIOR`), `productos.rs` y `trabajo.rs` (`Preparados` en la sesión).

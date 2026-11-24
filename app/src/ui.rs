@@ -97,6 +97,15 @@ pub struct App {
     // contactos
     nuevo_prog: String,
     nuevo_mail: String,
+    nuevo_alias: String,
+    /// Lo que se está editando en cada fila de contactos (correos y alias) antes de guardarlo.
+    contacto_buf: std::collections::BTreeMap<String, (String, String)>,
+    /// Plantilla de correo elegida en Ajustes y su copia en edición.
+    plantilla_sel: String,
+    plantilla_edicion: Option<(String, crate::config::PlantillaCorreo)>,
+    plantilla_error: Option<String>,
+    /// Plantilla que usa «Gestión particular».
+    plantilla_particular: String,
     filtro_contactos: String,
     filtro_umbrales: String,
     // anonimizador
@@ -149,6 +158,12 @@ impl App {
             solo_sel_res: false,
             productos: vec![],
             nuevo_prog: String::new(),
+            nuevo_alias: String::new(),
+            contacto_buf: std::collections::BTreeMap::new(),
+            plantilla_sel: "espera".into(),
+            plantilla_edicion: None,
+            plantilla_error: None,
+            plantilla_particular: "especial".into(),
             nuevo_mail: String::new(),
             filtro_contactos: String::new(),
             filtro_umbrales: String::new(),
@@ -1535,6 +1550,7 @@ impl App {
         theme::titulo(ui, p, "Correos", "Borradores listos para revisar: en Borradores de Outlook o como .eml sin enviar. Nunca se envían. Todos llevan CC a ucc_concepcion@pjud.cl.");
         let mut accion: Option<&'static str> = None;
         let mut guardar_destino = false;
+        let mut particular = false;
         theme::card(p).show(ui, |ui| {
             ui.set_width(ui.available_width());
             ui.horizontal_wrapped(|ui| {
@@ -1575,8 +1591,27 @@ impl App {
                 if ui.add_enabled(hay, egui::Button::new(RichText::new("✉  Preparar borradores").color(Color32::WHITE).strong()).fill(p.accent)).clicked() {
                     accion = Some("preparar");
                 }
+                let particulares: Vec<(String, String)> = self
+                    .cfg
+                    .plantillas
+                    .iter()
+                    .filter(|(k, t)| !t.archivada && (*k == "especial" || k.starts_with("particular_")))
+                    .map(|(k, t)| (k.clone(), t.nombre.clone()))
+                    .collect();
+                if !particulares.iter().any(|(k, _)| *k == self.plantilla_particular) {
+                    self.plantilla_particular = "especial".into();
+                }
                 if ui.add_enabled(hay, egui::Button::new("Gestión particular")).on_hover_text("Correo libre al tribunal con las filas marcadas en Trabajo").clicked() {
-                    accion = Some("especial");
+                    particular = true;
+                }
+                if particulares.len() > 1 {
+                    egui::ComboBox::from_id_salt("plantilla particular")
+                        .selected_text(particulares.iter().find(|(k, _)| *k == self.plantilla_particular).map(|(_, n)| n.clone()).unwrap_or_default())
+                        .show_ui(ui, |ui| {
+                            for (k, n) in &particulares {
+                                ui.selectable_value(&mut self.plantilla_particular, k.clone(), n);
+                            }
+                        });
                 }
                 if ui.add_enabled(!self.proyectos.is_empty(), egui::Button::new("Reporte de proyectos")).on_hover_text("Necesita proyectos preparados en Resoluciones").clicked() {
                     accion = Some("proyectos");
@@ -1601,6 +1636,10 @@ impl App {
             Some("guardar") => self.guardar_borradores(None),
             Some(k) => self.preparar_tipo(k),
             None => {}
+        }
+        if particular {
+            let kind = self.plantilla_particular.clone();
+            self.preparar_tipo(&kind);
         }
         ui.add_space(8.0);
         if self.borradores.is_empty() {
@@ -2172,13 +2211,22 @@ impl App {
                     });
                 });
                 ui.horizontal(|ui| {
-                    ui.add(egui::TextEdit::singleline(&mut self.nuevo_prog).hint_text("Nombre del programa (como en DERIVACION)").desired_width(300.0));
-                    ui.add(egui::TextEdit::singleline(&mut self.nuevo_mail).hint_text("correo@example.invalid").desired_width(260.0));
+                    ui.add(egui::TextEdit::singleline(&mut self.nuevo_prog).hint_text("Nombre del programa (como en DERIVACION)").desired_width(260.0));
+                    ui.add(egui::TextEdit::singleline(&mut self.nuevo_mail).hint_text("correo@example.invalid").desired_width(220.0));
+                    ui.add(egui::TextEdit::singleline(&mut self.nuevo_alias).hint_text("Alias (separados por coma)").desired_width(180.0));
                     if ui.button("➕ Agregar").clicked() && !self.nuevo_prog.trim().is_empty() {
-                        self.cfg.contactos.insert(self.nuevo_prog.trim().to_string(), self.nuevo_mail.trim().to_string());
-                        self.nuevo_prog.clear();
-                        self.nuevo_mail.clear();
-                        guardar = true;
+                        let alias: Vec<String> = self.nuevo_alias.split(',').map(str::to_string).collect();
+                        match crate::personalizar::guardar_contacto(&self.cfg, &self.nuevo_prog, &self.nuevo_mail, &alias, None) {
+                            Ok(c) => {
+                                self.cfg = c;
+                                self.nuevo_prog.clear();
+                                self.nuevo_mail.clear();
+                                self.nuevo_alias.clear();
+                                self.contacto_buf.clear();
+                                guardar = true;
+                            }
+                            Err(e) => self.aviso(e, true),
+                        }
                     }
                 });
                 if !faltan.is_empty() {
@@ -2194,21 +2242,47 @@ impl App {
                 ui.add_space(4.0);
                 let q = clave(&self.filtro_contactos);
                 let mut borrar = None;
-                egui::Grid::new("progs").striped(true).num_columns(3).spacing([10.0, 4.0]).show(ui, |ui| {
-                    for (k, v) in self.cfg.contactos.iter_mut() {
-                        if !q.is_empty() && !clave(k).contains(&q) && !clave(v).contains(&q) {
+                let mut cambio: Option<(String, String, String)> = None;
+                let filas: Vec<(String, String)> = self.cfg.contactos.iter().map(|(k, v)| (k.clone(), v.clone())).collect();
+                ui.label(RichText::new("Los alias son otros nombres con los que aparece el programa en DERIVACION; usan los mismos correos.").size(12.0).color(p.muted));
+                egui::Grid::new("progs").striped(true).num_columns(4).spacing([10.0, 4.0]).show(ui, |ui| {
+                    for (k, v) in filas {
+                        if !q.is_empty() && !clave(&k).contains(&q) && !clave(&v).contains(&q) {
                             continue;
                         }
+                        let alias_actuales = crate::personalizar::alias_de(&self.cfg, &k).join(", ");
+                        let buf = self.contacto_buf.entry(k.clone()).or_insert_with(|| (v.clone(), alias_actuales));
                         ui.label(k.as_str());
-                        guardar |= ui.add(egui::TextEdit::singleline(v).desired_width(340.0)).lost_focus();
+                        let a = ui.add(egui::TextEdit::singleline(&mut buf.0).desired_width(300.0)).lost_focus();
+                        let b = ui.add(egui::TextEdit::singleline(&mut buf.1).hint_text("alias, separados por coma").desired_width(200.0)).lost_focus();
+                        if a || b {
+                            cambio = Some((k.clone(), buf.0.clone(), buf.1.clone()));
+                        }
                         if ui.small_button("🗑").clicked() {
                             borrar = Some(k.clone());
                         }
                         ui.end_row();
                     }
                 });
+                if let Some((nombre, correo, alias)) = cambio {
+                    let alias: Vec<String> = alias.split(',').map(str::to_string).collect();
+                    match crate::personalizar::guardar_contacto(&self.cfg, &nombre, &correo, &alias, Some(&nombre)) {
+                        Ok(c) => {
+                            if c.contactos != self.cfg.contactos || c.aliases != self.cfg.aliases {
+                                self.cfg = c;
+                                guardar = true;
+                            }
+                        }
+                        Err(e) => {
+                            self.contacto_buf.remove(&nombre);
+                            self.aviso(e, true);
+                        }
+                    }
+                }
                 if let Some(k) = borrar {
                     self.cfg.contactos.remove(&k);
+                    self.cfg.aliases.retain(|_, d| *d != k);
+                    self.contacto_buf.remove(&k);
                     guardar = true;
                 }
             });
@@ -2221,6 +2295,84 @@ impl App {
         }
         if guardar {
             self.guardar_cfg();
+        }
+    }
+
+    /// Plantillas de correo: elegir, editar con el selector de variables, duplicar, archivar y restaurar.
+    fn editor_plantillas(&mut self, ui: &mut egui::Ui, p: &Pal) {
+        if !self.cfg.plantillas.contains_key(&self.plantilla_sel) {
+            self.plantilla_sel = self.cfg.plantillas.keys().next().cloned().unwrap_or_default();
+            self.plantilla_edicion = None;
+        }
+        if self.plantilla_edicion.as_ref().is_none_or(|(k, _)| *k != self.plantilla_sel) {
+            self.plantilla_edicion = self.cfg.plantillas.get(&self.plantilla_sel).map(|t| (self.plantilla_sel.clone(), t.clone()));
+        }
+        let etiqueta = |k: &String, t: &config::PlantillaCorreo| format!("{}{}", t.nombre, if t.archivada { " (archivada)" } else { "" }) + &format!("  [{k}]");
+        let actual = self.cfg.plantillas.get(&self.plantilla_sel).map(|t| etiqueta(&self.plantilla_sel, t)).unwrap_or_default();
+        let mut elegida = None;
+        egui::ComboBox::from_id_salt("plantilla correo").width(420.0).selected_text(actual).show_ui(ui, |ui| {
+            for (k, t) in &self.cfg.plantillas {
+                if ui.selectable_label(*k == self.plantilla_sel, etiqueta(k, t)).clicked() {
+                    elegida = Some(k.clone());
+                }
+            }
+        });
+        if let Some(k) = elegida {
+            self.plantilla_sel = k;
+            self.plantilla_error = None;
+            return;
+        }
+        let Some((clave, edicion)) = self.plantilla_edicion.as_mut() else { return };
+        ui.horizontal(|ui| {
+            ui.label("Nombre");
+            ui.add(egui::TextEdit::singleline(&mut edicion.nombre).desired_width(360.0));
+        });
+        ui.horizontal(|ui| {
+            ui.label("Asunto");
+            ui.add(egui::TextEdit::singleline(&mut edicion.asunto).desired_width(f32::INFINITY));
+        });
+        ui.add(egui::TextEdit::multiline(&mut edicion.cuerpo).desired_rows(6).desired_width(f32::INFINITY));
+        let (mut guardar_p, mut duplicar, mut archivar, mut restaurar) = (false, false, false, false);
+        ui.horizontal_wrapped(|ui| {
+            egui::ComboBox::from_id_salt("variable correo").selected_text("Insertar variable…").show_ui(ui, |ui| {
+                for v in crate::personalizar::VARIABLES {
+                    if ui.selectable_label(false, format!("{{{v}}}")).clicked() {
+                        edicion.cuerpo.push_str(&format!("{{{v}}}"));
+                    }
+                }
+            });
+            guardar_p = theme::primary(ui, p, "Guardar plantilla").clicked();
+            duplicar = ui.button("Duplicar").clicked();
+            archivar = ui.button(if edicion.archivada { "Desarchivar" } else { "Archivar" }).clicked();
+            restaurar = ui.button("↺ Restaurar versión anterior").clicked();
+        });
+        ui.label(RichText::new("Variables: solo las del selector, sin formatos. Una copia sirve para «Gestión particular».").size(12.0).color(p.muted));
+        let (clave, edicion) = (clave.clone(), edicion.clone());
+        let resultado = if guardar_p {
+            Some(crate::personalizar::guardar_plantilla(&self.cfg, &clave, edicion).map(|c| (c, clave.clone(), "Plantilla guardada.")))
+        } else if duplicar {
+            Some(crate::personalizar::duplicar_plantilla(&self.cfg, &clave, &format!("{} · copia", edicion.nombre)).map(|(c, k)| (c, k, "Plantilla duplicada.")))
+        } else if archivar {
+            Some(crate::personalizar::archivar_plantilla(&self.cfg, &clave, !edicion.archivada).map(|c| (c, clave.clone(), "Plantilla actualizada.")))
+        } else if restaurar {
+            Some(crate::personalizar::restaurar_plantilla(&self.cfg, &clave).map(|c| (c, clave.clone(), "Plantilla restaurada.")))
+        } else {
+            None
+        };
+        match resultado {
+            Some(Ok((c, k, mensaje))) => {
+                self.cfg = c;
+                self.plantilla_sel = k;
+                self.plantilla_edicion = None;
+                self.plantilla_error = None;
+                self.guardar_cfg();
+                self.aviso(mensaje, false);
+            }
+            Some(Err(e)) => self.plantilla_error = Some(e),
+            None => {}
+        }
+        if let Some(e) = &self.plantilla_error {
+            ui.label(RichText::new(e).color(p.amber));
         }
     }
 
@@ -2511,9 +2663,22 @@ impl App {
                         ui.label("Período (reporte de proyectos)");
                         guardar |= ui.add(egui::TextEdit::singleline(&mut self.cfg.periodo).desired_width(220.0)).lost_focus();
                     });
+                    ui.add_space(6.0);
+                    self.editor_plantillas(ui, p);
                     ui.add_space(10.0);
                     theme::seccion(ui, p, "Carpetas");
                     ui.horizontal(|ui| {
+                        if ui.button("Importar matrices Word (ZIP)…").on_hover_text("Un ZIP con una matriz por tribunal y tipo (por ejemplo LAJA_PC_IE.docx). Las que ya existían se respaldan.").clicked() {
+                            if let Some(zip) = rfd::FileDialog::new().set_title("ZIP de matrices Word").add_filter("ZIP", &["zip"]).pick_file() {
+                                match crate::personalizar::importar_matrices(&zip, &config::data_dir().join("plantillas")) {
+                                    Ok(r) => {
+                                        let sin = if r.sin_clasificar.is_empty() { String::new() } else { format!(" Sin clasificar: {}.", r.sin_clasificar.join(", ")) };
+                                        self.aviso(format!("{} matrices importadas.{sin}", r.importadas.len()), r.importadas.is_empty());
+                                    }
+                                    Err(e) => self.aviso(e, true),
+                                }
+                            }
+                        }
                         if ui.button("📁 Plantillas Word propias").clicked() {
                             let d = config::data_dir().join("plantillas");
                             let _ = std::fs::create_dir_all(&d);
@@ -2869,6 +3034,28 @@ mod pruebas_vigencia {
             .flat_map(|d| std::fs::read_dir(d.path()).into_iter().flatten().flatten())
             .filter(|f| f.path().extension().is_some_and(|e| e == "eml"))
             .count()
+    }
+
+    #[test]
+    fn una_copia_de_plantilla_sirve_para_gestion_particular_y_una_archivada_no() {
+        let (_candado, perfil) = crate::prueba_entorno::perfil_aislado();
+        let base = perfil.join("plantillas-particulares");
+        let _ = std::fs::remove_dir_all(&base);
+        let mut app = abrir_listados(&base);
+        app.work.as_mut().unwrap().registros.iter_mut().for_each(|r| r.seleccionada = true);
+        let (cfg, copia) = crate::personalizar::duplicar_plantilla(&app.cfg, "especial", "Mi gestión").unwrap();
+        app.cfg = cfg;
+        app.preparar_tipo(&copia);
+        assert_eq!(app.borradores.len(), 1);
+        assert_eq!(app.borradores[0].kind, copia);
+        // Archivada, la plantilla ya no prepara correos.
+        app.cfg = crate::personalizar::archivar_plantilla(&app.cfg, &copia, true).unwrap();
+        app.preparar_tipo(&copia);
+        assert_eq!(app.borradores.len(), 1, "una plantilla archivada no prepara borradores");
+        app.cfg = crate::personalizar::archivar_plantilla(&app.cfg, "cumplimiento", true).unwrap();
+        app.preparar_tipo("cumplimiento");
+        assert_eq!(app.borradores.len(), 1);
+        let _ = std::fs::remove_dir_all(&base);
     }
 
     #[test]

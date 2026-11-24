@@ -1,6 +1,6 @@
 # Estado de Flow Rust
 
-Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q7 el producto de Trabajo sin consolidado (E-W1) E-A1, E-U1, E-A2 y E-A3. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
+Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q7 el producto de Trabajo sin consolidado (E-W1) E-A1, E-U1, E-A2, E-A3 y E-A4. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
 
 - Aplicación: `app/` (`flow_rust.exe`). Referencia funcional: rama `flow-python`.
 - Rama única: `estudio/paridad-python-rust-20261119`.
@@ -32,7 +32,7 @@ Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q
 - **F08 Edición y revisión — Parcial.** Sin cotejo de edición masiva, deshacer ni selecciones ocultas.
 - **F09 Sesión y vigencia — Sí, sin oráculo de huellas.** Los correos y proyectos preparados se sellan con la huella de lo que leen (registros, plantillas, contactos, firma, captura); si eso cambia quedan «desactualizados» y no se guardan. Cada borrador guardado deja un recibo y uno idéntico no se crea dos veces. La sesión recupera los productos preparados y sus recibos; al conciliar capturas pasan marcados para revisar. Las huellas son propias de Rust (no coinciden byte a byte con Python); su comportamiento se prueba de punta a punta. Sin estado «incierto» tras un fallo de Outlook.
 - **F10 Excel preservado — Parcial.** «Actualizar desde Excel» (E-A1) trae la revisión de la copia (observación, `FECHA_OBS`, `TT`, `CC`, `RES`) con asociación por identidad y conflictos que se resuelven en pantalla, contrastado con Python en 12 casos. Falta recalcular cuando se editan columnas de origen en Excel y combinar `NURUS_DECISIONES`. Sin libro base (paquete sin consolidado), el producto sale como libro nuevo con la estructura de `FAE_RES` (hojas de servicio, todas las columnas del registro, las 10 columnas de revisión en el orden del usuario y `NURUS_CLAVE_INGRESO`); la copia preservada sigue exigiendo Windows y Excel de escritorio.
-- **F11 Configuración y contactos — Parcial.** 16 umbrales y textos con verificador. Faltan alias, selector de variables, plantillas de correo persistentes e importador de matrices y paquetes.
+- **F11 Configuración y contactos — Parcial.** 16 umbrales y textos con verificador. Alias de contactos con las mismas colisiones que Python, editor de plantillas de correo con selector de variables, duplicar, archivar y restaurar, e importación de matrices Word desde un ZIP (E-A4), contrastados con Python en 44 casos. Falta el importador de matrices de contactos y paquetes de plantillas con revisión empaquetada (`install_bundled_templates`, no aplica a Rust). Una copia de plantilla sirve para «Gestión particular»; el correo automático por programa sigue usando las plantillas base.
 - **F12 Correos y nómina — Parcial.** Sin cotejo de agrupación, firma y alcance.
 - **F13 Borradores Outlook — Parcial.** EML y Outlook. Falta elegir la cuenta y simular fallos. Sin prueba con Outlook real.
 - **F14 Proyectos Word — Sí.** Matrices de Laja y Mulchén. Por confirmar con el usuario: un `.docx` por proyecto.
