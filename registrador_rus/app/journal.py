@@ -159,7 +159,7 @@ class _JournalCore:
                             (current.operation_id,row['digest'],self.storage.seal('actor',current.operation_id,human_actor),self._now()))
             self._audit(current.operation_id, 'AUTORIZACION_SIMULADA' if self._simulated else 'AUTORIZACION_PILOTO')
 
-    def _reserve_attempt(self, current, *, expected_evidence_digest=None):
+    def _reserve_attempt(self, current, *, expected_evidence_digest=None, record_reservation=None):
         """Una sola reserva global sin resolver; persiste antes de devolver control."""
         with self._tx():
             row = self._require_current(current.operation_id, current)
@@ -190,6 +190,8 @@ class _JournalCore:
             self.db.execute('UPDATE authorizations SET consumed=1 WHERE operation_id=?', (current.operation_id,))
             self.db.execute('UPDATE operations SET state=? WHERE operation_id=?', ('ENVIANDO', current.operation_id))
             self._audit(current.operation_id, 'RESERVA_SIMULADA' if self._simulated else 'RESERVA_PILOTO')
+            if record_reservation is not None:
+                record_reservation(row,now)
         return 'ENVIANDO'
 
     def bind_baseline(self, current, raw, **context):

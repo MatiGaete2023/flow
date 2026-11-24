@@ -56,6 +56,9 @@ class PilotJournal(_JournalCore):
             self.db.execute('''CREATE TABLE IF NOT EXISTS pilot_review(
                 operation_id TEXT PRIMARY KEY REFERENCES operations(operation_id),
                 evidence BLOB NOT NULL, digest TEXT NOT NULL)''')
+            self.db.execute('''CREATE TABLE IF NOT EXISTS pilot_reservations(
+                operation_id TEXT PRIMARY KEY REFERENCES write_attempts(operation_id),
+                reservation_digest TEXT NOT NULL, created_at TEXT NOT NULL)''')
             value=json.dumps(dict(directory=str(policy.directory),retention_days=policy.retention_days,
                                   acceptance_reference=policy.acceptance_reference,authority_confirmed=True),
                              ensure_ascii=False,sort_keys=True,separators=(',',':'))
@@ -129,10 +132,25 @@ class PilotJournal(_JournalCore):
         # Vincular el baseline que se acaba de examinar con la reserva transaccional.
         row=self.db.execute('SELECT evidence_digest FROM readback_baselines WHERE operation_id=?',(op.operation_id,)).fetchone()
         if row is None:raise JournalError('BASELINE_REQUERIDA')
-        self._reserve_attempt(op,expected_evidence_digest=row[0])
-        # Solo se devuelve tras COMMIT. Un corte posterior se recupera por lectura.
+        reservation=secrets.token_hex(32)
+        def record(current_row,now):
+            self.db.execute('INSERT INTO pilot_reservations VALUES(?,?,?)',
+                (op.operation_id,self.storage.digest('reservation',reservation),now))
+        self._reserve_attempt(op,expected_evidence_digest=row[0],record_reservation=record)
+        # Solo se devuelve tras COMMIT; no existe función para reemitirlo.
         return dict(operation_id=op.operation_id,approved_text_sha256=op.approved_text_sha256,
-                    approval_version=op.approval_version,state='ENVIANDO',reservation_id=secrets.token_hex(32))
+                    approval_version=op.approval_version,state='ENVIANDO',reservation_id=reservation)
+
+    def load_unresolved(self):
+        ids=self.recover_unresolved()
+        if len(ids)!=1:raise JournalError('RECUPERACION_REQUIERE_INTENTO_UNICO')
+        row=self._row(ids[0])
+        payload=self.storage.unseal('payload',ids[0],row['payload'])
+        if self.storage.digest('approval',payload)!=row['digest']:
+            raise JournalError('APROBACION_CAMBIADA')
+        op=RegistroFlowV1.from_mapping(json.loads(payload))
+        self._require_current(ids[0],op);self._review_valid(op)
+        return op
 
     def resolve_creation(self,op,raw):
         # Solo lectura posterior a una reserva ya existente, nunca otro envío.
