@@ -38,3 +38,9 @@ P1 — implementar contrato y esquema local aislado, pruebas focalizadas. Manten
 - Decisiones: modelo inmutable, identidad SITFA completa y exacta; no coerción de identificadores; destino explícito separado de Estado; conserva Unicode y espacios del texto, SHA-256 sobre UTF-8; fecha UTC con Z y versión positiva. require_same_approval compara todo el contrato contra la aprobación vigente obtenida por el consumidor local; no acredita identidad del aprobador. El límite de longitud real se verifica en P2/P3, sin truncar.
 - Prueba local: 5 métodos unittest, todos OK, incluyendo ocho combinaciones origen/destino y casos inválidos; Python 3.13.5 Linux. No se ejecutó suite global ni pruebas sobre RUS. Blobs esperados del código y pruebas: 0ff9bdb10936c71794f1353bdd6ef9ff3a93a6d4 y 6ce4a210903394d2e265c10c804a2c5dfd7e1454. El esquema estructural se incorpora, falta prueba específica de concordancia JSON Schema. Python 3.12/Windows pendiente.
 - Siguiente: cerrar comprobación de esquema P1 y desarrollar P2 con fixture ficticio y detección inequívoca; no inventar selectores reales. P0 arranque/importación de Flow pendiente por entorno sin DNS. P8/P9 productivos bloqueados.
+
+### Cierre de P1
+
+- Comprobación remota: los blobs de contracts.py y test_contracts.py coinciden con los archivos ejecutados localmente. Esquema JSON blob `49f2a3744311d307100217211fff4b460512093d`, verificado localmente con el mismo hash.
+- Prueba focalizada adicional: `python -m unittest discover -s registrador_rus/tests -p test_schema.py -v`: 2 OK, Python 3.13.5 Linux, jsonschema (dependencia dev ya declarada en pyproject.toml). Comprueba esquema Draft 2020-12, ejemplos válidos e inválidos, y que un digest formalmente válido no sustituye el cálculo del hash. Blob esperado del test: `432fb66cae9b87892cff5f495e7ab3ef76dd9d40`.
+- P1: 7 métodos de prueba OK. P2 es el siguiente paquete. No aceptación institucional ni prueba en Windows; P0 arranque de Flow sigue pendiente.

@@ -11,3 +11,7 @@ Prueba desde la raíz del repositorio (Python 3.12 objetivo; probado en 3.13.5 L
 El esquema JSON describe la estructura; la validación Python es obligatoria para digest, fecha real, Unicode y aprobación vigente.
 
 Continuidad y límites: [CONTINUAR.md](CONTINUAR.md).
+
+Para comprobar también el esquema (solo desarrollo, requiere jsonschema de los extras dev de Flow):
+
+    python -m unittest discover -s registrador_rus/tests -p test_schema.py -v
