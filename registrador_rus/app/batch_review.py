@@ -1,8 +1,9 @@
 """Conjunto exacto a revisar y resumen categórico. Sin autorización ni escritura real."""
 from collections import Counter
-from dataclasses import asdict, dataclass
-from hashlib import sha256
-import json
+from dataclasses import dataclass
+
+from .batch_store import selection_digest
+from .contracts import ContractError
 
 from .contracts import RegistroFlowV1
 from .journal import SimulationJournal, JournalError
@@ -14,16 +15,14 @@ class BatchSelection:
     operations: tuple[RegistroFlowV1, ...]
 
     def __post_init__(self):
-        ops = self.operations
-        if type(ops) is not tuple or not 1 <= len(ops) <= 400 or any(type(op) is not RegistroFlowV1 for op in ops):
-            raise JournalError('LOTE_INVALIDO')
-        if len({op.operation_id for op in ops}) != len(ops) or len({op.remote_identity for op in ops}) != len(ops):
-            raise JournalError('INGRESO_O_INTENCION_REPETIDA_REVISAR')
+        try:
+            selection_digest(self.operations)
+        except ContractError as exc:
+            raise JournalError(str(exc)) from None
 
     @property
     def digest(self):
-        data = json.dumps([asdict(op) for op in self.operations], ensure_ascii=False, sort_keys=True, separators=(',', ':'))
-        return sha256(data.encode('utf-8')).hexdigest()
+        return selection_digest(self.operations)
 
     def require_unchanged(self, current):
         if type(current) is not BatchSelection or current != self:

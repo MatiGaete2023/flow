@@ -55,8 +55,15 @@ def candidate(work, row_ref, *, work_id, origin, destination, observation_state)
     if len(rows) != 1 or row_ref.startswith('calendar:'):
         _fail('FILA_NO_UNICA_O_FUERA_DE_ALCANCE')
     row = rows[0]
-    if row.excluded or row.warnings or getattr(row, 'sync_state', '') not in ('', 'SIN_CAMBIOS'):
+    if row.excluded or row.warnings:
         _fail('FILA_REQUIERE_REVISION')
+    # sync_state es NURUS_DECISIONES serializado, no un indicador de conflicto.
+    if getattr(row, 'sync_state', ''):
+        try:
+            from nurus.personal.record_edits import decode
+            decode(row.sync_state)
+        except (ImportError, ValueError):
+            _fail('SINCRONIZACION_NO_VALIDADA')
     provenance = getattr(work, 'capture_sources', {}).get(row_ref, {})
     if provenance.get('identity_status') != 'VERIFICADA' or provenance.get('record_type') != ORIGIN_TYPE[origin]:
         _fail('PROCEDENCIA_NO_VERIFICADA')
