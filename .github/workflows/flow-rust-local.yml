@@ -155,6 +155,8 @@ jobs:
       - name: Regenerar los oráculos con la referencia Python
         if: steps.cambios.outputs.oraculos == 'true'
         shell: pwsh
+        env:
+          PYTHONUTF8: '1'
         run: |
           foreach ($o in @('a78', 'lecturas', 'vinculos', 'bitacoras', 'lote', 'paquete', 'excel', 'resultados', 'sync')) {
             $salida = Join-Path $env:RUNNER_TEMP "$o.json"

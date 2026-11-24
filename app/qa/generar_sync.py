@@ -17,6 +17,8 @@ import zipfile
 from datetime import date, datetime
 from pathlib import Path
 
+sys.stdout.reconfigure(encoding='utf-8')
+sys.stderr.reconfigure(encoding='utf-8')
 RAIZ = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(RAIZ / 'src')]
 
