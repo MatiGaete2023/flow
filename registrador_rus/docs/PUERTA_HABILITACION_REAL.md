@@ -39,3 +39,7 @@ Esta especificación operacional desarrolla P8/P9 del plan integral y la excepci
 - No se acredita persistencia real, ni resultado en bandeja del tribunal más allá de la regla funcional de la casilla fijada por el usuario.
 - No se habilita un interruptor de escritura, ni se solicita un registro de prueba hasta satisfacer precondiciones.
 - No se modifica Descargador, motor ni otras ramas; no se amplía el alcance a SATURNO.
+
+## Avance del núcleo DOM candidato
+
+extension/live_adapter.js usa los perfiles reales del listado y la estructura observada de la ventana. No está cargado en ninguna extensión distribuida. Incluye lectura local y preparación, y acción de creación única bloqueada por constante de código; no habilitarla mientras G03–G12 no estén acreditados y no exista controlador de reserva real. El parámetro reservation del núcleo NO es por sí solo prueba de reserva durable ni autorización; esa prueba debe provenir del controlador local y nunca de una página RUS. CI del núcleo pendiente.

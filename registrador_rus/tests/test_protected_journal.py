@@ -164,12 +164,12 @@ class NativeProtectedJournalTests(unittest.TestCase):
             expanded.AddAccessAllowedAceEx(2,flags,mask,sid)
         expanded.AddAccessAllowedAceEx(2,0,0x120089,s.ConvertStringSidToSid('S-1-1-0'))
         try:
-            s.SetNamedSecurityInfo(str(self.folder),s.SE_FILE_OBJECT,s.DACL_SECURITY_INFORMATION|0x80000000,None,None,expanded,None)
+            s.SetNamedSecurityInfo(str(self.folder),s.SE_FILE_OBJECT,s.DACL_SECURITY_INFORMATION|-0x80000000,None,None,expanded,None)
             with self.assertRaisesRegex(StorageProtectionError,'DACL_DIARIO_INSEGURA'):
                 self.j.reserve_simulated_attempt(self.op)
             self.assertEqual(self.j.attempt_count(),0)
         finally:
-            s.SetNamedSecurityInfo(str(self.folder),s.SE_FILE_OBJECT,s.DACL_SECURITY_INFORMATION|0x80000000,None,None,dacl,None)
+            s.SetNamedSecurityInfo(str(self.folder),s.SE_FILE_OBJECT,s.DACL_SECURITY_INFORMATION|-0x80000000,None,None,dacl,None)
 
     def test_damaged_key_blocks_reopen(self):
         self.ready(self.op)

@@ -76,5 +76,11 @@
     if(doc.location.href!=='about:blank'||doc.documentElement.dataset.fixture!=='OBSERVED_PREPARATION')fail('ENTORNO_NO_SINTETICO');
     return binding(doc,origin);
   }
-  globalThis.RegistradorObservedForm=Object.freeze({inspect,bindFixture});
+  function bindReal(doc,origin){
+    const u=new URL(doc.location.href);
+    if(u.origin!=='https://familia.pjud.cl'||!['/SITFAWEB/IrPopUpInformesAccion.do','/SITFAWEB/InformesDAction.do'].includes(u.pathname))fail('RUTA_NO_BITACORA');
+    if(doc.defaultView!==doc.defaultView.top)fail('BITACORA_NO_ES_VENTANA_RAIZ');
+    return binding(doc,origin);
+  }
+  globalThis.RegistradorObservedForm=Object.freeze({inspect,bindFixture,bindReal});
 })();
