@@ -43,3 +43,5 @@ Revisión de lote: app/batch_review.py comprueba selección inmutable y genera r
 Detector estructural complementario: extension/structure.js, exclusivamente pasivo, reconstruido a partir de la evidencia sanitaria V1.5/V1.6. Prueba: `python registrador_rus/tests/run_structure.py` (Playwright/Chromium solo desarrollo). Ver [evidencia estructural](docs/EVIDENCIA_ESTRUCTURAL.md). No se carga en la extensión de demostración ni habilita uso en RUS.
 
 Adaptador Work→RegistroFlowV1: app/flow_export.py, solo contrato y prueba con dobles de Work/Row. `python -m unittest discover -s registrador_rus/tests -p test_flow_export.py -v`. No conectado a Flow ni autorizado para RUS.
+
+Revisión persistente del lote: app/batch_store.py (SQLite, ficticia, aún no conectada al diario ni UI). `python -m unittest discover -s registrador_rus/tests -p test_batch_store.py -v`. No autoriza un intento individual.
