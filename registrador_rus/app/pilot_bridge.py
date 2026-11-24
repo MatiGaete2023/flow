@@ -67,6 +67,7 @@ class PilotMailbox:
         self._delivered=False
         self._result=None
         self._creation_issued=False
+        self._closed=False
 
     def submit(self,command,*,reservation=None):
         _enabled()
@@ -84,6 +85,7 @@ class PilotMailbox:
         elif reservation is not None:
             raise BridgeError('RESERVA_FUERA_DE_COMANDO')
         with self._lock:
+            if self._closed:raise BridgeError('SESION_CERRADA')
             if self._active is not None or self._result is not None:
                 raise BridgeError('COMANDO_ACTIVO_O_RESULTADO_PENDIENTE')
             if command=='create_once':
@@ -103,7 +105,7 @@ class PilotMailbox:
             raise BridgeError('SESION_INVALIDA')
         with self._lock:
             self._expire()
-            if self._active is None or self._delivered:return {'command':None}
+            if self._closed or self._active is None or self._delivered:return {'command':None}
             self._delivered=True
             return {'command':self._active}
 
@@ -148,6 +150,11 @@ class PilotMailbox:
                 self._result=dict(command=command,status='BLOCKED')
             self._active=None
             return {'accepted':True}
+
+    def cancel_pending(self):
+        with self._lock:
+            # No se puede revocar lo ya entregado; ese intento queda incierto.
+            self._closed=True;self._active=None;self._result=None
 
     def take_result(self):
         with self._lock:

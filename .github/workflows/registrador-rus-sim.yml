@@ -32,6 +32,11 @@ jobs:
         run: node registrador_rus/tests/test_inspector_popup.cjs
       - name: Seleccion de ventana y permiso opcional (API Chrome simulada)
         run: node registrador_rus/tests/test_integral_window.cjs
+      - name: Sintaxis de extension real candidata
+        run: |
+          node --check registrador_rus/live_extension/browser.js
+          node --check registrador_rus/live_extension/verify.js
+          node --check registrador_rus/pilot_extension/pilot.js
       - name: Detector y preparacion de dos documentos ficticios (Chrome preinstalado)
         run: |
           export REGISTRADOR_CHROMIUM="$(command -v google-chrome || command -v chromium)"

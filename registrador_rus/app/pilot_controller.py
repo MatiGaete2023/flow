@@ -79,6 +79,7 @@ class PilotController:
         self.phase='BLOQUEADA';raise JournalError('RESPUESTA_FUERA_DE_FASE')
 
     def stop(self):
+        self.mailbox.cancel_pending()
         # Si el usuario cierra después de reserva, siempre recuperación por lectura.
         if self.journal.state(self.op.operation_id)=='ENVIANDO':
             self.journal.mark_uncertain(self.op.operation_id)

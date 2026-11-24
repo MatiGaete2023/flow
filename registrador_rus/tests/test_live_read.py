@@ -44,5 +44,5 @@ class LiveReadTests(TestCase):
     def test_build_exclusive(self):
         with TemporaryDirectory() as d:
             path=build(Path(d)/'extension')
-            self.assertEqual({x.name for x in path.iterdir()},{'manifest.json','background.js','verify.html','verify.js','prepare.js','observed_form.js','live_adapter.js'})
+            self.assertEqual({x.name for x in path.iterdir()},{'manifest.json','background.js','verify.html','verify.js','browser.js','prepare.js','observed_form.js','live_adapter.js'})
             with self.assertRaises(FileExistsError):build(path)

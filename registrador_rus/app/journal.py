@@ -167,6 +167,8 @@ class _JournalCore:
                 raise JournalError('INTENTO_PREVIO_SOLO_LECTURA')
             if row['state'] != 'LISTA':
                 raise JournalError('ESTADO_NO_LISTO')
+            if not self._simulated and self.db.execute('SELECT 1 FROM write_attempts LIMIT 1').fetchone():
+                raise JournalError('PILOTO_UNITARIO_AGOTADO')
             if self.db.execute(f"SELECT 1 FROM operations WHERE state IN {UNRESOLVED} LIMIT 1").fetchone():
                 raise JournalError('INTENTO_SIN_RESOLVER')
             auth = self.db.execute('SELECT * FROM authorizations WHERE operation_id=?', (current.operation_id,)).fetchone()

@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Flow — Registrador RUS piloto unitario (candidato)",
+  "version": "0.4.0",
+  "description": "Candidato de registro unitario mediante autorización humana y diario local; no habilitado hasta aceptación.",
+  "permissions": [
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*"
+  ],
+  "optional_host_permissions": [
+    "https://familia.pjud.cl/*"
+  ],
+  "action": {
+    "default_title": "Abrir registrador piloto"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; connect-src http://127.0.0.1:*;"
+  }
+}
