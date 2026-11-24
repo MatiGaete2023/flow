@@ -29,3 +29,5 @@ P6a: comparación pura de instantáneas con formato del lector existente, sin re
 P6b: el diario ficticio requiere lectura previa completa y reciente antes de reservar, y persiste recibos solo ante evidencia nueva única. `python -m unittest discover -s registrador_rus/tests -p test_readback_store.py -v`. Todos los recibos son simulados; COMPROBADA no acredita registro institucional. Conciliación Excel pendiente.
 
 P6c: conciliación ficticia por identidad, texto y recibo a una copia XLSX simple. Prueba: `python -m unittest discover -s registrador_rus/tests -p test_reconcile_excel.py -v`. Requiere openpyxl 3.1 (ya dependencia de Flow) y sistema de archivos que admita hardlink local. No sobrescribe; archivos complejos, XLS/XLSM y Excel nativo Windows no verificados. No equivale a certificación de fidelidad universal.
+
+P7a: puente localhost de simulación, sin consumidor real. Prueba: `python -m unittest discover -s registrador_rus/tests -p test_bridge.py -v`. El ack solo confirma recepción categórica; no acredita registro. No admite write_one.
