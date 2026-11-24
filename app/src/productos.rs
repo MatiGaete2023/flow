@@ -149,12 +149,9 @@ pub fn tabla_observaciones<'a>(
     (headers, rows)
 }
 
+/// Producto Excel con la estructura de Flow Python (hojas de servicio, todas las columnas y las de revisión).
 pub fn excel_observaciones(w: &Trabajo, dir: &Path) -> Result<PathBuf, String> {
-    let (headers, rows) = tabla_observaciones(w, &w.registros);
-    let fecha = w.corte.map(|c| c.format("%Y-%m-%d").to_string()).unwrap_or_default();
-    let path = nueva_ruta(dir, &format!("Observaciones_{}_{}", w.mode().label().to_uppercase(), fecha), "xlsx");
-    xlsx_libro(&[(w.mode().label(), headers, rows)], &path)?;
-    Ok(path)
+    crate::producto_excel::exportar(w, dir, None)
 }
 
 // ── correos ──────────────────────────────────────────────────────────────────

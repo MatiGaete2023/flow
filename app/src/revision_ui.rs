@@ -5,7 +5,7 @@ use crate::util::{parse_date_text, Cell};
 use chrono::{Months, NaiveDate};
 use egui::{Context, RichText};
 use egui_extras::{Column, TableBuilder};
-use flow_rust::captura::revision::{Clase, Resultado, Revision};
+use flow_rust::captura::revision::{Clase, Resultado, Revision, MOTIVO_ADVERTENCIAS, MOTIVO_SIN_BITACORA};
 use serde_json::json;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
@@ -15,6 +15,30 @@ const CLASES: [Clase; 3] = [
     Clase::SinObservacion,
     Clase::NoVerificable,
 ];
+/// Filas que piden atención antes de confiar en la revisión.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Atencion {
+    SinBitacora,
+    Advertencia,
+}
+
+impl Atencion {
+    pub fn etiqueta(self) -> &'static str {
+        match self {
+            Self::SinBitacora => "Sin bitácora",
+            Self::Advertencia => "Con advertencia de lectura",
+        }
+    }
+}
+
+pub fn atencion(r: &Resultado) -> Option<Atencion> {
+    match r.motivo.as_str() {
+        MOTIVO_SIN_BITACORA => Some(Atencion::SinBitacora),
+        MOTIVO_ADVERTENCIAS => Some(Atencion::Advertencia),
+        _ => None,
+    }
+}
+
 pub enum Accion {
     AbrirFila(usize),
     SeleccionarEnTrabajo(Vec<usize>),
@@ -26,6 +50,7 @@ pub struct Dialogo {
     periodo: (NaiveDate, NaiveDate),
     error: Option<String>,
     filtro: Option<Clase>,
+    atencion: Option<Atencion>,
     filas: Vec<(usize, Resultado)>,
     seleccion: HashSet<usize>,
     salida: Option<String>,
@@ -40,6 +65,7 @@ impl Dialogo {
             periodo: (desde, corte),
             error: None,
             filtro: None,
+            atencion: None,
             filas: Vec::new(),
             seleccion: HashSet::new(),
             salida: None,
@@ -142,13 +168,23 @@ impl Dialogo {
                         );
                     }
                 });
-                if self.filtro != filtro_anterior {
+                let atencion_anterior = self.atencion;
+                ui.horizontal_wrapped(|ui| {
+                    ui.label(RichText::new("Atención").color(p.muted));
+                    ui.selectable_value(&mut self.atencion, None, "Todas");
+                    for a in [Atencion::SinBitacora, Atencion::Advertencia] {
+                        let n = self.filas.iter().filter(|(_, r)| atencion(r) == Some(a)).count();
+                        ui.selectable_value(&mut self.atencion, Some(a), format!("{} ({n})", a.etiqueta()));
+                    }
+                });
+                if self.filtro != filtro_anterior || self.atencion != atencion_anterior {
                     self.seleccion.clear();
                 }
                 let visibles: Vec<_> = self
                     .filas
                     .iter()
                     .filter(|(_, r)| self.filtro.is_none_or(|clase| clase == r.clase))
+                    .filter(|(_, r)| self.atencion.is_none_or(|a| atencion(r) == Some(a)))
                     .collect();
                 let elegidas = subconjunto(&visibles, &self.seleccion);
                 let habilitado = self.error.is_none() && !elegidas.is_empty();
@@ -346,6 +382,14 @@ mod tests {
     use crate::config::Config;
 
     #[test]
+    fn la_revision_destaca_las_filas_sin_bitacora_y_con_advertencia() {
+        let r = |motivo: &str| Resultado { clase: Clase::NoVerificable, motivo: motivo.into() };
+        assert_eq!(atencion(&r(MOTIVO_SIN_BITACORA)), Some(Atencion::SinBitacora));
+        assert_eq!(atencion(&r(MOTIVO_ADVERTENCIAS)), Some(Atencion::Advertencia));
+        assert_eq!(atencion(&r("La bitácora no se pudo leer.")), None);
+    }
+
+    #[test]
     fn usa_el_mismo_subconjunto_para_exportar_y_transferir() {
         let resultado = |clase| Resultado {
             clase,
@@ -418,13 +462,22 @@ mod tests {
         let general = crate::productos::excel_observaciones(&w, &destino).unwrap();
         let general = crate::lectura::read_sheets(&std::fs::read(general).unwrap()).unwrap();
         assert_eq!(hojas[0].rows.len(), filas.len() + 1);
-        assert_eq!(hojas[0].name, general[0].name);
-        let comunes = general[0].rows[0].len();
-        assert_eq!(&hojas[0].rows[0][..comunes], general[0].rows[0].as_slice());
-        assert_eq!(
-            &hojas[0].rows[1][..comunes],
-            general[0].rows[fila.0 + 1].as_slice()
-        );
+        let datos = general.iter().find(|h| h.name.eq_ignore_ascii_case(&hojas[0].name)).expect("hoja de datos del producto");
+        // Las columnas de Trabajo coinciden con las del producto general, fila por fila y por nombre de columna.
+        let comunes = hojas[0].rows[0].len() - COLUMNAS_BITACORA.len();
+        let cab_general: Vec<String> = datos.rows[0].iter().map(|c| c.display()).collect();
+        let mut comparadas = 0;
+        for (i, titulo) in hojas[0].rows[0][..comunes].iter().enumerate() {
+            let titulo = titulo.display();
+            // OBSERVACION y las de revisión tienen su propio orden en el producto general.
+            if ["OBSERVACION", "ESTADO_REVISION", "REGLAS", "AVISOS", "RES", "FILA_ORIGEN"].contains(&titulo.as_str()) {
+                continue;
+            }
+            let j = cab_general.iter().position(|h| *h == titulo).unwrap_or_else(|| panic!("el producto general no trae {titulo}"));
+            assert_eq!(hojas[0].rows[1][i].display(), datos.rows[fila.0 + 1][j].display(), "{titulo}");
+            comparadas += 1;
+        }
+        assert!(comparadas >= 10, "solo {comparadas} columnas comparadas");
         assert_eq!(
             crate::lectura::headers_of(&hojas[0].rows[0][comunes..]),
             COLUMNAS_BITACORA

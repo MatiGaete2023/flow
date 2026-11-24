@@ -364,7 +364,7 @@ impl App {
         // Sin libro que preservar, una tabla nueva de fidelidad reducida, con el aviso visible.
         let r = match crate::copia_excel::base(w) {
             Ok(_) => crate::copia_excel::exportar(w, &dir).map(|p| (p, None)),
-            Err(aviso) => productos::excel_observaciones(w, &dir).map(|p| (p, Some(aviso))),
+            Err(aviso) => crate::producto_excel::exportar(w, &dir, Some(&aviso)).map(|p| (p, Some(aviso))),
         };
         match r {
             Ok((p, aviso)) => {
@@ -704,6 +704,19 @@ impl App {
                 let w = self.work.as_ref().unwrap();
                 self.revision_bitacoras = Some(crate::revision_ui::Dialogo::nuevo(w, self.corte()));
             }
+        }
+        let avisos = self.work.as_ref().and_then(|w| w.paquete.as_ref()).map(|p| p.avisos_agrupados()).unwrap_or_default();
+        if !avisos.is_empty() {
+            let total: usize = avisos.iter().map(|a| a.incidencias).sum();
+            egui::CollapsingHeader::new(format!("Avisos del paquete · {} tipos · {total} incidencias", avisos.len()))
+                .id_salt("avisos del paquete")
+                .show(ui, |ui| {
+                    for a in &avisos {
+                        let donde = if a.consultas == 1 { "1 consulta".to_string() } else { format!("{} consultas", a.consultas) };
+                        ui.label(RichText::new(format!("{} · {} · {} en {donde}", a.codigo, a.severidad, a.incidencias)).strong());
+                        ui.label(RichText::new(&a.mensaje).color(p.muted).size(12.5));
+                    }
+                });
         }
         if let (Some(dialogo), Some(w)) = (&mut self.revision_bitacoras, &self.work) {
             let (abierto, accion, productos) = dialogo.mostrar(ui.ctx(), p, w);
@@ -2258,6 +2271,115 @@ mod pruebas_paquete {
         assert_ne!(trabajo.registros[0].observacion(), "Edición ficticia");
         app.elegir_etapa(None);
         assert_eq!(app.work.as_ref().unwrap().mode(), Mode::Espera);
+    }
+}
+
+/// E-S1/Propuestas del 24-nov: un paquete del Descargador sin consolidado conserva todas las columnas de sus
+/// registros en Trabajo y se exporta con la estructura de `FAE_RES`.
+#[cfg(test)]
+mod pruebas_producto {
+    use super::*;
+    use base64::Engine;
+    use flow_rust::descargador::paquete::{self, Opciones};
+    use serde_json::Value;
+
+    fn reconstruir(destino: &std::path::Path, archivos: &Value) {
+        for (ruta, b64) in archivos.as_object().unwrap() {
+            let ruta = destino.join(ruta);
+            std::fs::create_dir_all(ruta.parent().unwrap()).unwrap();
+            std::fs::write(ruta, base64::engine::general_purpose::STANDARD.decode(b64.as_str().unwrap()).unwrap()).unwrap();
+        }
+    }
+
+    #[test]
+    fn paquete_sin_consolidado_exporta_la_estructura_de_flow_python() {
+        let (_candado, perfil) = crate::prueba_entorno::perfil_aislado();
+        let oraculo: Value = serde_json::from_str(include_str!("../tests/datos/paquete.json")).unwrap();
+        let e = oraculo["escenarios"].as_array().unwrap().iter().find(|e| e["escenario"] == "listados_dos_pestanas").unwrap();
+        let base = perfil.join("producto-excel");
+        let _ = std::fs::remove_dir_all(&base);
+        let lote = base.join("lote").join(e["lote"]["carpeta"].as_str().unwrap());
+        reconstruir(&lote, &e["lote"]["archivos"]);
+        let zip = base.join("Captura.zip");
+        let resultado = paquete::exportar_con(&[lote], &zip, &Opciones { consolidado: false, ..Default::default() }).unwrap();
+        assert!(resultado.nota.is_empty() || !resultado.nota.contains("Incluye"), "{}", resultado.nota);
+        let mut app = App::new(None);
+        app.cfg = Config::default();
+        app.corte_txt = "20/11/2026".into();
+        app.abrir(zip.clone());
+        let w = app.work.as_ref().expect("paquete abierto");
+        assert!(w.paquete.is_some());
+        // Punto 1: nada del registro normalizado se pierde en Trabajo.
+        let captura = flow_rust::captura::leer_captura(&std::fs::read(&zip).unwrap()).unwrap();
+        let normalizado: serde_json::Map<String, Value> = captura
+            .filas("registros")
+            .find(|r| r.get("record_type") == w.mode().label().to_uppercase())
+            .map(|r| serde_json::from_str(r.get("normalized_json")).unwrap())
+            .unwrap();
+        for clave in ["SITFA_TRIBUNAL_CODIGO", "SITFA_CAUSA_RUS", "SITFA_INGRESO_RUS", "SITFA_ETAPA_RUS"] {
+            assert!(normalizado.contains_key(clave), "el paquete sintético no trae {clave}");
+            assert!(w.headers.iter().any(|h| h == clave), "Trabajo perdió {clave}: {:?}", w.headers);
+        }
+        assert!(w.headers.len() >= normalizado.len(), "Trabajo conserva {} de {} columnas", w.headers.len(), normalizado.len());
+        // Puntos 2 y 3: libro nuevo con el orden del usuario y la clave de ingreso.
+        let carpeta = base.join("productos");
+        let ruta = crate::producto_excel::exportar(w, &carpeta, Some("motivo de prueba")).unwrap();
+        let hojas = crate::lectura::read_sheets(&std::fs::read(&ruta).unwrap()).unwrap();
+        let nombres: Vec<&str> = hojas.iter().map(|h| h.name.as_str()).collect();
+        assert_eq!(nombres, ["NURUS_LISTAS", "NURUS_TRAZABILIDAD", "Resumen", "SITFA_ARCHIVOS", w.mode().label().to_uppercase().as_str(), "Vencimientos"]);
+        let datos = hojas.iter().find(|h| h.name == w.mode().label().to_uppercase()).expect("hoja de datos");
+        let cab: Vec<String> = datos.rows[0].iter().map(|c| c.display()).collect();
+        let desde = cab.iter().position(|h| h == "NURUS_ID_REGISTRO").expect("NURUS_ID_REGISTRO");
+        let orden: Vec<&str> = cab[desde..desde + 10].iter().map(String::as_str).collect();
+        assert_eq!(orden, crate::producto_excel::COLUMNAS_NURUS);
+        assert_eq!(datos.rows.len(), w.registros.len() + 1);
+        let col = |n: &str| cab.iter().position(|h| h == n).unwrap_or_else(|| panic!("falta {n}"));
+        let (rit, clave, id) = (col("RIT"), col("NURUS_CLAVE_INGRESO"), col("NURUS_ID_REGISTRO"));
+        for fila in &datos.rows[1..] {
+            assert!(!fila[rit].display().is_empty(), "RIT vacío");
+            assert!(!fila[id].display().is_empty());
+            let k = fila[clave].display();
+            assert_eq!(k.split('-').count(), 3, "clave de ingreso {k}");
+        }
+        let trazabilidad = hojas.iter().find(|h| h.name == "NURUS_TRAZABILIDAD").unwrap();
+        assert!(trazabilidad.rows.iter().any(|f| f.first().map(|c| c.display()) == Some("FIDELIDAD".into())
+            && f.get(1).map(|c| c.display()) == Some("motivo de prueba".into())));
+        // Los avisos repetidos del paquete se muestran agrupados, con su cantidad.
+        let avisos = w.paquete.as_ref().unwrap().avisos_agrupados();
+        let incidencias = captura.filas("incidencias").count();
+        assert_eq!(avisos.iter().map(|a| a.incidencias).sum::<usize>(), incidencias);
+        assert!(avisos.len() <= incidencias);
+        assert!(avisos.windows(2).all(|p| p[0].incidencias >= p[1].incidencias));
+        // Con calendario de informes sin ingreso verificable, las incidencias iguales de varios registros salen juntas.
+        let cal = oraculo["escenarios"].as_array().unwrap().iter().find(|e| e["escenario"] == "calendario_informes").unwrap();
+        let lotes: Vec<std::path::PathBuf> = std::iter::once(&cal["lote"]).chain(cal["otros_lotes"].as_array().unwrap())
+            .map(|l| {
+                let c = base.join("cal").join(l["carpeta"].as_str().unwrap());
+                reconstruir(&c, &l["archivos"]);
+                c
+            })
+            .collect();
+        let zip_cal = base.join("Calendario.zip");
+        paquete::exportar_con(&lotes, &zip_cal, &Opciones::default()).unwrap();
+        let captura_cal = flow_rust::captura::leer_captura(&std::fs::read(&zip_cal).unwrap()).unwrap();
+        let n_incidencias = captura_cal.filas("incidencias").count();
+        let mut app_cal = App::new(None);
+        app_cal.cfg = Config::default();
+        app_cal.corte_txt = "20/11/2026".into();
+        app_cal.abrir(zip_cal);
+        let agrupados = app_cal.work.as_ref().unwrap().paquete.as_ref().unwrap().avisos_agrupados();
+        assert_eq!(agrupados.iter().map(|a| a.incidencias).sum::<usize>(), n_incidencias);
+        assert!(n_incidencias >= 2 && agrupados.len() < n_incidencias, "{n_incidencias} incidencias en {} grupos", agrupados.len());
+        assert!(agrupados[0].incidencias >= 2);
+        // Un paquete al que le falte una columna normalizada debe hacer fallar esta prueba: sin la clave, no hay producto.
+        let mut sin = App::new(None);
+        sin.cfg = Config::default();
+        sin.corte_txt = "20/11/2026".into();
+        sin.abrir(zip);
+        let mut w2 = sin.work.take().unwrap();
+        w2.headers.retain(|h| h != "SITFA_INGRESO_RUS");
+        assert!(crate::producto_excel::encabezados(&w2).iter().all(|h| h != "NURUS_CLAVE_INGRESO"));
+        let _ = std::fs::remove_dir_all(&base);
     }
 }
 

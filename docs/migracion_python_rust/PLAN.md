@@ -53,6 +53,14 @@ Qué se compara con Python:
   - `descargador/resultados.rs`: `export_book`, `export_csv`, `export_ics`, `export_zip` y `compare_lots`, con el oráculo `app/qa/generar_resultados.py`.
   - Vista: sección «Resultados del lote» (`descargador_resultados_ui.rs`) en el Descargador; se abre sola con el lote recién descargado. Pruebas `ui_resultados_abre_un_lote_y_crea_sus_productos` y `resultados_cruza_compara_y_rechaza_como_python`.
 
+- **E-W1 · Producto de Trabajo sin consolidado — `HECHO` en Linux; falta su CI de Windows.** Pedido del usuario tras probar un paquete de Cumplimiento (24-nov): el Excel salía de una hoja con 28 columnas, sin identificadores SITFA ni columnas de revisión.
+  - Trabajo conserva todas las columnas de `normalized_json` (`captura_trabajo::hoja`).
+  - `producto_excel.rs`: libro nuevo con `NURUS_LISTAS`, `NURUS_TRAZABILIDAD`, `Resumen`, `SITFA_ARCHIVOS`, la hoja de datos y `Vencimientos`; revisión en el orden del 20-nov y `NURUS_CLAVE_INGRESO` (tribunal-causa-ingreso, estable entre capturas; el `record_id` cambia en cada descarga).
+  - El paquete deja `CONSOLIDADO_OMITIDO` cuando se pidió el consolidado y no se pudo; Trabajo explica por qué no hay libro base.
+  - «Avisos del paquete» agrupa las incidencias repetidas en Trabajo. El paquete conserva una fila por registro porque Flow Python las lee así.
+  - Revisión de bitácoras: filtros «Sin bitácora» y «Con advertencia de lectura».
+  - Pendiente: un lote conjunto de Cumplimiento e Informes sigue sin generar consolidado (decisión del usuario: queda fuera).
+
 ## Tramo 3 · Asistente
 
 En este orden, salvo que el usuario indique otro:

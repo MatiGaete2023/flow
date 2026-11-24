@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 pub const FIDELIDAD_REDUCIDA: &str = "Copia de fidelidad reducida: el XLSX consolidado del paquete no sirve como base (por ejemplo, trae una hoja por modalidad o un registro repetido). El consolidado se conserva intacto dentro del paquete.";
 const HOJAS_SERVICIO: [&str; 3] = ["Resumen", "SITFA_ARCHIVOS", "Vencimientos"];
 const PROCEDENCIA: [&str; 3] = ["SITFA_SHA256", "SITFA_ARCHIVO", "SITFA_FILA"];
-const TIPOS_RES: [&str; 3] = ["PC_IE", "PC_INFO", "NOMENCL"];
+pub(crate) const TIPOS_RES: [&str; 3] = ["PC_IE", "PC_INFO", "NOMENCL"];
 pub const COLUMNAS_BITACORA: [&str; 2] = ["CLASIFICACION_BITACORA", "MOTIVO_BITACORA"];
 
 pub struct FilaBitacora<'a> {
@@ -39,12 +39,21 @@ fn texto_clave(c: &Cell) -> String {
     t.strip_suffix(".0").unwrap_or(t).to_string()
 }
 
+/// Por qué el paquete no trae `consolidado/consolidado.xlsx`: el motivo que dejó el Descargador o, si no hay, que el
+/// Descargador permite crear el paquete sin él.
+fn motivo_sin_consolidado(zip: &[u8]) -> String {
+    let incidencia = flow_rust::captura::leer_captura(zip).ok().and_then(|c| {
+        c.filas("incidencias").find(|i| i.get("code") == "CONSOLIDADO_OMITIDO").map(|i| i.get("message").to_string())
+    });
+    incidencia.unwrap_or_else(|| "El paquete no incluye el XLSX consolidado (el Descargador permite crearlo sin él).".into())
+}
+
 fn consolidado(zip: &[u8]) -> Result<Vec<u8>, String> {
     let mut archivo = zip::ZipArchive::new(std::io::Cursor::new(zip))
         .map_err(|_| "No se pudo abrir el paquete para la copia preservada.".to_string())?;
     let entrada = archivo
         .by_name("consolidado/consolidado.xlsx")
-        .map_err(|_| "El paquete no trae el libro consolidado.".to_string())?;
+        .map_err(|_| motivo_sin_consolidado(zip))?;
     let mut datos = Vec::new();
     entrada
         .take(200 * 1024 * 1024)
@@ -164,12 +173,12 @@ pub fn base(w: &Trabajo) -> Result<Base, String> {
 }
 
 /// `Work.export`: hay etapa revisada si alguna fila tiene una edición humana.
-fn revisada(r: &Registro) -> bool {
+pub(crate) fn revisada(r: &Registro) -> bool {
     r.revisada || r.editada.as_ref().is_some_and(|e| *e != r.propuesta)
 }
 
 /// Identificador estable de la fila (`Work.external`): hoja, identidad histórica y ordinal.
-fn identificadores(w: &Trabajo, hoja: &str) -> Vec<String> {
+pub(crate) fn identificadores(w: &Trabajo, hoja: &str) -> Vec<String> {
     let captura = w.headers.iter().position(|h| h == "ID_REGISTRO_CAPTURA");
     let mut vistos: HashMap<String, usize> = HashMap::new();
     w.registros
@@ -198,7 +207,7 @@ fn identificadores(w: &Trabajo, hoja: &str) -> Vec<String> {
 }
 
 /// `record_edits.encode` (versión 1): decisiones legibles por Flow Python al reimportar la copia.
-fn decisiones(r: &Registro) -> String {
+pub(crate) fn decisiones(r: &Registro) -> String {
     let resolucion = if TIPOS_RES.contains(&r.res.as_str()) { r.res.as_str() } else { "auto" };
     json!({
         "version": 1,
@@ -213,7 +222,7 @@ fn decisiones(r: &Registro) -> String {
 }
 
 /// `_safe_cell`: un texto que Excel leería como fórmula se escribe literal.
-fn literal(s: &str) -> String {
+pub(crate) fn literal(s: &str) -> String {
     if s.trim_start().starts_with(['=', '+', '-', '@']) {
         format!("'{s}")
     } else {

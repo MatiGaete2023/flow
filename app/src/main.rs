@@ -12,6 +12,7 @@ mod descargador_resultados_ui;
 mod descargador_ui;
 mod lectura;
 mod motor;
+mod producto_excel;
 mod productos;
 mod revision_ui;
 mod theme;

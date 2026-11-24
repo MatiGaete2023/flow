@@ -16,6 +16,13 @@ Una entrada por encargo, de diez líneas como máximo, la más reciente arriba:
 
 No se copian salidas completas ni listas de mutaciones: la prueba afirma sus conteos y la CI del commit es la evidencia.
 
+## 2026-11-24 · E-W1: producto de Trabajo sin consolidado
+
+- Cambió: `producto_excel.rs` (nuevo), `captura_trabajo.rs` (columnas completas y avisos agrupados), `copia_excel.rs` (motivo sin consolidado), `descargador/paquete.rs` (`CONSOLIDADO_OMITIDO`), `revision_ui.rs` (filtros de atención) y `ui.rs` (avisos del paquete).
+- Acredita: `paquete_sin_consolidado_exporta_la_estructura_de_flow_python` (columnas SITFA, orden de revisión, clave de ingreso, hojas y trazabilidad), la extensión de `paquete_con_consolidado` y `la_revision_destaca_las_filas_sin_bitacora_y_con_advertencia`; `tools/probar_app.sh todo`: 64 y 47 pruebas, 0 fallos; `inventario_escrituras` PASA.
+- Diferencias declaradas: libro nuevo en lugar de copia preservada; `FECHA_OBS`, `TT` y `CC` salen vacías hasta que Trabajo las modele; avisos agrupados solo en pantalla.
+- Pendiente: CI de Windows; revisión del usuario con su paquete.
+
 ## 2026-11-24 · E-S1: vista de Resultados del Descargador
 
 - Cambió: `app/src/descargador_resultados_ui.rs` (nuevo) y su sección en `descargador_ui.rs`, equivalente a `ventana_resultados.py`: carpeta del lote, «Permitir resultados INCOMPLETOS», tabla de consultas con su compatibilidad CSMP, y los botones Consolidar XLSX, Libro CSMP, Añadir informes al cruce, Comparar con otro lote, CSV, Calendario ICS, ZIP y Abrir carpeta. Cada producto recarga y verifica el lote en un hilo.

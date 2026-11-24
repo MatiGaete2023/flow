@@ -30,6 +30,10 @@ impl Clase {
     }
 }
 
+/// Motivos que la revisión da a las filas que piden atención del usuario (la interfaz los destaca).
+pub const MOTIVO_SIN_BITACORA: &str = "Sin bitácora asociada a una identidad verificada en el paquete.";
+pub const MOTIVO_ADVERTENCIAS: &str = "La lectura tiene advertencias o carece de evidencia válida de cobertura.";
+
 #[derive(Debug, Serialize)]
 pub struct Resultado {
     pub clase: Clase,
@@ -237,7 +241,7 @@ impl Revision {
             .then(|| self.por_ingreso.get(&identidad(registro)))
             .flatten();
         let Some(e) = disponible else {
-            return no("Sin bitácora asociada a una identidad verificada en el paquete.");
+            return no(MOTIVO_SIN_BITACORA);
         };
         if e.contradictoria {
             return no("Las lecturas o las entradas normalizadas se contradicen.");
@@ -268,9 +272,7 @@ impl Revision {
                 return no("La ventana mostró indicios de recorte.");
             }
             if e.alcance_declarado {
-                return no(
-                    "La lectura tiene advertencias o carece de evidencia válida de cobertura.",
-                );
+                return no(MOTIVO_ADVERTENCIAS);
             }
             return no("Lectura sin evidencia de alcance verificable.");
         };

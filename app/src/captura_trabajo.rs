@@ -24,6 +24,16 @@ const PROCEDENCIA: [(&str, &str); 5] = [
     ("ID_REGISTRO_CAPTURA", "record_id"),
 ];
 
+/// Un aviso del paquete con todas sus repeticiones agrupadas (código, severidad y mensaje iguales).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct AvisoPaquete {
+    pub codigo: String,
+    pub severidad: String,
+    pub mensaje: String,
+    pub incidencias: usize,
+    pub consultas: usize,
+}
+
 pub struct PaqueteTrabajo {
     pub fuente: Captura,
     pub modos: Vec<Mode>,
@@ -34,6 +44,32 @@ pub struct PaqueteTrabajo {
 }
 
 impl PaqueteTrabajo {
+    /// Incidencias del paquete agrupadas por código y mensaje, de la más repetida a la menos. El paquete conserva una
+    /// fila por registro (contrato de Flow Python); aquí se muestran una sola vez, con su cantidad.
+    pub fn avisos_agrupados(&self) -> Vec<AvisoPaquete> {
+        let mut grupos: Vec<(AvisoPaquete, HashSet<String>)> = Vec::new();
+        for i in self.fuente.filas("incidencias") {
+            let clave = (i.get("code"), i.get("severity"), i.get("message"));
+            let pos = grupos.iter().position(|(a, _)| (a.codigo.as_str(), a.severidad.as_str(), a.mensaje.as_str()) == clave);
+            let (aviso, consultas) = match pos {
+                Some(p) => &mut grupos[p],
+                None => {
+                    grupos.push((
+                        AvisoPaquete { codigo: clave.0.into(), severidad: clave.1.into(), mensaje: clave.2.into(), incidencias: 0, consultas: 0 },
+                        HashSet::new(),
+                    ));
+                    grupos.last_mut().unwrap()
+                }
+            };
+            aviso.incidencias += 1;
+            consultas.insert(i.get("query_id").to_string());
+            aviso.consultas = consultas.len();
+        }
+        let mut avisos: Vec<_> = grupos.into_iter().map(|(a, _)| a).collect();
+        avisos.sort_by_key(|a| std::cmp::Reverse(a.incidencias));
+        avisos
+    }
+
     pub fn actualizar_contextos(&mut self, corte: NaiveDate) {
         self.contextos = contextos(&self.fuente, corte);
     }
@@ -123,27 +159,50 @@ pub fn abrir(bytes: &[u8]) -> Result<(PaqueteTrabajo, Vec<Sheet>), String> {
 
 fn hoja(modo: Mode, filas: &[Fila<'_>]) -> Result<(Sheet, Vec<Cols>), String> {
     let columnas = lectura::columnas_canonicas(modo);
+    let mut mapas = Vec::with_capacity(filas.len());
+    for &fila in filas {
+        let mapa: serde_json::Map<String, Value> =
+            serde_json::from_str(fila.get("normalized_json"))
+                .map_err(|_| "No se pudo leer un registro normalizado.")?;
+        mapas.push(mapa);
+    }
+    // Las columnas canónicas van primero (el motor las busca por posición); el resto del registro normalizado
+    // (identificadores SITFA, tipo, sexo, nacionalidad…) se conserva a continuación en el orden en que aparece.
+    let reservados: HashSet<String> = columnas
+        .iter()
+        .map(|&(_, titulo)| titulo)
+        .chain(PROCEDENCIA.iter().map(|&(titulo, _)| titulo))
+        .map(|t| normalizar_titulo(t))
+        .collect();
+    let mut usados: HashSet<String> = HashSet::new();
+    let mut extras: Vec<String> = Vec::new();
+    for mapa in &mapas {
+        let encabezados: Vec<_> = mapa.keys().cloned().collect();
+        let origen = lectura::map_columns(&encabezados, modo);
+        usados.extend(columnas.iter().filter_map(|&(clave, _)| origen.get(clave)).map(|&i| encabezados[i].clone()));
+        for clave in &encabezados {
+            if !usados.contains(clave) && !reservados.contains(&normalizar_titulo(clave)) && !extras.contains(clave) {
+                extras.push(clave.clone());
+            }
+        }
+    }
+    // Una clave que otra fila sí usó como canónica no es una columna extra.
+    extras.retain(|c| !usados.contains(c));
     let mut celdas = Vec::with_capacity(filas.len() + 1);
     celdas.push(
         columnas
             .iter()
             .map(|&(_, titulo)| Cell::Text(titulo.into()))
-            .chain(
-                PROCEDENCIA
-                    .iter()
-                    .map(|&(titulo, _)| Cell::Text(titulo.into())),
-            )
+            .chain(PROCEDENCIA.iter().map(|&(titulo, _)| Cell::Text(titulo.into())))
+            .chain(extras.iter().map(|c| Cell::Text(c.clone())))
             .collect(),
     );
     let mut columnas_por_fila = Vec::with_capacity(filas.len());
-    for &fila in filas {
-        let mapa: serde_json::Map<String, Value> =
-            serde_json::from_str(fila.get("normalized_json"))
-                .map_err(|_| "No se pudo leer un registro normalizado.")?;
+    for (&fila, mapa) in filas.iter().zip(&mapas) {
         let encabezados: Vec<_> = mapa.keys().cloned().collect();
         let origen = lectura::map_columns(&encabezados, modo);
         let mut disponibles = Cols::new();
-        let mut valores = Vec::with_capacity(columnas.len() + PROCEDENCIA.len());
+        let mut valores = Vec::with_capacity(columnas.len() + PROCEDENCIA.len() + extras.len());
         for (i, &(clave, _)) in columnas.iter().enumerate() {
             let valor = origen.get(clave).map(|&idx| &mapa[&encabezados[idx]]);
             if valor.is_some() {
@@ -156,6 +215,7 @@ fn hoja(modo: Mode, filas: &[Fila<'_>]) -> Result<(Sheet, Vec<Cols>), String> {
                 .iter()
                 .map(|&(_, campo)| Cell::Text(fila.get(campo).into())),
         );
+        valores.extend(extras.iter().map(|c| celda(mapa.get(c))));
         columnas_por_fila.push(disponibles);
         celdas.push(valores);
     }
@@ -166,6 +226,10 @@ fn hoja(modo: Mode, filas: &[Fila<'_>]) -> Result<(Sheet, Vec<Cols>), String> {
         },
         columnas_por_fila,
     ))
+}
+
+fn normalizar_titulo(t: &str) -> String {
+    t.nfd().filter(|c| !('\u{300}'..='\u{36f}').contains(c)).collect::<String>().to_uppercase().split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
 fn celda(valor: Option<&Value>) -> Cell {

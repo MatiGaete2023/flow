@@ -1650,10 +1650,14 @@ pub fn exportar_con(carpetas: &[PathBuf], destino: &Path, op: &Opciones) -> Resu
     }
     let reloj = chrono::Local::now().fixed_offset();
     let ahora = reloj.to_rfc3339_opts(chrono::SecondsFormat::Micros, false);
+    let mut omision = None;
     let (consolidado, nota) = if op.consolidado {
         match super::resultados::libro_consolidado(&lotes, &reloj) {
             Ok(b) => (Some(b), " Incluye el XLSX consolidado.".to_string()),
-            Err(e) => (None, format!(" Sin XLSX consolidado: {e}")),
+            Err(e) => {
+                omision = Some(format!("Sin XLSX consolidado: {e}"));
+                (None, format!(" Sin XLSX consolidado: {e}"))
+            }
         }
     } else {
         (None, String::new())
@@ -1778,6 +1782,11 @@ pub fn exportar_con(carpetas: &[PathBuf], destino: &Path, op: &Opciones) -> Resu
     for (codigo, mensaje) in &op.avisos {
         let qid = d.filas("consultas").first().map(|q| texto(&q["query_id"])).unwrap_or_default();
         d.aviso(&qid, codigo, mensaje);
+    }
+    // El motivo viaja con el paquete: quien lo abra después sabe por qué no trae el libro consolidado.
+    if let Some(motivo) = &omision {
+        let qid = d.filas("consultas").first().map(|q| texto(&q["query_id"])).unwrap_or_default();
+        d.aviso(&qid, "CONSOLIDADO_OMITIDO", motivo);
     }
     let resueltos = asociar_calendarios(&mut d);
     if !resueltos.is_empty() {
@@ -2025,6 +2034,10 @@ mod tests {
         let r = exportar_con(&[no_apto], &otro, &Opciones { consolidado: true, ..Default::default() }).unwrap();
         assert_eq!(contenido(&otro)["manifest.json"]["schema_version"], VERSION);
         assert!(r.nota.starts_with(" Sin XLSX consolidado: "), "{}", r.nota);
+        // El motivo queda dentro del paquete como incidencia; sin el consolidado pedido no hay incidencia.
+        let captura = crate::captura::leer_captura(&std::fs::read(&otro).unwrap()).unwrap();
+        let omitidas: Vec<String> = captura.filas("incidencias").filter(|i| i.get("code") == "CONSOLIDADO_OMITIDO").map(|i| i.get("message").to_string()).collect();
+        assert_eq!(omitidas, [r.nota.trim_start().to_string()]);
         let _ = std::fs::remove_dir_all(&base);
     }
 

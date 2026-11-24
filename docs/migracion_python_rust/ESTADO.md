@@ -1,6 +1,6 @@
 # Estado de Flow Rust
 
-Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3 y E-Q7. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
+Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3, E-Q7 y el producto de Trabajo sin consolidado (E-W1). Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
 
 - Aplicación: `app/` (`flow_rust.exe`). Referencia funcional: rama `flow-python`.
 - Rama única: `estudio/paridad-python-rust-20261119`.
@@ -31,7 +31,7 @@ Actualizado: 24 de noviembre de 2026, tras E-S1 (con su vista), E-V1 a E-V3 y E-
 - **F07 Importación de paquetes — Parcial.** Falta la conciliación entre capturas.
 - **F08 Edición y revisión — Parcial.** Sin cotejo de edición masiva, deshacer ni selecciones ocultas.
 - **F09 Sesión y vigencia — Parcial.** Faltan recibos, vigencia y recuperación.
-- **F10 Excel preservado — Parcial.** Faltan la reimportación y la conciliación desde el Excel revisado.
+- **F10 Excel preservado — Parcial.** Faltan la reimportación y la conciliación desde el Excel revisado. Sin libro base (paquete sin consolidado), el producto sale como libro nuevo con la estructura de `FAE_RES` (hojas de servicio, todas las columnas del registro, las 10 columnas de revisión en el orden del usuario y `NURUS_CLAVE_INGRESO`); la copia preservada sigue exigiendo Windows y Excel de escritorio.
 - **F11 Configuración y contactos — Parcial.** 16 umbrales y textos con verificador. Faltan alias, selector de variables, plantillas de correo persistentes e importador de matrices y paquetes.
 - **F12 Correos y nómina — Parcial.** Sin cotejo de agrupación, firma y alcance.
 - **F13 Borradores Outlook — Parcial.** EML y Outlook. Falta elegir la cuenta y simular fallos. Sin prueba con Outlook real.

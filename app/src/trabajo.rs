@@ -759,7 +759,9 @@ mod tests {
             assert!(w.registros.iter().filter(|r| !r.propuesta.is_empty()).count() >= 10, "{m:?}");
             let x = productos::excel_observaciones(&w, &dir).unwrap();
             let back = crate::lectura::read_sheets(&std::fs::read(&x).unwrap()).unwrap();
-            assert!(back[0].rows[0].iter().any(|c| c.display() == "OBSERVACION"));
+            let datos = back.iter().find(|h| h.name == m.label().to_uppercase()).expect("hoja de datos");
+            assert!(datos.rows[0].iter().any(|c| c.display() == "OBSERVACION"));
+            assert_eq!(back.len(), 6, "{m:?}: libro con las hojas de servicio");
             let o = productos::OpcionesCorreo { modalidades: &["RES", "AMB", "FAE", "DCE"], tribunales: &[], solo_seleccionadas: false };
             let bs = productos::preparar_borradores(&w, &cfg, &o);
             assert!(!bs.is_empty(), "{m:?}");
