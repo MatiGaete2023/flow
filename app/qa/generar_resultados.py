@@ -59,7 +59,8 @@ def main():
         (RAIZ / 'app' / 'tests' / 'datos' / 'paquete.json').read_text(encoding='utf-8'))['escenarios']}
     salida = {'csv': [], 'ics': [], 'zip': [], 'comparacion': []}
     with tempfile.TemporaryDirectory() as tmp:
-        base = Path(tmp)
+        # En Windows `tmp` puede venir con el nombre corto (RUNNER~1) y Python resuelve las rutas al largo: se usa el resuelto.
+        base = Path(tmp).resolve()
         texto_base = str(base)
 
         def lote(escenario, indice=0):
