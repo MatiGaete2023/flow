@@ -63,7 +63,8 @@ Fuentes: [precios de OpenAI](https://developers.openai.com/api/docs/pricing), [r
 ## Lecciones operativas
 
 - Los oráculos se regeneran en Windows y se comparan con lo versionado: deben ser **deterministas y sin depender del sistema**. Escribir bytes (no `write_text`), fijar fechas (`date.today()` fijo en `generar_correos.py`), `ZipInfo.create_system = 3` y fecha de modificación fija en los `.xlsx` de openpyxl.
-- Tras publicar, confirmar que el paso «Regenerar los oráculos» **corrió** (no «skipped») además de ver el run en verde.
+- Tras publicar, confirmar que el paso «Regenerar los oráculos» **corrió** (no «skipped») además de ver el run en verde. Un commit que solo toca código Rust lo omite: si el encargo trae oráculos nuevos y su run de regeneración no corrió, lanzar la CI a mano (`workflow_dispatch` regenera todos). Pasó con E-A10.
+- Un agente sin checkout válido no arranca: cada prompt empieza con el «paso 0» (clon con `origin` MatiGaete2023/flow, rama y commit verificados, o BLOQUEADO).
 - Un `canonicalize()` distinto del nombre elegido (nombre corto `RUNNER~1`, enlaces) rompía la verificación de bitácoras solo en Windows: normalizar las rutas de entrada.
 - No hacer trabajo pesado por cuadro en la interfaz (la huella del ejecutable en Ajustes congeló las pruebas).
 - Entorno local para los generadores de Python que arman paquetes (necesitan `tkinter`): `apt-get update && apt-get install -y python3-tk`, y un `venv` con `/usr/bin/python3.12 --system-site-packages` más `openpyxl pandas docxcompose python-docx xlrd lxml pillow numpy reportlab pytest`. El `python3` por omisión (3.13) no ve `tkinter`.

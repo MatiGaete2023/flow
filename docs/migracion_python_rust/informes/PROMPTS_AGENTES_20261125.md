@@ -114,3 +114,58 @@ CRITERIO DE PARADA: si una conducta de Python es ambigua o parece un error, no l
 
 [Pega aquí el BLOQUE COMÚN con <letra> = C; el informe va en docs/migracion_python_rust/informes/AGENTE_C_20261125b.md]
 ```
+
+## Prompt del Agente A · E-P1 Word por tribunal (con preparación del checkout y recordatorio)
+
+Motivo: el primer intento no arrancó porque el agente abrió una carpeta que no era el repositorio (`…\work\flow-feat-flow-estudio-d-20261117`, rama `master`). El paso 0 deja el checkout correcto o se declara BLOQUEADO.
+
+```
+Eres el Agente A. Trabajas en MatiGaete2023/flow, directamente en la rama estudio/paridad-python-rust-20261119. Otros agentes: B (Meta 4) y C (Descargador, rama estudio/agente-c-conjuntos-20261125). No toques lo suyo.
+
+PASO 0 · CHECKOUT (antes de leer o escribir nada).
+1. Busca un clon válido: una carpeta donde `git remote get-url origin` termine en MatiGaete2023/flow(.git). Una carpeta con otro origen, en `master` o sin `.git` NO sirve, aunque se llame «flow»; no la uses ni la modifiques.
+2. Si no existe, clónalo en una carpeta nueva y vacía, fuera de cualquier carpeta de archivos pegados:
+   git clone https://github.com/MatiGaete2023/flow.git flow-rust-a
+3. En el clon:
+   git fetch origin estudio/paridad-python-rust-20261119
+   git checkout -B estudio/paridad-python-rust-20261119 origin/estudio/paridad-python-rust-20261119
+   git status -sb
+   git log --oneline -3
+   La rama debe seguir a origin y contener el commit 1065344 (git merge-base --is-ancestor 1065344 HEAD termina en 0). Si hay cambios locales que no son tuyos, detente: no los descartes.
+4. Si el clon o el fetch fallan (sin red, sin credenciales de GitHub, repositorio privado), no sigas: responde BLOQUEADO con el error literal y esta línea para el usuario: «Abre el agente en la carpeta de tu clon local de MatiGaete2023/flow, o conecta el repositorio MatiGaete2023/flow al entorno del agente, y vuelve a pegar este prompt».
+5. Informa en tu primera respuesta la ruta del clon, la rama y el commit de HEAD.
+
+RECORDATORIO (dos fallas del encargo anterior, E-A10):
+- No edites ESTADO.md, PLAN.md, REGISTRO_IMPLEMENTACION.md, AGENTS.md, CONTINUACION.md ni .github/workflows/*. En a059930 y faee8ea los editaste: los integra solo el coordinador. Tu texto propuesto va en el informe. Única excepción de este encargo: la línea del punto 6.
+- HECHO exige que el paso «Regenerar los oráculos con la referencia Python» del job validar haya CORRIDO (conclusión success, no skipped) y haya comparado tus oráculos por nombre. En E-A10 el run 45652241372 lo omitió porque el commit solo tocaba demo.rs, y lo declaraste HECHO igual. Revisa el log del paso: debe listar tus oráculos. Si quedó omitido, dilo en el informe; no declares HECHO.
+- No escribas «HECHO» en ningún archivo: en el informe pon ENTREGADO con commit, run y salida literal del paso. El estado lo cambia el coordinador.
+
+Lee solo AGENTS.md, docs/migracion_python_rust/ESTADO.md, PLAN.md (entrada E-P1) y CONTINUACION.md.
+
+ENCARGO · E-P1 · Proyectos Word: elegir el formato al crearlos (F14).
+Decisión del usuario (25-nov): al crear los proyectos Word, la persona elige entre «un .docx por proyecto» (lo que hace hoy productos::generar_word) y «un .docx por tribunal». En el segundo, cada archivo reúne los proyectos de un tribunal, con un índice al inicio y un salto de página entre proyectos.
+Referencia Python (no la modifiques): src/nurus/personal/resolutions.py, generate_projects. Python une todos los proyectos en un solo .docx con docxcompose (Composer(docs[0], preserve_styles=True); add_page_break antes de cada proyecto siguiente; without_italics al final; require_complete) y no tiene índice. Rust separa por tribunal y agrega el índice por decisión del usuario.
+
+Tareas, en orden:
+1. En productos.rs, una función nueva que genere un .docx por tribunal a partir de los mismos Proyecto que usa generar_word, sin cambiar generar_word ni su firma. Cada matriz conserva sus estilos (como preserve_styles). Salto de página entre proyectos; ningún proyecto empieza a mitad de página. Sin cursivas al final, como without_italics. Carpeta nueva con nueva_ruta, nunca sobrescribe.
+2. Índice al inicio de cada archivo: título «Índice» y una línea por proyecto en el orden del archivo, con número, RIT y tipo de proyecto (kind_label). Sin números de página ni campos de Word. No agregues otros textos judiciales: los proyectos van con el texto exacto de su matriz y de la revisión.
+3. En ui.rs, en «Resoluciones», el selector «Un .docx por proyecto / Un .docx por tribunal» antes de crear. Por omisión, el formato actual. Mensaje final con la carpeta y cuántos archivos y proyectos quedaron.
+4. Recibos: cada proyecto deja su recibo como hoy, con la ruta del archivo de su tribunal.
+5. Oráculo nuevo app/qa/generar_word_tribunal.py y app/tests/datos/word_tribunal.json. Python arma, con datos ficticios y las matrices de src/nurus/personal/plantillas_word, los proyectos de al menos 2 tribunales (Laja y Mulchén) y 2 tipos, y genera con generate_projects el .docx de cada tribunal pasándole solo los proyectos de ese tribunal. Graba por archivo la secuencia de párrafos (texto y si va precedido de salto de página) y si quedan cursivas. Rust compara lo mismo, quitando su índice, que se afirma aparte (líneas exactas). Mínimo 6 casos: 1 proyecto, 3 proyectos de un tribunal, 2 tribunales, texto editado en la revisión, matriz propia del usuario y un proyecto con cursivas en la matriz. Determinista: escribir bytes, fechas fijas, ZipInfo.create_system = 3.
+6. Única excepción de workflow de este encargo: agrega 'word_tribunal' al arreglo de oráculos del paso «Regenerar los oráculos con la referencia Python» de .github/workflows/flow-rust-local.yml. Nada más en ese archivo.
+7. Pruebas Rust: word_por_tribunal_igual_a_python (afirma el número de casos y de archivos) y oraculo_de_word_tribunal_detecta_alteraciones (altera un párrafo, un salto y una línea del índice, y exige que el comparador falle). Si generar_word deja de pasar sus pruebas actuales, detente.
+8. Si escribes a disco por una ruta nueva, ajusta la línea de productos.rs en tools/inventario_escrituras.py.
+
+Archivos tuyos: productos.rs, ui.rs (solo «Resoluciones»), app/qa/generar_word_tribunal.py, app/tests/datos/word_tribunal.json, la línea del punto 6 y la línea de productos.rs del inventario.
+Prohibido: descargador/**, descargador_ui.rs, descargador_resultados_ui.rs, meta4_ui.rs, Cargo.toml y Cargo.lock (sin dependencias nuevas), archivos Python de src/, descargador/ y tests/, y los documentos del recordatorio.
+
+CRITERIO DE PARADA: si Python y la decisión del usuario chocan en algo que no sea el índice ni la separación por tribunal (por ejemplo estilos, saltos o textos), no lo resuelvas: fíjalo en el oráculo y repórtalo. Si algo exige una dependencia nueva o un archivo prohibido, BLOQUEADO. Si la CI falla dos veces por la misma causa sin que la entiendas, detente y reporta el log.
+
+PRUEBAS: tools/probar_app.sh rapido word mientras trabajas; tools/probar_app.sh todo una vez antes de publicar; cargo clippy --manifest-path app/Cargo.toml --features eframe/x11 --lib -- -D warnings; verificar_textos_umbrales.py e inventario_escrituras.py. Si el generador necesita tkinter: apt-get install -y python3-tk y un venv con /usr/bin/python3.12 --system-site-packages más openpyxl pandas docxcompose python-docx xlrd lxml pillow numpy reportlab pytest.
+
+PUBLICACIÓN: commits en estudio/paridad-python-rust-20261119 con las líneas de atribución del sistema; git push origin estudio/paridad-python-rust-20261119 (sin --force; si lo rechaza, git fetch y git merge --no-edit, nunca rebase de commits ajenos). Revisa la CI con las herramientas de GitHub sin sondear en bucle.
+
+INFORME: docs/migracion_python_rust/informes/AGENTE_A_20261125.md, en un commit aparte y el último: 1) resumen ≤10 líneas; 2) ruta del clon, commits y archivos; 3) pruebas y conteos antes → después; 4) run de CI, con la conclusión y el log del paso «Regenerar los oráculos» (debe nombrar word_tribunal); 5) hallazgos (hechos | inferencias | especulación); 6) texto propuesto para ESTADO, PLAN y registro (≤10 líneas); 7) riesgos y pendientes. Estado del encargo en el informe: ENTREGADO o BLOQUEADO.
+
+ESTILO: español chileno, primera línea = la respuesta, sin cortesías, código completo.
+```
