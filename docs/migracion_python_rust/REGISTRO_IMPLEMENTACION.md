@@ -237,5 +237,4 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Cambió: `sincronizar.rs` (`actualizar` con `Config`, `Resumen.recalculadas`), `ui.rs` (aviso de filas recalculadas), `generar_sync.py` y `sync.json` (17 casos, con propuesta y reglas de Python).
 - Acredita: `actualizar_desde_excel_igual_a_python` (17 casos: reglas iguales y propuesta igual salvo R6) y `oraculo_de_sync_detecta_alteraciones`. `probar_app.sh todo`: 72 y 90 pruebas, 0 fallos; clippy limpio.
 - Diferencias: solo archivos de RUS (un paquete avisa); se reanalizan todas las filas; `NURUS_DECISIONES` no se combina (sin F08 no hay estado que combinar).
-- Pendiente: CI de Windows verde.
-
+- CI: run 45625544370 verde (`linux` y `validar`, `sync.json` regenerado igual en Windows).
