@@ -515,3 +515,7 @@ FIRMA (obligatoria) e INFORME: docs/migracion_python_rust/informes/AGENTE_A_EA11
 
 ESTILO: español chileno, primera línea = la respuesta, sin cortesías, código completo.
 ```
+
+### Ajuste: E-Q11 ejecutado por ChatGPT Terra
+
+Antes de pegar el prompt de E-Q11, reemplazar su encabezado y su paso 0 por el bloque «Encabezado para Terra» (en el chat del 25-nov) y cambiar la línea final de cada commit por «Agente: B · ChatGPT Terra». El resto del prompt no cambia.

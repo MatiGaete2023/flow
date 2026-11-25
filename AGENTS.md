@@ -18,7 +18,7 @@
 - La rama `estudio/paridad-python-rust-20261119` la integra el coordinador. Un agente en paralelo trabaja en su propia rama `estudio/agente-<letra>-<tema>-<fecha>` (la CI también corre ahí) y **no toca** `ESTADO.md`, `PLAN.md`, `REGISTRO_IMPLEMENTACION.md`, `AGENTS.md`, `CONTINUACION.md` ni el workflow.
 - En lugar de eso escribe `docs/migracion_python_rust/informes/AGENTE_<letra>_<fecha>.md` con lo hecho, las pruebas, los runs de CI y el texto propuesto para `ESTADO.md`, `PLAN.md` y el registro; el coordinador lo revisa, lo integra y valida de nuevo en la rama principal.
 - Cada agente tiene archivos propios (los fija su prompt). Una función compartida no cambia de firma sin avisar en el informe.
-- **Ejecutores fijos (25-nov, usuario):** A = Antigravity, B = DeepSeek, C = ChatGPT (GPT-5.6 Terra desde el 25-nov por la tarde; antes Luna). Un agente no toma encargos de otra letra.
+- **Ejecutores fijos (25-nov, usuario):** A = Antigravity, B = DeepSeek (por ahora ejecutado por ChatGPT Terra, desde E-Q11), C = ChatGPT (GPT-5.6 Terra desde el 25-nov por la tarde; antes Luna). Un agente no toma encargos de otra letra.
 - **Firma obligatoria.** Cada informe empieza con un bloque «Firma» (agente y letra, herramienta y modelo, identidad git `nombre <correo>` con la que firmó los commits, ruta del clon, rama, y la lista de commits que hizo esa sesión, uno por línea con su SHA). Cada commit lleva al final la línea `Agente: <letra> · <herramienta>`. Un commit que el informe no lista no se atribuye a ese agente; un informe sin firma no se integra.
 
 ## Entrega y actualización
