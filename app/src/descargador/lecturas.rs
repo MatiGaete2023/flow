@@ -923,20 +923,32 @@ mod tests {
         }
     }
 
+    fn diferencia_con_python(c: &Value) -> Option<Value> {
+        let obtenido = match leer(c, c["html"].as_str().unwrap().as_bytes()) {
+            Ok(v) => serde_json::json!({"ok": v}),
+            Err(e) => serde_json::json!({"error": e}),
+        };
+        (obtenido != c["python"]).then_some(obtenido)
+    }
+
+    #[test]
+    fn oraculo_de_lecturas_detecta_un_error_alterado() {
+        let mut c = casos().into_iter().find(|c| c["caso"] == "cal_enviado_guiones_separados").unwrap();
+        assert!(diferencia_con_python(&c).is_none());
+        c["python"]["error"] = serde_json::json!("Error distinto");
+        assert!(diferencia_con_python(&c).is_some());
+    }
+
     /// E-Q1: las mismas salidas que los lectores vigentes de Flow Python (`app/qa/generar_lecturas.py`).
     #[test]
     fn lecturas_iguales_a_python() {
         let (mut iguales, mut fallos) = (0usize, Vec::new());
         let casos = casos();
         for c in &casos {
-            let obtenido = match leer(c, c["html"].as_str().unwrap().as_bytes()) {
-                Ok(v) => serde_json::json!({"ok": v}),
-                Err(e) => serde_json::json!({"error": e}),
-            };
-            if obtenido == c["python"] {
-                iguales += 1;
-            } else {
+            if let Some(obtenido) = diferencia_con_python(c) {
                 fallos.push(format!("{} {}:\n  esp {}\n  obt {}", c["tipo"], c["caso"], c["python"], obtenido));
+            } else {
+                iguales += 1;
             }
         }
         // Negativas del crate histórico: respuesta cortada, login o estructura ajena nunca es una lectura válida.
@@ -960,7 +972,7 @@ mod tests {
             println!("FALLA {f}");
         }
         println!("LECTURAS: {iguales}/{}, negativas {negativas}/{total_neg}, fallos {}", casos.len(), fallos.len());
-        assert_eq!(casos.len(), 32, "el fixture cambió de tamaño: regenerar y revisar");
+        assert_eq!(casos.len(), 35, "el fixture cambió de tamaño: regenerar y revisar");
         assert!(fallos.is_empty(), "{} lecturas difieren de Flow Python", fallos.len());
     }
 }

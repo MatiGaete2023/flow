@@ -303,9 +303,7 @@ impl Contexto {
                 Some(m) => paquete::empaquetar_lote(&listados, m, &destino, historia.as_deref(), historico.as_deref(), meses, &[], consolidado),
                 None => {
                     let opciones = paquete::Opciones { consolidado, meses, ..Default::default() };
-                    paquete::exportar_con(&[listados], &destino, &opciones).map(|r| {
-                        serde_json::json!({"path": r.ruta.display().to_string(), "reuse": format!("Sin bitácoras añadidas.{}", r.nota)})
-                    })
+                    paquete::exportar_con(&[listados], &destino, &opciones).map(paquete::Exportado::respuesta_interfaz)
                 }
             };
             let _ = envio.send(Trabajo::Paquete(resultado));
@@ -445,8 +443,8 @@ impl Contexto {
             if let Some(reuse) = r["reuse"].as_str() {
                 ui.label(RichText::new(reuse).color(p.muted));
             }
-            if r["historico_incompleto"].as_bool() == Some(true) {
-                ui.label(RichText::new("El Ingreso Histórico quedó incompleto: revisa sus incidencias en el paquete.").color(p.amber));
+            if let Some(aviso) = r["aviso_cobertura"].as_str() {
+                ui.label(RichText::new(aviso).color(p.amber));
             }
             ui.horizontal_wrapped(|ui| {
                 if let Some(ruta) = r["path"].as_str().map(PathBuf::from) {
@@ -1561,13 +1559,17 @@ mod pruebas_interfaz {
         assert_eq!(h.state().contexto.error, None);
         let mut esperado = e["resultado"].clone();
         esperado["path"] = serde_json::json!(destino.to_string_lossy());
-        assert_eq!(h.state().contexto.paquete.as_ref(), Some(&esperado), "resultado distinto de package_current_lot");
+        let mut resultado = h.state().contexto.paquete.clone().unwrap();
+        let aviso = resultado.as_object_mut().unwrap().remove("aviso_cobertura").unwrap();
+        assert_eq!(resultado, esperado, "resultado distinto de package_current_lot");
         let mut zip = zip::ZipArchive::new(std::fs::File::open(&destino).unwrap()).unwrap();
         let manifiesto: Value = serde_json::from_reader(zip.by_name("manifest.json").unwrap()).unwrap();
         assert_eq!(manifiesto, e["paquete"]["manifest.json"], "el paquete de la interfaz difiere del de Flow Python");
         assert!(h.query_by_label(&format!("Paquete creado: {}", destino.display())).is_some());
         assert!(h.query_by_label(e["resultado"]["reuse"].as_str().unwrap()).is_some());
-        assert!(h.query_by_label("El Ingreso Histórico quedó incompleto: revisa sus incidencias en el paquete.").is_some());
+        let aviso = aviso.as_str().unwrap();
+        assert!(aviso.contains("HISTORICO_"), "{aviso}");
+        assert!(h.query_by_label(aviso).is_some());
         assert!(h.query_by_label("Abrir carpeta del paquete").is_some());
         // «Abrir en Trabajo» deja el paquete listo para que `App` lo abra, una sola vez.
         assert!(h.state().contexto.abrir_en_trabajo.is_none());

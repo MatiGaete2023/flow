@@ -938,19 +938,10 @@ pub fn diagnostico_anonimo(datos: &Value) -> Value {
     })
 }
 
-/// Extensión de Flow Rust (no existe en Flow Python): estados de calendario e histórico por ingreso y códigos fijos de
-/// error, para diagnosticar lecturas parciales sin compartir filas, identificadores ni texto libre.
-pub fn diagnostico_calendarios(datos: &Value) -> Value {
-    let registros = datos["registros"].as_array().cloned().unwrap_or_default();
-    let contar = |it: &mut dyn Iterator<Item = String>| {
-        let mut c: BTreeMap<String, u64> = BTreeMap::new();
-        for k in it {
-            *c.entry(k).or_default() += 1;
-        }
-        json!(c)
-    };
-    // Calendario e histórico por ingreso: solo estados y códigos fijos, nunca el texto del error.
-    const CODIGOS_CALENDARIO: [(&str, &str); 10] = [
+/// Clasifica el detalle de lectura, incluidos los controles guardados con versiones anteriores.
+pub(super) fn codigo_calendario(error: &str) -> &'static str {
+    const CODIGOS_CALENDARIO: &[(&str, &str)] = &[
+        ("Fecha Proyección", "CAL_FECHA_PROYECCION"),
         ("fecha ilegible", "CAL_FECHA_ILEGIBLE"),
         ("no concuerdan", "CAL_ESTADO_FECHA"),
         ("Estado de calendario no reconocido", "CAL_ESTADO"),
@@ -961,14 +952,30 @@ pub fn diagnostico_calendarios(datos: &Value) -> Value {
         ("incompleta", "CAL_INCOMPLETA"),
         ("ingreso de SITFA", "CAL_SESION"),
         ("no coincide con la solicitud", "CAL_RESPUESTA"),
+        ("formulario del calendario", "CAL_FORMULARIO"),
+        ("Campo ausente o repetido", "CAL_CAMPO"),
+        ("enlace del calendario", "CAL_ENLACE"),
     ];
+    CODIGOS_CALENDARIO.iter().find(|(fragmento, _)| error.contains(fragmento)).map_or("CAL_OTRA", |(_, codigo)| *codigo)
+}
+
+/// Extensión de Flow Rust: estados y códigos fijos de error, para compartir sin identificadores ni texto libre.
+pub fn diagnostico_calendarios(datos: &Value) -> Value {
+    let registros = datos["registros"].as_array().cloned().unwrap_or_default();
+    let contar = |it: &mut dyn Iterator<Item = String>| {
+        let mut c: BTreeMap<String, u64> = BTreeMap::new();
+        for k in it {
+            *c.entry(k).or_default() += 1;
+        }
+        json!(c)
+    };
     let estado_lectura = |v: &Value| ["LEIDA", "FALLIDA", "PENDIENTE"].iter().find(|e| v == **e).map_or("OTRO", |e| *e).to_string();
     let calendarios = contar(&mut registros.iter().filter(|r| r["calendario"].is_array()).map(|r| {
         if r["calendario_lectura"].is_object() { estado_lectura(&r["calendario_lectura"]["estado"]) } else { "NO_INTENTADO".into() }
     }));
     let errores_calendario = contar(&mut registros.iter().filter(|r| matches!(r["calendario_lectura"]["estado"].as_str(), Some("FALLIDA" | "PENDIENTE"))).map(|r| {
         let texto = r["calendario_lectura"]["error"].as_str().unwrap_or("");
-        CODIGOS_CALENDARIO.iter().find(|(c, _)| texto.contains(c)).map_or("CAL_OTRA", |(_, k)| *k).to_string()
+        codigo_calendario(texto).to_string()
     }));
     let historicos = contar(&mut registros.iter().filter(|r| r["historico_lectura"].is_object()).map(|r| estado_lectura(&r["historico_lectura"]["estado"])));
     json!({
@@ -1349,6 +1356,82 @@ mod tests {
         Value::Object(salida)
     }
 
+    fn diferencia_paquete(captura: &crate::captura::Captura, esperado: &Value) -> Option<Value> {
+        let tablas = ["consultas", "registros", "bitacoras", "calendarios", "historico_proteccion", "incidencias"];
+        let cobertura: BTreeMap<_, _> = tablas.into_iter().map(|t| (t, captura.estado(t))).collect();
+        let incidencias: Vec<_> = captura.filas("incidencias").map(|fila| fila.get("code")).collect();
+        let obtenido = json!({"cobertura": cobertura, "incidencias": incidencias});
+        (obtenido["cobertura"] != esperado["cobertura"] || obtenido["incidencias"] != esperado["incidencias"]).then_some(obtenido)
+    }
+
+    fn contrastar_paquete(e: &Value, destino: &Path, carpeta: &Path, registros: &Value) {
+        use super::super::paquete;
+
+        let esperado = &e["paquete"];
+        let listados = destino.join("listados");
+        std::fs::create_dir(&listados).unwrap();
+        for (nombre, datos) in esperado["archivos"].as_object().unwrap() {
+            std::fs::write(listados.join(nombre), serde_json::to_vec(datos).unwrap()).unwrap();
+        }
+        let ruta = destino.join("paquete.zip");
+        let manifiesto = carpeta.join(MANIFIESTO);
+        let mut opciones = paquete::Opciones {
+            bitacoras: vec![manifiesto.clone()],
+            historico: (e["historico"] == true).then(|| carpeta.to_path_buf()),
+            ..Default::default()
+        };
+        let exportado = paquete::exportar_con(std::slice::from_ref(&listados), &ruta, &opciones).unwrap();
+        let captura = crate::captura::leer_captura(&std::fs::read(&ruta).unwrap()).unwrap();
+        let caso = e["escenario"].as_str().unwrap();
+        assert_eq!(diferencia_paquete(&captura, esperado), None, "{caso}");
+        let (calendario, codigo) = match caso {
+            "cal_pendiente_guiones" => ("LEIDA", None),
+            "cal_enviado_guiones" => ("FALLIDA", Some("CAL_ESTADO_FECHA")),
+            "cal_proyeccion_guiones" => ("FALLIDA", Some("CAL_FECHA_PROYECCION")),
+            "cal_estado_desconocido" => ("FALLIDA", Some("CAL_ESTADO")),
+            "historico_no_verificado" => ("", Some("HISTORICO_NO_VERIFICADA")),
+            _ => panic!("Escenario de paquete sin prueba: {caso}"),
+        };
+        assert_eq!(registros[0]["estado"], "LEIDA");
+        assert_eq!(registros[1]["estado"], "LEIDA");
+        if calendario.is_empty() {
+            assert_eq!(registros[1]["historico_lectura"]["estado"], "FALLIDA");
+        } else {
+            assert_eq!(registros[0]["calendario_lectura"]["estado"], "LEIDA");
+            assert_eq!(registros[1]["calendario_lectura"]["estado"], calendario);
+        }
+        let diagnostico = paquete::leer_json(&ruta.with_extension("diagnostico_cobertura.json")).unwrap();
+        assert_eq!(diagnostico["motivos"]["BITACORA_VENTANA_VERIFICADA"], 2, "{caso}");
+        if let Some(codigo) = codigo {
+            assert_eq!(diagnostico["motivos"][codigo], 1);
+            assert!(exportado.aviso_cobertura.unwrap().contains(&format!("{codigo} (1)")));
+        } else {
+            assert!(exportado.aviso_cobertura.is_none());
+            let mut alterado = esperado.clone();
+            alterado["cobertura"]["calendarios"] = json!("FALLIDA");
+            assert!(diferencia_paquete(&captura, &alterado).is_some());
+
+            // Control persistido por el lector Python anterior a 38fa03d con la misma ventana PENDIENTE.
+            let mut anterior = paquete::leer_json(&manifiesto).unwrap();
+            anterior["registros"][1]["calendario_lectura"] = json!({
+                "estado": "FALLIDA",
+                "error": "El calendario contiene una fecha ilegible en «Fecha Informe» (forma «- - -»).",
+            });
+            let control = carpeta.join("control_anterior.json");
+            std::fs::write(&control, serde_json::to_vec(&anterior).unwrap()).unwrap();
+            opciones.bitacoras = vec![control];
+            let ruta = destino.join("anterior.zip");
+            let exportado = paquete::exportar_con(&[listados], &ruta, &opciones).unwrap();
+            let captura = crate::captura::leer_captura(&std::fs::read(&ruta).unwrap()).unwrap();
+            assert_eq!(anterior["registros"][1]["estado"], "LEIDA");
+            assert_eq!(anterior["registros"][1]["calendario_lectura"]["estado"], "FALLIDA");
+            assert_eq!(captura.estado("calendarios"), "PARCIAL");
+            let incidencias: Vec<_> = captura.filas("incidencias").map(|fila| fila.get("code")).collect();
+            assert_eq!(incidencias, ["CALENDARIO_FALLIDO"]);
+            assert!(exportado.aviso_cobertura.unwrap().contains("CAL_FECHA_ILEGIBLE (1)"));
+        }
+    }
+
     /// E-Q4a: mismas órdenes al puente, mismo `bitacoras.json`, mismas instantáneas y mismo resultado que
     /// `DiaryRunner` de Flow Python en los escenarios de `app/qa/generar_bitacoras.py` (`fecha` declarada).
     #[test]
@@ -1446,6 +1529,9 @@ mod tests {
                     diferencias.push(format!("resultado.{clave}: Rust {} / Python {valor}", resultado[clave]));
                 }
             }
+            if e.get("paquete").is_some() {
+                contrastar_paquete(e, &destino, &carpeta, &manifiesto["registros"]);
+            }
             let _ = std::fs::remove_dir_all(&destino);
             if diferencias.is_empty() {
                 iguales += 1;
@@ -1462,7 +1548,8 @@ mod tests {
         println!("AVANCE: {} escenarios con una fila de avance por registro; distintos {distintos:?}", avances.len() - distintos.len());
         assert!(distintos.is_empty(), "el avance por fila no cubre cada registro");
         assert!(avances.iter().all(|(_, _, _, consultas)| *consultas > 0), "falta el evento de consulta");
-        assert_eq!(escenarios.len(), 16, "el fixture cambió de tamaño: regenerar y revisar");
+        assert_eq!(escenarios.len(), 21, "el fixture cambió de tamaño: regenerar y revisar");
+        assert_eq!(escenarios.iter().filter(|e| e.get("paquete").is_some()).count(), 5);
         assert!(fallos.is_empty(), "{} escenarios difieren de Flow Python", fallos.len());
     }
 }
