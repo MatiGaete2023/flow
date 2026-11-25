@@ -12,7 +12,8 @@ Determinista: reloj fijo que avanza un segundo por llamada, JSON con LF, rutas r
 `proceso.json`), historial sin hora ni zona, entrada sin ZIP y la carpeta temporal tomada con `Path(tmp).resolve()`
 (en Windows llega como `RUNNER~1`). Dos corridas y una carpeta de trabajo con espacios dan bytes idénticos.
 
-Uso (desde la raíz): python app/qa/generar_flujo_paquete.py [salida.json]
+Incluye por_hoja (E-Q10): un paquete por pestaña, con la hoja que falla, una sola hoja y la cancelación en la
+segunda con su retomar. Uso (desde la raíz): python app/qa/generar_flujo_paquete.py [salida.json]
 """
 
 import base64
@@ -146,9 +147,11 @@ def calendario(args):
 class Puente:
     """SITFA ficticio: listados, bitácoras y calendarios sintéticos; historia e histórico fallan a propósito."""
 
-    def __init__(self, fallar_bitacora=None):
+    def __init__(self, fallar_bitacora=None, fallar_hoja=None):
         self.pantalla = 'seguimiento'
         self.mes = None
+        self.fallar_hoja = fallar_hoja
+        self.seleccion = None
         self.pares = {}
         self.seleccion = None
         self.llamadas = []
@@ -159,7 +162,8 @@ class Puente:
         if self.pantalla == 'seguimiento':
             base = test_lotes.document(self.seleccion, 1, 1).decode('utf-8')
             inicio, fin = base.index('<table'), base.index('</table>') + len('</table>')
-            return (base[:inicio] + tabla(con_enlaces) + base[fin:]).encode()
+            tabla_id = re.search(r'id="([^"]+)"', base[inicio:fin]).group(1)
+            return (base[:inicio] + tabla(con_enlaces, tabla_id) + base[fin:]).encode()
         formulario = ''.join(f'<select name="{k}"><option value="{v}" selected>{v}</option></select>'
                              if k in ('COD_Tribunal_sel', 'TIP_Consulta', 'COD_Mes_sel', 'COD_Anio_Sel') else
                              f'<input name="{k}" value="{v}">' for k, v in self.pares.items())
@@ -185,6 +189,8 @@ class Puente:
             crudo = payload['selection']
             self.pantalla = crudo['screen']
             self.mes = crudo.get('month')
+            if self.fallar_hoja and crudo.get('tab') == self.fallar_hoja:
+                raise PocError(f'La hoja {self.fallar_hoja} no se pudo preparar.')
             self.seleccion = Selection(**{k: crudo.get(k) for k in
                                           ('tribunal', 'tab', 'modality', 'report', 'screen', 'state', 'month', 'year')
                                           if k in crudo})
@@ -378,6 +384,73 @@ def archivos(carpeta):
     return salida
 
 
+def volcado_resultado(resultado):
+    """Lo observable de un paquete del flujo por hoja: resultado, proceso final y ZIP."""
+    ruta = Path(resultado['path'])
+    return {
+        'resultado': {'parcial': bool(resultado.get('partial')),
+                      'historia': (resultado.get('historia') or {}).get('estado'),
+                      'zip': ruta.name},
+        'proceso': volcado_proceso(ruta.parent),
+        'zip': volcado_zip(ruta),
+    }
+
+
+def caso_por_hoja(nombre, hojas, *, opciones=None, fallar_hoja=None, cancelar_en_hoja=None):
+    """Un `run_por_hoja` completo: fases globales, error y un volcado por paquete; si se cancela, la entrada cortada."""
+    opciones = opciones or {}
+    base = Path(tempfile.mkdtemp(prefix='flujo-')).resolve()
+    destino = base / 'destino'
+    destino.mkdir()
+    puente = Puente(fallar_hoja=fallar_hoja)
+    eventos = []
+    cancelar = threading.Event()
+    registro = {'caso': nombre, 'hojas': list(hojas), 'error': None, 'paquetes': []}
+    if cancelar_en_hoja:
+        original = puente.call
+
+        def cortar(command, payload=None, timeout=75):
+            if command == 'download' and puente.seleccion is not None and puente.seleccion.tab == cancelar_en_hoja:
+                cancelar.set()
+            return original(command, payload, timeout)
+
+        puente.call = cortar
+    try:
+        resultados = flujo_paquete.run_por_hoja(
+            puente, CATALOGO, lambda *e: eventos.append(e), cancelar,
+            Batch(('901',), ('2',), tuple(hojas)), destino, pause=0, today=date(2026, 10, 14), **opciones)
+        registro['paquetes'] = [volcado_resultado(r) for r in resultados]
+    except (PocError, ValueError, OSError) as exc:
+        registro['error'] = str(exc)
+        paquetes = sorted(p for p in destino.glob('Paquete CSMP *') if p.is_dir())
+        registro['paquetes'] = [{'resultado': None, 'proceso': volcado_proceso(p), 'zip': None} for p in paquetes]
+        cortado = paquetes[-1] if paquetes else None
+        if cortado:
+            registro['entrada'] = archivos(cortado)
+            registro['retomado'] = caso('retomado_por_hoja', resume=Paquete_de(cortado))
+    registro['fases'] = [v for n, v in eventos if n == 'phase']
+    registro['avisos'] = [v for n, v in eventos if n == 'warning']
+    return registro
+
+
+class Paquete_de:
+    """Copia de una carpeta Â«Paquete CSMP â€¦Â» ya existente, para retomarla (sin ZIP y con `proceso.json` normalizado)."""
+
+    def __init__(self, carpeta):
+        self.carpeta = Path(tempfile.mkdtemp(prefix='flujo-entrada-')).resolve()
+        destino = self.carpeta / Path(carpeta).name
+        shutil.copytree(carpeta, destino)
+        for zip_viejo in destino.glob('*.zip'):
+            zip_viejo.unlink()
+        control = destino / 'respaldo' / 'proceso.json'
+        control.write_bytes(json.dumps(rutas_normalizadas(json.loads(control.read_text(encoding='utf-8'))),
+                                       ensure_ascii=False, indent=2).encode('utf-8'))
+        self.ruta = destino
+
+    def __str__(self):
+        return str(self.ruta)
+
+
 def main():
     destino = Path(sys.argv[1]) if len(sys.argv) > 1 else RAIZ / 'app' / 'tests' / 'datos' / 'flujo_paquete.json'
     completo = caso('todo_completo')
@@ -395,9 +468,17 @@ def main():
     casos = [completo, sin_calendarios, con_calendarios, con_informes, con_historia, cancelado, retomado, fallida,
              retomada, danado, sin_alcance, pantalla]
     destino.parent.mkdir(parents=True, exist_ok=True)
-    destino.write_bytes((json.dumps({'catalogo': CATALOGO, 'casos': casos}, ensure_ascii=False, indent=1) + '\n').encode('utf-8'))
+    por_hoja = [
+        caso_por_hoja('dos_hojas', ('Cumplimiento', 'Espera')),
+        caso_por_hoja('una_hoja_falla', ('Cumplimiento', 'Espera'), fallar_hoja='Espera'),
+        caso_por_hoja('una_sola_hoja', ('Cumplimiento',)),
+        caso_por_hoja('cancelada_y_retomada', ('Cumplimiento', 'Espera'), cancelar_en_hoja='Espera'),
+    ]
+    destino.write_bytes((json.dumps({'catalogo': CATALOGO, 'casos': casos, 'por_hoja': por_hoja}, ensure_ascii=False, indent=1) + '\n').encode('utf-8'))
     for c in casos:
         print(c['caso'], '->', c['error'] or (c['fases'], (c['resultado'] or {}).get('parcial')))
+    for c in por_hoja:
+        print('por hoja', c['caso'], '->', c['error'] or len(c['paquetes']), 'paquete(s)')
 
 
 class Paquete:
