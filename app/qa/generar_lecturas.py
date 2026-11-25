@@ -77,6 +77,9 @@ def casos():
         'cal_estado_desconocido': valido.replace('PENDIENTE', 'ANULADO'),
         'cal_estado_sin_fecha': valido.replace('<td>01/09/2026</td><td>---</td><td>PENDIENTE</td>',
                                                '<td>01/09/2026</td><td>---</td><td>ENVIADO</td>'),
+        'cal_pendiente_guiones_separados': valido.replace('<td>---</td>', '<td>- - -</td>'),
+        'cal_enviado_guiones_separados': valido.replace('<td>---</td><td>PENDIENTE</td>', '<td>- - -</td><td>ENVIADO</td>'),
+        'cal_proyeccion_guiones_separados': valido.replace('<td>01/09/2026</td>', '<td>- - -</td>'),
         'cal_fecha_ilegible': valido.replace('<td>01/09/2026</td>', '<td>1 de sept.</td>'),
         'cal_fecha_imposible': valido.replace('<td>01/09/2026</td>', '<td>31/02/2026</td>'),
     }
@@ -120,7 +123,7 @@ def main():
     destino = Path(sys.argv[1]) if len(sys.argv) > 1 else RAIZ / 'app' / 'tests' / 'datos' / 'lecturas.json'
     lista = casos()
     destino.parent.mkdir(parents=True, exist_ok=True)
-    destino.write_text(json.dumps(lista, ensure_ascii=False, indent=1) + '\n', encoding='utf-8', newline='\n')
+    destino.write_bytes((json.dumps(lista, ensure_ascii=False, indent=1) + '\n').encode('utf-8'))
     print(f'{len(lista)} ventanas ficticias cotejadas con Python → {destino}')
 
 

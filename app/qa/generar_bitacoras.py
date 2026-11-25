@@ -34,12 +34,15 @@ AHORA = datetime(2026, 10, 8, 13, 0, 0, 123456, tzinfo=ZoneInfo('America/Santiag
 motor.now = lambda: AHORA
 
 from lectura_bitacoras import DiaryRunner  # noqa: E402
+from export_csmp_capture import export_capture  # noqa: E402
 from lotes import Batch  # noqa: E402
+from nurus.capture import read_capture  # noqa: E402
+from resultados import load_lot  # noqa: E402
 from test_lectura_bitacoras import Bridge  # noqa: E402
 from test_lotes import CATALOG  # noqa: E402
 
 
-from test_calendario_lectura import CalendarBridge  # noqa: E402
+from test_calendario_lectura import CalendarBridge, calendar_page  # noqa: E402
 
 
 def grabador(base):
@@ -61,9 +64,25 @@ def grabador(base):
 
 
 Grabador = grabador(Bridge)
-GrabadorCalendario = grabador(CalendarBridge)
 
-HISTORIAL = (RAIZ / 'tests/fixtures_integracion/historial_menores_ficticio.html').read_bytes()
+
+class CalendarioConFilas(CalendarBridge):
+    def __init__(self, fila=None, **opciones):
+        super().__init__(**opciones)
+        self.fila = fila
+
+    def call(self, command, payload=None, timeout=75):
+        respuesta = super().call(command, payload, timeout)
+        if command == 'calendar_open' and self.fila is not None and payload['args'][10] == '202':
+            causa, _, tribunal, *_, ingreso, _ = payload['args']
+            datos = calendar_page(causa, tribunal, ingreso, (self.fila,)).encode('utf-8')
+            respuesta = dict(respuesta, body=base64.b64encode(datos).decode(), digest=hashlib.sha256(datos).hexdigest())
+        return respuesta
+
+
+GrabadorCalendario = grabador(CalendarioConFilas)
+
+HISTORIAL = (RAIZ / 'tests/fixtures_integracion/historial_menores_ficticio.html').read_bytes().replace(b'\r\n', b'\n')
 SIN_TABLA = (b'<html><head><title>Historial Menores</title></head><body>'
              b'<iframe src="/SITFAWEB/x.jsp?RUT=1"></iframe></body></html>')
 
@@ -134,7 +153,7 @@ class HistoriaCorrecta(BridgeConHistoria):
 
             self.events.append((command, None))
             p = payload['params']
-            ventana = VENTANA.replace(b'C-99999-2099', p['rit'].encode()).replace(
+            ventana = VENTANA.replace(b'\r\n', b'\n').replace(b'C-99999-2099', p['rit'].encode()).replace(
                 b'Juzgado Canario de Prueba', CATALOG['tribunales'][p['tribunal']].encode('cp1252'))  # la ventana declara windows-1252
             return FakeBridge(respuesta=ventana).call(command, payload)
         return super().call(command, payload, timeout)
@@ -202,7 +221,49 @@ ESCENARIOS = {
 }
 
 
-def escenario(nombre, opciones, lote, calendarios=False, historico=None, historia=None):
+def escribir_json(ruta, valor):
+    ruta.write_bytes(json.dumps(valor, ensure_ascii=False).encode('utf-8'))
+
+
+def lote_para_paquete(base):
+    seleccion = {'screen': 'seguimiento', 'tribunal': '49', 'modality': '2', 'tab': 'Cumplimiento'}
+    consulta = {'estado': 'SIN_RESULTADOS', 'seleccion': seleccion, 'verificacion': 'verificacion 001.json'}
+    archivos = {
+        'resumen.json': {'estado': 'VALIDADA', 'consultas_esperadas': 1, 'consultas': [consulta],
+                         'plan': [seleccion], 'fecha_hora': AHORA.isoformat()},
+        consulta['verificacion']: {'estado': 'SIN_RESULTADOS', 'seleccion': seleccion,
+                                   'archivos': [], 'paginas_esperadas': 0},
+    }
+    base.mkdir()
+    for nombre, valor in archivos.items():
+        escribir_json(base / nombre, valor)
+    return archivos
+
+
+def cobertura_paquete(base, manifiesto, historico):
+    listados = base / 'listados'
+    archivos = lote_para_paquete(listados)
+    ruta = export_capture([load_lot(listados)], base / 'paquete.zip', diaries=[manifiesto],
+                          historico=manifiesto.parent if historico else None)
+    captura = read_capture(ruta)
+    tablas = ('consultas', 'registros', 'bitacoras', 'calendarios', 'historico_proteccion', 'incidencias')
+    return {'archivos': archivos, 'cobertura': {t: captura.manifest['table_states'].get(t, 'NO_SOLICITADA') for t in tablas},
+            'incidencias': [fila['code'] for fila in captura.rows('incidencias')]}
+
+
+def mensual_incompleto():
+    with tempfile.TemporaryDirectory() as tmp:
+        base = Path(tmp)
+        seleccion = {'screen': 'calendario_informes', 'tribunal': '901', 'month': '11', 'year': '2026'}
+        escribir_json(base / 'resumen.json', {'estado': 'INCOMPLETA', 'consultas': [], 'plan': [seleccion]})
+        try:
+            load_lot(base)
+        except motor.PocError as error:
+            return str(error)
+        raise AssertionError('Python permitió empaquetar un calendario mensual sin completar')
+
+
+def escenario(nombre, opciones, lote, calendarios=False, historico=None, historia=None, paquete=False):
     lector = None
     if historia:
         puente = GrabadorConHistoria() if historia == 'ok' else GrabadorHistoriaAjena(historia)
@@ -224,10 +285,11 @@ def escenario(nombre, opciones, lote, calendarios=False, historico=None, histori
         instantaneas = {
             p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(carpeta.glob('*.html'))
         }
+        cobertura = cobertura_paquete(Path(tmp), Path(resultado['manifest']), historico) if paquete else None
     manifiesto['fecha'] = '<FECHA>'
     claves = ('estado', 'leidas', 'fallidas', 'consultas_fallidas', 'detalle', 'faltantes_por_tribunal',
               'calendarios_leidos', 'calendarios_fallidos', 'historicos')
-    return {
+    escenario = {
         'escenario': nombre,
         'calendarios': calendarios,
         'historico': bool(historico),
@@ -243,12 +305,23 @@ def escenario(nombre, opciones, lote, calendarios=False, historico=None, histori
         'instantaneas': instantaneas,
         'resultado': {k: resultado[k] for k in claves},
     }
+    if cobertura is not None:
+        escenario['paquete'] = cobertura
+    return escenario
 
 
 def carpeta_json(carpeta):
     """Archivos de una carpeta de lote (manifiesto e instantáneas) para reconstruirla en la prueba Rust."""
-    return {p.name: base64.b64encode(p.read_bytes()).decode()
-            for p in sorted(carpeta.iterdir()) if p.name == 'bitacoras.json' or p.suffix == '.html'}
+    archivos = {}
+    for p in sorted(carpeta.iterdir()):
+        if p.name == 'bitacoras.json':
+            datos = p.read_text(encoding='utf-8').encode('utf-8')
+        elif p.suffix == '.html':
+            datos = p.read_bytes()
+        else:
+            continue
+        archivos[p.name] = base64.b64encode(datos).decode()
+    return archivos
 
 
 def dos_corridas(nombre, primera, segunda, lote, retomar, cancelada=False, calendarios=False):
@@ -317,9 +390,18 @@ def main():
     escenarios.append(escenario('historia_tribunal_distinto', dict(), uno, historia='tribunal'))
     escenarios.append(escenario('historico_sin_tabla', dict(), Batch(tuple(CATALOG['tribunales']), ('1', '2', '3', '4'),
                                                                    ('Cumplimiento',)), historico='sin_tabla'))
-    datos = {'catalogo': CATALOG, 'ahora': AHORA.isoformat(), 'escenarios': escenarios}
+    for nombre, fila in {
+        'cal_pendiente_guiones': ('10/11/2026', '- - -', 'PENDIENTE'),
+        'cal_enviado_guiones': ('10/11/2026', '- - -', 'ENVIADO'),
+        'cal_proyeccion_guiones': ('- - -', '', 'PENDIENTE'),
+        'cal_estado_desconocido': ('10/11/2026', '', 'ANULADO'),
+    }.items():
+        escenarios.append(escenario(nombre, dict(fila=fila), uno, calendarios=True, paquete=True))
+    escenarios.append(escenario('historico_no_verificado', dict(), uno, historico='sin_tabla', paquete=True))
+    datos = {'catalogo': CATALOG, 'ahora': AHORA.isoformat(), 'escenarios': escenarios,
+             'error_mensual_incompleto': mensual_incompleto()}
     destino.parent.mkdir(parents=True, exist_ok=True)
-    destino.write_text(json.dumps(datos, ensure_ascii=False, indent=1) + '\n', encoding='utf-8', newline='\n')
+    destino.write_bytes((json.dumps(datos, ensure_ascii=False, indent=1) + '\n').encode('utf-8'))
     for e in datos['escenarios']:
         print(e['escenario'], e['resultado']['estado'], len(e['guion']), 'órdenes', len(e['manifiesto']['registros']),
               'registros')

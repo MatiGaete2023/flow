@@ -149,9 +149,23 @@ pub fn escribir_captura(destino: &Path, metadatos: Value, tablas: &[(String, Vec
 /// `write_capture(..., consolidated=bytes)`: con el libro «Para CSMP» en `consolidado/consolidado.xlsx` (1.1.0).
 pub fn escribir_captura_con(
     destino: &Path,
-    mut metadatos: Value,
+    metadatos: Value,
     tablas: &[(String, Vec<Map<String, Value>>)],
     consolidado: Option<&[u8]>,
+) -> Result<PathBuf, String> {
+    escribir_captura_diagnosticada(destino, metadatos, tablas, consolidado, None)
+}
+
+fn ruta_diagnostico(destino: &Path) -> PathBuf {
+    destino.with_extension("diagnostico_cobertura.json")
+}
+
+fn escribir_captura_diagnosticada(
+    destino: &Path,
+    mut metadatos: Value,
+    tablas: &[(String, Vec<Fila>)],
+    consolidado: Option<&[u8]>,
+    diagnostico: Option<&Value>,
 ) -> Result<PathBuf, String> {
     if destino.exists() {
         return Err("El paquete de destino ya existe.".into());
@@ -210,7 +224,22 @@ pub fn escribir_captura_con(
     if let Some(padre) = destino.parent() {
         std::fs::create_dir_all(padre).map_err(|e| format!("No se pudo crear la carpeta del paquete: {e}"))?;
     }
-    super::lote::guardar_exclusivo(destino, &bytes)?;
+    let respaldo = if let Some(diagnostico) = diagnostico {
+        let ruta = ruta_diagnostico(destino);
+        let mut datos = serde_json::to_vec_pretty(diagnostico).map_err(|e| e.to_string())?;
+        datos.push(b'\n');
+        super::lote::guardar_exclusivo(&ruta, &datos)
+            .map_err(|e| format!("No se pudo guardar el diagnóstico anónimo de cobertura. {e}"))?;
+        Some(ruta)
+    } else {
+        None
+    };
+    if let Err(e) = super::lote::guardar_exclusivo(destino, &bytes) {
+        if let Some(ruta) = respaldo {
+            let _ = std::fs::remove_file(ruta);
+        }
+        return Err(e);
+    }
     Ok(destino.to_path_buf())
 }
 
@@ -715,6 +744,18 @@ pub struct Exportado {
     pub nota: String,
     pub reutilizacion: Option<String>,
     pub historico_incompleto: bool,
+    pub aviso_cobertura: Option<String>,
+}
+
+impl Exportado {
+    pub fn respuesta_interfaz(self) -> Value {
+        let resumen = self.reutilizacion.unwrap_or_else(|| "Sin bitácoras añadidas.".into());
+        let mut r = json!({"path": self.ruta.to_string_lossy(), "reuse": resumen + &self.nota});
+        if let Some(aviso) = self.aviso_cobertura {
+            r["aviso_cobertura"] = json!(aviso);
+        }
+        r
+    }
 }
 
 /// Tablas del paquete en el orden en que Python las crea (`data` es un dict: el ZIP sigue ese orden).
@@ -722,6 +763,7 @@ struct Datos {
     cid: String,
     tablas: Vec<(String, Vec<Fila>)>,
     n: usize,
+    motivos: BTreeMap<String, Vec<&'static str>>,
 }
 
 impl Datos {
@@ -756,6 +798,10 @@ impl Datos {
         self.incidencia(qid, codigo, mensaje, "", "ADVERTENCIA");
     }
 
+    fn motivo(&mut self, qid: &str, codigo: &'static str) {
+        self.motivos.entry(qid.into()).or_default().push(codigo);
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn consulta(&mut self, qid: &str, seleccion: &Value, estado: &str, cuando: &str, esperadas: String, guardadas: usize,
                 pantalla: Option<&str>, error: &str) -> Fila {
@@ -783,6 +829,62 @@ impl Datos {
         self.tabla("consultas").push(r.clone());
         r
     }
+}
+
+/// Solo enumera consultas, estados y códigos conocidos. La selección, los mensajes, las filas y los IDs
+/// del ZIP no se serializan en este archivo.
+fn diagnostico_cobertura(d: &Datos, estados: &Map<String, Value>) -> (Value, Option<String>) {
+    let mut consultas = Vec::new();
+    let mut totales: BTreeMap<&str, usize> = BTreeMap::new();
+    for (i, q) in d.filas("consultas").iter().enumerate() {
+        let qid = q["query_id"].as_str().unwrap_or_default();
+        let pantalla = match q["screen"].as_str().unwrap_or_default() {
+            "seguimiento" => "seguimiento",
+            "carga" => "carga",
+            "litigantes" => "litigantes",
+            "calendario_medidas" => "calendario_medidas",
+            "calendario_informes" => "calendario_informes",
+            "calendario_ingreso" => "calendario_ingreso",
+            "bitacoras" => "bitacoras",
+            "historia_tramites" => "historia_tramites",
+            "escritos" => "escritos",
+            "historico_proteccion" => "historico_proteccion",
+            _ => "otra",
+        };
+        let estado = q["coverage"].as_str().unwrap_or_default();
+        let mut codigos = BTreeMap::new();
+        for &codigo in d.motivos.get(qid).into_iter().flatten() {
+            *codigos.entry(codigo).or_insert(0) += 1;
+        }
+        if codigos.is_empty() && !matches!(estado, "COMPLETA" | "VACIA_COMPROBADA") {
+            let codigo = match estado {
+                "NO_CONSULTADA" => "NO_CONSULTADA",
+                "CANCELADA" => "CONSULTA_CANCELADA",
+                "IDENTIDAD_INCIERTA" => "IDENTIDAD_INCIERTA",
+                "FALLIDA" => "CONSULTA_FALLIDA",
+                _ => "CAPTURA_PARCIAL",
+            };
+            codigos.insert(codigo, 1);
+        }
+        if !codigos.is_empty() {
+            for (&codigo, &cantidad) in &codigos {
+                *totales.entry(codigo).or_default() += cantidad;
+            }
+            consultas.push(json!({"consulta": i + 1, "fuente": pantalla, "cobertura": estado, "motivos": codigos}));
+        }
+    }
+    let codigos: Vec<_> = totales.iter()
+        .filter(|(codigo, _)| **codigo != "BITACORA_VENTANA_VERIFICADA")
+        .map(|(codigo, n)| format!("{codigo} ({n})")).collect();
+    let aviso = (!codigos.is_empty()).then(|| format!("Paquete con cobertura incompleta · {}. Busca el diagnóstico anónimo en la carpeta del paquete.", codigos.join(", ")));
+    (json!({
+        "tipo": "COBERTURA_DIAGNOSTICO_ANONIMO",
+        "version": 1,
+        "cobertura_tablas": estados,
+        "total_consultas": d.filas("consultas").len(),
+        "motivos": totales,
+        "consultas": consultas,
+    }), aviso)
 }
 
 // ---------------------------------------------------------------- bitácoras (`nurus.capture.diaries`)
@@ -867,19 +969,29 @@ fn calendario_ingreso(carpeta: &Path, r: &Value, id: &Clave) -> Value {
         "proyecciones": [], "archivo": texto(&lectura["archivo"]), "captured_at": texto(&lectura["capturada"]), "html_sha256": "",
     });
     if lectura["estado"] != "LEIDA" {
+        let codigo = super::bitacoras::codigo_calendario(res["error"].as_str().unwrap_or_default());
+        res["codigo"] = json!(if codigo == "CAL_OTRA" && lectura["estado"] == "PENDIENTE" { "CAL_PENDIENTE" } else { codigo });
         return res;
     }
-    let leido = (|| -> Result<Value, Option<String>> {
+    let copia = (|| -> Result<_, Option<String>> {
         let nombre = cadena(lectura, "archivo")?;
         let datos = copia_local(carpeta, nombre, "Archivo de calendario fuera de alcance.")?;
         if json!(sha256(&datos)) != *lectura.get("sha256").ok_or(None)? {
             return Err(Some("La copia HTML del calendario cambió después de su verificación.".into()));
         }
         let args: Vec<String> = lectura.get("args").and_then(Value::as_array).ok_or(None)?.iter().map(texto).collect();
-        super::lecturas::leer_calendario(&datos, &args, nombre, cadena(lectura, "capturada")?).map_err(Some)
+        Ok((datos, args, nombre, cadena(lectura, "capturada")?))
     })();
+    let leido = match copia {
+        Ok((datos, args, nombre, capturada)) => super::lecturas::leer_calendario(&datos, &args, nombre, capturada)
+            .map_err(|e| (super::bitacoras::codigo_calendario(&e), e)),
+        Err(e) => Err(("CAL_COPIA_NO_VERIFICABLE", e.unwrap_or_else(|| COPIA_NO_VERIFICABLE.into()))),
+    };
     match leido {
-        Err(e) => res["error"] = json!(e.unwrap_or_else(|| COPIA_NO_VERIFICABLE.into())),
+        Err((codigo, e)) => {
+            res["error"] = json!(e);
+            res["codigo"] = json!(codigo);
+        }
         Ok(c) => {
             let vacio = c["proyecciones"].as_array().is_none_or(Vec::is_empty);
             res["coverage"] = json!(if vacio { "VACIA_COMPROBADA" } else { "COMPLETA" });
@@ -1261,6 +1373,7 @@ fn exportar_historia(estado: &Value, causas: &[Causa], lote: &str, d: &mut Datos
         let qid = format!("hist-listado-{n}");
         d.consulta(&qid, &listado, "FALLIDA", capturada, "0".into(), 0, Some("historia_tramites"), "HISTORIA_ENUMERACION_FALLIDA");
         d.aviso(&qid, "HISTORIA_ENUMERACION_FALLIDA", "No se pudo enumerar toda la historia solicitada.");
+        d.motivo(&qid, "HISTORIA_ENUMERACION_FALLIDA");
     }
     if causas.is_empty() && fallos.is_empty() {
         d.consulta("hist-listado-vacio", &listado, "VACIA_COMPROBADA", capturada, "0".into(), 0, Some("historia_tramites"), "");
@@ -1293,11 +1406,15 @@ fn exportar_historia(estado: &Value, causas: &[Causa], lote: &str, d: &mut Datos
         let error = if cobertura == "FALLIDA" { texto(&causa["error"]) } else { String::new() };
         let fila_q = d.consulta(&qid, &seleccion, cobertura, &cuando, "1".into(), usize::from(ok), Some("historia_tramites"), &error);
         let o = |defecto: &str| { let e = texto(&causa["error"]); if e.is_empty() { defecto.to_string() } else { e } };
-        match cobertura {
-            "FALLIDA" => d.aviso(&qid, "HISTORIA_FALLIDA", &o("No se pudo leer la historia.")),
-            "IDENTIDAD_INCIERTA" => d.aviso(&qid, "HISTORIA_IDENTIDAD_INCIERTA", &o("Identidad de la causa no verificable.")),
-            "CANCELADA" => d.aviso(&qid, "HISTORIA_NO_LEIDA", "La historia no se leyó (lote cancelado o con tope)."),
-            _ => {}
+        let aviso = match cobertura {
+            "FALLIDA" => Some(("HISTORIA_FALLIDA", o("No se pudo leer la historia."))),
+            "IDENTIDAD_INCIERTA" => Some(("HISTORIA_IDENTIDAD_INCIERTA", o("Identidad de la causa no verificable."))),
+            "CANCELADA" => Some(("HISTORIA_NO_LEIDA", "La historia no se leyó (lote cancelado o con tope).".into())),
+            _ => None,
+        };
+        if let Some((codigo, mensaje)) = aviso {
+            d.aviso(&qid, codigo, &mensaje);
+            d.motivo(&qid, codigo);
         }
         for codigo in causa["advertencias"].as_array().into_iter().flatten() {
             d.aviso(&qid, &texto(codigo), "Advertencia del lector de historia.");
@@ -1356,10 +1473,17 @@ fn exportar_escritos(causas: &[Causa], lote: &str, d: &mut Datos, capturada: &st
             &item.escritos_error);
         let Some(lectura) = &item.escritos else {
             d.aviso(&qid, &item.escritos_error, "La pestaña Escritos de la causa no se pudo leer.");
+            d.motivo(&qid, match item.escritos_error.as_str() {
+                "ESCRITOS_NO_VERIFICADA" => "ESCRITOS_NO_VERIFICADA",
+                "ESCRITOS_RESPUESTA_INCOMPLETA" => "ESCRITOS_RESPUESTA_INCOMPLETA",
+                "ESCRITOS_SESION" => "ESCRITOS_SESION",
+                _ => "ESCRITOS_FALLIDA",
+            });
             continue;
         };
         for a in lectura["advertencias"].as_array().into_iter().flatten() {
             d.aviso(&qid, &texto(&a["codigo"]), "Advertencia del lector de escritos.");
+            d.motivo(&qid, "ESCRITOS_FILA_INCOMPLETA");
         }
         let q = |k: &str| texto(&fila_q[k]);
         for f in lectura["filas"].as_array().into_iter().flatten() {
@@ -1419,6 +1543,7 @@ fn exportar_historico(entradas: Option<&[Value]>, d: &mut Datos, capturada: &str
         let codigo = if entradas.is_none() { "HISTORICO_RESPALDO_INVALIDO" } else { "HISTORICO_PENDIENTE" };
         d.consulta("historico-respaldo", &json!({"tab": "HISTORICO"}), "FALLIDA", capturada, "0".into(), 0, Some("historico_proteccion"), codigo);
         d.aviso("historico-respaldo", codigo, "Hay lecturas del histórico sin respaldo verificable.");
+        d.motivo("historico-respaldo", codigo);
         d.tabla("historico_proteccion").clear();
     }
     let mut filas = Vec::new();
@@ -1443,10 +1568,21 @@ fn exportar_historico(entradas: Option<&[Value]>, d: &mut Datos, capturada: &str
         if cobertura == "FALLIDA" {
             let codigo = texto(&e["error"]);
             d.aviso(&qid, if codigo.is_empty() { "HISTORICO_NO_VERIFICADA" } else { &codigo }, "El histórico de protección no se pudo leer.");
+            d.motivo(&qid, match codigo.as_str() {
+                "HISTORICO_RESPALDO_INVALIDO" => "HISTORICO_RESPALDO_INVALIDO",
+                "HISTORICO_SUSPENDIDO" => "HISTORICO_SUSPENDIDO",
+                "HISTORICO_RESPONSE" => "HISTORICO_RESPONSE",
+                "HISTORICO_IDENTITY" => "HISTORICO_IDENTITY",
+                _ => "HISTORICO_NO_VERIFICADA",
+            });
             continue;
         }
         if e["ownership"] != "VERIFICADA" {
             d.aviso(&qid, "HISTORICO_PERTENENCIA_INCIERTA", "No se comprobó que la vista sea de la persona seleccionada.");
+            d.motivo(&qid, "HISTORICO_PERTENENCIA_INCIERTA");
+        }
+        for _ in e["advertencias"].as_array().into_iter().flatten() {
+            d.motivo(&qid, "HISTORICO_FILA_INCOMPLETA");
         }
         let q = |k: &str| texto(&fila_q[k]);
         for f in e["filas"].as_array().into_iter().flatten() {
@@ -1614,7 +1750,7 @@ pub fn exportar(carpetas: &[PathBuf], destino: &Path) -> Result<PathBuf, String>
 }
 
 /// `package_current_lot`: la ruta de Resultados › Paquete. Bitácoras emparejadas por identidad verificada
-/// (`match_diaries`), historia e histórico del lote de bitácoras y destino nuevo. Devuelve `{path, reuse[, historico_incompleto]}`.
+/// (`match_diaries`), historia e histórico del lote de bitácoras y destino nuevo.
 #[allow(clippy::too_many_arguments)]
 pub fn empaquetar_lote(
     carpeta: &Path,
@@ -1639,10 +1775,10 @@ pub fn empaquetar_lote(
         consolidado,
     };
     let e = exportar_con(&[carpeta.to_path_buf()], destino, &opciones)?;
-    let resumen = e.reutilizacion.unwrap_or_else(|| "Sin bitácoras añadidas.".into());
-    let mut r = json!({"path": e.ruta.to_string_lossy(), "reuse": resumen + &e.nota});
+    let historico_incompleto = e.historico_incompleto;
+    let mut r = e.respuesta_interfaz();
     if historico.is_some() {
-        r["historico_incompleto"] = json!(e.historico_incompleto);
+        r["historico_incompleto"] = json!(historico_incompleto);
     }
     Ok(r)
 }
@@ -1650,7 +1786,17 @@ pub fn empaquetar_lote(
 /// `export_capture`: lotes de listados (E-Q5a) más bitácoras, calendario por ingreso, historia, Escritos e
 /// histórico (E-Q5c), calendario de informes con su asociación y Carga (E-Q5b).
 pub fn exportar_con(carpetas: &[PathBuf], destino: &Path, op: &Opciones) -> Result<Exportado, String> {
-    let lotes: Vec<Lote> = carpetas.iter().map(|c| cargar_lote(c)).collect::<Result<_, _>>()?;
+    let lotes: Vec<Lote> = carpetas.iter().map(|c| cargar_lote(c).map_err(|error| {
+        let Ok(resumen) = leer_json(&c.join("resumen.json")) else { return error };
+        let terminadas = resumen["consultas"].as_array().into_iter().flatten();
+        let mensual_pendiente = resumen["plan"].as_array().into_iter().flatten().any(|p|
+            p["screen"] == "calendario_informes" && !terminadas.clone().any(|q| q["seleccion"] == *p));
+        if resumen["estado"] != "VALIDADA" && mensual_pendiente {
+            format!("CAL_MENSUAL_INCOMPLETO · Falta completar el lote del calendario de informes. {error}")
+        } else {
+            error
+        }
+    })).collect::<Result<_, _>>()?;
     if lotes.is_empty() {
         return Err("Selecciona un lote verificado.".into());
     }
@@ -1705,7 +1851,10 @@ pub fn exportar_con(carpetas: &[PathBuf], destino: &Path, op: &Opciones) -> Resu
     let personas: BTreeSet<(String, String)> = entradas_historico.iter().flatten()
         .filter(|e| e["person_id"].as_str().is_some_and(|p| p.starts_with("rut-")))
         .map(|e| (texto(&e["tribunal"]), texto(&e["person_id"]))).collect();
-    let mut d = Datos { cid: cid.clone(), tablas: ["consultas", "registros", "incidencias"].map(|t| (t.to_string(), Vec::new())).to_vec(), n: 0 };
+    let mut d = Datos {
+        cid: cid.clone(), tablas: ["consultas", "registros", "incidencias"].map(|t| (t.to_string(), Vec::new())).to_vec(),
+        n: 0, motivos: BTreeMap::new(),
+    };
     for (li, lote) in lotes.iter().enumerate() {
         let cuando = lote.resumen["fecha_hora"].as_str().filter(|s| !s.is_empty()).unwrap_or(&capturada).to_string();
         let mut indice: HashMap<String, Fila> = HashMap::new();
@@ -1815,6 +1964,7 @@ pub fn exportar_con(carpetas: &[PathBuf], destino: &Path, op: &Opciones) -> Resu
         if op.emparejar && lote.consultas.is_empty() {
             d.consulta("diary-sin-coincidencia", &json!({"capture_tables": ["bitacoras"]}), "IDENTIDAD_INCIERTA", &capturada, "0".into(), 0,
                 Some("bitacoras"), "Las bitácoras disponibles no tienen correspondencia remota verificada con los registros seleccionados.");
+            d.motivo("diary-sin-coincidencia", "BITACORAS_SIN_COINCIDENCIA");
         }
         let corte = chrono::NaiveDate::parse_from_str(&primeros(&capturada, 10), "%Y-%m-%d").unwrap_or_else(|_| chrono::Local::now().date_naive());
         let desde = primera_fecha(corte, op.meses)?.format("%Y-%m-%d").to_string();
@@ -1840,9 +1990,18 @@ pub fn exportar_con(carpetas: &[PathBuf], destino: &Path, op: &Opciones) -> Resu
             d.consulta(&qid, &seleccion, &cobertura, &cuando, "1".into(), 1, Some("bitacoras"), "");
             if cobertura == "FALLIDA" {
                 d.aviso(&qid, "BITACORA_FALLIDA", &texto(&s["error"]));
+                d.motivo(&qid, "BITACORA_FALLIDA");
+            } else if cobertura == "PARCIAL" {
+                match alcance.as_str() {
+                    "COMPLETA" | "VACIA_COMPROBADA" if avisos.is_empty() => d.motivo(&qid, "BITACORA_VENTANA_VERIFICADA"),
+                    "PARCIAL" => d.motivo(&qid, "BITACORA_ALCANCE_PARCIAL"),
+                    "" => d.motivo(&qid, "BITACORA_ALCANCE_SIN_ACREDITAR"),
+                    _ => {}
+                }
             }
             for w in &avisos {
                 d.aviso(&qid, "BITACORA_ADVERTENCIA", &texto(w));
+                d.motivo(&qid, "BITACORA_ADVERTENCIA");
             }
             for e in s["entries"].as_array().into_iter().flatten() {
                 let v = |k: &str| texto(&e[k]);
@@ -1881,7 +2040,14 @@ pub fn exportar_con(carpetas: &[PathBuf], destino: &Path, op: &Opciones) -> Resu
             let fallida = cobertura == "FALLIDA";
             d.consulta(&qid, &seleccion, &cobertura, &cuando, "1".into(), usize::from(!fallida), Some("calendario_ingreso"), &texto(&c["error"]));
             if fallida {
-                d.aviso(&qid, "CALENDARIO_FALLIDO", &texto(&c["error"]));
+                let error = texto(&c["error"]);
+                d.aviso(&qid, "CALENDARIO_FALLIDO", &error);
+                let codigo = match c["codigo"].as_str() {
+                    Some("CAL_COPIA_NO_VERIFICABLE") => "CAL_COPIA_NO_VERIFICABLE",
+                    Some("CAL_PENDIENTE") => "CAL_PENDIENTE",
+                    _ => super::bitacoras::codigo_calendario(&error),
+                };
+                d.motivo(&qid, codigo);
                 continue;
             }
             d.tabla("calendarios");
@@ -1951,13 +2117,14 @@ pub fn exportar_con(carpetas: &[PathBuf], destino: &Path, op: &Opciones) -> Resu
     }
     let historico_incompleto = d.filas("consultas").iter()
         .any(|q| q["screen"] == "historico_proteccion" && !matches!(q["coverage"].as_str(), Some("COMPLETA" | "VACIA_COMPROBADA")));
+    let (diagnostico, aviso_cobertura) = diagnostico_cobertura(&d, &estados);
     let metadatos = json!({
         "capture_id": cid, "captured_at": capturada,
         "downloader": {"version": super::extension::version(super::Edicion::Integral), "commit": "desarrollo"},
         "contains_sensitive_data": true, "originals_authorized": false, "queries": d.filas("consultas"), "table_states": estados,
     });
-    let ruta = escribir_captura_con(destino, metadatos, &d.tablas, consolidado.as_deref())?;
-    Ok(Exportado { ruta, nota, reutilizacion, historico_incompleto })
+    let ruta = escribir_captura_diagnosticada(destino, metadatos, &d.tablas, consolidado.as_deref(), Some(&diagnostico))?;
+    Ok(Exportado { ruta, nota, reutilizacion, historico_incompleto, aviso_cobertura })
 }
 
 #[cfg(test)]
@@ -1992,6 +2159,32 @@ mod tests {
             }
         }
         salida
+    }
+
+    #[test]
+    fn diagnostico_de_cobertura_solo_expone_codigos_y_conteos() {
+        let privados = ["RUT-ficticio-11.111.111-2", "F-99999-2099", "Persona Canario Ficticia", "IngresoFicticio123",
+            "CasoFicticio987", "Mensaje ficticio privado", "consulta-ficticia-privada", "Tribunal canario"];
+        let mut d = Datos { cid: privados[4].into(), tablas: Vec::new(), n: 0, motivos: BTreeMap::new() };
+        let qid = privados[6];
+        let seleccion = json!({
+            "tribunal_nombre": privados[7], "screen": privados[2],
+            "filters": {"rut": privados[0], "rit": privados[1], "nombre": privados[2], "ingreso": privados[3]},
+        });
+        d.consulta(qid, &seleccion, "FALLIDA", "2099-11-25", "1".into(), 0, None, privados[5]);
+        d.aviso(qid, privados[5], &privados.join(" "));
+        d.motivo(qid, "CAL_ESTADO_FECHA");
+        d.motivo(qid, "CAL_ESTADO_FECHA");
+        let estados = json!({"consultas": "FALLIDA"});
+        let (diagnostico, aviso) = diagnostico_cobertura(&d, estados.as_object().unwrap());
+        assert_eq!(diagnostico["consultas"], json!([{
+            "consulta": 1, "fuente": "otra", "cobertura": "FALLIDA", "motivos": {"CAL_ESTADO_FECHA": 2},
+        }]));
+        assert_eq!(diagnostico["motivos"], json!({"CAL_ESTADO_FECHA": 2}));
+        let salida = format!("{diagnostico} {}", aviso.unwrap());
+        for marcador in privados {
+            assert!(!salida.contains(marcador), "El diagnóstico o aviso incluye {marcador}");
+        }
     }
 
     /// E-Q5d: con `consolidado`, el paquete de lotes aptos para CSMP lleva `consolidado/consolidado.xlsx` (1.1.0); las
@@ -2071,6 +2264,7 @@ mod tests {
                     Some(&bitacoras), 4, &[], false)
                     .map(|mut r| {
                         r.as_object_mut().unwrap().remove("path");
+                        r.as_object_mut().unwrap().remove("aviso_cobertura");
                         if r != e["resultado"] {
                             diferencias.push(format!("resultado:\n    Rust   {r}\n    Python {}", e["resultado"]));
                         }

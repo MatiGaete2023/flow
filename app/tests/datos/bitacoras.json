@@ -17058,6 +17058,3317 @@
      "OMITIDA": 6
     }
    }
+  },
+  {
+   "escenario": "cal_pendiente_guiones",
+   "calendarios": true,
+   "historico": false,
+   "historicos": {
+    "respaldos": {}
+   },
+   "historia": false,
+   "historias": null,
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "COMPLETA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 2,
+    "estados": {
+     "LEIDA": 2
+    },
+    "diagnosticos_sin_vinculo": {},
+    "errores_extension": {},
+    "consultas": [
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     }
+    ],
+    "anteriores_no_reenumeradas": 0,
+    "contiene_identificadores_personales": false
+   },
+   "ahora": "2026-10-08T13:00:00.123456-03:00",
+   "carpeta": "Bitacoras 2026-10-08 13-00-00-123456",
+   "lote": {
+    "tribunales": [
+     "49"
+    ],
+    "modalidades": [
+     "2"
+    ],
+    "pestanas": [
+     "Cumplimiento"
+    ]
+   },
+   "guion": [
+    {
+     "comando": "capabilities",
+     "payload": null,
+     "respuesta": {
+      "tipo": "CSMP_RUS_CAPACIDADES",
+      "version": "2.9.0",
+      "commit": "desarrollo",
+      "protocolos": {
+       "bitacoras_lectura": 1,
+       "descarga_conjunta": 1,
+       "pdf_seleccion": 1,
+       "pdf_copia_fija": 1,
+       "calendario_lectura": 1,
+       "historia_lectura": 1,
+       "historico_lectura": 2
+      },
+      "escritura_rus": false,
+      "intercambio_local": {
+       "CSMP_CAPTURE": "1.0.0",
+       "CSMP_REQUEST": "1.0.0"
+      }
+     }
+    },
+    {
+     "comando": "lock",
+     "payload": null,
+     "respuesta": {
+      "ok": true
+     }
+    },
+    {
+     "comando": "prepare",
+     "payload": {
+      "selection": {
+       "tribunal": "49",
+       "tab": "Cumplimiento",
+       "modality": "2",
+       "report": null,
+       "screen": "seguimiento",
+       "state": "1",
+       "month": null,
+       "year": null,
+       "start": null,
+       "end": null
+      },
+      "dates": null,
+      "keep_filters": false
+     },
+     "respuesta": {
+      "pairs": [
+       [
+        "COD_Lengueta",
+        "tdCumplimiento"
+       ],
+       [
+        "COD_Tribunal_sel",
+        "49"
+       ],
+       [
+        "TIP_Consulta",
+        "2"
+       ],
+       [
+        "irAccion",
+        "Buscar medida"
+       ],
+       [
+        "NUM_PaginaCumplimiento",
+        "1"
+       ],
+       [
+        "NUM_TotalCumplimiento",
+        "2"
+       ],
+       [
+        "FLG_Consulta",
+        "0"
+       ],
+       [
+        "FEC_Inicio",
+        ""
+       ],
+       [
+        "FEC_Fin",
+        ""
+       ]
+      ]
+     }
+    },
+    {
+     "comando": "search",
+     "payload": {
+      "pairs": [
+       [
+        "COD_Lengueta",
+        "tdCumplimiento"
+       ],
+       [
+        "COD_Tribunal_sel",
+        "49"
+       ],
+       [
+        "TIP_Consulta",
+        "2"
+       ],
+       [
+        "irAccion",
+        "Buscar medida"
+       ],
+       [
+        "NUM_PaginaCumplimiento",
+        "1"
+       ],
+       [
+        "NUM_TotalCumplimiento",
+        "2"
+       ],
+       [
+        "FLG_Consulta",
+        "0"
+       ],
+       [
+        "FEC_Inicio",
+        ""
+       ],
+       [
+        "FEC_Fin",
+        ""
+       ]
+      ],
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgbWV0aG9kPSJwb3N0IiBhY3Rpb249Ii9TSVRGQVdFQi9JbmZvcm1lc0RBY3Rpb24uZG8iPjxpbnB1dCBuYW1lPSJDT0RfTGVuZ3VldGEiIHZhbHVlPSJ0ZEN1bXBsaW1pZW50byI+PGlucHV0IG5hbWU9IkNPRF9UcmlidW5hbF9zZWwiIHZhbHVlPSI0OSI+PGlucHV0IG5hbWU9IlRJUF9Db25zdWx0YSIgdmFsdWU9IjIiPjxpbnB1dCBuYW1lPSJOVU1fUGFnaW5hQ3VtcGxpbWllbnRvIiB2YWx1ZT0iMSI+PGlucHV0IG5hbWU9Ik5VTV9Ub3RhbEN1bXBsaW1pZW50byIgdmFsdWU9IjIiPjx0YWJsZSBpZD0idGFibGFDdW1wbGltaWVudG8iPjx0aGVhZD48dHI+PHRkPlJJVDwvdGQ+PHRkPlJVVCAoLSZndDtSQ2VJKTwvdGQ+PHRkPk5vbWJyZTwvdGQ+PHRkPkRlcml2YWNpw7NuPC90ZD48dGQ+QWNjaW9uZXM8L3RkPjwvdHI+PC90aGVhZD48dGJvZHk+PHRyPjx0ZD5YLTEtMjAyNjwvdGQ+PHRkPjExMTExMTExLTE8L3RkPjx0ZD5QZXJzb25hIGZpY3RpY2lhPC90ZD48dGQ+UFJNIENlbnRybyBmaWN0aWNpbzwvdGQ+PHRkPgogICAgICAgIDxhIG9uY2xpY2s9IlNob3dIaXN0b3JpYSgnNDknLCdYLTEtMjAyNicsJzEwMCcpIj5DYXVzYTwvYT4KICAgICAgICA8YSBvbmNsaWNrPSJTaG93T2JzZXJ2YWNpb25lcygnMTAwJywnNDknLCcyMDEnLCcxMicsJzMnLCcwJykiPk9iczwvYT4KICAgICAgICA8YSBvbmNsaWNrPSJTaG93SW5mb3JtZXNQcm9ncmFtYWRvcygnMTAwJywnMzAwJywnNDknLCc0MDAnLCdYLTEtMjAyNicsJzAxLzAxLzIwMjYnLCdQUk0gQ2VudHJvIGZpY3RpY2lvJywnUGVyc29uYSBmaWN0aWNpYScsJzEyJywnMycsJzIwMScsJzAnKSI+SW5mPC9hPgogICAgICAgIDwvdGQ+PC90cj48L3Rib2R5PjwvdGFibGU+PC9mb3JtPjxzY3JpcHQ+ZnVuY3Rpb24gU2hvd0V4Y2VsKCl7d2luZG93Lm9wZW4oImh0dHBzOi8vZmFtaWxpYS5wanVkLmNsL3NpdGZhL3JlcG9ydGVzL2RlbW9fZGNlbGlzdGN1bXAueGxzIik7fTwvc2NyaXB0PjwvaHRtbD4="
+     }
+    },
+    {
+     "comando": "diary_open",
+     "payload": {
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "201",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgYWN0aW9uPSIvU0lURkFXRUIvSW5mb3JtZXNEQWN0aW9uLmRvIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJ0aXBvX3BvcFVwIiB2YWx1ZT0iIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJDUlJfSWRDYXVzYSIgdmFsdWU9IjEwMCI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iQ09EX1RyaWJ1bmFsIiB2YWx1ZT0iNDkiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IlRJUF9Db25zdWx0YSIgdmFsdWU9IjIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IklEX0luZ3Jlc28iIHZhbHVlPSIyMDEiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkNPRF9FdGFwYSIgdmFsdWU9IjMiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkZMR19NZWpvck5pbmV6IiB2YWx1ZT0iMCI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iUklUX0NhdXNhIiB2YWx1ZT0iWC0xLTIwMjYiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkdMU19Ob21icmUiIHZhbHVlPSJQZXJzb25hIGZpY3RpY2lhIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJHTFNfQ2VudHJvIiB2YWx1ZT0iUFJNIENlbnRybyBmaWN0aWNpbyI+PHRhYmxlIGlkPSJUYWJsYUluZm9ybWUiPjx0cj48dGQ+VGlwbyBPYnNlcnZhY2nDs248L3RkPjx0ZD5FdGFwYTwvdGQ+PHRkPkZlY2hhIENlbnRybzwvdGQ+PHRkPlVzdWFyaW8gQ2VudHJvPC90ZD48dGQ+T2JzZXJ2YWNpw7NuIENlbnRybzwvdGQ+PHRkPkZlY2hhIFRyaWJ1bmFsPC90ZD48dGQ+VXN1YXJpbyBUcmlidW5hbDwvdGQ+PHRkPk9ic2VydmFjacOzbiBUcmlidW5hbDwvdGQ+PHRkPkFjY2nDs248L3RkPjwvdHI+PHRyPjx0ZD5BbCBUcmlidW5hbDwvdGQ+PHRkPkN1bXBsaW1pZW50bzwvdGQ+PHRkPjEyLzA4LzIwMjYgMTA6MTM8L3RkPjx0ZD5Vc3VhcmlvIGZpY3RpY2lvPC90ZD48dGQ+VGV4dG8gcmVjb3J0YWRvPC90ZD48dGQ+LS0tPC90ZD48dGQ+LS0tPC90ZD48dGQ+LS0tPC90ZD48dGQ+PGltZyBpZD0iNDQiPjwvdGQ+PC90cj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIT0JTX0NlbnRyb180NCIgdmFsdWU9IlRleHRvIGNvbXBsZXRvClNlZ3VuZGEgbMOtbmVhIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIT0JTX1RyaWJ1bmFsXzQ0IiB2YWx1ZT0iLS0tIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIQ09EX0VzdGFkb180NCIgdmFsdWU9IjYiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkhGVU5fVHJpYnVuYWxfNDQiIHZhbHVlPSIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkhGTEdfRW52aW9fNDQiIHZhbHVlPSIxIj48L3RhYmxlPjwvZm9ybT48L2h0bWw+",
+      "digest": "ff23bd1a408b97357426209fbb5507a120c9357b77cb1b92dff9c2922de17354",
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "201",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "startedAt": "2026-10-08T12:00:00Z"
+     }
+    },
+    {
+     "comando": "calendar_open",
+     "payload": {
+      "args": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "201",
+       "0"
+      ],
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGJvZHk+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgYWN0aW9uPSIvU0lURkFXRUIvSW5mb3JtZXNEQWN0aW9uLmRvIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJDT0RfVHJpYnVuYWwiIHZhbHVlPSI0OSI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iQ1JSX0lkQ2F1c2EiIHZhbHVlPSIxMDAiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IklEX0luZ3Jlc28iIHZhbHVlPSIyMDEiPjx0YWJsZT48dHI+PHRkPlBsYXpvIFJlbWlzacOzbjogMyBNZXNlczwvdGQ+PHRkPlBsYXpvIEludGVydmVuY2nDs246IDEyIE1lc2VzPC90ZD48L3RyPjwvdGFibGU+PHRhYmxlPjx0cj48dGg+RmVjaGEgUHJveWVjY2nDs248L3RoPjx0aD5GZWNoYSBJbmZvcm1lPC90aD48dGg+RXN0YWRvPC90aD48L3RyPjx0cj48dGQ+MTAvMTEvMjAyNjwvdGQ+PHRkPjwvdGQ+PHRkPlBFTkRJRU5URTwvdGQ+PC90cj48L3RhYmxlPjwvZm9ybT48L2JvZHk+PC9odG1sPg==",
+      "digest": "7d6672247c93d5957f1c016a6550924728df42fc00682b45931bf9ab850d9abf",
+      "args": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "201",
+       "0"
+      ],
+      "startedAt": "2026-10-19T12:00:00Z"
+     }
+    },
+    {
+     "comando": "search",
+     "payload": {
+      "pairs": [
+       [
+        "COD_Lengueta",
+        "tdCumplimiento"
+       ],
+       [
+        "COD_Tribunal_sel",
+        "49"
+       ],
+       [
+        "TIP_Consulta",
+        "2"
+       ],
+       [
+        "irAccion",
+        "Buscar medida"
+       ],
+       [
+        "NUM_PaginaCumplimiento",
+        "2"
+       ],
+       [
+        "NUM_TotalCumplimiento",
+        "2"
+       ],
+       [
+        "FLG_Consulta",
+        "0"
+       ],
+       [
+        "FEC_Inicio",
+        ""
+       ],
+       [
+        "FEC_Fin",
+        ""
+       ]
+      ],
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgbWV0aG9kPSJwb3N0IiBhY3Rpb249Ii9TSVRGQVdFQi9JbmZvcm1lc0RBY3Rpb24uZG8iPjxpbnB1dCBuYW1lPSJDT0RfTGVuZ3VldGEiIHZhbHVlPSJ0ZEN1bXBsaW1pZW50byI+PGlucHV0IG5hbWU9IkNPRF9UcmlidW5hbF9zZWwiIHZhbHVlPSI0OSI+PGlucHV0IG5hbWU9IlRJUF9Db25zdWx0YSIgdmFsdWU9IjIiPjxpbnB1dCBuYW1lPSJOVU1fUGFnaW5hQ3VtcGxpbWllbnRvIiB2YWx1ZT0iMiI+PGlucHV0IG5hbWU9Ik5VTV9Ub3RhbEN1bXBsaW1pZW50byIgdmFsdWU9IjIiPjx0YWJsZSBpZD0idGFibGFDdW1wbGltaWVudG8iPjx0aGVhZD48dHI+PHRkPlJJVDwvdGQ+PHRkPlJVVCAoLSZndDtSQ2VJKTwvdGQ+PHRkPk5vbWJyZTwvdGQ+PHRkPkRlcml2YWNpw7NuPC90ZD48dGQ+QWNjaW9uZXM8L3RkPjwvdHI+PC90aGVhZD48dGJvZHk+PHRyPjx0ZD5YLTEtMjAyNjwvdGQ+PHRkPjExMTExMTExLTE8L3RkPjx0ZD5QZXJzb25hIGZpY3RpY2lhPC90ZD48dGQ+UFJNIENlbnRybyBmaWN0aWNpbzwvdGQ+PHRkPgogICAgICAgIDxhIG9uY2xpY2s9IlNob3dIaXN0b3JpYSgnNDknLCdYLTEtMjAyNicsJzEwMCcpIj5DYXVzYTwvYT4KICAgICAgICA8YSBvbmNsaWNrPSJTaG93T2JzZXJ2YWNpb25lcygnMTAwJywnNDknLCcyMDInLCcxMicsJzMnLCcwJykiPk9iczwvYT4KICAgICAgICA8YSBvbmNsaWNrPSJTaG93SW5mb3JtZXNQcm9ncmFtYWRvcygnMTAwJywnMzAwJywnNDknLCc0MDAnLCdYLTEtMjAyNicsJzAxLzAxLzIwMjYnLCdQUk0gQ2VudHJvIGZpY3RpY2lvJywnUGVyc29uYSBmaWN0aWNpYScsJzEyJywnMycsJzIwMicsJzAnKSI+SW5mPC9hPgogICAgICAgIDwvdGQ+PC90cj48L3Rib2R5PjwvdGFibGU+PC9mb3JtPjxzY3JpcHQ+ZnVuY3Rpb24gU2hvd0V4Y2VsKCl7d2luZG93Lm9wZW4oImh0dHBzOi8vZmFtaWxpYS5wanVkLmNsL3NpdGZhL3JlcG9ydGVzL2RlbW9fZGNlbGlzdGN1bXAueGxzIik7fTwvc2NyaXB0PjwvaHRtbD4="
+     }
+    },
+    {
+     "comando": "diary_open",
+     "payload": {
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "202",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgYWN0aW9uPSIvU0lURkFXRUIvSW5mb3JtZXNEQWN0aW9uLmRvIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJ0aXBvX3BvcFVwIiB2YWx1ZT0iIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJDUlJfSWRDYXVzYSIgdmFsdWU9IjEwMCI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iQ09EX1RyaWJ1bmFsIiB2YWx1ZT0iNDkiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IlRJUF9Db25zdWx0YSIgdmFsdWU9IjIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IklEX0luZ3Jlc28iIHZhbHVlPSIyMDIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkNPRF9FdGFwYSIgdmFsdWU9IjMiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkZMR19NZWpvck5pbmV6IiB2YWx1ZT0iMCI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iUklUX0NhdXNhIiB2YWx1ZT0iWC0xLTIwMjYiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkdMU19Ob21icmUiIHZhbHVlPSJQZXJzb25hIGZpY3RpY2lhIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJHTFNfQ2VudHJvIiB2YWx1ZT0iUFJNIENlbnRybyBmaWN0aWNpbyI+PHRhYmxlIGlkPSJUYWJsYUluZm9ybWUiPjx0cj48dGQ+VGlwbyBPYnNlcnZhY2nDs248L3RkPjx0ZD5FdGFwYTwvdGQ+PHRkPkZlY2hhIENlbnRybzwvdGQ+PHRkPlVzdWFyaW8gQ2VudHJvPC90ZD48dGQ+T2JzZXJ2YWNpw7NuIENlbnRybzwvdGQ+PHRkPkZlY2hhIFRyaWJ1bmFsPC90ZD48dGQ+VXN1YXJpbyBUcmlidW5hbDwvdGQ+PHRkPk9ic2VydmFjacOzbiBUcmlidW5hbDwvdGQ+PHRkPkFjY2nDs248L3RkPjwvdHI+PHRyPjx0ZD5BbCBUcmlidW5hbDwvdGQ+PHRkPkN1bXBsaW1pZW50bzwvdGQ+PHRkPjEyLzA4LzIwMjYgMTA6MTM8L3RkPjx0ZD5Vc3VhcmlvIGZpY3RpY2lvPC90ZD48dGQ+VGV4dG8gcmVjb3J0YWRvPC90ZD48dGQ+LS0tPC90ZD48dGQ+LS0tPC90ZD48dGQ+LS0tPC90ZD48dGQ+PGltZyBpZD0iNDQiPjwvdGQ+PC90cj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIT0JTX0NlbnRyb180NCIgdmFsdWU9IlRleHRvIGNvbXBsZXRvClNlZ3VuZGEgbMOtbmVhIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIT0JTX1RyaWJ1bmFsXzQ0IiB2YWx1ZT0iLS0tIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIQ09EX0VzdGFkb180NCIgdmFsdWU9IjYiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkhGVU5fVHJpYnVuYWxfNDQiIHZhbHVlPSIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkhGTEdfRW52aW9fNDQiIHZhbHVlPSIxIj48L3RhYmxlPjwvZm9ybT48L2h0bWw+",
+      "digest": "43696e3074641f3a2df9acd9d4e547c0e8647410c96a4641f4673933e6c3b925",
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "202",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "startedAt": "2026-10-08T12:00:00Z"
+     }
+    },
+    {
+     "comando": "calendar_open",
+     "payload": {
+      "args": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "202",
+       "0"
+      ],
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGJvZHk+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgYWN0aW9uPSIvU0lURkFXRUIvSW5mb3JtZXNEQWN0aW9uLmRvIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJDT0RfVHJpYnVuYWwiIHZhbHVlPSI0OSI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iQ1JSX0lkQ2F1c2EiIHZhbHVlPSIxMDAiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IklEX0luZ3Jlc28iIHZhbHVlPSIyMDIiPjx0YWJsZT48dHI+PHRkPlBsYXpvIFJlbWlzacOzbjogMyBNZXNlczwvdGQ+PHRkPlBsYXpvIEludGVydmVuY2nDs246IDEyIE1lc2VzPC90ZD48L3RyPjwvdGFibGU+PHRhYmxlPjx0cj48dGg+RmVjaGEgUHJveWVjY2nDs248L3RoPjx0aD5GZWNoYSBJbmZvcm1lPC90aD48dGg+RXN0YWRvPC90aD48L3RyPjx0cj48dGQ+MTAvMTEvMjAyNjwvdGQ+PHRkPi0gLSAtPC90ZD48dGQ+UEVORElFTlRFPC90ZD48L3RyPjwvdGFibGU+PC9mb3JtPjwvYm9keT48L2h0bWw+",
+      "digest": "12d1203f65e931def74a27a0adde27a253577e3eb956b770f8518b98106e45fc",
+      "args": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "202",
+       "0"
+      ],
+      "startedAt": "2026-10-19T12:00:00Z"
+     }
+    },
+    {
+     "comando": "unlock",
+     "payload": null,
+     "respuesta": {
+      "ok": true
+     }
+    }
+   ],
+   "manifiesto": {
+    "version": 1,
+    "tipo": "BITACORAS_LECTURA",
+    "estado": "COMPLETA",
+    "seleccion": {
+     "tribunals": [
+      "49"
+     ],
+     "modalities": [
+      "2"
+     ],
+     "tabs": [
+      "Cumplimiento"
+     ],
+     "report": "1",
+     "dates": null,
+     "keep_filters": false,
+     "screen": "seguimiento",
+     "state": "1",
+     "month": null,
+     "year": null
+    },
+    "fecha": "<FECHA>",
+    "consultas": [
+     {
+      "tribunal": "49",
+      "tab": "Cumplimiento",
+      "modality": "2",
+      "report": null,
+      "screen": "seguimiento",
+      "state": "1",
+      "month": null,
+      "year": null,
+      "start": null,
+      "end": null,
+      "tribunal_nombre": "Juzgado de Familia Tomé",
+      "modalidad_nombre": "Ambulatorio",
+      "estado": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2
+     }
+    ],
+    "registros": [
+     {
+      "rit": "X-1-2026",
+      "nombre": "Persona ficticia",
+      "programa": "PRM Centro ficticio",
+      "rut": "11111111-1",
+      "fila": 2,
+      "tribunal_codigo": "49",
+      "causa_id": "100",
+      "ingreso_id": "201",
+      "etapa": "3",
+      "antiguo": "0",
+      "tipo_popup": "12",
+      "persona_id": "300",
+      "centro_id": "400",
+      "calendario": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "201",
+       "0"
+      ],
+      "tribunal_nombre": "Juzgado de Familia Tomé",
+      "modalidad": "2",
+      "modalidad_nombre": "Ambulatorio",
+      "pestana": "Cumplimiento",
+      "pagina": 1,
+      "estado": "LEIDA",
+      "error": "",
+      "clave": "ee22f019e6a4910ef848fd39829f48673c162485f5c686d27c20fb187ece2845",
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "201",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "advertencias": [],
+      "archivo": "bitacora-ee22f019e6a4910ef848fd39-ff23bd1a408b9735.html",
+      "sha256": "ff23bd1a408b97357426209fbb5507a120c9357b77cb1b92dff9c2922de17354",
+      "capturada": "2026-10-08T12:00:00Z",
+      "entradas": 1,
+      "calendario_lectura": {
+       "estado": "LEIDA",
+       "args": [
+        "100",
+        "300",
+        "49",
+        "400",
+        "X-1-2026",
+        "01/01/2026",
+        "PRM Centro ficticio",
+        "Persona ficticia",
+        "12",
+        "3",
+        "201",
+        "0"
+       ],
+       "archivo": "calendario-ee22f019e6a4910ef848fd39-7d6672247c93d595.html",
+       "sha256": "7d6672247c93d5957f1c016a6550924728df42fc00682b45931bf9ab850d9abf",
+       "capturada": "2026-10-19T12:00:00Z",
+       "proyecciones": [
+        {
+         "fila": 1,
+         "fecha_proyeccion": "2026-11-10",
+         "fecha_informe": "",
+         "estado": "PENDIENTE"
+        }
+       ]
+      }
+     },
+     {
+      "rit": "X-1-2026",
+      "nombre": "Persona ficticia",
+      "programa": "PRM Centro ficticio",
+      "rut": "11111111-1",
+      "fila": 2,
+      "tribunal_codigo": "49",
+      "causa_id": "100",
+      "ingreso_id": "202",
+      "etapa": "3",
+      "antiguo": "0",
+      "tipo_popup": "12",
+      "persona_id": "300",
+      "centro_id": "400",
+      "calendario": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "202",
+       "0"
+      ],
+      "tribunal_nombre": "Juzgado de Familia Tomé",
+      "modalidad": "2",
+      "modalidad_nombre": "Ambulatorio",
+      "pestana": "Cumplimiento",
+      "pagina": 2,
+      "estado": "LEIDA",
+      "error": "",
+      "clave": "9b4541373621ede0d117962f33b4dc06c9f5ea6f44056ace9048f52b775991a1",
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "202",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "advertencias": [],
+      "archivo": "bitacora-9b4541373621ede0d117962f-43696e3074641f3a.html",
+      "sha256": "43696e3074641f3a2df9acd9d4e547c0e8647410c96a4641f4673933e6c3b925",
+      "capturada": "2026-10-08T12:00:00Z",
+      "entradas": 1,
+      "calendario_lectura": {
+       "estado": "LEIDA",
+       "args": [
+        "100",
+        "300",
+        "49",
+        "400",
+        "X-1-2026",
+        "01/01/2026",
+        "PRM Centro ficticio",
+        "Persona ficticia",
+        "12",
+        "3",
+        "202",
+        "0"
+       ],
+       "archivo": "calendario-9b4541373621ede0d117962f-12d1203f65e931de.html",
+       "sha256": "12d1203f65e931def74a27a0adde27a253577e3eb956b770f8518b98106e45fc",
+       "capturada": "2026-10-19T12:00:00Z",
+       "proyecciones": [
+        {
+         "fila": 1,
+         "fecha_proyeccion": "2026-11-10",
+         "fecha_informe": "",
+         "estado": "PENDIENTE"
+        }
+       ]
+      }
+     }
+    ],
+    "origen": {
+     "version": "2.9.0",
+     "commit": "desarrollo"
+    },
+    "extension": {
+     "version": "2.9.0",
+     "protocolos": {
+      "bitacoras_lectura": 1,
+      "descarga_conjunta": 1,
+      "pdf_seleccion": 1,
+      "pdf_copia_fija": 1,
+      "calendario_lectura": 1,
+      "historia_lectura": 1,
+      "historico_lectura": 2
+     }
+    },
+    "anteriores_no_reenumeradas": []
+   },
+   "instantaneas": {
+    "bitacora-9b4541373621ede0d117962f-43696e3074641f3a.html": "43696e3074641f3a2df9acd9d4e547c0e8647410c96a4641f4673933e6c3b925",
+    "bitacora-ee22f019e6a4910ef848fd39-ff23bd1a408b9735.html": "ff23bd1a408b97357426209fbb5507a120c9357b77cb1b92dff9c2922de17354",
+    "calendario-9b4541373621ede0d117962f-12d1203f65e931de.html": "12d1203f65e931def74a27a0adde27a253577e3eb956b770f8518b98106e45fc",
+    "calendario-ee22f019e6a4910ef848fd39-7d6672247c93d595.html": "7d6672247c93d5957f1c016a6550924728df42fc00682b45931bf9ab850d9abf"
+   },
+   "resultado": {
+    "estado": "COMPLETA",
+    "leidas": 2,
+    "fallidas": 0,
+    "consultas_fallidas": 0,
+    "detalle": "",
+    "faltantes_por_tribunal": {},
+    "calendarios_leidos": 2,
+    "calendarios_fallidos": 0,
+    "historicos": {}
+   },
+   "paquete": {
+    "archivos": {
+     "resumen.json": {
+      "estado": "VALIDADA",
+      "consultas_esperadas": 1,
+      "consultas": [
+       {
+        "estado": "SIN_RESULTADOS",
+        "seleccion": {
+         "screen": "seguimiento",
+         "tribunal": "49",
+         "modality": "2",
+         "tab": "Cumplimiento"
+        },
+        "verificacion": "verificacion 001.json"
+       }
+      ],
+      "plan": [
+       {
+        "screen": "seguimiento",
+        "tribunal": "49",
+        "modality": "2",
+        "tab": "Cumplimiento"
+       }
+      ],
+      "fecha_hora": "2026-10-08T13:00:00.123456-03:00"
+     },
+     "verificacion 001.json": {
+      "estado": "SIN_RESULTADOS",
+      "seleccion": {
+       "screen": "seguimiento",
+       "tribunal": "49",
+       "modality": "2",
+       "tab": "Cumplimiento"
+      },
+      "archivos": [],
+      "paginas_esperadas": 0
+     }
+    },
+    "cobertura": {
+     "consultas": "PARCIAL",
+     "registros": "VACIA_COMPROBADA",
+     "bitacoras": "PARCIAL",
+     "calendarios": "COMPLETA",
+     "historico_proteccion": "NO_SOLICITADA",
+     "incidencias": "VACIA_COMPROBADA"
+    },
+    "incidencias": []
+   }
+  },
+  {
+   "escenario": "cal_enviado_guiones",
+   "calendarios": true,
+   "historico": false,
+   "historicos": {
+    "respaldos": {}
+   },
+   "historia": false,
+   "historias": null,
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "COMPLETA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 2,
+    "estados": {
+     "LEIDA": 2
+    },
+    "diagnosticos_sin_vinculo": {},
+    "errores_extension": {},
+    "consultas": [
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     }
+    ],
+    "anteriores_no_reenumeradas": 0,
+    "contiene_identificadores_personales": false
+   },
+   "ahora": "2026-10-08T13:00:00.123456-03:00",
+   "carpeta": "Bitacoras 2026-10-08 13-00-00-123456",
+   "lote": {
+    "tribunales": [
+     "49"
+    ],
+    "modalidades": [
+     "2"
+    ],
+    "pestanas": [
+     "Cumplimiento"
+    ]
+   },
+   "guion": [
+    {
+     "comando": "capabilities",
+     "payload": null,
+     "respuesta": {
+      "tipo": "CSMP_RUS_CAPACIDADES",
+      "version": "2.9.0",
+      "commit": "desarrollo",
+      "protocolos": {
+       "bitacoras_lectura": 1,
+       "descarga_conjunta": 1,
+       "pdf_seleccion": 1,
+       "pdf_copia_fija": 1,
+       "calendario_lectura": 1,
+       "historia_lectura": 1,
+       "historico_lectura": 2
+      },
+      "escritura_rus": false,
+      "intercambio_local": {
+       "CSMP_CAPTURE": "1.0.0",
+       "CSMP_REQUEST": "1.0.0"
+      }
+     }
+    },
+    {
+     "comando": "lock",
+     "payload": null,
+     "respuesta": {
+      "ok": true
+     }
+    },
+    {
+     "comando": "prepare",
+     "payload": {
+      "selection": {
+       "tribunal": "49",
+       "tab": "Cumplimiento",
+       "modality": "2",
+       "report": null,
+       "screen": "seguimiento",
+       "state": "1",
+       "month": null,
+       "year": null,
+       "start": null,
+       "end": null
+      },
+      "dates": null,
+      "keep_filters": false
+     },
+     "respuesta": {
+      "pairs": [
+       [
+        "COD_Lengueta",
+        "tdCumplimiento"
+       ],
+       [
+        "COD_Tribunal_sel",
+        "49"
+       ],
+       [
+        "TIP_Consulta",
+        "2"
+       ],
+       [
+        "irAccion",
+        "Buscar medida"
+       ],
+       [
+        "NUM_PaginaCumplimiento",
+        "1"
+       ],
+       [
+        "NUM_TotalCumplimiento",
+        "2"
+       ],
+       [
+        "FLG_Consulta",
+        "0"
+       ],
+       [
+        "FEC_Inicio",
+        ""
+       ],
+       [
+        "FEC_Fin",
+        ""
+       ]
+      ]
+     }
+    },
+    {
+     "comando": "search",
+     "payload": {
+      "pairs": [
+       [
+        "COD_Lengueta",
+        "tdCumplimiento"
+       ],
+       [
+        "COD_Tribunal_sel",
+        "49"
+       ],
+       [
+        "TIP_Consulta",
+        "2"
+       ],
+       [
+        "irAccion",
+        "Buscar medida"
+       ],
+       [
+        "NUM_PaginaCumplimiento",
+        "1"
+       ],
+       [
+        "NUM_TotalCumplimiento",
+        "2"
+       ],
+       [
+        "FLG_Consulta",
+        "0"
+       ],
+       [
+        "FEC_Inicio",
+        ""
+       ],
+       [
+        "FEC_Fin",
+        ""
+       ]
+      ],
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgbWV0aG9kPSJwb3N0IiBhY3Rpb249Ii9TSVRGQVdFQi9JbmZvcm1lc0RBY3Rpb24uZG8iPjxpbnB1dCBuYW1lPSJDT0RfTGVuZ3VldGEiIHZhbHVlPSJ0ZEN1bXBsaW1pZW50byI+PGlucHV0IG5hbWU9IkNPRF9UcmlidW5hbF9zZWwiIHZhbHVlPSI0OSI+PGlucHV0IG5hbWU9IlRJUF9Db25zdWx0YSIgdmFsdWU9IjIiPjxpbnB1dCBuYW1lPSJOVU1fUGFnaW5hQ3VtcGxpbWllbnRvIiB2YWx1ZT0iMSI+PGlucHV0IG5hbWU9Ik5VTV9Ub3RhbEN1bXBsaW1pZW50byIgdmFsdWU9IjIiPjx0YWJsZSBpZD0idGFibGFDdW1wbGltaWVudG8iPjx0aGVhZD48dHI+PHRkPlJJVDwvdGQ+PHRkPlJVVCAoLSZndDtSQ2VJKTwvdGQ+PHRkPk5vbWJyZTwvdGQ+PHRkPkRlcml2YWNpw7NuPC90ZD48dGQ+QWNjaW9uZXM8L3RkPjwvdHI+PC90aGVhZD48dGJvZHk+PHRyPjx0ZD5YLTEtMjAyNjwvdGQ+PHRkPjExMTExMTExLTE8L3RkPjx0ZD5QZXJzb25hIGZpY3RpY2lhPC90ZD48dGQ+UFJNIENlbnRybyBmaWN0aWNpbzwvdGQ+PHRkPgogICAgICAgIDxhIG9uY2xpY2s9IlNob3dIaXN0b3JpYSgnNDknLCdYLTEtMjAyNicsJzEwMCcpIj5DYXVzYTwvYT4KICAgICAgICA8YSBvbmNsaWNrPSJTaG93T2JzZXJ2YWNpb25lcygnMTAwJywnNDknLCcyMDEnLCcxMicsJzMnLCcwJykiPk9iczwvYT4KICAgICAgICA8YSBvbmNsaWNrPSJTaG93SW5mb3JtZXNQcm9ncmFtYWRvcygnMTAwJywnMzAwJywnNDknLCc0MDAnLCdYLTEtMjAyNicsJzAxLzAxLzIwMjYnLCdQUk0gQ2VudHJvIGZpY3RpY2lvJywnUGVyc29uYSBmaWN0aWNpYScsJzEyJywnMycsJzIwMScsJzAnKSI+SW5mPC9hPgogICAgICAgIDwvdGQ+PC90cj48L3Rib2R5PjwvdGFibGU+PC9mb3JtPjxzY3JpcHQ+ZnVuY3Rpb24gU2hvd0V4Y2VsKCl7d2luZG93Lm9wZW4oImh0dHBzOi8vZmFtaWxpYS5wanVkLmNsL3NpdGZhL3JlcG9ydGVzL2RlbW9fZGNlbGlzdGN1bXAueGxzIik7fTwvc2NyaXB0PjwvaHRtbD4="
+     }
+    },
+    {
+     "comando": "diary_open",
+     "payload": {
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "201",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgYWN0aW9uPSIvU0lURkFXRUIvSW5mb3JtZXNEQWN0aW9uLmRvIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJ0aXBvX3BvcFVwIiB2YWx1ZT0iIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJDUlJfSWRDYXVzYSIgdmFsdWU9IjEwMCI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iQ09EX1RyaWJ1bmFsIiB2YWx1ZT0iNDkiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IlRJUF9Db25zdWx0YSIgdmFsdWU9IjIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IklEX0luZ3Jlc28iIHZhbHVlPSIyMDEiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkNPRF9FdGFwYSIgdmFsdWU9IjMiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkZMR19NZWpvck5pbmV6IiB2YWx1ZT0iMCI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iUklUX0NhdXNhIiB2YWx1ZT0iWC0xLTIwMjYiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkdMU19Ob21icmUiIHZhbHVlPSJQZXJzb25hIGZpY3RpY2lhIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJHTFNfQ2VudHJvIiB2YWx1ZT0iUFJNIENlbnRybyBmaWN0aWNpbyI+PHRhYmxlIGlkPSJUYWJsYUluZm9ybWUiPjx0cj48dGQ+VGlwbyBPYnNlcnZhY2nDs248L3RkPjx0ZD5FdGFwYTwvdGQ+PHRkPkZlY2hhIENlbnRybzwvdGQ+PHRkPlVzdWFyaW8gQ2VudHJvPC90ZD48dGQ+T2JzZXJ2YWNpw7NuIENlbnRybzwvdGQ+PHRkPkZlY2hhIFRyaWJ1bmFsPC90ZD48dGQ+VXN1YXJpbyBUcmlidW5hbDwvdGQ+PHRkPk9ic2VydmFjacOzbiBUcmlidW5hbDwvdGQ+PHRkPkFjY2nDs248L3RkPjwvdHI+PHRyPjx0ZD5BbCBUcmlidW5hbDwvdGQ+PHRkPkN1bXBsaW1pZW50bzwvdGQ+PHRkPjEyLzA4LzIwMjYgMTA6MTM8L3RkPjx0ZD5Vc3VhcmlvIGZpY3RpY2lvPC90ZD48dGQ+VGV4dG8gcmVjb3J0YWRvPC90ZD48dGQ+LS0tPC90ZD48dGQ+LS0tPC90ZD48dGQ+LS0tPC90ZD48dGQ+PGltZyBpZD0iNDQiPjwvdGQ+PC90cj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIT0JTX0NlbnRyb180NCIgdmFsdWU9IlRleHRvIGNvbXBsZXRvClNlZ3VuZGEgbMOtbmVhIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIT0JTX1RyaWJ1bmFsXzQ0IiB2YWx1ZT0iLS0tIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIQ09EX0VzdGFkb180NCIgdmFsdWU9IjYiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkhGVU5fVHJpYnVuYWxfNDQiIHZhbHVlPSIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkhGTEdfRW52aW9fNDQiIHZhbHVlPSIxIj48L3RhYmxlPjwvZm9ybT48L2h0bWw+",
+      "digest": "ff23bd1a408b97357426209fbb5507a120c9357b77cb1b92dff9c2922de17354",
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "201",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "startedAt": "2026-10-08T12:00:00Z"
+     }
+    },
+    {
+     "comando": "calendar_open",
+     "payload": {
+      "args": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "201",
+       "0"
+      ],
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGJvZHk+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgYWN0aW9uPSIvU0lURkFXRUIvSW5mb3JtZXNEQWN0aW9uLmRvIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJDT0RfVHJpYnVuYWwiIHZhbHVlPSI0OSI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iQ1JSX0lkQ2F1c2EiIHZhbHVlPSIxMDAiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IklEX0luZ3Jlc28iIHZhbHVlPSIyMDEiPjx0YWJsZT48dHI+PHRkPlBsYXpvIFJlbWlzacOzbjogMyBNZXNlczwvdGQ+PHRkPlBsYXpvIEludGVydmVuY2nDs246IDEyIE1lc2VzPC90ZD48L3RyPjwvdGFibGU+PHRhYmxlPjx0cj48dGg+RmVjaGEgUHJveWVjY2nDs248L3RoPjx0aD5GZWNoYSBJbmZvcm1lPC90aD48dGg+RXN0YWRvPC90aD48L3RyPjx0cj48dGQ+MTAvMTEvMjAyNjwvdGQ+PHRkPjwvdGQ+PHRkPlBFTkRJRU5URTwvdGQ+PC90cj48L3RhYmxlPjwvZm9ybT48L2JvZHk+PC9odG1sPg==",
+      "digest": "7d6672247c93d5957f1c016a6550924728df42fc00682b45931bf9ab850d9abf",
+      "args": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "201",
+       "0"
+      ],
+      "startedAt": "2026-10-19T12:00:00Z"
+     }
+    },
+    {
+     "comando": "search",
+     "payload": {
+      "pairs": [
+       [
+        "COD_Lengueta",
+        "tdCumplimiento"
+       ],
+       [
+        "COD_Tribunal_sel",
+        "49"
+       ],
+       [
+        "TIP_Consulta",
+        "2"
+       ],
+       [
+        "irAccion",
+        "Buscar medida"
+       ],
+       [
+        "NUM_PaginaCumplimiento",
+        "2"
+       ],
+       [
+        "NUM_TotalCumplimiento",
+        "2"
+       ],
+       [
+        "FLG_Consulta",
+        "0"
+       ],
+       [
+        "FEC_Inicio",
+        ""
+       ],
+       [
+        "FEC_Fin",
+        ""
+       ]
+      ],
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgbWV0aG9kPSJwb3N0IiBhY3Rpb249Ii9TSVRGQVdFQi9JbmZvcm1lc0RBY3Rpb24uZG8iPjxpbnB1dCBuYW1lPSJDT0RfTGVuZ3VldGEiIHZhbHVlPSJ0ZEN1bXBsaW1pZW50byI+PGlucHV0IG5hbWU9IkNPRF9UcmlidW5hbF9zZWwiIHZhbHVlPSI0OSI+PGlucHV0IG5hbWU9IlRJUF9Db25zdWx0YSIgdmFsdWU9IjIiPjxpbnB1dCBuYW1lPSJOVU1fUGFnaW5hQ3VtcGxpbWllbnRvIiB2YWx1ZT0iMiI+PGlucHV0IG5hbWU9Ik5VTV9Ub3RhbEN1bXBsaW1pZW50byIgdmFsdWU9IjIiPjx0YWJsZSBpZD0idGFibGFDdW1wbGltaWVudG8iPjx0aGVhZD48dHI+PHRkPlJJVDwvdGQ+PHRkPlJVVCAoLSZndDtSQ2VJKTwvdGQ+PHRkPk5vbWJyZTwvdGQ+PHRkPkRlcml2YWNpw7NuPC90ZD48dGQ+QWNjaW9uZXM8L3RkPjwvdHI+PC90aGVhZD48dGJvZHk+PHRyPjx0ZD5YLTEtMjAyNjwvdGQ+PHRkPjExMTExMTExLTE8L3RkPjx0ZD5QZXJzb25hIGZpY3RpY2lhPC90ZD48dGQ+UFJNIENlbnRybyBmaWN0aWNpbzwvdGQ+PHRkPgogICAgICAgIDxhIG9uY2xpY2s9IlNob3dIaXN0b3JpYSgnNDknLCdYLTEtMjAyNicsJzEwMCcpIj5DYXVzYTwvYT4KICAgICAgICA8YSBvbmNsaWNrPSJTaG93T2JzZXJ2YWNpb25lcygnMTAwJywnNDknLCcyMDInLCcxMicsJzMnLCcwJykiPk9iczwvYT4KICAgICAgICA8YSBvbmNsaWNrPSJTaG93SW5mb3JtZXNQcm9ncmFtYWRvcygnMTAwJywnMzAwJywnNDknLCc0MDAnLCdYLTEtMjAyNicsJzAxLzAxLzIwMjYnLCdQUk0gQ2VudHJvIGZpY3RpY2lvJywnUGVyc29uYSBmaWN0aWNpYScsJzEyJywnMycsJzIwMicsJzAnKSI+SW5mPC9hPgogICAgICAgIDwvdGQ+PC90cj48L3Rib2R5PjwvdGFibGU+PC9mb3JtPjxzY3JpcHQ+ZnVuY3Rpb24gU2hvd0V4Y2VsKCl7d2luZG93Lm9wZW4oImh0dHBzOi8vZmFtaWxpYS5wanVkLmNsL3NpdGZhL3JlcG9ydGVzL2RlbW9fZGNlbGlzdGN1bXAueGxzIik7fTwvc2NyaXB0PjwvaHRtbD4="
+     }
+    },
+    {
+     "comando": "diary_open",
+     "payload": {
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "202",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgYWN0aW9uPSIvU0lURkFXRUIvSW5mb3JtZXNEQWN0aW9uLmRvIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJ0aXBvX3BvcFVwIiB2YWx1ZT0iIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJDUlJfSWRDYXVzYSIgdmFsdWU9IjEwMCI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iQ09EX1RyaWJ1bmFsIiB2YWx1ZT0iNDkiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IlRJUF9Db25zdWx0YSIgdmFsdWU9IjIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IklEX0luZ3Jlc28iIHZhbHVlPSIyMDIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkNPRF9FdGFwYSIgdmFsdWU9IjMiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkZMR19NZWpvck5pbmV6IiB2YWx1ZT0iMCI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iUklUX0NhdXNhIiB2YWx1ZT0iWC0xLTIwMjYiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkdMU19Ob21icmUiIHZhbHVlPSJQZXJzb25hIGZpY3RpY2lhIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJHTFNfQ2VudHJvIiB2YWx1ZT0iUFJNIENlbnRybyBmaWN0aWNpbyI+PHRhYmxlIGlkPSJUYWJsYUluZm9ybWUiPjx0cj48dGQ+VGlwbyBPYnNlcnZhY2nDs248L3RkPjx0ZD5FdGFwYTwvdGQ+PHRkPkZlY2hhIENlbnRybzwvdGQ+PHRkPlVzdWFyaW8gQ2VudHJvPC90ZD48dGQ+T2JzZXJ2YWNpw7NuIENlbnRybzwvdGQ+PHRkPkZlY2hhIFRyaWJ1bmFsPC90ZD48dGQ+VXN1YXJpbyBUcmlidW5hbDwvdGQ+PHRkPk9ic2VydmFjacOzbiBUcmlidW5hbDwvdGQ+PHRkPkFjY2nDs248L3RkPjwvdHI+PHRyPjx0ZD5BbCBUcmlidW5hbDwvdGQ+PHRkPkN1bXBsaW1pZW50bzwvdGQ+PHRkPjEyLzA4LzIwMjYgMTA6MTM8L3RkPjx0ZD5Vc3VhcmlvIGZpY3RpY2lvPC90ZD48dGQ+VGV4dG8gcmVjb3J0YWRvPC90ZD48dGQ+LS0tPC90ZD48dGQ+LS0tPC90ZD48dGQ+LS0tPC90ZD48dGQ+PGltZyBpZD0iNDQiPjwvdGQ+PC90cj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIT0JTX0NlbnRyb180NCIgdmFsdWU9IlRleHRvIGNvbXBsZXRvClNlZ3VuZGEgbMOtbmVhIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIT0JTX1RyaWJ1bmFsXzQ0IiB2YWx1ZT0iLS0tIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIQ09EX0VzdGFkb180NCIgdmFsdWU9IjYiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkhGVU5fVHJpYnVuYWxfNDQiIHZhbHVlPSIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkhGTEdfRW52aW9fNDQiIHZhbHVlPSIxIj48L3RhYmxlPjwvZm9ybT48L2h0bWw+",
+      "digest": "43696e3074641f3a2df9acd9d4e547c0e8647410c96a4641f4673933e6c3b925",
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "202",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "startedAt": "2026-10-08T12:00:00Z"
+     }
+    },
+    {
+     "comando": "calendar_open",
+     "payload": {
+      "args": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "202",
+       "0"
+      ],
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGJvZHk+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgYWN0aW9uPSIvU0lURkFXRUIvSW5mb3JtZXNEQWN0aW9uLmRvIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJDT0RfVHJpYnVuYWwiIHZhbHVlPSI0OSI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iQ1JSX0lkQ2F1c2EiIHZhbHVlPSIxMDAiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IklEX0luZ3Jlc28iIHZhbHVlPSIyMDIiPjx0YWJsZT48dHI+PHRkPlBsYXpvIFJlbWlzacOzbjogMyBNZXNlczwvdGQ+PHRkPlBsYXpvIEludGVydmVuY2nDs246IDEyIE1lc2VzPC90ZD48L3RyPjwvdGFibGU+PHRhYmxlPjx0cj48dGg+RmVjaGEgUHJveWVjY2nDs248L3RoPjx0aD5GZWNoYSBJbmZvcm1lPC90aD48dGg+RXN0YWRvPC90aD48L3RyPjx0cj48dGQ+MTAvMTEvMjAyNjwvdGQ+PHRkPi0gLSAtPC90ZD48dGQ+RU5WSUFETzwvdGQ+PC90cj48L3RhYmxlPjwvZm9ybT48L2JvZHk+PC9odG1sPg==",
+      "digest": "a97bbe3ca03f4c244e1d7a265f61dd2e29b8bb39251689328089e39ec0f59b9c",
+      "args": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "202",
+       "0"
+      ],
+      "startedAt": "2026-10-19T12:00:00Z"
+     }
+    },
+    {
+     "comando": "unlock",
+     "payload": null,
+     "respuesta": {
+      "ok": true
+     }
+    }
+   ],
+   "manifiesto": {
+    "version": 1,
+    "tipo": "BITACORAS_LECTURA",
+    "estado": "COMPLETA",
+    "seleccion": {
+     "tribunals": [
+      "49"
+     ],
+     "modalities": [
+      "2"
+     ],
+     "tabs": [
+      "Cumplimiento"
+     ],
+     "report": "1",
+     "dates": null,
+     "keep_filters": false,
+     "screen": "seguimiento",
+     "state": "1",
+     "month": null,
+     "year": null
+    },
+    "fecha": "<FECHA>",
+    "consultas": [
+     {
+      "tribunal": "49",
+      "tab": "Cumplimiento",
+      "modality": "2",
+      "report": null,
+      "screen": "seguimiento",
+      "state": "1",
+      "month": null,
+      "year": null,
+      "start": null,
+      "end": null,
+      "tribunal_nombre": "Juzgado de Familia Tomé",
+      "modalidad_nombre": "Ambulatorio",
+      "estado": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2
+     }
+    ],
+    "registros": [
+     {
+      "rit": "X-1-2026",
+      "nombre": "Persona ficticia",
+      "programa": "PRM Centro ficticio",
+      "rut": "11111111-1",
+      "fila": 2,
+      "tribunal_codigo": "49",
+      "causa_id": "100",
+      "ingreso_id": "201",
+      "etapa": "3",
+      "antiguo": "0",
+      "tipo_popup": "12",
+      "persona_id": "300",
+      "centro_id": "400",
+      "calendario": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "201",
+       "0"
+      ],
+      "tribunal_nombre": "Juzgado de Familia Tomé",
+      "modalidad": "2",
+      "modalidad_nombre": "Ambulatorio",
+      "pestana": "Cumplimiento",
+      "pagina": 1,
+      "estado": "LEIDA",
+      "error": "",
+      "clave": "ee22f019e6a4910ef848fd39829f48673c162485f5c686d27c20fb187ece2845",
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "201",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "advertencias": [],
+      "archivo": "bitacora-ee22f019e6a4910ef848fd39-ff23bd1a408b9735.html",
+      "sha256": "ff23bd1a408b97357426209fbb5507a120c9357b77cb1b92dff9c2922de17354",
+      "capturada": "2026-10-08T12:00:00Z",
+      "entradas": 1,
+      "calendario_lectura": {
+       "estado": "LEIDA",
+       "args": [
+        "100",
+        "300",
+        "49",
+        "400",
+        "X-1-2026",
+        "01/01/2026",
+        "PRM Centro ficticio",
+        "Persona ficticia",
+        "12",
+        "3",
+        "201",
+        "0"
+       ],
+       "archivo": "calendario-ee22f019e6a4910ef848fd39-7d6672247c93d595.html",
+       "sha256": "7d6672247c93d5957f1c016a6550924728df42fc00682b45931bf9ab850d9abf",
+       "capturada": "2026-10-19T12:00:00Z",
+       "proyecciones": [
+        {
+         "fila": 1,
+         "fecha_proyeccion": "2026-11-10",
+         "fecha_informe": "",
+         "estado": "PENDIENTE"
+        }
+       ]
+      }
+     },
+     {
+      "rit": "X-1-2026",
+      "nombre": "Persona ficticia",
+      "programa": "PRM Centro ficticio",
+      "rut": "11111111-1",
+      "fila": 2,
+      "tribunal_codigo": "49",
+      "causa_id": "100",
+      "ingreso_id": "202",
+      "etapa": "3",
+      "antiguo": "0",
+      "tipo_popup": "12",
+      "persona_id": "300",
+      "centro_id": "400",
+      "calendario": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "202",
+       "0"
+      ],
+      "tribunal_nombre": "Juzgado de Familia Tomé",
+      "modalidad": "2",
+      "modalidad_nombre": "Ambulatorio",
+      "pestana": "Cumplimiento",
+      "pagina": 2,
+      "estado": "LEIDA",
+      "error": "",
+      "clave": "9b4541373621ede0d117962f33b4dc06c9f5ea6f44056ace9048f52b775991a1",
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "202",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "advertencias": [],
+      "archivo": "bitacora-9b4541373621ede0d117962f-43696e3074641f3a.html",
+      "sha256": "43696e3074641f3a2df9acd9d4e547c0e8647410c96a4641f4673933e6c3b925",
+      "capturada": "2026-10-08T12:00:00Z",
+      "entradas": 1,
+      "calendario_lectura": {
+       "estado": "FALLIDA",
+       "args": [
+        "100",
+        "300",
+        "49",
+        "400",
+        "X-1-2026",
+        "01/01/2026",
+        "PRM Centro ficticio",
+        "Persona ficticia",
+        "12",
+        "3",
+        "202",
+        "0"
+       ],
+       "error": "Estado y fecha de informe del calendario no concuerdan."
+      }
+     }
+    ],
+    "origen": {
+     "version": "2.9.0",
+     "commit": "desarrollo"
+    },
+    "extension": {
+     "version": "2.9.0",
+     "protocolos": {
+      "bitacoras_lectura": 1,
+      "descarga_conjunta": 1,
+      "pdf_seleccion": 1,
+      "pdf_copia_fija": 1,
+      "calendario_lectura": 1,
+      "historia_lectura": 1,
+      "historico_lectura": 2
+     }
+    },
+    "anteriores_no_reenumeradas": []
+   },
+   "instantaneas": {
+    "bitacora-9b4541373621ede0d117962f-43696e3074641f3a.html": "43696e3074641f3a2df9acd9d4e547c0e8647410c96a4641f4673933e6c3b925",
+    "bitacora-ee22f019e6a4910ef848fd39-ff23bd1a408b9735.html": "ff23bd1a408b97357426209fbb5507a120c9357b77cb1b92dff9c2922de17354",
+    "calendario-ee22f019e6a4910ef848fd39-7d6672247c93d595.html": "7d6672247c93d5957f1c016a6550924728df42fc00682b45931bf9ab850d9abf"
+   },
+   "resultado": {
+    "estado": "COMPLETA",
+    "leidas": 2,
+    "fallidas": 0,
+    "consultas_fallidas": 0,
+    "detalle": "",
+    "faltantes_por_tribunal": {},
+    "calendarios_leidos": 1,
+    "calendarios_fallidos": 1,
+    "historicos": {}
+   },
+   "paquete": {
+    "archivos": {
+     "resumen.json": {
+      "estado": "VALIDADA",
+      "consultas_esperadas": 1,
+      "consultas": [
+       {
+        "estado": "SIN_RESULTADOS",
+        "seleccion": {
+         "screen": "seguimiento",
+         "tribunal": "49",
+         "modality": "2",
+         "tab": "Cumplimiento"
+        },
+        "verificacion": "verificacion 001.json"
+       }
+      ],
+      "plan": [
+       {
+        "screen": "seguimiento",
+        "tribunal": "49",
+        "modality": "2",
+        "tab": "Cumplimiento"
+       }
+      ],
+      "fecha_hora": "2026-10-08T13:00:00.123456-03:00"
+     },
+     "verificacion 001.json": {
+      "estado": "SIN_RESULTADOS",
+      "seleccion": {
+       "screen": "seguimiento",
+       "tribunal": "49",
+       "modality": "2",
+       "tab": "Cumplimiento"
+      },
+      "archivos": [],
+      "paginas_esperadas": 0
+     }
+    },
+    "cobertura": {
+     "consultas": "PARCIAL",
+     "registros": "VACIA_COMPROBADA",
+     "bitacoras": "PARCIAL",
+     "calendarios": "PARCIAL",
+     "historico_proteccion": "NO_SOLICITADA",
+     "incidencias": "COMPLETA"
+    },
+    "incidencias": [
+     "CALENDARIO_FALLIDO"
+    ]
+   }
+  },
+  {
+   "escenario": "cal_proyeccion_guiones",
+   "calendarios": true,
+   "historico": false,
+   "historicos": {
+    "respaldos": {}
+   },
+   "historia": false,
+   "historias": null,
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "COMPLETA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 2,
+    "estados": {
+     "LEIDA": 2
+    },
+    "diagnosticos_sin_vinculo": {},
+    "errores_extension": {},
+    "consultas": [
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     }
+    ],
+    "anteriores_no_reenumeradas": 0,
+    "contiene_identificadores_personales": false
+   },
+   "ahora": "2026-10-08T13:00:00.123456-03:00",
+   "carpeta": "Bitacoras 2026-10-08 13-00-00-123456",
+   "lote": {
+    "tribunales": [
+     "49"
+    ],
+    "modalidades": [
+     "2"
+    ],
+    "pestanas": [
+     "Cumplimiento"
+    ]
+   },
+   "guion": [
+    {
+     "comando": "capabilities",
+     "payload": null,
+     "respuesta": {
+      "tipo": "CSMP_RUS_CAPACIDADES",
+      "version": "2.9.0",
+      "commit": "desarrollo",
+      "protocolos": {
+       "bitacoras_lectura": 1,
+       "descarga_conjunta": 1,
+       "pdf_seleccion": 1,
+       "pdf_copia_fija": 1,
+       "calendario_lectura": 1,
+       "historia_lectura": 1,
+       "historico_lectura": 2
+      },
+      "escritura_rus": false,
+      "intercambio_local": {
+       "CSMP_CAPTURE": "1.0.0",
+       "CSMP_REQUEST": "1.0.0"
+      }
+     }
+    },
+    {
+     "comando": "lock",
+     "payload": null,
+     "respuesta": {
+      "ok": true
+     }
+    },
+    {
+     "comando": "prepare",
+     "payload": {
+      "selection": {
+       "tribunal": "49",
+       "tab": "Cumplimiento",
+       "modality": "2",
+       "report": null,
+       "screen": "seguimiento",
+       "state": "1",
+       "month": null,
+       "year": null,
+       "start": null,
+       "end": null
+      },
+      "dates": null,
+      "keep_filters": false
+     },
+     "respuesta": {
+      "pairs": [
+       [
+        "COD_Lengueta",
+        "tdCumplimiento"
+       ],
+       [
+        "COD_Tribunal_sel",
+        "49"
+       ],
+       [
+        "TIP_Consulta",
+        "2"
+       ],
+       [
+        "irAccion",
+        "Buscar medida"
+       ],
+       [
+        "NUM_PaginaCumplimiento",
+        "1"
+       ],
+       [
+        "NUM_TotalCumplimiento",
+        "2"
+       ],
+       [
+        "FLG_Consulta",
+        "0"
+       ],
+       [
+        "FEC_Inicio",
+        ""
+       ],
+       [
+        "FEC_Fin",
+        ""
+       ]
+      ]
+     }
+    },
+    {
+     "comando": "search",
+     "payload": {
+      "pairs": [
+       [
+        "COD_Lengueta",
+        "tdCumplimiento"
+       ],
+       [
+        "COD_Tribunal_sel",
+        "49"
+       ],
+       [
+        "TIP_Consulta",
+        "2"
+       ],
+       [
+        "irAccion",
+        "Buscar medida"
+       ],
+       [
+        "NUM_PaginaCumplimiento",
+        "1"
+       ],
+       [
+        "NUM_TotalCumplimiento",
+        "2"
+       ],
+       [
+        "FLG_Consulta",
+        "0"
+       ],
+       [
+        "FEC_Inicio",
+        ""
+       ],
+       [
+        "FEC_Fin",
+        ""
+       ]
+      ],
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgbWV0aG9kPSJwb3N0IiBhY3Rpb249Ii9TSVRGQVdFQi9JbmZvcm1lc0RBY3Rpb24uZG8iPjxpbnB1dCBuYW1lPSJDT0RfTGVuZ3VldGEiIHZhbHVlPSJ0ZEN1bXBsaW1pZW50byI+PGlucHV0IG5hbWU9IkNPRF9UcmlidW5hbF9zZWwiIHZhbHVlPSI0OSI+PGlucHV0IG5hbWU9IlRJUF9Db25zdWx0YSIgdmFsdWU9IjIiPjxpbnB1dCBuYW1lPSJOVU1fUGFnaW5hQ3VtcGxpbWllbnRvIiB2YWx1ZT0iMSI+PGlucHV0IG5hbWU9Ik5VTV9Ub3RhbEN1bXBsaW1pZW50byIgdmFsdWU9IjIiPjx0YWJsZSBpZD0idGFibGFDdW1wbGltaWVudG8iPjx0aGVhZD48dHI+PHRkPlJJVDwvdGQ+PHRkPlJVVCAoLSZndDtSQ2VJKTwvdGQ+PHRkPk5vbWJyZTwvdGQ+PHRkPkRlcml2YWNpw7NuPC90ZD48dGQ+QWNjaW9uZXM8L3RkPjwvdHI+PC90aGVhZD48dGJvZHk+PHRyPjx0ZD5YLTEtMjAyNjwvdGQ+PHRkPjExMTExMTExLTE8L3RkPjx0ZD5QZXJzb25hIGZpY3RpY2lhPC90ZD48dGQ+UFJNIENlbnRybyBmaWN0aWNpbzwvdGQ+PHRkPgogICAgICAgIDxhIG9uY2xpY2s9IlNob3dIaXN0b3JpYSgnNDknLCdYLTEtMjAyNicsJzEwMCcpIj5DYXVzYTwvYT4KICAgICAgICA8YSBvbmNsaWNrPSJTaG93T2JzZXJ2YWNpb25lcygnMTAwJywnNDknLCcyMDEnLCcxMicsJzMnLCcwJykiPk9iczwvYT4KICAgICAgICA8YSBvbmNsaWNrPSJTaG93SW5mb3JtZXNQcm9ncmFtYWRvcygnMTAwJywnMzAwJywnNDknLCc0MDAnLCdYLTEtMjAyNicsJzAxLzAxLzIwMjYnLCdQUk0gQ2VudHJvIGZpY3RpY2lvJywnUGVyc29uYSBmaWN0aWNpYScsJzEyJywnMycsJzIwMScsJzAnKSI+SW5mPC9hPgogICAgICAgIDwvdGQ+PC90cj48L3Rib2R5PjwvdGFibGU+PC9mb3JtPjxzY3JpcHQ+ZnVuY3Rpb24gU2hvd0V4Y2VsKCl7d2luZG93Lm9wZW4oImh0dHBzOi8vZmFtaWxpYS5wanVkLmNsL3NpdGZhL3JlcG9ydGVzL2RlbW9fZGNlbGlzdGN1bXAueGxzIik7fTwvc2NyaXB0PjwvaHRtbD4="
+     }
+    },
+    {
+     "comando": "diary_open",
+     "payload": {
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "201",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgYWN0aW9uPSIvU0lURkFXRUIvSW5mb3JtZXNEQWN0aW9uLmRvIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJ0aXBvX3BvcFVwIiB2YWx1ZT0iIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJDUlJfSWRDYXVzYSIgdmFsdWU9IjEwMCI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iQ09EX1RyaWJ1bmFsIiB2YWx1ZT0iNDkiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IlRJUF9Db25zdWx0YSIgdmFsdWU9IjIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IklEX0luZ3Jlc28iIHZhbHVlPSIyMDEiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkNPRF9FdGFwYSIgdmFsdWU9IjMiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkZMR19NZWpvck5pbmV6IiB2YWx1ZT0iMCI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iUklUX0NhdXNhIiB2YWx1ZT0iWC0xLTIwMjYiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkdMU19Ob21icmUiIHZhbHVlPSJQZXJzb25hIGZpY3RpY2lhIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJHTFNfQ2VudHJvIiB2YWx1ZT0iUFJNIENlbnRybyBmaWN0aWNpbyI+PHRhYmxlIGlkPSJUYWJsYUluZm9ybWUiPjx0cj48dGQ+VGlwbyBPYnNlcnZhY2nDs248L3RkPjx0ZD5FdGFwYTwvdGQ+PHRkPkZlY2hhIENlbnRybzwvdGQ+PHRkPlVzdWFyaW8gQ2VudHJvPC90ZD48dGQ+T2JzZXJ2YWNpw7NuIENlbnRybzwvdGQ+PHRkPkZlY2hhIFRyaWJ1bmFsPC90ZD48dGQ+VXN1YXJpbyBUcmlidW5hbDwvdGQ+PHRkPk9ic2VydmFjacOzbiBUcmlidW5hbDwvdGQ+PHRkPkFjY2nDs248L3RkPjwvdHI+PHRyPjx0ZD5BbCBUcmlidW5hbDwvdGQ+PHRkPkN1bXBsaW1pZW50bzwvdGQ+PHRkPjEyLzA4LzIwMjYgMTA6MTM8L3RkPjx0ZD5Vc3VhcmlvIGZpY3RpY2lvPC90ZD48dGQ+VGV4dG8gcmVjb3J0YWRvPC90ZD48dGQ+LS0tPC90ZD48dGQ+LS0tPC90ZD48dGQ+LS0tPC90ZD48dGQ+PGltZyBpZD0iNDQiPjwvdGQ+PC90cj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIT0JTX0NlbnRyb180NCIgdmFsdWU9IlRleHRvIGNvbXBsZXRvClNlZ3VuZGEgbMOtbmVhIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIT0JTX1RyaWJ1bmFsXzQ0IiB2YWx1ZT0iLS0tIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIQ09EX0VzdGFkb180NCIgdmFsdWU9IjYiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkhGVU5fVHJpYnVuYWxfNDQiIHZhbHVlPSIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkhGTEdfRW52aW9fNDQiIHZhbHVlPSIxIj48L3RhYmxlPjwvZm9ybT48L2h0bWw+",
+      "digest": "ff23bd1a408b97357426209fbb5507a120c9357b77cb1b92dff9c2922de17354",
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "201",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "startedAt": "2026-10-08T12:00:00Z"
+     }
+    },
+    {
+     "comando": "calendar_open",
+     "payload": {
+      "args": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "201",
+       "0"
+      ],
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGJvZHk+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgYWN0aW9uPSIvU0lURkFXRUIvSW5mb3JtZXNEQWN0aW9uLmRvIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJDT0RfVHJpYnVuYWwiIHZhbHVlPSI0OSI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iQ1JSX0lkQ2F1c2EiIHZhbHVlPSIxMDAiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IklEX0luZ3Jlc28iIHZhbHVlPSIyMDEiPjx0YWJsZT48dHI+PHRkPlBsYXpvIFJlbWlzacOzbjogMyBNZXNlczwvdGQ+PHRkPlBsYXpvIEludGVydmVuY2nDs246IDEyIE1lc2VzPC90ZD48L3RyPjwvdGFibGU+PHRhYmxlPjx0cj48dGg+RmVjaGEgUHJveWVjY2nDs248L3RoPjx0aD5GZWNoYSBJbmZvcm1lPC90aD48dGg+RXN0YWRvPC90aD48L3RyPjx0cj48dGQ+MTAvMTEvMjAyNjwvdGQ+PHRkPjwvdGQ+PHRkPlBFTkRJRU5URTwvdGQ+PC90cj48L3RhYmxlPjwvZm9ybT48L2JvZHk+PC9odG1sPg==",
+      "digest": "7d6672247c93d5957f1c016a6550924728df42fc00682b45931bf9ab850d9abf",
+      "args": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "201",
+       "0"
+      ],
+      "startedAt": "2026-10-19T12:00:00Z"
+     }
+    },
+    {
+     "comando": "search",
+     "payload": {
+      "pairs": [
+       [
+        "COD_Lengueta",
+        "tdCumplimiento"
+       ],
+       [
+        "COD_Tribunal_sel",
+        "49"
+       ],
+       [
+        "TIP_Consulta",
+        "2"
+       ],
+       [
+        "irAccion",
+        "Buscar medida"
+       ],
+       [
+        "NUM_PaginaCumplimiento",
+        "2"
+       ],
+       [
+        "NUM_TotalCumplimiento",
+        "2"
+       ],
+       [
+        "FLG_Consulta",
+        "0"
+       ],
+       [
+        "FEC_Inicio",
+        ""
+       ],
+       [
+        "FEC_Fin",
+        ""
+       ]
+      ],
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgbWV0aG9kPSJwb3N0IiBhY3Rpb249Ii9TSVRGQVdFQi9JbmZvcm1lc0RBY3Rpb24uZG8iPjxpbnB1dCBuYW1lPSJDT0RfTGVuZ3VldGEiIHZhbHVlPSJ0ZEN1bXBsaW1pZW50byI+PGlucHV0IG5hbWU9IkNPRF9UcmlidW5hbF9zZWwiIHZhbHVlPSI0OSI+PGlucHV0IG5hbWU9IlRJUF9Db25zdWx0YSIgdmFsdWU9IjIiPjxpbnB1dCBuYW1lPSJOVU1fUGFnaW5hQ3VtcGxpbWllbnRvIiB2YWx1ZT0iMiI+PGlucHV0IG5hbWU9Ik5VTV9Ub3RhbEN1bXBsaW1pZW50byIgdmFsdWU9IjIiPjx0YWJsZSBpZD0idGFibGFDdW1wbGltaWVudG8iPjx0aGVhZD48dHI+PHRkPlJJVDwvdGQ+PHRkPlJVVCAoLSZndDtSQ2VJKTwvdGQ+PHRkPk5vbWJyZTwvdGQ+PHRkPkRlcml2YWNpw7NuPC90ZD48dGQ+QWNjaW9uZXM8L3RkPjwvdHI+PC90aGVhZD48dGJvZHk+PHRyPjx0ZD5YLTEtMjAyNjwvdGQ+PHRkPjExMTExMTExLTE8L3RkPjx0ZD5QZXJzb25hIGZpY3RpY2lhPC90ZD48dGQ+UFJNIENlbnRybyBmaWN0aWNpbzwvdGQ+PHRkPgogICAgICAgIDxhIG9uY2xpY2s9IlNob3dIaXN0b3JpYSgnNDknLCdYLTEtMjAyNicsJzEwMCcpIj5DYXVzYTwvYT4KICAgICAgICA8YSBvbmNsaWNrPSJTaG93T2JzZXJ2YWNpb25lcygnMTAwJywnNDknLCcyMDInLCcxMicsJzMnLCcwJykiPk9iczwvYT4KICAgICAgICA8YSBvbmNsaWNrPSJTaG93SW5mb3JtZXNQcm9ncmFtYWRvcygnMTAwJywnMzAwJywnNDknLCc0MDAnLCdYLTEtMjAyNicsJzAxLzAxLzIwMjYnLCdQUk0gQ2VudHJvIGZpY3RpY2lvJywnUGVyc29uYSBmaWN0aWNpYScsJzEyJywnMycsJzIwMicsJzAnKSI+SW5mPC9hPgogICAgICAgIDwvdGQ+PC90cj48L3Rib2R5PjwvdGFibGU+PC9mb3JtPjxzY3JpcHQ+ZnVuY3Rpb24gU2hvd0V4Y2VsKCl7d2luZG93Lm9wZW4oImh0dHBzOi8vZmFtaWxpYS5wanVkLmNsL3NpdGZhL3JlcG9ydGVzL2RlbW9fZGNlbGlzdGN1bXAueGxzIik7fTwvc2NyaXB0PjwvaHRtbD4="
+     }
+    },
+    {
+     "comando": "diary_open",
+     "payload": {
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "202",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgYWN0aW9uPSIvU0lURkFXRUIvSW5mb3JtZXNEQWN0aW9uLmRvIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJ0aXBvX3BvcFVwIiB2YWx1ZT0iIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJDUlJfSWRDYXVzYSIgdmFsdWU9IjEwMCI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iQ09EX1RyaWJ1bmFsIiB2YWx1ZT0iNDkiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IlRJUF9Db25zdWx0YSIgdmFsdWU9IjIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IklEX0luZ3Jlc28iIHZhbHVlPSIyMDIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkNPRF9FdGFwYSIgdmFsdWU9IjMiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkZMR19NZWpvck5pbmV6IiB2YWx1ZT0iMCI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iUklUX0NhdXNhIiB2YWx1ZT0iWC0xLTIwMjYiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkdMU19Ob21icmUiIHZhbHVlPSJQZXJzb25hIGZpY3RpY2lhIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJHTFNfQ2VudHJvIiB2YWx1ZT0iUFJNIENlbnRybyBmaWN0aWNpbyI+PHRhYmxlIGlkPSJUYWJsYUluZm9ybWUiPjx0cj48dGQ+VGlwbyBPYnNlcnZhY2nDs248L3RkPjx0ZD5FdGFwYTwvdGQ+PHRkPkZlY2hhIENlbnRybzwvdGQ+PHRkPlVzdWFyaW8gQ2VudHJvPC90ZD48dGQ+T2JzZXJ2YWNpw7NuIENlbnRybzwvdGQ+PHRkPkZlY2hhIFRyaWJ1bmFsPC90ZD48dGQ+VXN1YXJpbyBUcmlidW5hbDwvdGQ+PHRkPk9ic2VydmFjacOzbiBUcmlidW5hbDwvdGQ+PHRkPkFjY2nDs248L3RkPjwvdHI+PHRyPjx0ZD5BbCBUcmlidW5hbDwvdGQ+PHRkPkN1bXBsaW1pZW50bzwvdGQ+PHRkPjEyLzA4LzIwMjYgMTA6MTM8L3RkPjx0ZD5Vc3VhcmlvIGZpY3RpY2lvPC90ZD48dGQ+VGV4dG8gcmVjb3J0YWRvPC90ZD48dGQ+LS0tPC90ZD48dGQ+LS0tPC90ZD48dGQ+LS0tPC90ZD48dGQ+PGltZyBpZD0iNDQiPjwvdGQ+PC90cj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIT0JTX0NlbnRyb180NCIgdmFsdWU9IlRleHRvIGNvbXBsZXRvClNlZ3VuZGEgbMOtbmVhIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIT0JTX1RyaWJ1bmFsXzQ0IiB2YWx1ZT0iLS0tIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIQ09EX0VzdGFkb180NCIgdmFsdWU9IjYiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkhGVU5fVHJpYnVuYWxfNDQiIHZhbHVlPSIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkhGTEdfRW52aW9fNDQiIHZhbHVlPSIxIj48L3RhYmxlPjwvZm9ybT48L2h0bWw+",
+      "digest": "43696e3074641f3a2df9acd9d4e547c0e8647410c96a4641f4673933e6c3b925",
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "202",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "startedAt": "2026-10-08T12:00:00Z"
+     }
+    },
+    {
+     "comando": "calendar_open",
+     "payload": {
+      "args": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "202",
+       "0"
+      ],
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGJvZHk+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgYWN0aW9uPSIvU0lURkFXRUIvSW5mb3JtZXNEQWN0aW9uLmRvIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJDT0RfVHJpYnVuYWwiIHZhbHVlPSI0OSI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iQ1JSX0lkQ2F1c2EiIHZhbHVlPSIxMDAiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IklEX0luZ3Jlc28iIHZhbHVlPSIyMDIiPjx0YWJsZT48dHI+PHRkPlBsYXpvIFJlbWlzacOzbjogMyBNZXNlczwvdGQ+PHRkPlBsYXpvIEludGVydmVuY2nDs246IDEyIE1lc2VzPC90ZD48L3RyPjwvdGFibGU+PHRhYmxlPjx0cj48dGg+RmVjaGEgUHJveWVjY2nDs248L3RoPjx0aD5GZWNoYSBJbmZvcm1lPC90aD48dGg+RXN0YWRvPC90aD48L3RyPjx0cj48dGQ+LSAtIC08L3RkPjx0ZD48L3RkPjx0ZD5QRU5ESUVOVEU8L3RkPjwvdHI+PC90YWJsZT48L2Zvcm0+PC9ib2R5PjwvaHRtbD4=",
+      "digest": "0518f78d05e3e80d54774f92ac775bd34960482c8b150652d1a5e52180c64ea5",
+      "args": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "202",
+       "0"
+      ],
+      "startedAt": "2026-10-19T12:00:00Z"
+     }
+    },
+    {
+     "comando": "unlock",
+     "payload": null,
+     "respuesta": {
+      "ok": true
+     }
+    }
+   ],
+   "manifiesto": {
+    "version": 1,
+    "tipo": "BITACORAS_LECTURA",
+    "estado": "COMPLETA",
+    "seleccion": {
+     "tribunals": [
+      "49"
+     ],
+     "modalities": [
+      "2"
+     ],
+     "tabs": [
+      "Cumplimiento"
+     ],
+     "report": "1",
+     "dates": null,
+     "keep_filters": false,
+     "screen": "seguimiento",
+     "state": "1",
+     "month": null,
+     "year": null
+    },
+    "fecha": "<FECHA>",
+    "consultas": [
+     {
+      "tribunal": "49",
+      "tab": "Cumplimiento",
+      "modality": "2",
+      "report": null,
+      "screen": "seguimiento",
+      "state": "1",
+      "month": null,
+      "year": null,
+      "start": null,
+      "end": null,
+      "tribunal_nombre": "Juzgado de Familia Tomé",
+      "modalidad_nombre": "Ambulatorio",
+      "estado": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2
+     }
+    ],
+    "registros": [
+     {
+      "rit": "X-1-2026",
+      "nombre": "Persona ficticia",
+      "programa": "PRM Centro ficticio",
+      "rut": "11111111-1",
+      "fila": 2,
+      "tribunal_codigo": "49",
+      "causa_id": "100",
+      "ingreso_id": "201",
+      "etapa": "3",
+      "antiguo": "0",
+      "tipo_popup": "12",
+      "persona_id": "300",
+      "centro_id": "400",
+      "calendario": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "201",
+       "0"
+      ],
+      "tribunal_nombre": "Juzgado de Familia Tomé",
+      "modalidad": "2",
+      "modalidad_nombre": "Ambulatorio",
+      "pestana": "Cumplimiento",
+      "pagina": 1,
+      "estado": "LEIDA",
+      "error": "",
+      "clave": "ee22f019e6a4910ef848fd39829f48673c162485f5c686d27c20fb187ece2845",
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "201",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "advertencias": [],
+      "archivo": "bitacora-ee22f019e6a4910ef848fd39-ff23bd1a408b9735.html",
+      "sha256": "ff23bd1a408b97357426209fbb5507a120c9357b77cb1b92dff9c2922de17354",
+      "capturada": "2026-10-08T12:00:00Z",
+      "entradas": 1,
+      "calendario_lectura": {
+       "estado": "LEIDA",
+       "args": [
+        "100",
+        "300",
+        "49",
+        "400",
+        "X-1-2026",
+        "01/01/2026",
+        "PRM Centro ficticio",
+        "Persona ficticia",
+        "12",
+        "3",
+        "201",
+        "0"
+       ],
+       "archivo": "calendario-ee22f019e6a4910ef848fd39-7d6672247c93d595.html",
+       "sha256": "7d6672247c93d5957f1c016a6550924728df42fc00682b45931bf9ab850d9abf",
+       "capturada": "2026-10-19T12:00:00Z",
+       "proyecciones": [
+        {
+         "fila": 1,
+         "fecha_proyeccion": "2026-11-10",
+         "fecha_informe": "",
+         "estado": "PENDIENTE"
+        }
+       ]
+      }
+     },
+     {
+      "rit": "X-1-2026",
+      "nombre": "Persona ficticia",
+      "programa": "PRM Centro ficticio",
+      "rut": "11111111-1",
+      "fila": 2,
+      "tribunal_codigo": "49",
+      "causa_id": "100",
+      "ingreso_id": "202",
+      "etapa": "3",
+      "antiguo": "0",
+      "tipo_popup": "12",
+      "persona_id": "300",
+      "centro_id": "400",
+      "calendario": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "202",
+       "0"
+      ],
+      "tribunal_nombre": "Juzgado de Familia Tomé",
+      "modalidad": "2",
+      "modalidad_nombre": "Ambulatorio",
+      "pestana": "Cumplimiento",
+      "pagina": 2,
+      "estado": "LEIDA",
+      "error": "",
+      "clave": "9b4541373621ede0d117962f33b4dc06c9f5ea6f44056ace9048f52b775991a1",
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "202",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "advertencias": [],
+      "archivo": "bitacora-9b4541373621ede0d117962f-43696e3074641f3a.html",
+      "sha256": "43696e3074641f3a2df9acd9d4e547c0e8647410c96a4641f4673933e6c3b925",
+      "capturada": "2026-10-08T12:00:00Z",
+      "entradas": 1,
+      "calendario_lectura": {
+       "estado": "FALLIDA",
+       "args": [
+        "100",
+        "300",
+        "49",
+        "400",
+        "X-1-2026",
+        "01/01/2026",
+        "PRM Centro ficticio",
+        "Persona ficticia",
+        "12",
+        "3",
+        "202",
+        "0"
+       ],
+       "error": "El calendario contiene una fecha ilegible en «Fecha Proyección» (forma «- - -»)."
+      }
+     }
+    ],
+    "origen": {
+     "version": "2.9.0",
+     "commit": "desarrollo"
+    },
+    "extension": {
+     "version": "2.9.0",
+     "protocolos": {
+      "bitacoras_lectura": 1,
+      "descarga_conjunta": 1,
+      "pdf_seleccion": 1,
+      "pdf_copia_fija": 1,
+      "calendario_lectura": 1,
+      "historia_lectura": 1,
+      "historico_lectura": 2
+     }
+    },
+    "anteriores_no_reenumeradas": []
+   },
+   "instantaneas": {
+    "bitacora-9b4541373621ede0d117962f-43696e3074641f3a.html": "43696e3074641f3a2df9acd9d4e547c0e8647410c96a4641f4673933e6c3b925",
+    "bitacora-ee22f019e6a4910ef848fd39-ff23bd1a408b9735.html": "ff23bd1a408b97357426209fbb5507a120c9357b77cb1b92dff9c2922de17354",
+    "calendario-ee22f019e6a4910ef848fd39-7d6672247c93d595.html": "7d6672247c93d5957f1c016a6550924728df42fc00682b45931bf9ab850d9abf"
+   },
+   "resultado": {
+    "estado": "COMPLETA",
+    "leidas": 2,
+    "fallidas": 0,
+    "consultas_fallidas": 0,
+    "detalle": "",
+    "faltantes_por_tribunal": {},
+    "calendarios_leidos": 1,
+    "calendarios_fallidos": 1,
+    "historicos": {}
+   },
+   "paquete": {
+    "archivos": {
+     "resumen.json": {
+      "estado": "VALIDADA",
+      "consultas_esperadas": 1,
+      "consultas": [
+       {
+        "estado": "SIN_RESULTADOS",
+        "seleccion": {
+         "screen": "seguimiento",
+         "tribunal": "49",
+         "modality": "2",
+         "tab": "Cumplimiento"
+        },
+        "verificacion": "verificacion 001.json"
+       }
+      ],
+      "plan": [
+       {
+        "screen": "seguimiento",
+        "tribunal": "49",
+        "modality": "2",
+        "tab": "Cumplimiento"
+       }
+      ],
+      "fecha_hora": "2026-10-08T13:00:00.123456-03:00"
+     },
+     "verificacion 001.json": {
+      "estado": "SIN_RESULTADOS",
+      "seleccion": {
+       "screen": "seguimiento",
+       "tribunal": "49",
+       "modality": "2",
+       "tab": "Cumplimiento"
+      },
+      "archivos": [],
+      "paginas_esperadas": 0
+     }
+    },
+    "cobertura": {
+     "consultas": "PARCIAL",
+     "registros": "VACIA_COMPROBADA",
+     "bitacoras": "PARCIAL",
+     "calendarios": "PARCIAL",
+     "historico_proteccion": "NO_SOLICITADA",
+     "incidencias": "COMPLETA"
+    },
+    "incidencias": [
+     "CALENDARIO_FALLIDO"
+    ]
+   }
+  },
+  {
+   "escenario": "cal_estado_desconocido",
+   "calendarios": true,
+   "historico": false,
+   "historicos": {
+    "respaldos": {}
+   },
+   "historia": false,
+   "historias": null,
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "COMPLETA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 2,
+    "estados": {
+     "LEIDA": 2
+    },
+    "diagnosticos_sin_vinculo": {},
+    "errores_extension": {},
+    "consultas": [
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     }
+    ],
+    "anteriores_no_reenumeradas": 0,
+    "contiene_identificadores_personales": false
+   },
+   "ahora": "2026-10-08T13:00:00.123456-03:00",
+   "carpeta": "Bitacoras 2026-10-08 13-00-00-123456",
+   "lote": {
+    "tribunales": [
+     "49"
+    ],
+    "modalidades": [
+     "2"
+    ],
+    "pestanas": [
+     "Cumplimiento"
+    ]
+   },
+   "guion": [
+    {
+     "comando": "capabilities",
+     "payload": null,
+     "respuesta": {
+      "tipo": "CSMP_RUS_CAPACIDADES",
+      "version": "2.9.0",
+      "commit": "desarrollo",
+      "protocolos": {
+       "bitacoras_lectura": 1,
+       "descarga_conjunta": 1,
+       "pdf_seleccion": 1,
+       "pdf_copia_fija": 1,
+       "calendario_lectura": 1,
+       "historia_lectura": 1,
+       "historico_lectura": 2
+      },
+      "escritura_rus": false,
+      "intercambio_local": {
+       "CSMP_CAPTURE": "1.0.0",
+       "CSMP_REQUEST": "1.0.0"
+      }
+     }
+    },
+    {
+     "comando": "lock",
+     "payload": null,
+     "respuesta": {
+      "ok": true
+     }
+    },
+    {
+     "comando": "prepare",
+     "payload": {
+      "selection": {
+       "tribunal": "49",
+       "tab": "Cumplimiento",
+       "modality": "2",
+       "report": null,
+       "screen": "seguimiento",
+       "state": "1",
+       "month": null,
+       "year": null,
+       "start": null,
+       "end": null
+      },
+      "dates": null,
+      "keep_filters": false
+     },
+     "respuesta": {
+      "pairs": [
+       [
+        "COD_Lengueta",
+        "tdCumplimiento"
+       ],
+       [
+        "COD_Tribunal_sel",
+        "49"
+       ],
+       [
+        "TIP_Consulta",
+        "2"
+       ],
+       [
+        "irAccion",
+        "Buscar medida"
+       ],
+       [
+        "NUM_PaginaCumplimiento",
+        "1"
+       ],
+       [
+        "NUM_TotalCumplimiento",
+        "2"
+       ],
+       [
+        "FLG_Consulta",
+        "0"
+       ],
+       [
+        "FEC_Inicio",
+        ""
+       ],
+       [
+        "FEC_Fin",
+        ""
+       ]
+      ]
+     }
+    },
+    {
+     "comando": "search",
+     "payload": {
+      "pairs": [
+       [
+        "COD_Lengueta",
+        "tdCumplimiento"
+       ],
+       [
+        "COD_Tribunal_sel",
+        "49"
+       ],
+       [
+        "TIP_Consulta",
+        "2"
+       ],
+       [
+        "irAccion",
+        "Buscar medida"
+       ],
+       [
+        "NUM_PaginaCumplimiento",
+        "1"
+       ],
+       [
+        "NUM_TotalCumplimiento",
+        "2"
+       ],
+       [
+        "FLG_Consulta",
+        "0"
+       ],
+       [
+        "FEC_Inicio",
+        ""
+       ],
+       [
+        "FEC_Fin",
+        ""
+       ]
+      ],
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgbWV0aG9kPSJwb3N0IiBhY3Rpb249Ii9TSVRGQVdFQi9JbmZvcm1lc0RBY3Rpb24uZG8iPjxpbnB1dCBuYW1lPSJDT0RfTGVuZ3VldGEiIHZhbHVlPSJ0ZEN1bXBsaW1pZW50byI+PGlucHV0IG5hbWU9IkNPRF9UcmlidW5hbF9zZWwiIHZhbHVlPSI0OSI+PGlucHV0IG5hbWU9IlRJUF9Db25zdWx0YSIgdmFsdWU9IjIiPjxpbnB1dCBuYW1lPSJOVU1fUGFnaW5hQ3VtcGxpbWllbnRvIiB2YWx1ZT0iMSI+PGlucHV0IG5hbWU9Ik5VTV9Ub3RhbEN1bXBsaW1pZW50byIgdmFsdWU9IjIiPjx0YWJsZSBpZD0idGFibGFDdW1wbGltaWVudG8iPjx0aGVhZD48dHI+PHRkPlJJVDwvdGQ+PHRkPlJVVCAoLSZndDtSQ2VJKTwvdGQ+PHRkPk5vbWJyZTwvdGQ+PHRkPkRlcml2YWNpw7NuPC90ZD48dGQ+QWNjaW9uZXM8L3RkPjwvdHI+PC90aGVhZD48dGJvZHk+PHRyPjx0ZD5YLTEtMjAyNjwvdGQ+PHRkPjExMTExMTExLTE8L3RkPjx0ZD5QZXJzb25hIGZpY3RpY2lhPC90ZD48dGQ+UFJNIENlbnRybyBmaWN0aWNpbzwvdGQ+PHRkPgogICAgICAgIDxhIG9uY2xpY2s9IlNob3dIaXN0b3JpYSgnNDknLCdYLTEtMjAyNicsJzEwMCcpIj5DYXVzYTwvYT4KICAgICAgICA8YSBvbmNsaWNrPSJTaG93T2JzZXJ2YWNpb25lcygnMTAwJywnNDknLCcyMDEnLCcxMicsJzMnLCcwJykiPk9iczwvYT4KICAgICAgICA8YSBvbmNsaWNrPSJTaG93SW5mb3JtZXNQcm9ncmFtYWRvcygnMTAwJywnMzAwJywnNDknLCc0MDAnLCdYLTEtMjAyNicsJzAxLzAxLzIwMjYnLCdQUk0gQ2VudHJvIGZpY3RpY2lvJywnUGVyc29uYSBmaWN0aWNpYScsJzEyJywnMycsJzIwMScsJzAnKSI+SW5mPC9hPgogICAgICAgIDwvdGQ+PC90cj48L3Rib2R5PjwvdGFibGU+PC9mb3JtPjxzY3JpcHQ+ZnVuY3Rpb24gU2hvd0V4Y2VsKCl7d2luZG93Lm9wZW4oImh0dHBzOi8vZmFtaWxpYS5wanVkLmNsL3NpdGZhL3JlcG9ydGVzL2RlbW9fZGNlbGlzdGN1bXAueGxzIik7fTwvc2NyaXB0PjwvaHRtbD4="
+     }
+    },
+    {
+     "comando": "diary_open",
+     "payload": {
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "201",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgYWN0aW9uPSIvU0lURkFXRUIvSW5mb3JtZXNEQWN0aW9uLmRvIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJ0aXBvX3BvcFVwIiB2YWx1ZT0iIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJDUlJfSWRDYXVzYSIgdmFsdWU9IjEwMCI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iQ09EX1RyaWJ1bmFsIiB2YWx1ZT0iNDkiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IlRJUF9Db25zdWx0YSIgdmFsdWU9IjIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IklEX0luZ3Jlc28iIHZhbHVlPSIyMDEiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkNPRF9FdGFwYSIgdmFsdWU9IjMiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkZMR19NZWpvck5pbmV6IiB2YWx1ZT0iMCI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iUklUX0NhdXNhIiB2YWx1ZT0iWC0xLTIwMjYiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkdMU19Ob21icmUiIHZhbHVlPSJQZXJzb25hIGZpY3RpY2lhIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJHTFNfQ2VudHJvIiB2YWx1ZT0iUFJNIENlbnRybyBmaWN0aWNpbyI+PHRhYmxlIGlkPSJUYWJsYUluZm9ybWUiPjx0cj48dGQ+VGlwbyBPYnNlcnZhY2nDs248L3RkPjx0ZD5FdGFwYTwvdGQ+PHRkPkZlY2hhIENlbnRybzwvdGQ+PHRkPlVzdWFyaW8gQ2VudHJvPC90ZD48dGQ+T2JzZXJ2YWNpw7NuIENlbnRybzwvdGQ+PHRkPkZlY2hhIFRyaWJ1bmFsPC90ZD48dGQ+VXN1YXJpbyBUcmlidW5hbDwvdGQ+PHRkPk9ic2VydmFjacOzbiBUcmlidW5hbDwvdGQ+PHRkPkFjY2nDs248L3RkPjwvdHI+PHRyPjx0ZD5BbCBUcmlidW5hbDwvdGQ+PHRkPkN1bXBsaW1pZW50bzwvdGQ+PHRkPjEyLzA4LzIwMjYgMTA6MTM8L3RkPjx0ZD5Vc3VhcmlvIGZpY3RpY2lvPC90ZD48dGQ+VGV4dG8gcmVjb3J0YWRvPC90ZD48dGQ+LS0tPC90ZD48dGQ+LS0tPC90ZD48dGQ+LS0tPC90ZD48dGQ+PGltZyBpZD0iNDQiPjwvdGQ+PC90cj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIT0JTX0NlbnRyb180NCIgdmFsdWU9IlRleHRvIGNvbXBsZXRvClNlZ3VuZGEgbMOtbmVhIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIT0JTX1RyaWJ1bmFsXzQ0IiB2YWx1ZT0iLS0tIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIQ09EX0VzdGFkb180NCIgdmFsdWU9IjYiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkhGVU5fVHJpYnVuYWxfNDQiIHZhbHVlPSIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkhGTEdfRW52aW9fNDQiIHZhbHVlPSIxIj48L3RhYmxlPjwvZm9ybT48L2h0bWw+",
+      "digest": "ff23bd1a408b97357426209fbb5507a120c9357b77cb1b92dff9c2922de17354",
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "201",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "startedAt": "2026-10-08T12:00:00Z"
+     }
+    },
+    {
+     "comando": "calendar_open",
+     "payload": {
+      "args": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "201",
+       "0"
+      ],
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGJvZHk+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgYWN0aW9uPSIvU0lURkFXRUIvSW5mb3JtZXNEQWN0aW9uLmRvIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJDT0RfVHJpYnVuYWwiIHZhbHVlPSI0OSI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iQ1JSX0lkQ2F1c2EiIHZhbHVlPSIxMDAiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IklEX0luZ3Jlc28iIHZhbHVlPSIyMDEiPjx0YWJsZT48dHI+PHRkPlBsYXpvIFJlbWlzacOzbjogMyBNZXNlczwvdGQ+PHRkPlBsYXpvIEludGVydmVuY2nDs246IDEyIE1lc2VzPC90ZD48L3RyPjwvdGFibGU+PHRhYmxlPjx0cj48dGg+RmVjaGEgUHJveWVjY2nDs248L3RoPjx0aD5GZWNoYSBJbmZvcm1lPC90aD48dGg+RXN0YWRvPC90aD48L3RyPjx0cj48dGQ+MTAvMTEvMjAyNjwvdGQ+PHRkPjwvdGQ+PHRkPlBFTkRJRU5URTwvdGQ+PC90cj48L3RhYmxlPjwvZm9ybT48L2JvZHk+PC9odG1sPg==",
+      "digest": "7d6672247c93d5957f1c016a6550924728df42fc00682b45931bf9ab850d9abf",
+      "args": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "201",
+       "0"
+      ],
+      "startedAt": "2026-10-19T12:00:00Z"
+     }
+    },
+    {
+     "comando": "search",
+     "payload": {
+      "pairs": [
+       [
+        "COD_Lengueta",
+        "tdCumplimiento"
+       ],
+       [
+        "COD_Tribunal_sel",
+        "49"
+       ],
+       [
+        "TIP_Consulta",
+        "2"
+       ],
+       [
+        "irAccion",
+        "Buscar medida"
+       ],
+       [
+        "NUM_PaginaCumplimiento",
+        "2"
+       ],
+       [
+        "NUM_TotalCumplimiento",
+        "2"
+       ],
+       [
+        "FLG_Consulta",
+        "0"
+       ],
+       [
+        "FEC_Inicio",
+        ""
+       ],
+       [
+        "FEC_Fin",
+        ""
+       ]
+      ],
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgbWV0aG9kPSJwb3N0IiBhY3Rpb249Ii9TSVRGQVdFQi9JbmZvcm1lc0RBY3Rpb24uZG8iPjxpbnB1dCBuYW1lPSJDT0RfTGVuZ3VldGEiIHZhbHVlPSJ0ZEN1bXBsaW1pZW50byI+PGlucHV0IG5hbWU9IkNPRF9UcmlidW5hbF9zZWwiIHZhbHVlPSI0OSI+PGlucHV0IG5hbWU9IlRJUF9Db25zdWx0YSIgdmFsdWU9IjIiPjxpbnB1dCBuYW1lPSJOVU1fUGFnaW5hQ3VtcGxpbWllbnRvIiB2YWx1ZT0iMiI+PGlucHV0IG5hbWU9Ik5VTV9Ub3RhbEN1bXBsaW1pZW50byIgdmFsdWU9IjIiPjx0YWJsZSBpZD0idGFibGFDdW1wbGltaWVudG8iPjx0aGVhZD48dHI+PHRkPlJJVDwvdGQ+PHRkPlJVVCAoLSZndDtSQ2VJKTwvdGQ+PHRkPk5vbWJyZTwvdGQ+PHRkPkRlcml2YWNpw7NuPC90ZD48dGQ+QWNjaW9uZXM8L3RkPjwvdHI+PC90aGVhZD48dGJvZHk+PHRyPjx0ZD5YLTEtMjAyNjwvdGQ+PHRkPjExMTExMTExLTE8L3RkPjx0ZD5QZXJzb25hIGZpY3RpY2lhPC90ZD48dGQ+UFJNIENlbnRybyBmaWN0aWNpbzwvdGQ+PHRkPgogICAgICAgIDxhIG9uY2xpY2s9IlNob3dIaXN0b3JpYSgnNDknLCdYLTEtMjAyNicsJzEwMCcpIj5DYXVzYTwvYT4KICAgICAgICA8YSBvbmNsaWNrPSJTaG93T2JzZXJ2YWNpb25lcygnMTAwJywnNDknLCcyMDInLCcxMicsJzMnLCcwJykiPk9iczwvYT4KICAgICAgICA8YSBvbmNsaWNrPSJTaG93SW5mb3JtZXNQcm9ncmFtYWRvcygnMTAwJywnMzAwJywnNDknLCc0MDAnLCdYLTEtMjAyNicsJzAxLzAxLzIwMjYnLCdQUk0gQ2VudHJvIGZpY3RpY2lvJywnUGVyc29uYSBmaWN0aWNpYScsJzEyJywnMycsJzIwMicsJzAnKSI+SW5mPC9hPgogICAgICAgIDwvdGQ+PC90cj48L3Rib2R5PjwvdGFibGU+PC9mb3JtPjxzY3JpcHQ+ZnVuY3Rpb24gU2hvd0V4Y2VsKCl7d2luZG93Lm9wZW4oImh0dHBzOi8vZmFtaWxpYS5wanVkLmNsL3NpdGZhL3JlcG9ydGVzL2RlbW9fZGNlbGlzdGN1bXAueGxzIik7fTwvc2NyaXB0PjwvaHRtbD4="
+     }
+    },
+    {
+     "comando": "diary_open",
+     "payload": {
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "202",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgYWN0aW9uPSIvU0lURkFXRUIvSW5mb3JtZXNEQWN0aW9uLmRvIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJ0aXBvX3BvcFVwIiB2YWx1ZT0iIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJDUlJfSWRDYXVzYSIgdmFsdWU9IjEwMCI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iQ09EX1RyaWJ1bmFsIiB2YWx1ZT0iNDkiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IlRJUF9Db25zdWx0YSIgdmFsdWU9IjIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IklEX0luZ3Jlc28iIHZhbHVlPSIyMDIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkNPRF9FdGFwYSIgdmFsdWU9IjMiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkZMR19NZWpvck5pbmV6IiB2YWx1ZT0iMCI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iUklUX0NhdXNhIiB2YWx1ZT0iWC0xLTIwMjYiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkdMU19Ob21icmUiIHZhbHVlPSJQZXJzb25hIGZpY3RpY2lhIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJHTFNfQ2VudHJvIiB2YWx1ZT0iUFJNIENlbnRybyBmaWN0aWNpbyI+PHRhYmxlIGlkPSJUYWJsYUluZm9ybWUiPjx0cj48dGQ+VGlwbyBPYnNlcnZhY2nDs248L3RkPjx0ZD5FdGFwYTwvdGQ+PHRkPkZlY2hhIENlbnRybzwvdGQ+PHRkPlVzdWFyaW8gQ2VudHJvPC90ZD48dGQ+T2JzZXJ2YWNpw7NuIENlbnRybzwvdGQ+PHRkPkZlY2hhIFRyaWJ1bmFsPC90ZD48dGQ+VXN1YXJpbyBUcmlidW5hbDwvdGQ+PHRkPk9ic2VydmFjacOzbiBUcmlidW5hbDwvdGQ+PHRkPkFjY2nDs248L3RkPjwvdHI+PHRyPjx0ZD5BbCBUcmlidW5hbDwvdGQ+PHRkPkN1bXBsaW1pZW50bzwvdGQ+PHRkPjEyLzA4LzIwMjYgMTA6MTM8L3RkPjx0ZD5Vc3VhcmlvIGZpY3RpY2lvPC90ZD48dGQ+VGV4dG8gcmVjb3J0YWRvPC90ZD48dGQ+LS0tPC90ZD48dGQ+LS0tPC90ZD48dGQ+LS0tPC90ZD48dGQ+PGltZyBpZD0iNDQiPjwvdGQ+PC90cj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIT0JTX0NlbnRyb180NCIgdmFsdWU9IlRleHRvIGNvbXBsZXRvClNlZ3VuZGEgbMOtbmVhIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIT0JTX1RyaWJ1bmFsXzQ0IiB2YWx1ZT0iLS0tIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIQ09EX0VzdGFkb180NCIgdmFsdWU9IjYiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkhGVU5fVHJpYnVuYWxfNDQiIHZhbHVlPSIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkhGTEdfRW52aW9fNDQiIHZhbHVlPSIxIj48L3RhYmxlPjwvZm9ybT48L2h0bWw+",
+      "digest": "43696e3074641f3a2df9acd9d4e547c0e8647410c96a4641f4673933e6c3b925",
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "202",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "startedAt": "2026-10-08T12:00:00Z"
+     }
+    },
+    {
+     "comando": "calendar_open",
+     "payload": {
+      "args": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "202",
+       "0"
+      ],
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGJvZHk+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgYWN0aW9uPSIvU0lURkFXRUIvSW5mb3JtZXNEQWN0aW9uLmRvIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJDT0RfVHJpYnVuYWwiIHZhbHVlPSI0OSI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iQ1JSX0lkQ2F1c2EiIHZhbHVlPSIxMDAiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IklEX0luZ3Jlc28iIHZhbHVlPSIyMDIiPjx0YWJsZT48dHI+PHRkPlBsYXpvIFJlbWlzacOzbjogMyBNZXNlczwvdGQ+PHRkPlBsYXpvIEludGVydmVuY2nDs246IDEyIE1lc2VzPC90ZD48L3RyPjwvdGFibGU+PHRhYmxlPjx0cj48dGg+RmVjaGEgUHJveWVjY2nDs248L3RoPjx0aD5GZWNoYSBJbmZvcm1lPC90aD48dGg+RXN0YWRvPC90aD48L3RyPjx0cj48dGQ+MTAvMTEvMjAyNjwvdGQ+PHRkPjwvdGQ+PHRkPkFOVUxBRE88L3RkPjwvdHI+PC90YWJsZT48L2Zvcm0+PC9ib2R5PjwvaHRtbD4=",
+      "digest": "979d3bbd481d0dca90288dddbb5e2a27dd4c869de0878baf420c0d68d460d591",
+      "args": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "202",
+       "0"
+      ],
+      "startedAt": "2026-10-19T12:00:00Z"
+     }
+    },
+    {
+     "comando": "unlock",
+     "payload": null,
+     "respuesta": {
+      "ok": true
+     }
+    }
+   ],
+   "manifiesto": {
+    "version": 1,
+    "tipo": "BITACORAS_LECTURA",
+    "estado": "COMPLETA",
+    "seleccion": {
+     "tribunals": [
+      "49"
+     ],
+     "modalities": [
+      "2"
+     ],
+     "tabs": [
+      "Cumplimiento"
+     ],
+     "report": "1",
+     "dates": null,
+     "keep_filters": false,
+     "screen": "seguimiento",
+     "state": "1",
+     "month": null,
+     "year": null
+    },
+    "fecha": "<FECHA>",
+    "consultas": [
+     {
+      "tribunal": "49",
+      "tab": "Cumplimiento",
+      "modality": "2",
+      "report": null,
+      "screen": "seguimiento",
+      "state": "1",
+      "month": null,
+      "year": null,
+      "start": null,
+      "end": null,
+      "tribunal_nombre": "Juzgado de Familia Tomé",
+      "modalidad_nombre": "Ambulatorio",
+      "estado": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2
+     }
+    ],
+    "registros": [
+     {
+      "rit": "X-1-2026",
+      "nombre": "Persona ficticia",
+      "programa": "PRM Centro ficticio",
+      "rut": "11111111-1",
+      "fila": 2,
+      "tribunal_codigo": "49",
+      "causa_id": "100",
+      "ingreso_id": "201",
+      "etapa": "3",
+      "antiguo": "0",
+      "tipo_popup": "12",
+      "persona_id": "300",
+      "centro_id": "400",
+      "calendario": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "201",
+       "0"
+      ],
+      "tribunal_nombre": "Juzgado de Familia Tomé",
+      "modalidad": "2",
+      "modalidad_nombre": "Ambulatorio",
+      "pestana": "Cumplimiento",
+      "pagina": 1,
+      "estado": "LEIDA",
+      "error": "",
+      "clave": "ee22f019e6a4910ef848fd39829f48673c162485f5c686d27c20fb187ece2845",
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "201",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "advertencias": [],
+      "archivo": "bitacora-ee22f019e6a4910ef848fd39-ff23bd1a408b9735.html",
+      "sha256": "ff23bd1a408b97357426209fbb5507a120c9357b77cb1b92dff9c2922de17354",
+      "capturada": "2026-10-08T12:00:00Z",
+      "entradas": 1,
+      "calendario_lectura": {
+       "estado": "LEIDA",
+       "args": [
+        "100",
+        "300",
+        "49",
+        "400",
+        "X-1-2026",
+        "01/01/2026",
+        "PRM Centro ficticio",
+        "Persona ficticia",
+        "12",
+        "3",
+        "201",
+        "0"
+       ],
+       "archivo": "calendario-ee22f019e6a4910ef848fd39-7d6672247c93d595.html",
+       "sha256": "7d6672247c93d5957f1c016a6550924728df42fc00682b45931bf9ab850d9abf",
+       "capturada": "2026-10-19T12:00:00Z",
+       "proyecciones": [
+        {
+         "fila": 1,
+         "fecha_proyeccion": "2026-11-10",
+         "fecha_informe": "",
+         "estado": "PENDIENTE"
+        }
+       ]
+      }
+     },
+     {
+      "rit": "X-1-2026",
+      "nombre": "Persona ficticia",
+      "programa": "PRM Centro ficticio",
+      "rut": "11111111-1",
+      "fila": 2,
+      "tribunal_codigo": "49",
+      "causa_id": "100",
+      "ingreso_id": "202",
+      "etapa": "3",
+      "antiguo": "0",
+      "tipo_popup": "12",
+      "persona_id": "300",
+      "centro_id": "400",
+      "calendario": [
+       "100",
+       "300",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "202",
+       "0"
+      ],
+      "tribunal_nombre": "Juzgado de Familia Tomé",
+      "modalidad": "2",
+      "modalidad_nombre": "Ambulatorio",
+      "pestana": "Cumplimiento",
+      "pagina": 2,
+      "estado": "LEIDA",
+      "error": "",
+      "clave": "9b4541373621ede0d117962f33b4dc06c9f5ea6f44056ace9048f52b775991a1",
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "202",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "advertencias": [],
+      "archivo": "bitacora-9b4541373621ede0d117962f-43696e3074641f3a.html",
+      "sha256": "43696e3074641f3a2df9acd9d4e547c0e8647410c96a4641f4673933e6c3b925",
+      "capturada": "2026-10-08T12:00:00Z",
+      "entradas": 1,
+      "calendario_lectura": {
+       "estado": "FALLIDA",
+       "args": [
+        "100",
+        "300",
+        "49",
+        "400",
+        "X-1-2026",
+        "01/01/2026",
+        "PRM Centro ficticio",
+        "Persona ficticia",
+        "12",
+        "3",
+        "202",
+        "0"
+       ],
+       "error": "Estado de calendario no reconocido."
+      }
+     }
+    ],
+    "origen": {
+     "version": "2.9.0",
+     "commit": "desarrollo"
+    },
+    "extension": {
+     "version": "2.9.0",
+     "protocolos": {
+      "bitacoras_lectura": 1,
+      "descarga_conjunta": 1,
+      "pdf_seleccion": 1,
+      "pdf_copia_fija": 1,
+      "calendario_lectura": 1,
+      "historia_lectura": 1,
+      "historico_lectura": 2
+     }
+    },
+    "anteriores_no_reenumeradas": []
+   },
+   "instantaneas": {
+    "bitacora-9b4541373621ede0d117962f-43696e3074641f3a.html": "43696e3074641f3a2df9acd9d4e547c0e8647410c96a4641f4673933e6c3b925",
+    "bitacora-ee22f019e6a4910ef848fd39-ff23bd1a408b9735.html": "ff23bd1a408b97357426209fbb5507a120c9357b77cb1b92dff9c2922de17354",
+    "calendario-ee22f019e6a4910ef848fd39-7d6672247c93d595.html": "7d6672247c93d5957f1c016a6550924728df42fc00682b45931bf9ab850d9abf"
+   },
+   "resultado": {
+    "estado": "COMPLETA",
+    "leidas": 2,
+    "fallidas": 0,
+    "consultas_fallidas": 0,
+    "detalle": "",
+    "faltantes_por_tribunal": {},
+    "calendarios_leidos": 1,
+    "calendarios_fallidos": 1,
+    "historicos": {}
+   },
+   "paquete": {
+    "archivos": {
+     "resumen.json": {
+      "estado": "VALIDADA",
+      "consultas_esperadas": 1,
+      "consultas": [
+       {
+        "estado": "SIN_RESULTADOS",
+        "seleccion": {
+         "screen": "seguimiento",
+         "tribunal": "49",
+         "modality": "2",
+         "tab": "Cumplimiento"
+        },
+        "verificacion": "verificacion 001.json"
+       }
+      ],
+      "plan": [
+       {
+        "screen": "seguimiento",
+        "tribunal": "49",
+        "modality": "2",
+        "tab": "Cumplimiento"
+       }
+      ],
+      "fecha_hora": "2026-10-08T13:00:00.123456-03:00"
+     },
+     "verificacion 001.json": {
+      "estado": "SIN_RESULTADOS",
+      "seleccion": {
+       "screen": "seguimiento",
+       "tribunal": "49",
+       "modality": "2",
+       "tab": "Cumplimiento"
+      },
+      "archivos": [],
+      "paginas_esperadas": 0
+     }
+    },
+    "cobertura": {
+     "consultas": "PARCIAL",
+     "registros": "VACIA_COMPROBADA",
+     "bitacoras": "PARCIAL",
+     "calendarios": "PARCIAL",
+     "historico_proteccion": "NO_SOLICITADA",
+     "incidencias": "COMPLETA"
+    },
+    "incidencias": [
+     "CALENDARIO_FALLIDO"
+    ]
+   }
+  },
+  {
+   "escenario": "historico_no_verificado",
+   "calendarios": false,
+   "historico": true,
+   "historicos": {
+    "historico.json": {
+     "version": 1,
+     "tipo": "HISTORICO_PROTECCION",
+     "capturas": {
+      "49|301": {
+       "tribunal": "49",
+       "tribunal_nombre": "Juzgado de Familia Tomé",
+       "person_id": "301",
+       "archivo": "historico-ef702b784f7a31639c33571e.html",
+       "sha256": "ef702b784f7a31639c33571e4b8487cf99b46e7a9524ccda1faab7fabfc67d19",
+       "origen": "AUTOMATICA",
+       "rut_hash": "rut-9383d2a24200af8902dd",
+       "leida": "2026-10-08T12:00:00Z",
+       "estado": "FALLIDA",
+       "error": "HISTORICO_NO_VERIFICADA",
+       "ownership": "INCIERTA",
+       "filas": [],
+       "advertencias": [
+        "La vista de Ingreso Histórico Protección no trae la tabla esperada; queda sin verificar."
+       ]
+      }
+     }
+    },
+    "estructura_historico.json": {
+     "tipo": "ESTRUCTURA_VENTANA_SITFA",
+     "version": 2,
+     "bytes": 116,
+     "titulo": "Historial Menores",
+     "marcos": [
+      {
+       "etiqueta": "iframe",
+       "ruta": "otra"
+      }
+     ],
+     "formularios": [],
+     "tablas": [],
+     "secciones": [],
+     "funciones": [],
+     "rutas_en_scripts": [],
+     "ajax": {
+      "jquery": 0,
+      "xhr": 0,
+      "fetch": 0
+     },
+     "contiene_identificadores_personales": false
+    },
+    "respaldos": {
+     "historico-ef702b784f7a31639c33571e.html": "ef702b784f7a31639c33571e4b8487cf99b46e7a9524ccda1faab7fabfc67d19"
+    }
+   },
+   "historia": false,
+   "historias": null,
+   "diagnostico": {
+    "tipo": "BITACORAS_DIAGNOSTICO_ANONIMO",
+    "version": 1,
+    "estado_lote": "COMPLETA",
+    "descargador_version": "2.9.0",
+    "descargador_commit": "NO_VERIFICADO",
+    "extension_version": "2.9.0",
+    "registros": 2,
+    "estados": {
+     "LEIDA": 2
+    },
+    "diagnosticos_sin_vinculo": {},
+    "errores_extension": {},
+    "consultas": [
+     {
+      "tribunal_codigo": "49",
+      "modalidad_codigo": "2",
+      "pestana": "Cumplimiento",
+      "estado_consulta": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2,
+      "estados": {
+       "LEIDA": 2
+      }
+     }
+    ],
+    "anteriores_no_reenumeradas": 0,
+    "contiene_identificadores_personales": false
+   },
+   "ahora": "2026-10-08T13:00:00.123456-03:00",
+   "carpeta": "Bitacoras 2026-10-08 13-00-00-123456",
+   "lote": {
+    "tribunales": [
+     "49"
+    ],
+    "modalidades": [
+     "2"
+    ],
+    "pestanas": [
+     "Cumplimiento"
+    ]
+   },
+   "guion": [
+    {
+     "comando": "capabilities",
+     "payload": null,
+     "respuesta": {
+      "tipo": "CSMP_RUS_CAPACIDADES",
+      "version": "2.9.0",
+      "commit": "desarrollo",
+      "protocolos": {
+       "bitacoras_lectura": 1,
+       "descarga_conjunta": 1,
+       "pdf_seleccion": 1,
+       "pdf_copia_fija": 1,
+       "calendario_lectura": 1,
+       "historia_lectura": 1,
+       "historico_lectura": 2
+      },
+      "escritura_rus": false,
+      "intercambio_local": {
+       "CSMP_CAPTURE": "1.0.0",
+       "CSMP_REQUEST": "1.0.0"
+      }
+     }
+    },
+    {
+     "comando": "lock",
+     "payload": null,
+     "respuesta": {
+      "ok": true
+     }
+    },
+    {
+     "comando": "prepare",
+     "payload": {
+      "selection": {
+       "tribunal": "49",
+       "tab": "Cumplimiento",
+       "modality": "2",
+       "report": null,
+       "screen": "seguimiento",
+       "state": "1",
+       "month": null,
+       "year": null,
+       "start": null,
+       "end": null
+      },
+      "dates": null,
+      "keep_filters": false
+     },
+     "respuesta": {
+      "pairs": [
+       [
+        "COD_Lengueta",
+        "tdCumplimiento"
+       ],
+       [
+        "COD_Tribunal_sel",
+        "49"
+       ],
+       [
+        "TIP_Consulta",
+        "2"
+       ],
+       [
+        "irAccion",
+        "Buscar medida"
+       ],
+       [
+        "NUM_PaginaCumplimiento",
+        "1"
+       ],
+       [
+        "NUM_TotalCumplimiento",
+        "2"
+       ],
+       [
+        "FLG_Consulta",
+        "0"
+       ],
+       [
+        "FEC_Inicio",
+        ""
+       ],
+       [
+        "FEC_Fin",
+        ""
+       ]
+      ]
+     }
+    },
+    {
+     "comando": "search",
+     "payload": {
+      "pairs": [
+       [
+        "COD_Lengueta",
+        "tdCumplimiento"
+       ],
+       [
+        "COD_Tribunal_sel",
+        "49"
+       ],
+       [
+        "TIP_Consulta",
+        "2"
+       ],
+       [
+        "irAccion",
+        "Buscar medida"
+       ],
+       [
+        "NUM_PaginaCumplimiento",
+        "1"
+       ],
+       [
+        "NUM_TotalCumplimiento",
+        "2"
+       ],
+       [
+        "FLG_Consulta",
+        "0"
+       ],
+       [
+        "FEC_Inicio",
+        ""
+       ],
+       [
+        "FEC_Fin",
+        ""
+       ]
+      ],
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgbWV0aG9kPSJwb3N0IiBhY3Rpb249Ii9TSVRGQVdFQi9JbmZvcm1lc0RBY3Rpb24uZG8iPjxpbnB1dCBuYW1lPSJDT0RfTGVuZ3VldGEiIHZhbHVlPSJ0ZEN1bXBsaW1pZW50byI+PGlucHV0IG5hbWU9IkNPRF9UcmlidW5hbF9zZWwiIHZhbHVlPSI0OSI+PGlucHV0IG5hbWU9IlRJUF9Db25zdWx0YSIgdmFsdWU9IjIiPjxpbnB1dCBuYW1lPSJOVU1fUGFnaW5hQ3VtcGxpbWllbnRvIiB2YWx1ZT0iMSI+PGlucHV0IG5hbWU9Ik5VTV9Ub3RhbEN1bXBsaW1pZW50byIgdmFsdWU9IjIiPjx0YWJsZSBpZD0idGFibGFDdW1wbGltaWVudG8iPjx0aGVhZD48dHI+PHRkPlJJVDwvdGQ+PHRkPlJVVCAoLSZndDtSQ2VJKTwvdGQ+PHRkPk5vbWJyZTwvdGQ+PHRkPkRlcml2YWNpw7NuPC90ZD48dGQ+QWNjaW9uZXM8L3RkPjwvdHI+PC90aGVhZD48dGJvZHk+PHRyPjx0ZD5YLTEtMjAyNjwvdGQ+PHRkPjEwMDAwMDAxLTA8L3RkPjx0ZD5QZXJzb25hIGZpY3RpY2lhPC90ZD48dGQ+UFJNIENlbnRybyBmaWN0aWNpbzwvdGQ+PHRkPgogICAgICAgIDxhIG9uY2xpY2s9IlNob3dIaXN0b3JpYSgnNDknLCdYLTEtMjAyNicsJzEwMCcpIj5DYXVzYTwvYT4KICAgICAgICA8YSBvbmNsaWNrPSJTaG93T2JzZXJ2YWNpb25lcygnMTAwJywnNDknLCcyMDEnLCcxMicsJzMnLCcwJykiPk9iczwvYT4KICAgICAgICA8YSBvbmNsaWNrPSJTaG93SW5mb3JtZXNQcm9ncmFtYWRvcygnMTAwJywnMzAxJywnNDknLCc0MDAnLCdYLTEtMjAyNicsJzAxLzAxLzIwMjYnLCdQUk0gQ2VudHJvIGZpY3RpY2lvJywnUGVyc29uYSBmaWN0aWNpYScsJzEyJywnMycsJzIwMScsJzAnKSI+SW5mPC9hPgogICAgICAgIDwvdGQ+PC90cj48L3Rib2R5PjwvdGFibGU+PC9mb3JtPjxzY3JpcHQ+ZnVuY3Rpb24gU2hvd0V4Y2VsKCl7d2luZG93Lm9wZW4oImh0dHBzOi8vZmFtaWxpYS5wanVkLmNsL3NpdGZhL3JlcG9ydGVzL2RlbW9fZGNlbGlzdGN1bXAueGxzIik7fTwvc2NyaXB0PjwvaHRtbD4="
+     }
+    },
+    {
+     "comando": "diary_open",
+     "payload": {
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "201",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgYWN0aW9uPSIvU0lURkFXRUIvSW5mb3JtZXNEQWN0aW9uLmRvIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJ0aXBvX3BvcFVwIiB2YWx1ZT0iIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJDUlJfSWRDYXVzYSIgdmFsdWU9IjEwMCI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iQ09EX1RyaWJ1bmFsIiB2YWx1ZT0iNDkiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IlRJUF9Db25zdWx0YSIgdmFsdWU9IjIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IklEX0luZ3Jlc28iIHZhbHVlPSIyMDEiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkNPRF9FdGFwYSIgdmFsdWU9IjMiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkZMR19NZWpvck5pbmV6IiB2YWx1ZT0iMCI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iUklUX0NhdXNhIiB2YWx1ZT0iWC0xLTIwMjYiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkdMU19Ob21icmUiIHZhbHVlPSJQZXJzb25hIGZpY3RpY2lhIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJHTFNfQ2VudHJvIiB2YWx1ZT0iUFJNIENlbnRybyBmaWN0aWNpbyI+PHRhYmxlIGlkPSJUYWJsYUluZm9ybWUiPjx0cj48dGQ+VGlwbyBPYnNlcnZhY2nDs248L3RkPjx0ZD5FdGFwYTwvdGQ+PHRkPkZlY2hhIENlbnRybzwvdGQ+PHRkPlVzdWFyaW8gQ2VudHJvPC90ZD48dGQ+T2JzZXJ2YWNpw7NuIENlbnRybzwvdGQ+PHRkPkZlY2hhIFRyaWJ1bmFsPC90ZD48dGQ+VXN1YXJpbyBUcmlidW5hbDwvdGQ+PHRkPk9ic2VydmFjacOzbiBUcmlidW5hbDwvdGQ+PHRkPkFjY2nDs248L3RkPjwvdHI+PHRyPjx0ZD5BbCBUcmlidW5hbDwvdGQ+PHRkPkN1bXBsaW1pZW50bzwvdGQ+PHRkPjEyLzA4LzIwMjYgMTA6MTM8L3RkPjx0ZD5Vc3VhcmlvIGZpY3RpY2lvPC90ZD48dGQ+VGV4dG8gcmVjb3J0YWRvPC90ZD48dGQ+LS0tPC90ZD48dGQ+LS0tPC90ZD48dGQ+LS0tPC90ZD48dGQ+PGltZyBpZD0iNDQiPjwvdGQ+PC90cj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIT0JTX0NlbnRyb180NCIgdmFsdWU9IlRleHRvIGNvbXBsZXRvClNlZ3VuZGEgbMOtbmVhIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIT0JTX1RyaWJ1bmFsXzQ0IiB2YWx1ZT0iLS0tIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIQ09EX0VzdGFkb180NCIgdmFsdWU9IjYiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkhGVU5fVHJpYnVuYWxfNDQiIHZhbHVlPSIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkhGTEdfRW52aW9fNDQiIHZhbHVlPSIxIj48L3RhYmxlPjwvZm9ybT48L2h0bWw+",
+      "digest": "ff23bd1a408b97357426209fbb5507a120c9357b77cb1b92dff9c2922de17354",
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "201",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "startedAt": "2026-10-08T12:00:00Z"
+     }
+    },
+    {
+     "comando": "historico_open",
+     "payload": {
+      "params": {
+       "tribunal": "49",
+       "rut": "100000010"
+      },
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGhlYWQ+PHRpdGxlPkhpc3RvcmlhbCBNZW5vcmVzPC90aXRsZT48L2hlYWQ+PGJvZHk+PGlmcmFtZSBzcmM9Ii9TSVRGQVdFQi94LmpzcD9SVVQ9MSI+PC9pZnJhbWU+PC9ib2R5PjwvaHRtbD4=",
+      "digest": "ef702b784f7a31639c33571e4b8487cf99b46e7a9524ccda1faab7fabfc67d19",
+      "params": {
+       "tribunal": "49",
+       "rut": "100000010"
+      },
+      "startedAt": "2026-10-08T12:00:00Z"
+     }
+    },
+    {
+     "comando": "search",
+     "payload": {
+      "pairs": [
+       [
+        "COD_Lengueta",
+        "tdCumplimiento"
+       ],
+       [
+        "COD_Tribunal_sel",
+        "49"
+       ],
+       [
+        "TIP_Consulta",
+        "2"
+       ],
+       [
+        "irAccion",
+        "Buscar medida"
+       ],
+       [
+        "NUM_PaginaCumplimiento",
+        "2"
+       ],
+       [
+        "NUM_TotalCumplimiento",
+        "2"
+       ],
+       [
+        "FLG_Consulta",
+        "0"
+       ],
+       [
+        "FEC_Inicio",
+        ""
+       ],
+       [
+        "FEC_Fin",
+        ""
+       ]
+      ],
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgbWV0aG9kPSJwb3N0IiBhY3Rpb249Ii9TSVRGQVdFQi9JbmZvcm1lc0RBY3Rpb24uZG8iPjxpbnB1dCBuYW1lPSJDT0RfTGVuZ3VldGEiIHZhbHVlPSJ0ZEN1bXBsaW1pZW50byI+PGlucHV0IG5hbWU9IkNPRF9UcmlidW5hbF9zZWwiIHZhbHVlPSI0OSI+PGlucHV0IG5hbWU9IlRJUF9Db25zdWx0YSIgdmFsdWU9IjIiPjxpbnB1dCBuYW1lPSJOVU1fUGFnaW5hQ3VtcGxpbWllbnRvIiB2YWx1ZT0iMiI+PGlucHV0IG5hbWU9Ik5VTV9Ub3RhbEN1bXBsaW1pZW50byIgdmFsdWU9IjIiPjx0YWJsZSBpZD0idGFibGFDdW1wbGltaWVudG8iPjx0aGVhZD48dHI+PHRkPlJJVDwvdGQ+PHRkPlJVVCAoLSZndDtSQ2VJKTwvdGQ+PHRkPk5vbWJyZTwvdGQ+PHRkPkRlcml2YWNpw7NuPC90ZD48dGQ+QWNjaW9uZXM8L3RkPjwvdHI+PC90aGVhZD48dGJvZHk+PHRyPjx0ZD5YLTEtMjAyNjwvdGQ+PHRkPjEwMDAwMDAxLTA8L3RkPjx0ZD5QZXJzb25hIGZpY3RpY2lhPC90ZD48dGQ+UFJNIENlbnRybyBmaWN0aWNpbzwvdGQ+PHRkPgogICAgICAgIDxhIG9uY2xpY2s9IlNob3dIaXN0b3JpYSgnNDknLCdYLTEtMjAyNicsJzEwMCcpIj5DYXVzYTwvYT4KICAgICAgICA8YSBvbmNsaWNrPSJTaG93T2JzZXJ2YWNpb25lcygnMTAwJywnNDknLCcyMDInLCcxMicsJzMnLCcwJykiPk9iczwvYT4KICAgICAgICA8YSBvbmNsaWNrPSJTaG93SW5mb3JtZXNQcm9ncmFtYWRvcygnMTAwJywnMzAxJywnNDknLCc0MDAnLCdYLTEtMjAyNicsJzAxLzAxLzIwMjYnLCdQUk0gQ2VudHJvIGZpY3RpY2lvJywnUGVyc29uYSBmaWN0aWNpYScsJzEyJywnMycsJzIwMicsJzAnKSI+SW5mPC9hPgogICAgICAgIDwvdGQ+PC90cj48L3Rib2R5PjwvdGFibGU+PC9mb3JtPjxzY3JpcHQ+ZnVuY3Rpb24gU2hvd0V4Y2VsKCl7d2luZG93Lm9wZW4oImh0dHBzOi8vZmFtaWxpYS5wanVkLmNsL3NpdGZhL3JlcG9ydGVzL2RlbW9fZGNlbGlzdGN1bXAueGxzIik7fTwvc2NyaXB0PjwvaHRtbD4="
+     }
+    },
+    {
+     "comando": "diary_open",
+     "payload": {
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "202",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "timeout": 60000
+     },
+     "respuesta": {
+      "status": 200,
+      "type": "text/html",
+      "body": "PGh0bWw+PGZvcm0gbmFtZT0iSW5mb3JtZXNQcGFsRm9ybSIgYWN0aW9uPSIvU0lURkFXRUIvSW5mb3JtZXNEQWN0aW9uLmRvIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJ0aXBvX3BvcFVwIiB2YWx1ZT0iIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJDUlJfSWRDYXVzYSIgdmFsdWU9IjEwMCI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iQ09EX1RyaWJ1bmFsIiB2YWx1ZT0iNDkiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IlRJUF9Db25zdWx0YSIgdmFsdWU9IjIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IklEX0luZ3Jlc28iIHZhbHVlPSIyMDIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkNPRF9FdGFwYSIgdmFsdWU9IjMiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkZMR19NZWpvck5pbmV6IiB2YWx1ZT0iMCI+PGlucHV0IHR5cGU9ImhpZGRlbiIgbmFtZT0iUklUX0NhdXNhIiB2YWx1ZT0iWC0xLTIwMjYiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkdMU19Ob21icmUiIHZhbHVlPSJQZXJzb25hIGZpY3RpY2lhIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJHTFNfQ2VudHJvIiB2YWx1ZT0iUFJNIENlbnRybyBmaWN0aWNpbyI+PHRhYmxlIGlkPSJUYWJsYUluZm9ybWUiPjx0cj48dGQ+VGlwbyBPYnNlcnZhY2nDs248L3RkPjx0ZD5FdGFwYTwvdGQ+PHRkPkZlY2hhIENlbnRybzwvdGQ+PHRkPlVzdWFyaW8gQ2VudHJvPC90ZD48dGQ+T2JzZXJ2YWNpw7NuIENlbnRybzwvdGQ+PHRkPkZlY2hhIFRyaWJ1bmFsPC90ZD48dGQ+VXN1YXJpbyBUcmlidW5hbDwvdGQ+PHRkPk9ic2VydmFjacOzbiBUcmlidW5hbDwvdGQ+PHRkPkFjY2nDs248L3RkPjwvdHI+PHRyPjx0ZD5BbCBUcmlidW5hbDwvdGQ+PHRkPkN1bXBsaW1pZW50bzwvdGQ+PHRkPjEyLzA4LzIwMjYgMTA6MTM8L3RkPjx0ZD5Vc3VhcmlvIGZpY3RpY2lvPC90ZD48dGQ+VGV4dG8gcmVjb3J0YWRvPC90ZD48dGQ+LS0tPC90ZD48dGQ+LS0tPC90ZD48dGQ+LS0tPC90ZD48dGQ+PGltZyBpZD0iNDQiPjwvdGQ+PC90cj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIT0JTX0NlbnRyb180NCIgdmFsdWU9IlRleHRvIGNvbXBsZXRvClNlZ3VuZGEgbMOtbmVhIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIT0JTX1RyaWJ1bmFsXzQ0IiB2YWx1ZT0iLS0tIj48aW5wdXQgdHlwZT0iaGlkZGVuIiBuYW1lPSJIQ09EX0VzdGFkb180NCIgdmFsdWU9IjYiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkhGVU5fVHJpYnVuYWxfNDQiIHZhbHVlPSIiPjxpbnB1dCB0eXBlPSJoaWRkZW4iIG5hbWU9IkhGTEdfRW52aW9fNDQiIHZhbHVlPSIxIj48L3RhYmxlPjwvZm9ybT48L2h0bWw+",
+      "digest": "43696e3074641f3a2df9acd9d4e547c0e8647410c96a4641f4673933e6c3b925",
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "202",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "startedAt": "2026-10-08T12:00:00Z"
+     }
+    },
+    {
+     "comando": "unlock",
+     "payload": null,
+     "respuesta": {
+      "ok": true
+     }
+    }
+   ],
+   "manifiesto": {
+    "version": 1,
+    "tipo": "BITACORAS_LECTURA",
+    "estado": "COMPLETA",
+    "seleccion": {
+     "tribunals": [
+      "49"
+     ],
+     "modalities": [
+      "2"
+     ],
+     "tabs": [
+      "Cumplimiento"
+     ],
+     "report": "1",
+     "dates": null,
+     "keep_filters": false,
+     "screen": "seguimiento",
+     "state": "1",
+     "month": null,
+     "year": null
+    },
+    "fecha": "<FECHA>",
+    "consultas": [
+     {
+      "tribunal": "49",
+      "tab": "Cumplimiento",
+      "modality": "2",
+      "report": null,
+      "screen": "seguimiento",
+      "state": "1",
+      "month": null,
+      "year": null,
+      "start": null,
+      "end": null,
+      "tribunal_nombre": "Juzgado de Familia Tomé",
+      "modalidad_nombre": "Ambulatorio",
+      "estado": "ENUMERADA",
+      "paginas": 2,
+      "registros": 2
+     }
+    ],
+    "registros": [
+     {
+      "rit": "X-1-2026",
+      "nombre": "Persona ficticia",
+      "programa": "PRM Centro ficticio",
+      "rut": "10000001-0",
+      "fila": 2,
+      "tribunal_codigo": "49",
+      "causa_id": "100",
+      "ingreso_id": "201",
+      "etapa": "3",
+      "antiguo": "0",
+      "tipo_popup": "12",
+      "persona_id": "301",
+      "centro_id": "400",
+      "calendario": [
+       "100",
+       "301",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "201",
+       "0"
+      ],
+      "tribunal_nombre": "Juzgado de Familia Tomé",
+      "modalidad": "2",
+      "modalidad_nombre": "Ambulatorio",
+      "pestana": "Cumplimiento",
+      "pagina": 1,
+      "estado": "LEIDA",
+      "error": "",
+      "clave": "df14fc883563c7fdefae83cdae93aa52281137cbfa9bcd0f9cdfdba33310fefd",
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "201",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "advertencias": [],
+      "archivo": "bitacora-df14fc883563c7fdefae83cd-ff23bd1a408b9735.html",
+      "sha256": "ff23bd1a408b97357426209fbb5507a120c9357b77cb1b92dff9c2922de17354",
+      "capturada": "2026-10-08T12:00:00Z",
+      "entradas": 1,
+      "historico_lectura": {
+       "estado": "FALLIDA",
+       "person_id": "301",
+       "ownership": "INCIERTA",
+       "error": "HISTORICO_NO_VERIFICADA",
+       "programas": 0
+      }
+     },
+     {
+      "rit": "X-1-2026",
+      "nombre": "Persona ficticia",
+      "programa": "PRM Centro ficticio",
+      "rut": "10000001-0",
+      "fila": 2,
+      "tribunal_codigo": "49",
+      "causa_id": "100",
+      "ingreso_id": "202",
+      "etapa": "3",
+      "antiguo": "0",
+      "tipo_popup": "12",
+      "persona_id": "301",
+      "centro_id": "400",
+      "calendario": [
+       "100",
+       "301",
+       "49",
+       "400",
+       "X-1-2026",
+       "01/01/2026",
+       "PRM Centro ficticio",
+       "Persona ficticia",
+       "12",
+       "3",
+       "202",
+       "0"
+      ],
+      "tribunal_nombre": "Juzgado de Familia Tomé",
+      "modalidad": "2",
+      "modalidad_nombre": "Ambulatorio",
+      "pestana": "Cumplimiento",
+      "pagina": 2,
+      "estado": "LEIDA",
+      "error": "",
+      "clave": "69ba4e5c0488b783058dd2b6942010b53db4f5ab024c1109b67e11a5a7fcbab2",
+      "params": {
+       "tipo_popUp": "12",
+       "CRR_IdCausa": "100",
+       "COD_Tribunal": "49",
+       "TIP_Consulta": "2",
+       "ID_Ingreso": "202",
+       "COD_Etapa": "3",
+       "FLG_MejorNinez": "0"
+      },
+      "advertencias": [],
+      "archivo": "bitacora-69ba4e5c0488b783058dd2b6-43696e3074641f3a.html",
+      "sha256": "43696e3074641f3a2df9acd9d4e547c0e8647410c96a4641f4673933e6c3b925",
+      "capturada": "2026-10-08T12:00:00Z",
+      "entradas": 1,
+      "historico_lectura": {
+       "estado": "FALLIDA",
+       "person_id": "301",
+       "ownership": "INCIERTA",
+       "error": "HISTORICO_NO_VERIFICADA",
+       "programas": 0
+      }
+     }
+    ],
+    "origen": {
+     "version": "2.9.0",
+     "commit": "desarrollo"
+    },
+    "extension": {
+     "version": "2.9.0",
+     "protocolos": {
+      "bitacoras_lectura": 1,
+      "descarga_conjunta": 1,
+      "pdf_seleccion": 1,
+      "pdf_copia_fija": 1,
+      "calendario_lectura": 1,
+      "historia_lectura": 1,
+      "historico_lectura": 2
+     }
+    },
+    "anteriores_no_reenumeradas": []
+   },
+   "instantaneas": {
+    "bitacora-69ba4e5c0488b783058dd2b6-43696e3074641f3a.html": "43696e3074641f3a2df9acd9d4e547c0e8647410c96a4641f4673933e6c3b925",
+    "bitacora-df14fc883563c7fdefae83cd-ff23bd1a408b9735.html": "ff23bd1a408b97357426209fbb5507a120c9357b77cb1b92dff9c2922de17354"
+   },
+   "resultado": {
+    "estado": "COMPLETA",
+    "leidas": 2,
+    "fallidas": 0,
+    "consultas_fallidas": 0,
+    "detalle": "",
+    "faltantes_por_tribunal": {},
+    "calendarios_leidos": 0,
+    "calendarios_fallidos": 0,
+    "historicos": {
+     "FALLIDA": 2
+    }
+   },
+   "paquete": {
+    "archivos": {
+     "resumen.json": {
+      "estado": "VALIDADA",
+      "consultas_esperadas": 1,
+      "consultas": [
+       {
+        "estado": "SIN_RESULTADOS",
+        "seleccion": {
+         "screen": "seguimiento",
+         "tribunal": "49",
+         "modality": "2",
+         "tab": "Cumplimiento"
+        },
+        "verificacion": "verificacion 001.json"
+       }
+      ],
+      "plan": [
+       {
+        "screen": "seguimiento",
+        "tribunal": "49",
+        "modality": "2",
+        "tab": "Cumplimiento"
+       }
+      ],
+      "fecha_hora": "2026-10-08T13:00:00.123456-03:00"
+     },
+     "verificacion 001.json": {
+      "estado": "SIN_RESULTADOS",
+      "seleccion": {
+       "screen": "seguimiento",
+       "tribunal": "49",
+       "modality": "2",
+       "tab": "Cumplimiento"
+      },
+      "archivos": [],
+      "paginas_esperadas": 0
+     }
+    },
+    "cobertura": {
+     "consultas": "PARCIAL",
+     "registros": "VACIA_COMPROBADA",
+     "bitacoras": "PARCIAL",
+     "calendarios": "NO_SOLICITADA",
+     "historico_proteccion": "FALLIDA",
+     "incidencias": "COMPLETA"
+    },
+    "incidencias": [
+     "HISTORICO_NO_VERIFICADA"
+    ]
+   }
   }
- ]
+ ],
+ "error_mensual_incompleto": "El lote es incompleto. Selecciona explícitamente una exportación parcial."
 }

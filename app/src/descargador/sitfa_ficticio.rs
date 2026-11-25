@@ -829,6 +829,42 @@ mod tests {
     }
 
     #[test]
+    fn calendario_mensual_incompleto_no_crea_paquete() {
+        let destino = Carpeta::nueva();
+        let pantalla = "calendario_informes";
+        let sitfa = SitfaFicticio::nuevo(pantalla, &[("901|10", 1), ("901|11", 1)]);
+        let catalogo = catalogo(pantalla);
+        let seleccion = SeleccionLote {
+            tribunales: vec!["901".into()],
+            meses: vec!["10".into(), "11".into()],
+            anio: "2026".into(),
+            ..Default::default()
+        };
+        let plan = catalogo.planificar(Edicion::Integral, &seleccion).unwrap();
+        let cancelar = AtomicBool::new(false);
+        let error = ejecutar(&sitfa, &catalogo, Edicion::Integral, &plan, &destino.0, &Opciones::default(), &cancelar,
+            &mut |e| {
+                if matches!(e, Evento::ConsultaLista { .. }) {
+                    cancelar.store(true, std::sync::atomic::Ordering::Relaxed);
+                }
+            }).unwrap_err();
+        assert!(error.contains("cancelado"), "{error}");
+        let carpeta = std::fs::read_dir(&destino.0).unwrap().next().unwrap().unwrap().path();
+        let resumen = json(&carpeta, "resumen.json");
+        assert_eq!(resumen["estado"], "INCOMPLETA");
+        assert_eq!(resumen["consultas"][0]["estado"], "VALIDADA");
+        assert_eq!(resumen["consultas_completadas"], 1);
+        assert_eq!(resumen["consultas_esperadas"], 2);
+        let ruta = destino.0.join("mensual.zip");
+        let error = super::super::paquete::exportar(&[carpeta], &ruta).unwrap_err();
+        let oraculo: Value = serde_json::from_str(include_str!("../../tests/datos/bitacoras.json")).unwrap();
+        assert_eq!(error, format!("CAL_MENSUAL_INCOMPLETO · Falta completar el lote del calendario de informes. {}",
+            oraculo["error_mensual_incompleto"].as_str().unwrap()));
+        assert!(!ruta.exists());
+        assert!(!ruta.with_extension("diagnostico_cobertura.json").exists());
+    }
+
+    #[test]
     fn rechaza_un_xls_que_no_coincide_con_la_pagina() {
         struct Alterado(SitfaFicticio);
         impl Conexion for Alterado {
