@@ -4,6 +4,73 @@ use super::paquete::{self, Lote};
 use serde_json::Value;
 use std::collections::HashSet;
 use std::path::{Component, Path, PathBuf};
+use super::preferencias::Preferencias;
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Referencia {
+    pub carpeta: PathBuf,
+    pub tipo: String,
+    pub estado: String,
+    pub conteo: String,
+}
+
+fn resolver_referencia(ruta: &Path) -> PathBuf {
+    let absoluta = if ruta.is_absolute() { ruta.to_path_buf() } else { std::env::current_dir().unwrap_or_default().join(ruta) };
+    resolver_tolerante(&absoluta).unwrap_or(absoluta)
+}
+
+pub fn recordar(preferencias: &mut Preferencias, carpeta: &Path) -> Result<PathBuf, String> {
+    let carpeta = std::fs::canonicalize(carpeta).map_err(|e| e.to_string())?;
+    let clase = tipo(&carpeta)?;
+    let (historial, ruta) = if clase == Tipo::Bitacoras {
+        (&mut preferencias.historial_bitacoras, carpeta.join("bitacoras.json"))
+    } else {
+        (&mut preferencias.historial_lotes, carpeta.clone())
+    };
+    let ruta = ruta.to_string_lossy().into_owned();
+    if !historial.contains(&ruta) { historial.push(ruta); }
+    Ok(carpeta)
+}
+
+pub fn referencias_bitacoras(preferencias: &Preferencias, excluidas: &[PathBuf]) -> Vec<PathBuf> {
+    let excluidas: HashSet<_> = excluidas.iter().map(|p| resolver_referencia(p)).collect();
+    let mut vistas = HashSet::new();
+    preferencias.historial_bitacoras.iter().map(|p| resolver_referencia(Path::new(p)))
+        .filter(|p| !excluidas.contains(p) && vistas.insert(p.clone())).collect()
+}
+
+pub fn descubrir(base: &Path, preferencias: &Preferencias, ultimo: Option<&Path>) -> Vec<Referencia> {
+    let lotes: HashSet<_> = preferencias.historial_lotes.iter().map(|p| resolver_referencia(Path::new(p))).collect();
+    let diarios: HashSet<_> = referencias_bitacoras(preferencias, &[]).iter().filter_map(|p| p.parent().map(Path::to_path_buf)).collect();
+    let mut carpetas = lotes.clone();
+    carpetas.extend(diarios.iter().cloned());
+    if base.is_dir() {
+        carpetas.insert(resolver_referencia(base));
+        if let Ok(entradas) = std::fs::read_dir(base) {
+            carpetas.extend(entradas.flatten().map(|e| e.path()).filter(|p| p.is_dir()).map(|p| resolver_referencia(&p)));
+        }
+    }
+    if let Some(ruta) = ultimo { carpetas.insert(resolver_referencia(ruta)); }
+    let mut carpetas: Vec<_> = carpetas.into_iter().collect();
+    carpetas.sort_by(|a, b| b.cmp(a));
+    carpetas.into_iter().filter_map(|carpeta| {
+        let control = tipo(&carpeta).ok().and_then(|t| {
+            let archivo = match t { Tipo::Bitacoras => "bitacoras.json", Tipo::Conjunto => "flujo.json", Tipo::Descarga => "resumen.json" };
+            let ruta = carpeta.join(archivo);
+            if std::fs::metadata(&ruta).ok()?.len() > 4 * 1024 * 1024 { return None; }
+            let data: Value = serde_json::from_slice(&std::fs::read(ruta).ok()?).ok()?;
+            if !data.is_object() { return None; }
+            let conteo = if t == Tipo::Bitacoras { data["registros"].as_array().map_or(0, Vec::len).to_string() }
+                else { data.get("consultas_completadas").map(Value::to_string).unwrap_or_else(|| data["fases"].as_object().map_or(0, |v| v.len()).to_string()) };
+            Some(Referencia { carpeta: carpeta.clone(), tipo: t.etiqueta().into(), estado: data["estado"].as_str().unwrap_or("DESCONOCIDO").into(), conteo })
+        });
+        control.or_else(|| {
+            let (tipo, estado) = if diarios.contains(&carpeta) { ("Bitácoras", if carpeta.join("bitacoras.json").is_file() { "ERROR_CONTROL" } else { "NO_DISPONIBLE" }) }
+                else if lotes.contains(&carpeta) { ("Lote", "NO_DISPONIBLE") } else { return None };
+            Some(Referencia { carpeta, tipo: tipo.into(), estado: estado.into(), conteo: "—".into() })
+        })
+    }).collect()
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Tipo {
@@ -76,7 +143,7 @@ fn resolver_tolerante(ruta: &Path) -> Result<PathBuf, String> {
     Ok(resuelta)
 }
 
-fn ruta_fase(raiz: &Path, nombre: &Value) -> Result<PathBuf, String> {
+pub fn ruta_fase(raiz: &Path, nombre: &Value) -> Result<PathBuf, String> {
     let Some(nombre) = nombre.as_str().filter(|s| !s.is_empty()) else {
         return Err(CARPETA_FASE_AUSENTE.into());
     };
@@ -174,6 +241,78 @@ mod pruebas {
     use super::*;
     use base64::Engine;
     use serde_json::{json, Map};
+
+    fn comparar_historial(caso: &Value) -> Result<(), String> {
+        let nombre = caso["caso"].as_str().unwrap();
+        let base = std::env::temp_dir().join(format!("flow-historial-{}-{}-{nombre}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+        std::fs::create_dir_all(&base).map_err(|e| e.to_string())?;
+        let base = std::fs::canonicalize(base).map_err(|e| e.to_string())?;
+        let resultado = (|| {
+            if caso.get("lotes").is_none() { return Ok(()); }
+            for (ruta, contenido) in caso["archivos"].as_object().unwrap() {
+                let destino = base.join(ruta);
+                std::fs::create_dir_all(destino.parent().unwrap()).map_err(|e| e.to_string())?;
+                std::fs::write(destino, contenido.as_str().unwrap()).map_err(|e| e.to_string())?;
+            }
+            let p = Preferencias {
+                historial_lotes: caso["lotes"].as_array().unwrap().iter().map(|v| base.join(v.as_str().unwrap()).to_string_lossy().into_owned()).collect(),
+                historial_bitacoras: caso["bitacoras"].as_array().unwrap().iter().map(|v| base.join(v.as_str().unwrap()).to_string_lossy().into_owned()).collect(),
+                ..Default::default()
+            };
+            let ruta = |p: &Path| p.strip_prefix(&base).unwrap().to_string_lossy().replace('\\', "/");
+            let ultimo = caso["ultimo"].as_str().map(|s| base.join(s));
+            let obtenido: Vec<_> = descubrir(&base.join(caso["base"].as_str().unwrap()), &p, ultimo.as_deref()).iter().map(|r| json!([ruta(&r.carpeta), r.tipo, r.estado, r.conteo])).collect();
+            if json!(obtenido) != caso["resultado"] { return Err(format!("{nombre}: {obtenido:?} != {}", caso["resultado"])); }
+            let excluidas: Vec<_> = caso["excluidas"].as_array().unwrap().iter().map(|v| base.join(v.as_str().unwrap())).collect();
+            let refs: Vec<_> = referencias_bitacoras(&p, &excluidas).iter().map(|p| ruta(p)).collect();
+            if json!(refs) != caso["referencias"] { return Err(format!("{nombre}: referencias {refs:?}")); }
+            Ok(())
+        })();
+        let _ = std::fs::remove_dir_all(base);
+        resultado
+    }
+
+    #[test]
+    fn historial_local_igual_a_python() {
+        let oracle: Value = serde_json::from_str(include_str!("../../tests/datos/historial_local.json")).unwrap();
+        let casos = oracle["casos"].as_array().unwrap();
+        assert_eq!(casos.len(), 14);
+        for caso in casos { comparar_historial(caso).unwrap(); }
+        let base = std::env::temp_dir().join(format!("flow-recordar-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&base);
+        let mut p = Preferencias::default();
+        for (carpeta, control) in [("lote", "resumen.json"), ("conjunto", "flujo.json"), ("diario", "bitacoras.json")] {
+            let ruta = base.join(carpeta);
+            std::fs::create_dir_all(&ruta).unwrap();
+            std::fs::write(ruta.join(control), "{}").unwrap();
+            recordar(&mut p, &ruta).unwrap();
+            recordar(&mut p, &ruta).unwrap();
+        }
+        assert_eq!((p.historial_lotes.len(), p.historial_bitacoras.len()), (2, 1));
+        assert!(p.historial_bitacoras[0].ends_with("bitacoras.json"));
+        let diario = base.join("diario").join("bitacoras.json");
+        for contenido in ["[]".to_owned(), " ".repeat(4 * 1024 * 1024 + 1)] {
+            std::fs::write(&diario, contenido).unwrap();
+            let referencias = descubrir(&base.join("sin-base"), &p, None);
+            assert_eq!(referencias.iter().find(|r| r.tipo == "Bitácoras").unwrap().estado, "ERROR_CONTROL");
+        }
+        let _ = std::fs::remove_dir_all(base);
+    }
+
+    #[test]
+    fn oraculo_de_historial_local_detecta_alteraciones() {
+        let oracle: Value = serde_json::from_str(include_str!("../../tests/datos/historial_local.json")).unwrap();
+        let casos = oracle["casos"].as_array().unwrap();
+        let original = casos.iter().find(|c| c["caso"] == "orden").unwrap();
+        for columna in [2, 3] {
+            let mut alterado = original.clone();
+            alterado["resultado"][0][columna] = json!("alterado");
+            assert!(comparar_historial(&alterado).is_err());
+        }
+        let mut alterado = original.clone();
+        alterado["resultado"].as_array_mut().unwrap().reverse();
+        assert!(comparar_historial(&alterado).is_err());
+    }
 
     fn reconstruir(destino: &Path, archivos: &Value) {
         for (ruta, contenido) in archivos.as_object().unwrap() {

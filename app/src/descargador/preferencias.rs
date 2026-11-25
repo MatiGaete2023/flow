@@ -55,6 +55,8 @@ pub struct Preferencias {
     pub meses_atras: u32,
     /// `paquete_consolidado`: el paquete lleva el XLSX «Para CSMP» (D6).
     pub paquete_consolidado: bool,
+    pub historial_lotes: Vec<String>,
+    pub historial_bitacoras: Vec<String>,
 }
 
 impl Default for Preferencias {
@@ -71,6 +73,8 @@ impl Default for Preferencias {
             historia_en_paquete: true,
             meses_atras: 4,
             paquete_consolidado: true,
+            historial_lotes: Vec::new(),
+            historial_bitacoras: Vec::new(),
         }
     }
 }

@@ -22,7 +22,7 @@ PATRON = re.compile(
 CLASIFICACION = {
     'config.rs': (3, 'perfil', 'config::atomic_write: config.json y sesiones en data_dir() (APPDATA/FlowRust); temporal + rename'),
     'trabajo.rs': (1, 'perfil', 'limpieza de sesiones antiguas propias en data_dir()/sesiones (RETENCION_DIAS, SESIONES_ANTERIORES)'),
-    'descargador/preferencias.rs': (3, 'perfil', 'descargador_preferencias.json en LOCALAPPDATA/FlowRust; temporal + rename'),
+    'descargador/preferencias.rs': (3, 'perfil', 'descargador_preferencias.json en LOCALAPPDATA/FlowRust, incluye historial local; temporal + rename'),
     'descargador/extension.rs': (3, 'perfil', 'archivos de la extensión Lite/Integral en LOCALAPPDATA/FlowRust/extension-<edición> (carpeta fija, actualizada en el lugar); solo escribe lo que cambió y quita los archivos que ya no son de la extensión'),
     'actualizacion.rs': (19, 'perfil', 'E-I2/E-I3: copia atómica desde carpeta adicional (OneDrive) a LOCALAPPDATA/FlowRust/actualizaciones con verificación SHA-256; reemplazo del propio flow_rust.exe por el de la carpeta fija con su botón, guardando sesión; deja flow_rust.exe.anterior y restaura si falla; la actualización aplicada pasa a aplicadas/'),
     'descargador/bitacoras.rs': (8, 'usuario', 'lote de bitácoras (E-Q4): subcarpeta nueva «Bitacoras <fecha>» en el destino elegido (create_dir falla si existe); bitacoras.json y diagnostico_calendarios.json (anónimo, extensión de Rust, mismo patrón temporal+rename) y diagnostico_bitacoras.json (anónimo) por temporal + rename; instantáneas con guardar_exclusivo (nunca sobrescribe)'),
