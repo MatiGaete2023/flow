@@ -245,7 +245,12 @@ fn consultas_validadas(carpeta: Option<&PathBuf>) -> bool {
 }
 
 fn carpeta_del_estado(raiz: &Path, estado: &Value, fase: &str) -> Option<PathBuf> {
-    estado["carpetas"][fase].as_str().map(|c| raiz.join(c))
+    estado["carpetas"][fase].as_str().map(|c| raiz.join(relativa(c)))
+}
+
+/// El `proceso.json` puede venir de Windows (`respaldo\\...`) y leerse en Linux: los separadores se normalizan.
+fn relativa(texto: &str) -> PathBuf {
+    PathBuf::from(texto.replace('\\', "/"))
 }
 
 /// `_proceso`: valida el control de un paquete antes de retomarlo.
@@ -261,10 +266,10 @@ fn leer_control(raiz: &Path) -> Result<Control, String> {
         return Err(YA_COMPLETO.into());
     }
     for carpeta in estado["carpetas"].as_object().map(|c| c.values()).into_iter().flatten() {
-        let Some(relativa) = carpeta.as_str() else {
+        let Some(relativa_texto) = carpeta.as_str() else {
             return Err(FUERA_DE_RESPALDO.into());
         };
-        let destino = raiz.join(relativa);
+        let destino = raiz.join(relativa(relativa_texto));
         let dentro = destino
             .canonicalize()
             .map(|d| d.starts_with(respaldo.canonicalize().unwrap_or_else(|_| respaldo.clone())))
