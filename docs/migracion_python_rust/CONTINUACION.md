@@ -8,9 +8,9 @@ Claude es el **orquestador y coordinador**: decide, integra y valida. Tres agent
 
 | Agente · ejecutor | Rama | Encargo | Archivos propios |
 |---|---|---|---|
-| A · Antigravity | `estudio/paridad-python-rust-20261119` | E-A10, E-P1, E-P2 `HECHO`; E-I1 `ENTREGADO` (revisado); E-I3 actualizaciones desde OneDrive | E-I3: `actualizacion.rs`, campo en `config.rs`, sección «Actualizaciones» de `ui.rs`, `installer/**`, `app/tests/instalador.rs` |
-| B · DeepSeek | `estudio/agente-b-hoja-20261125` | E-R3, E-Q9 `HECHO`; E-Q10 paquete por hoja | E-Q10: `flujo_paquete.rs`, su acción en `descargador_ui.rs`, `generar_flujo_paquete.py`, `flujo_paquete.json` |
-| C · ChatGPT Terra (antes Luna) | `estudio/agente-c-historial-20261125` | E-Q8 `HECHO`; E-S2 integrado; E-S3 historial y descarga conjunta | E-S3: `archivo_local.rs`, historial en `preferencias.rs`, `descargador_resultados_ui.rs`, `generar_historial_local.py`, `historial_local.json` |
+| A · Antigravity | `estudio/paridad-python-rust-20261119` | E-A11 `NURUS_DECISIONES` completo y E-T6 borrador de prueba en Outlook | `sincronizar.rs`, `trabajo.rs` (estado), `generar_sync.py`, `sync.json`, `outlook.rs`, sección Outlook de `ui.rs` |
+| B · DeepSeek | `estudio/agente-b-conjunta-20261125` | E-Q11 descarga conjunta CSMP y «Retomar pendientes» | `flujo_csmp.rs` (nuevo), su acción en `descargador_ui.rs`, el botón «Retomar pendientes» en `descargador_resultados_ui.rs`, `generar_flujo_csmp.py`, `flujo_csmp.json` |
+| C · ChatGPT Terra (antes Luna) | — | Sin encargo (E-S3 `HECHO`) | — |
 
 Los prompts completos están en [informes/PROMPTS_AGENTES_20261125.md](informes/PROMPTS_AGENTES_20261125.md). Cada agente entrega un informe en `informes/AGENTE_<letra>_<fecha>.md` y no edita `ESTADO`, `PLAN`, `REGISTRO`, `AGENTS`, `CONTINUACION` ni el workflow.
 

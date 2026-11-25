@@ -439,3 +439,79 @@ INFORME: docs/migracion_python_rust/informes/AGENTE_C_20261125c.md, en un commit
 
 ESTILO: español chileno, primera línea = la respuesta, sin cortesías, código completo.
 ```
+
+## Prompt del Agente B · E-Q11 descarga conjunta CSMP (DeepSeek)
+
+```
+Eres el Agente B · DeepSeek. Trabajas en MatiGaete2023/flow, en la rama nueva estudio/agente-b-conjunta-20261125. Otro agente activo: A · Antigravity (rama principal: sincronizar.rs, trabajo.rs, outlook.rs, ui.rs Ajustes). C no tiene encargo. No toques lo de A.
+
+PASO 0 · CHECKOUT. En tu clon (C:\Users\matia\OneDrive\Documentos\deepseek-harness\default-workspace\flow): git fetch origin; git checkout -b estudio/agente-b-conjunta-20261125 origin/estudio/paridad-python-rust-20261119; comprueba git merge-base --is-ancestor 0257981 HEAD (debe terminar en 0). Si falla: BLOQUEADO con el error literal. Primera respuesta: ruta, rama y HEAD.
+
+EVALUACIÓN DE TU ENTREGA ANTERIOR (E-Q10, HECHO, run 45708628960): bien. Firma completa, CI verde con la regeneración corrida y oráculo idéntico en Linux. Sigue así.
+
+Lee solo AGENTS.md, docs/migracion_python_rust/ESTADO.md, PLAN.md (E-Q9, E-Q10, E-S2, E-S3 y E-Q11) y CONTINUACION.md.
+
+ENCARGO · E-Q11 · Descarga conjunta CSMP y «Retomar pendientes» (F17, F22).
+Referencia Python (no la modifiques): descargador/flujo_csmp.py (FLOW_DONE, months, plan, source_folder, merge_phase, assemble y la clase que ejecuta run con resume), descargador/descargador.py (start_joint, resume_joint, botón «Descarga conjunta CSMP» y su habilitación), descargador/ventana_flujo.py (JointWindow y su botón «Retomar pendientes») y las pruebas descargador/test_flujo_csmp.py y test_recuperacion_flujo.py.
+1. Nuevo app/src/descargador/flujo_csmp.rs con el equivalente de run: plan (principal de Espera o Cumplimiento más calendario de informes del mes actual y el siguiente, mismas validaciones y textos: «El flujo conjunto admite Espera o Cumplimiento.», rango de días 60–730, «Selecciona tribunales y modalidades.»), carpeta del conjunto con flujo.json (version_contrato, seleccion, estado, fases) escrito en cada cambio, recuperación por fase (reutiliza lo validado y solo repite lo pendiente, como merge_phase), y assemble: el libro para CSMP con la hoja de estado por tribunal y «archivo» y «sha256» en flujo.json; estado final PREPARADO_SIN_CONSULTA_FIRMAS. Usa lote::ejecutar y las funciones existentes de resultados/paquete para el libro; si una no te alcanza, agrega una función nueva en flujo_csmp.rs y no cambies firmas.
+2. Declara el módulo con una línea en app/src/descargador.rs.
+3. Vista: en app/src/descargador_ui.rs, la acción «Descarga conjunta CSMP» habilitada como en Python (Seguimiento, tribunales elegidos), con avance, pausa y cancelación; y «Retomar flujo…» para elegir una carpeta de conjunto. En app/src/descargador_resultados_ui.rs, SOLO el botón «Retomar pendientes» de la vista conjunta de E-S3 (llama a tu función de retomar con esa carpeta). No cambies nada más de ese archivo.
+4. Oráculo nuevo app/qa/generar_flujo_csmp.py y app/tests/datos/flujo_csmp.json: al menos 8 casos con el SITFA ficticio (Espera completo, Cumplimiento completo, modo no admitido, sin tribunales, días fuera de rango, cortado tras la principal y retomado, una fase de informes fallida y retomada, flujo.json dañado). Graba fases y estados de flujo.json, carpetas relativas con «/», mensajes exactos y el libro por valores (no por bytes). Determinista e idéntico en Linux y Windows: importa app/qa/generar_lote.py, LF, Path(tmp).resolve(), as_posix(), sorted() al recorrer carpetas, historial sin hora y, si Python depende del sistema, emula Windows y dilo.
+5. Pruebas Rust: flujo_csmp_igual_a_python (número de casos y fases) y oraculo_de_flujo_csmp_detecta_alteraciones (altera una fase, un mensaje y una celda del libro); una prueba de vista de la acción y una de «Retomar pendientes».
+6. Única excepción de workflow: agrega 'flujo_csmp' al arreglo de oráculos del paso «Regenerar los oráculos con la referencia Python» y nada más.
+7. Agrega la línea de flujo_csmp.rs en tools/inventario_escrituras.py.
+
+Fuera de alcance: la consulta de resoluciones firmadas (Python la retiró del flujo) y la fase de Carga (Python la sacó del flujo entregable).
+
+Archivos tuyos: app/src/descargador/flujo_csmp.rs (nuevo), una línea en app/src/descargador.rs, la acción y «Retomar flujo…» en app/src/descargador_ui.rs, el botón «Retomar pendientes» en app/src/descargador_resultados_ui.rs, app/qa/generar_flujo_csmp.py, app/tests/datos/flujo_csmp.json, la línea del workflow y tu línea del inventario.
+Prohibido: paquete.rs, lote.rs, bitacoras.rs, lecturas.rs, archivo_local.rs, preferencias.rs, flujo_paquete.rs (úsalo sin cambiar firmas), sincronizar.rs, trabajo.rs, outlook.rs, ui.rs, productos.rs, Cargo.toml y Cargo.lock, Python de descargador/, src/ y tests/, y ESTADO, PLAN, REGISTRO, AGENTS y CONTINUACION.
+
+REGLAS: datos sintéticos; sin escritura en RUS/SATURNO; sin --force, sin merge a main ni a la rama principal, sin releases. verificar_referencia_python.py y verificar_solo_lectura.py en PASA.
+
+CRITERIO DE PARADA: si Python es ambiguo o parece tener un error, reprodúcelo, fíjalo en el oráculo y repórtalo. Archivo prohibido o firma protegida: BLOQUEADO. Si la CI falla dos veces por la misma causa sin entenderla, detente y reporta el log.
+
+PRUEBAS: tools/probar_app.sh rapido flujo_csmp mientras trabajas; tools/probar_app.sh todo una vez antes de publicar; clippy de la biblioteca; inventario_escrituras.py y verificar_solo_lectura.py; dos corridas del generador con bytes idénticos.
+
+PUBLICACIÓN: commits terminados con «Agente: B · DeepSeek»; git push -u origin estudio/agente-b-conjunta-20261125. CI: linux y validar en success y «Regenerar los oráculos» CORRIDO con flujo_csmp, terminando en «Oráculos regenerados sin diferencias.». Cita solo runs que veas en GitHub.
+
+FIRMA (obligatoria) e INFORME: docs/migracion_python_rust/informes/AGENTE_B_20261125d.md, en un commit aparte y el último, con la estructura de siempre (firma, resumen, conteos literales con commit, runs reales con conclusión, hallazgos clasificados, texto propuesto sin «HECHO», riesgos). Estado: ENTREGADO solo con CI verde; si no, BLOQUEADO.
+
+ESTILO: español chileno, primera línea = la respuesta, sin cortesías, código completo.
+```
+
+## Prompt del Agente A · E-A11 NURUS_DECISIONES completo y E-T6 borrador de prueba en Outlook (Antigravity)
+
+```
+Eres el Agente A · Antigravity. Trabajas en MatiGaete2023/flow, directamente en la rama estudio/paridad-python-rust-20261119, clon C:\Users\matia\Downloads\nuevo. Otro agente activo: B · DeepSeek (rama estudio/agente-b-conjunta-20261125: flujo_csmp.rs, descargador_ui.rs, un botón en descargador_resultados_ui.rs). No toques lo suyo.
+
+PASO 0 · CHECKOUT. git fetch origin; git checkout estudio/paridad-python-rust-20261119; git merge --ff-only origin/estudio/paridad-python-rust-20261119; comprueba git merge-base --is-ancestor 0257981 HEAD (debe terminar en 0). Si hay cambios locales que no son tuyos, detente. Si ya hay commits de otra sesión con E-A11 o E-T6, detente y avisa. Primera respuesta: ruta, rama y HEAD.
+
+EVALUACIÓN DE TU ENTREGA ANTERIOR (E-I3, HECHO, run 45708628960): bien. No tocaste el workflow, firmaste cada commit y la primera CI roja la corregiste sin ocultarla. Observación: con un .exe nuevo en la carpeta adicional, abrir Flow tarda unos 2 s por la comprobación de sincronización; si en este encargo tocas ui.rs, deja esa búsqueda inicial en un hilo aparte sin cambiar su resultado.
+
+Lee solo AGENTS.md, docs/migracion_python_rust/ESTADO.md (F10 y F13), PLAN.md (E-A8, E-A10, E-A11 y E-T6) y CONTINUACION.md.
+
+ENCARGO 1 · E-A11 · NURUS_DECISIONES completo al actualizar desde Excel (F10).
+Referencia Python (no la modifiques): src/nurus/personal/sync.py (el bloque que lee NURUS_DECISIONES, compara technical_data, baseline_data y local_data y llama a restore) y src/nurus/personal/record_edits.py (encode, decode, restore).
+1. En app/src/sincronizar.rs (y trabajo.rs solo si hace falta para guardar el estado), igualar a Python: decodificar la celda NURUS_DECISIONES; si es válida y distinta de la línea base, comparar el estado local completo de la fila (todas las decisiones que codifica encode: gestión de correo, anulaciones, resolución, exclusión y propuesta, las que existan en Rust) con la base y la remota; si los tres difieren, conflicto en «NURUS_DECISIONES» que se resuelve en pantalla; si no, restaurar el estado remoto completo. Si cambió RES respecto de la base, la resolución de la fila pasa a «review». Hoy Rust solo combina la gestión de correo y las anulaciones campo a campo: eso se reemplaza por la conducta de Python.
+2. Oráculo: amplía app/qa/generar_sync.py y app/tests/datos/sync.json (ya están en el workflow) con al menos 6 casos: cambio remoto de la resolución; cambio local y remoto distinto (conflicto) resuelto con cada valor; mismas gestiones con distinto resto del estado (ahora debe chocar como en Python); RES cambiado en Excel (resolución a «review»); celda inválida (mensaje de Python); sesión antigua sin línea base. Determinista e idéntico en Linux y Windows (generar_lote importado, LF, sorted, Path(tmp).resolve()).
+3. Pruebas: amplía actualizar_desde_excel_igual_a_python con los nuevos conteos y oraculo_de_sync_detecta_alteraciones con una alteración del estado combinado.
+
+ENCARGO 2 · E-T6 · Borrador de prueba en Outlook (F13).
+4. En app/src/outlook.rs y en la sección de Outlook de Ajustes en app/src/ui.rs: botón «Guardar un borrador de prueba en Outlook». Crea un borrador sintético (asunto «Flow Rust · borrador de prueba», cuerpo fijo sin datos de causas, destinatario la cuenta elegida o vacío, CC fijo ucc_concepcion@pjud.cl), solo con Save(); nunca .Send(. Muestra el resultado (guardado, incierto o error con su mensaje) y explica que se revisa en la carpeta Borradores y se borra a mano.
+5. Pruebas: el script generado contiene Save(), el CC fijo y el asunto, y no contiene .Send(; el resultado «incierto» se muestra igual que en los borradores normales. verificar_solo_lectura.py debe seguir en PASA.
+
+Archivos tuyos: app/src/sincronizar.rs, app/src/trabajo.rs (solo lo necesario para el estado), app/qa/generar_sync.py, app/tests/datos/sync.json, app/src/outlook.rs, la sección de Outlook (y, si la tocas, la búsqueda inicial de actualizaciones) en app/src/ui.rs y tus líneas del inventario.
+Prohibido: el workflow, descargador/**, descargador_ui.rs, descargador_resultados_ui.rs, productos.rs (salvo que la prueba de Outlook lo requiera; dilo en el informe), installer/**, Cargo.toml y Cargo.lock, Python de src/, descargador/ y tests/, y ESTADO, PLAN, REGISTRO, AGENTS y CONTINUACION.
+
+REGLAS: datos sintéticos; sin escritura en RUS/SATURNO; Outlook solo borradores con CC fijo; sin --force, sin merge a main, sin releases.
+
+CRITERIO DE PARADA: si Python es ambiguo o parece tener un error, reprodúcelo, fíjalo en el oráculo y repórtalo. Si algo exige un archivo prohibido o una dependencia: BLOQUEADO. Si la CI falla dos veces por la misma causa sin entenderla, detente y reporta el log.
+
+PRUEBAS: tools/probar_app.sh rapido sync y outlook mientras trabajas; tools/probar_app.sh todo una vez antes de publicar; clippy de la biblioteca; verificar_solo_lectura.py, verificar_textos_umbrales.py e inventario_escrituras.py; dos corridas del generador con bytes idénticos.
+
+PUBLICACIÓN: commits en estudio/paridad-python-rust-20261119 terminados con «Agente: A · Antigravity»; antes de cada push, git fetch y git merge --no-edit (nunca rebase ni --force). CI: linux y validar en success y «Regenerar los oráculos» CORRIDO con sync. Cita solo runs que veas en GitHub con su conclusión leída en ese momento.
+
+FIRMA (obligatoria) e INFORME: docs/migracion_python_rust/informes/AGENTE_A_EA11_20261125.md, en un commit aparte y el último, con la estructura de siempre. Estado: ENTREGADO o BLOQUEADO.
+
+ESTILO: español chileno, primera línea = la respuesta, sin cortesías, código completo.
+```
