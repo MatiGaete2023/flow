@@ -178,6 +178,8 @@ jobs:
           PYTHONUTF8: '1'
         run: |
           $lista = '${{ steps.cambios.outputs.lista }}'
+          # Se recorren todos los oráculos y se falla al final con la lista completa de los que no coinciden.
+          $fallas = @()
           foreach ($o in @('a78', 'lecturas', 'vinculos', 'bitacoras', 'lote', 'paquete', 'excel', 'resultados', 'sync', 'conciliacion', 'personalizacion', 'estadisticas', 'correos', 'ordenes', 'meta4', 'catastro', 'sync_paquete', 'anulaciones')) {
             if ($lista -ne 'todos' -and (($lista -split ',') -notcontains $o)) { continue }
             # a78 lleva ZIP en base64 que cambia byte a byte entre ejecutores: solo se contrasta cuando se pide por nombre.
@@ -187,14 +189,17 @@ jobs:
               python app/qa/generar_vinculos.py
               Copy-Item app/tests/datos/vinculos.json $salida
               git diff --exit-code -- app/tests/datos/vinculos.json
-              if ($LASTEXITCODE -ne 0) { Write-Error 'app/tests/datos/vinculos.json no coincide con generar_vinculos.py'; exit 1 }
+              if ($LASTEXITCODE -ne 0) { Write-Warning 'app/tests/datos/vinculos.json no coincide con generar_vinculos.py'; $fallas += 'vinculos' }
               continue
             }
             python "app/qa/generar_$o.py" $salida
-            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            if ($LASTEXITCODE -ne 0) { Write-Warning "generar_$o.py terminó con error"; $fallas += $o; continue }
             python -c "import sys; a=open(sys.argv[1],'rb').read().replace(b'\r\n',b'\n').split(b'\n'); b=open(sys.argv[2],'rb').read().replace(b'\r\n',b'\n').split(b'\n'); d=[i for i in range(max(len(a),len(b))) if (a[i] if i<len(a) else None)!=(b[i] if i<len(b) else None)]; [print('línea',i+1,'| generado:',(a[i] if i<len(a) else b'-')[:160],'| versionado:',(b[i] if i<len(b) else b'-')[:160]) for i in d[:5]]; sys.exit(1 if d else 0)" $salida "app/tests/datos/$o.json"
-            if ($LASTEXITCODE -ne 0) { Write-Error "app/tests/datos/$o.json no coincide con generar_$o.py"; exit 1 }
+            if ($LASTEXITCODE -ne 0) { Write-Warning "app/tests/datos/$o.json no coincide con generar_$o.py"; $fallas += $o }
           }
+          if ($fallas.Count -gt 0) { Write-Error ("Oráculos que no coinciden: " + ($fallas -join ', ')); exit 1 }
+          "Oráculos regenerados sin diferencias."
+          exit 0
       - name: Probar todas las pruebas con variables
         shell: pwsh
         run: |

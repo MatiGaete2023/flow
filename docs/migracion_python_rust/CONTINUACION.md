@@ -63,7 +63,7 @@ Fuentes: [precios de OpenAI](https://developers.openai.com/api/docs/pricing), [r
 ## Lecciones operativas
 
 - Los oráculos se regeneran en Windows y se comparan con lo versionado: deben ser **deterministas y sin depender del sistema**. Escribir bytes (no `write_text`), fijar fechas (`date.today()` fijo en `generar_correos.py`), `ZipInfo.create_system = 3` y fecha de modificación fija en los `.xlsx` de openpyxl.
-- Tras publicar, confirmar que el paso «Regenerar los oráculos» **corrió** (no «skipped») además de ver el run en verde. Un commit que solo toca código Rust lo omite: si el encargo trae oráculos nuevos y su run de regeneración no corrió, lanzar la CI a mano (`workflow_dispatch` regenera todos). Pasó con E-A10.
+- Tras publicar, confirmar que el paso «Regenerar los oráculos» **corrió** (no «skipped») además de ver el run en verde. Un commit que solo toca código Rust lo omite: si el encargo trae oráculos nuevos y su run de regeneración no corrió, lanzar la CI a mano (`workflow_dispatch` regenera todos). Pasó con E-A10. La primera corrida «todos» destapó que `generar_lote.py` volcaba JSON con CRLF en Windows: todo archivo de texto escrito por Python que se pase a base64 se normaliza a LF.
 - Un agente sin checkout válido no arranca: cada prompt empieza con el «paso 0» (clon con `origin` MatiGaete2023/flow, rama y commit verificados, o BLOQUEADO).
 - Un `canonicalize()` distinto del nombre elegido (nombre corto `RUNNER~1`, enlaces) rompía la verificación de bitácoras solo en Windows: normalizar las rutas de entrada.
 - No hacer trabajo pesado por cuadro en la interfaz (la huella del ejecutable en Ajustes congeló las pruebas).

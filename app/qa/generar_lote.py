@@ -123,8 +123,10 @@ def escenario(nombre, lote):
         BatchRunner(puente, CATALOG, lambda *a: None, threading.Event(), pause=0).run(lote, Path(tmp))
         carpeta = next(p for p in Path(tmp).iterdir() if p.is_dir())
         jsons = {p.name: sin_horas(json.loads(p.read_text(encoding='utf-8'))) for p in sorted(carpeta.glob('*.json'))}
-        archivos = {p.name: base64.b64encode(p.read_bytes()).decode() for p in sorted(carpeta.iterdir())
-                    if p.is_file() and p.suffix in ('.json', '.xls', '.pdf')}
+        # Los JSON del lote los escribe Python en modo texto: en Windows salen con CRLF. Se fijan en LF para que el
+        # oráculo se regenere con los mismos bytes en cualquier sistema (los XLS y PDF se conservan tal cual).
+        archivos = {p.name: base64.b64encode(p.read_bytes().replace(b'\r\n', b'\n') if p.suffix == '.json' else p.read_bytes()).decode()
+                    for p in sorted(carpeta.iterdir()) if p.is_file() and p.suffix in ('.json', '.xls', '.pdf')}
         huellas = {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(carpeta.iterdir())
                    if p.is_file() and p.suffix in ('.xls', '.pdf')}
     return {
