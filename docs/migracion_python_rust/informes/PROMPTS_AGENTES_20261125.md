@@ -85,7 +85,20 @@ Pensado para GPT-5.6 Luna: pasos numerados, archivos cerrados y criterio de para
 ```
 Eres el Agente C. Trabajas en MatiGaete2023/flow. Crea la rama estudio/agente-c-conjuntos-20261125 desde el último commit de origin/estudio/paridad-python-rust-20261119 (ya trae integrado tu encargo anterior, E-Q8). Otros agentes: A (Asistente, Word, instalador) y B (Meta 4). No toques lo suyo.
 
-Lee solo AGENTS.md (incluida «Trabajo en paralelo»), docs/migracion_python_rust/ESTADO.md, PLAN.md (entrada E-S2) y CONTINUACION.md.
+PASO 0 · CHECKOUT (antes de leer o escribir nada).
+1. Busca un clon válido: una carpeta donde `git remote get-url origin` termine en MatiGaete2023/flow(.git). Una carpeta con otro origen, en `master` o sin `.git` NO sirve, aunque se llame «flow».
+2. Si no existe: git clone https://github.com/MatiGaete2023/flow.git flow-rust-c (en una carpeta nueva y vacía, fuera de carpetas de archivos pegados).
+3. En el clon: git fetch origin estudio/paridad-python-rust-20261119 y luego git checkout -b estudio/agente-c-conjuntos-20261125 origin/estudio/paridad-python-rust-20261119 (si la rama ya existe en origin, git checkout -B estudio/agente-c-conjuntos-20261125 origin/estudio/agente-c-conjuntos-20261125). Comprueba git merge-base --is-ancestor 622a56b HEAD (debe terminar en 0).
+4. Si el clon o el fetch fallan, responde BLOQUEADO con el error literal y esta línea para el usuario: «Abre el agente en la carpeta de tu clon local de MatiGaete2023/flow, o conecta el repositorio al entorno del agente, y vuelve a pegar este prompt».
+5. Informa en tu primera respuesta la ruta del clon, la rama y el commit de HEAD.
+
+RECORDATORIO: no edites ESTADO, PLAN, REGISTRO, AGENTS, CONTINUACION ni el workflow (salvo la línea del punto 6). En el informe pon ENTREGADO, no HECHO. «Regenerar los oráculos» debe haber CORRIDO (no skipped) y nombrar archivo_local en su log; el paso ahora termina con «Oráculos regenerados sin diferencias.» o con «Oráculos que no coinciden: …».
+
+Lee solo AGENTS.md (incluida «Trabajo en paralelo»), docs/migracion_python_rust/ESTADO.md, PLAN.md (entradas E-S2 y E-Q9) y CONTINUACION.md.
+
+AMPLIACIÓN (prueba del usuario, 25-nov): «Descargar lote» trajo solo las hojas de RUS, «Leer bitácoras del lote» el resto en otra carpeta, y no hubo forma de juntarlos en un paquete. Este encargo resuelve juntar lo ya descargado; descargar todo en una sola acción es E-Q9 (no lo hagas aquí). Agrega a las tareas:
+2b. En Resultados, «Crear paquete» trabaja sobre una colección de carpetas elegidas (lotes y conjuntos, con «Quitar») más una lista de controles bitacoras.json de otras carpetas («Añadir bitácoras…», selector de archivos bitacoras.json, con «Quitar»), como ventana_resultados.py (choose, add_diaries, package_folders, package_diaries, export). Arma el paquete con cargar_fuentes y paquete::exportar_con con Opciones { bitacoras, emparejar: true, .. } (export_capture_with_note(lots, diaries=…, match_diaries=True)). Muestra la nota de BITACORAS_REUTILIZADAS y de bitácoras sin coincidencia que ya produce el exportador. Una referencia ausente se muestra como NO_DISPONIBLE y bloquea crear el paquete hasta quitarla, como review_missing_diaries.
+4b. En el oráculo, al menos 3 casos más: un lote de listados con un bitacoras.json de otra carpeta (todas coinciden), con uno que coincide en parte y con uno que no coincide; compara las tablas del paquete y las incidencias con Python.
 
 ENCARGO · E-S2 · Resultados abre conjuntos de Flow Python (F22).
 Hechos: el usuario abrió en «Resultados del lote» una carpeta antigua de Flow Python y Rust respondió «falta resumen.json». Python acepta tres tipos de carpeta (descargador/archivo_local.py, kind): bitacoras.json → «Bitácoras», flujo.json → «Conjunto», resumen.json → «Descarga», en ese orden de prioridad; sin ninguno: «La carpeta debe conservar resumen.json, flujo.json o bitacoras.json y sus originales.». Python resuelve un conjunto a las carpetas de sus fases (archivo_local.load_sources + flujo_csmp.source_folder y FLOW_DONE). Rust (descargador/paquete.rs, cargar_lote) hoy solo reconoce el tipo y pide elegir una subcarpeta.
@@ -107,7 +120,7 @@ Tareas, en orden:
 
 Fuera de alcance (infórmalo como pendiente, no lo implementes): historial de referencias en preferencias (remember, discover), «Ver descarga conjunta» (show_joint) y la recuperación de un flujo a medias (resume_joint).
 
-Archivos tuyos: app/src/descargador/archivo_local.rs (nuevo), una línea en app/src/descargador.rs, app/src/descargador_resultados_ui.rs, el texto citado de paquete.rs, app/src/descargador/resultados.rs solo si hace falta para exportar por fase, app/qa/generar_archivo_local.py, app/tests/datos/archivo_local.json, la línea del workflow del punto 6 y tu línea de tools/inventario_escrituras.py.
+Archivos tuyos: app/src/descargador/archivo_local.rs (nuevo), una línea en app/src/descargador.rs, app/src/descargador_resultados_ui.rs (incluida la colección de carpetas y bitácoras), el texto citado de paquete.rs, app/src/descargador/resultados.rs solo si hace falta para exportar por fase, app/qa/generar_archivo_local.py, app/tests/datos/archivo_local.json, la línea del workflow del punto 6 y tu línea de tools/inventario_escrituras.py.
 Prohibido: ui.rs, trabajo.rs, sincronizar.rs, conciliar.rs, productos.rs, producto_excel.rs, copia_excel.rs, descargador/meta4.rs, meta4_ui.rs, cualquier archivo Python de descargador/, src/ o tests/, y lo del bloque común.
 
 CRITERIO DE PARADA: si una conducta de Python es ambigua o parece un error, no la «corrijas» en Rust: reprodúcela, fíjala en el oráculo y repórtala como hallazgo. Si algo exige cambiar una firma protegida, otro archivo prohibido o una dependencia, detente y repórtalo como BLOQUEADO. Si la CI falla dos veces por la misma causa sin que la entiendas, detente y reporta el log.
