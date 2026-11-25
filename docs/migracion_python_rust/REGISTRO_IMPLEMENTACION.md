@@ -301,3 +301,8 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Revisión autorizada por escrito de 8 controles JSON del usuario (estructura y conteos; nada copiado al repositorio): listados `VALIDADA` (2 consultas), 84/84 bitácoras y calendarios `LEIDA`, 66/66 causas de historia; el paquete de la misma sesión trae todo (302 consultas).
 - Causa de la impresión de falla: aviso «cobertura incompleta» disparado solo por `BITACORA_ADVERTENCIA (3)`. `paquete::diagnostico_cobertura` ahora distingue advertencias de lectura de motivos que degradan; prueba `advertencias_de_lectura_no_se_anuncian_como_cobertura_incompleta` con la forma del lote (81 + 3) y el caso con una bitácora fallida.
 - Pendiente: E-S2 ampliado (juntar carpetas y bitácoras separadas en Resultados) y E-Q9 («Consultar y crear paquete» en una acción, `flujo_paquete.py`).
+
+## 2026-11-25 · Orquestador · Integra al Agente B (E-R3)
+
+E-R3 · Meta 4: contraste ampliado (`92ab9c1`, CI Windows verde, run 45656558813). `generar_meta4.py` pasa a 33 casos (55 filas, 7 errores): Espera, FAE y Residencia en un lote, Laja, Mulchén, dos lotes, filtro de varios tribunales, bordes de la ventana y etapas distintas el mismo día; agrega regeneración (3 escenarios, 11 libros) y plantilla propia (5 plantillas) con 2 hojas auxiliares declaradas más. `plantilla.rs` acepta plantillas sin anchos de columna. Rust conserva en Registros las filas fuera de FAE/Residencia y, al regenerar, la fecha de corte en vez del día 1 del mes.
+- Integración: merge `3a2da44`; `probar_app.sh todo` (82 y 97 pruebas, 0 fallos), clippy `--lib` y verificadores en verde. Falta la CI de Windows sobre la rama principal.
