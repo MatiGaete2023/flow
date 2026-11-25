@@ -320,3 +320,9 @@ E-R3 · Meta 4: contraste ampliado (`92ab9c1`, CI Windows verde, run 45656558813
 ## 2026-11-25 · Orquestador · Cierres con todos los oráculos regenerados en Windows
 
 - Run 45665516823 (`db33e78`, `workflow_dispatch`, «todos»): `linux` y `validar` verdes; regeneración sin diferencias. Cierra como `HECHO`: E-A10, E-P1, la corrección del aviso de cobertura (`980c6ed`), E-R3 sobre la rama principal y el determinismo de los generadores.
+
+## 2026-11-25 · E-P2 · Word por tribunal con imágenes, numeración y relaciones (agente A · Antigravity)
+
+- Cambió: `productos.rs` (`DocumentoCombinado`: `rId` renumerados, medios deduplicados por SHA-256, encabezados y pies con sus relaciones, estilos usados, `numbering.xml` con el reinicio de `docxcompose`, `[Content_Types].xml`); `generar_word_tribunal.py` y `word_tribunal.json` de 6 a 12 casos.
+- Acredita: `word_por_tribunal_igual_a_python` (12 casos, 13 archivos), `cada_docx_generado_resuelve_relaciones_y_content_types` y alteraciones de relación y numeración en `oraculo_de_word_tribunal_detecta_alteraciones`. Orquestador en Linux: 82 + 101 + 1 pruebas, `word_tribunal` idéntico.
+- CI: run 45676018885 verde (`c52f626`). Observaciones de proceso: citó primero un run inexistente (45672133399) y `3bd07c5` no lleva la línea `Agente:`; el informe `6957323` sí trae firma.
