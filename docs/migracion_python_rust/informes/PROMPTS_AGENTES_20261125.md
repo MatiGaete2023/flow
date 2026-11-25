@@ -287,3 +287,30 @@ FIRMA (obligatoria): el informe empieza con un bloque «Firma» con: agente y le
 
 ESTILO: español chileno, primera línea = la respuesta, sin cortesías, código completo.
 ```
+
+## Prompt del Agente B · Corrección de E-Q9 (DeepSeek)
+
+```
+Eres el Agente B (DeepSeek). Sigues en MatiGaete2023/flow, rama estudio/agente-b-flujo-20261125, mismo clon. E-Q9 vuelve a ti: el coordinador no lo integra.
+
+POR QUÉ SE DEVUELVE (hechos verificados por el coordinador):
+1. CI roja. El run 45671145795 (7b051b4) falló y en el 45672730810 (9952dab) el job linux falló en descargador::flujo_paquete::pruebas::flujo_paquete_igual_a_python. Tu informe proponía «CI Windows verde, run 45671145795» y dejó el paso de regeneración como «REGENERACION_CI» sin completar. Nunca escribas un run como verde sin haber leído su conclusión.
+2. Diferencia exacta en Linux (casos retomado y bitacora_retomada): el historial de Python trae «consultas reutilizadas del intento anterior» entre «fase consultas» y «fase bitacoras», y el de Rust no. Rust no reutiliza las consultas al retomar.
+3. El oráculo depende del sistema: flujo_paquete.json se generó en Windows y su respaldo/proceso.json guarda «respaldo\\<fecha>»; generado en Linux sale «respaldo/<fecha>», y también cambia el ZIP de «Paquete CSMP 2026-10-08 13-02-17-123456». En el repositorio todos los oráculos deben regenerarse idénticos en Windows y Linux.
+4. El informe no trae el bloque «Firma» (regla nueva en AGENTS.md, «Trabajo en paralelo»).
+
+TAREAS, en orden:
+1. git fetch origin; git merge --no-edit origin/estudio/paridad-python-rust-20261119 en tu rama (sin rebase ni --force). Si hay conflicto en la línea de oráculos del workflow, deja las dos entradas: ... 'anulaciones', 'word_tribunal', 'flujo_paquete'.
+2. Generador (app/qa/generar_flujo_paquete.py): todo texto escrito por Python que vaya al oráculo debe quedar igual en cualquier sistema. Antes del base64, en proceso.json y en cualquier JSON o CSV del paquete, reemplaza los separadores «\\» de rutas relativas por «/» (solo en rutas, no en texto libre); importa app/qa/generar_lote.py como hacen generar_paquete.py y generar_excel.py (fija el reloj y hace que Path.write_text escriba LF). Comprueba en Linux que dos corridas dan bytes idénticos y que el resultado no depende de os.sep: corre el generador también con la carpeta de trabajo bajo una ruta con espacios.
+3. Rust (descargador/flujo_paquete.rs): al retomar, resuelve las carpetas guardadas en proceso.json aceptando «/» y «\\» en cualquier sistema, y reutiliza las consultas validadas igual que Python (_consultas_validadas), con la línea «consultas reutilizadas del intento anterior» en el historial. Agrega una prueba que retoma un proceso.json con separadores «\\» en Linux y otra con «/», y que ambas reutilizan.
+4. Regenera app/tests/datos/flujo_paquete.json en Linux con el generador corregido y verifica: tools/probar_app.sh todo sin fallos, clippy, inventario_escrituras.py y verificar_solo_lectura.py.
+5. Publica y espera la CI: linux y validar en success, y «Regenerar los oráculos» CORRIDO terminando en «Oráculos regenerados sin diferencias.» con flujo_paquete listado. Si falla, lee el log y corrige; si falla dos veces por la misma causa sin entenderla, BLOQUEADO con el log.
+
+Archivos: los mismos de E-Q9 (flujo_paquete.rs, la línea de descargador.rs, tu parte de descargador_ui.rs, generar_flujo_paquete.py, flujo_paquete.json, tu línea del workflow y del inventario). Sigue prohibido: paquete.rs, lote.rs, bitacoras.rs, lecturas.rs, sitfa_ficticio.rs, descargador_resultados_ui.rs, archivo_local.rs, productos.rs, ui.rs, Cargo.toml/Cargo.lock, Python de descargador/, src/ y tests/, y ESTADO, PLAN, REGISTRO, AGENTS y CONTINUACION. Las dos diferencias del escritor de paquetes que declaraste (escritos/historico_proteccion NO_SOLICITADA y CONSOLIDADO_OMITIDO) quedan anotadas: no las corrijas aquí.
+
+FIRMA (obligatoria): el informe empieza con un bloque «Firma» con: agente y letra (B); herramienta y modelo (DeepSeek, versión exacta); identidad git `nombre <correo>` usada en tus commits; ruta del clon; rama; y la lista de commits hechos por esta sesión, uno por línea con su SHA (incluye 7b051b4, 9952dab y c4dffd9 si son tuyos). Termina cada mensaje de commit con la línea `Agente: B · DeepSeek`. Un informe sin firma no se integra.
+
+INFORME: actualiza docs/migracion_python_rust/informes/AGENTE_B_20261125b.md en un commit aparte y el último: corrige el punto 4 (CI) con los runs reales, su conclusión y la última línea literal del paso de regeneración; agrega en hallazgos la causa de la falla y cómo la corregiste; ajusta el texto propuesto (sin «HECHO»: el coordinador lo pone). Estado: ENTREGADO solo con CI verde en ambos trabajos; si no, BLOQUEADO.
+
+ESTILO: español chileno, primera línea = la respuesta, sin cortesías, hechos | inferencias | especulación separados, código completo.
+```
