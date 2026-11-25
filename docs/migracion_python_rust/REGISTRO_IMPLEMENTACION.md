@@ -327,3 +327,9 @@ E-R3 · Meta 4: contraste ampliado (`92ab9c1`, CI Windows verde, run 45656558813
 - Acredita: `word_por_tribunal_igual_a_python` (12 casos, 13 archivos), `cada_docx_generado_resuelve_relaciones_y_content_types` y alteraciones de relación y numeración en `oraculo_de_word_tribunal_detecta_alteraciones`. Orquestador en Linux: 82 + 101 + 1 pruebas, `word_tribunal` idéntico.
 - CI: run 45676018885 verde (`c52f626`). Observaciones de proceso: citó primero un run inexistente (45672133399) y `3bd07c5` no lleva la línea `Agente:`; el informe `6957323` sí trae firma.
 - Duplicado detectado: ChatGPT Luna también implementó E-P2 (`f7ff7c9`, local en su clon, sin publicar; 11 casos). Se detuvo al ver la entrega remota y no hizo push: conducta correcta. Se descarta; Luna pasa a C (E-S2).
+
+## 2026-11-25 · E-Q9 · «Consultar y crear paquete» en una acción (agente B · DeepSeek)
+
+- Cambió: `descargador/flujo_paquete.rs` (nuevo: `run`, `retomar`, `proceso.json`, opciones y textos de Python), una línea en `descargador.rs`, la acción y su avance en `descargador_ui.rs`, `generar_flujo_paquete.py` y `flujo_paquete.json`, su línea del workflow y del inventario.
+- Acredita: `flujo_paquete_igual_a_python` (12 casos, 4 errores, 26 fases), `oraculo_de_flujo_paquete_detecta_alteraciones`, `deja_una_sola_carpeta_con_las_fuentes_y_el_zip`, `retomar_resuelve_separadores_y_reutiliza_consultas` y la prueba de vista. Orquestador en Linux tras integrar: 86 + 102 + 1 pruebas; `flujo_paquete` idéntico.
+- CI de la rama: 45671145795 y 45672730810 rojos (retomar no reutilizaba; oráculo con `\` de Windows), 45675971822 rojo (hora del ejecutor en el historial), 45682691364 verde con `flujo_paquete` regenerado. Devuelto una vez; el informe corregido trae firma.
