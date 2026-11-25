@@ -2,7 +2,8 @@ name: Flow Rust local · Windows
 
 on:
   push:
-    branches: [estudio/paridad-python-rust-20261119]
+    # Las ramas de agentes en paralelo (`estudio/agente-*`) también validan; el coordinador las integra a la rama principal.
+    branches: [estudio/paridad-python-rust-20261119, 'estudio/agente-**']
     paths: [app/**, tools/**, descargador/**, src/**, tests/**, .github/workflows/flow-rust-local.yml]
   workflow_dispatch:
     inputs:

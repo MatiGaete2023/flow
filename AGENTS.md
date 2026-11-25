@@ -13,6 +13,12 @@
 - Un `HECHO` exige una prueba en el repositorio que afirme sus conteos y que falle si faltan sus datos. No citar pruebas, funciones ni archivos que no estén en el commit publicado.
 - Si un criterio no se puede cumplir, se informa como `BLOQUEADO` con el motivo.
 
+## Trabajo en paralelo (agentes coordinados)
+
+- La rama `estudio/paridad-python-rust-20261119` la integra el coordinador. Un agente en paralelo trabaja en su propia rama `estudio/agente-<letra>-<tema>-<fecha>` (la CI también corre ahí) y **no toca** `ESTADO.md`, `PLAN.md`, `REGISTRO_IMPLEMENTACION.md`, `AGENTS.md`, `CONTINUACION.md` ni el workflow.
+- En lugar de eso escribe `docs/migracion_python_rust/informes/AGENTE_<letra>_<fecha>.md` con lo hecho, las pruebas, los runs de CI y el texto propuesto para `ESTADO.md`, `PLAN.md` y el registro; el coordinador lo revisa, lo integra y valida de nuevo en la rama principal.
+- Cada agente tiene archivos propios (los fija su prompt). Una función compartida no cambia de firma sin avisar en el informe.
+
 ## Entrega y actualización
 
 - Toda corrección se entrega de modo que se aplique **sin reinstalar**: el ejecutable se reemplaza desde `%LOCALAPPDATA%\FlowRust\actualizaciones` (aviso y botón en Flow, con verificación de SHA-256) y nada que no haya cambiado se vuelve a instalar.
