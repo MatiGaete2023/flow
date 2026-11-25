@@ -21,6 +21,19 @@ from test_resultados import fixture
 from resultados import load_lot, read_json
 from flujo_csmp import FLOW_DONE
 from archivo_local import kind, load_sources
+import flujo_csmp  # noqa: E402
+
+# Python trata «\\» como separador solo en Windows: en Linux «sub\\fase» es un nombre literal y la fase no existe
+# (y el error trae la ruta temporal). Para que el oráculo sea el mismo en cualquier sistema se reproduce la conducta de
+# Windows durante la generación; la referencia no se modifica y la entrada del caso conserva «sub\\fase».
+_source_folder = flujo_csmp.source_folder
+
+
+def _source_folder_portable(root, name):
+    return _source_folder(root, name.replace('\\', '/') if isinstance(name, str) else name)
+
+
+flujo_csmp.source_folder = _source_folder_portable
 from test_reutilizacion_local import bound_lot, diaries
 from export_csmp_capture import export_capture
 from nurus.capture import read_capture

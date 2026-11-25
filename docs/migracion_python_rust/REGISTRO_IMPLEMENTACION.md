@@ -334,3 +334,10 @@ E-R3 · Meta 4: contraste ampliado (`92ab9c1`, CI Windows verde, run 45656558813
 - Acredita: `flujo_paquete_igual_a_python` (12 casos, 4 errores, 26 fases), `oraculo_de_flujo_paquete_detecta_alteraciones`, `deja_una_sola_carpeta_con_las_fuentes_y_el_zip`, `retomar_resuelve_separadores_y_reutiliza_consultas` y la prueba de vista. Orquestador en Linux tras integrar: 86 + 102 + 1 pruebas; `flujo_paquete` idéntico.
 - CI de la rama: 45671145795 y 45672730810 rojos (retomar no reutilizaba; oráculo con `\` de Windows), 45675971822 rojo (hora del ejecutor en el historial), 45682691364 verde con `flujo_paquete` regenerado. Devuelto una vez; el informe corregido trae firma.
 - Cierre: `HECHO` con el run 45685219486 de la rama principal (`310d783`; `linux` y `validar` verdes, regeneración corrida).
+
+## 2026-11-25 · E-S2 · Conjuntos y bitácoras de otras carpetas en Resultados (agente C · ChatGPT Luna)
+
+- Cambió: `descargador/archivo_local.rs` (nuevo), una línea en `descargador.rs`, `descargador_resultados_ui.rs` (colección de carpetas y bitácoras), el texto de `cargar_lote` para `flujo.json` en `paquete.rs`, `generar_archivo_local.py` y `archivo_local.json`, su línea del workflow y la del inventario.
+- Acredita: `conjuntos_iguales_a_python` (22 casos) y su prueba de alteración, y la prueba de vista. Orquestador tras integrar: 88 + 103 + 1 pruebas; inventario 108 en 24.
+- CI de la rama: 45685311235 rojo (bytes del XLSX), 45687407129 rojo solo en `linux` (destino de diagnóstico repetido; regeneración de `archivo_local` sin diferencias), 45688144080 verde. Firma completa (modelo declarado: «GPT-6, ejecución Codex»).
+- Al integrar: el generador dependía de cómo Python resuelve «\\» en Linux (caso `separadores_ambos`, con ruta temporal en el error); se reproduce la conducta de Windows y regenera idéntico en Linux.
