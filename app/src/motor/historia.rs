@@ -459,12 +459,6 @@ pub(super) fn busqueda_historia(ctx: &mut Ctx) -> Vec<Frag> {
         }
     }
     ordenes.sort_by_key(|o| orden_tramite(o));
-    // D-11 (R-A): en una causa compartida con más de una orden no se sabe de quién es cada orden ni cada cierre (el cierre
-    // se asigna a la orden anterior más cercana): no se redacta en esta fila, igual que R2.
-    if ordenes.len() > 1 && causa_compartida(ctx, captura) {
-        ctx.aviso("HISTORIA.R11_NO_ATRIBUIBLE: Orden de búsqueda de la causa no atribuible a este ingreso.");
-        return Vec::new();
-    }
     let mut seguimiento: Vec<&TramiteCausa> = [PIDE_CUENTA_BUSQUEDA, SIN_EFECTO_BUSQUEDA, TERMINO_BUSQUEDA]
         .into_iter()
         .flat_map(|n| tramites(captura, n))
@@ -1081,7 +1075,7 @@ mod tests {
     #[test]
     fn oraculo_historia() {
         let dir = crate::prueba_entorno::requerida("FLOW_CASOS");
-        let (mut evaluados, mut con_prorroga, mut finales, mut fallos, mut d11) = (0, 0, 0, Vec::new(), 0);
+        let (mut evaluados, mut con_prorroga, mut finales, mut fallos) = (0, 0, 0, Vec::new());
         for (archivo, mode) in [("espera", Mode::Espera), ("cumplimiento", Mode::Cumplimiento), ("informes", Mode::Informes)] {
             let txt = std::fs::read_to_string(std::path::Path::new(&dir).join(format!("{archivo}.json"))).unwrap();
             let casos: Vec<serde_json::Value> = serde_json::from_str(&txt).unwrap();
@@ -1092,12 +1086,6 @@ mod tests {
                 evaluados += 1;
                 let (r, prorroga) = caso_corpus(c, mode);
                 con_prorroga += usize::from(prorroga);
-                // D-11: Python redacta la orden de búsqueda de un hermano; Rust la deja como aviso interno. Son 3 casos del corpus
-                // (en 2 cambia la redacción; en 1 ya coincidía).
-                if r.avisos.iter().any(|a| a.starts_with("HISTORIA.R11_NO_ATRIBUIBLE:")) {
-                    d11 += 1;
-                    continue;
-                }
                 let e = &c["esperado"];
                 let reglas: Vec<&str> = e["reglas"].as_array().unwrap().iter().filter_map(|r| r.as_str()).collect();
                 let marcas: Vec<&str> = e["marcas"].as_array().unwrap().iter().filter_map(|m| m["codigo"].as_str()).collect();
@@ -1118,8 +1106,7 @@ mod tests {
                 }
             }
         }
-        println!("oraculo_historia: {} de {evaluados} casos coinciden ({con_prorroga} con prórroga, {finales} causas finalizadas, {d11} con D-11 declarado)", evaluados - fallos.len() - d11);
-        assert_eq!(d11, 3, "los casos del corpus con varias órdenes en una causa compartida cambiaron");
+        println!("oraculo_historia: {} de {evaluados} casos coinciden ({con_prorroga} con prórroga, {finales} causas finalizadas)", evaluados - fallos.len());
         assert!(evaluados > 2500 && con_prorroga > 0 && finales > 0);
         assert!(fallos.is_empty(), "{} casos difieren:\n{}", fallos.len(), fallos.iter().take(10).cloned().collect::<Vec<_>>().join("\n"));
     }
@@ -1144,8 +1131,6 @@ mod tests {
         r4_ok: u64,
         r4_aplica: u64,
         r5_motor: u64,
-        /// D-11: casos con varias órdenes de búsqueda en una causa compartida (Rust no las redacta).
-        d11: u64,
         fallos: Vec<String>,
     }
 
@@ -1169,10 +1154,6 @@ mod tests {
                 }
                 p.evaluados += 1;
                 let (r, _) = caso_corpus_con_redaccion(c, mode, true);
-                if r.avisos.iter().any(|a| a.starts_with("HISTORIA.R11_NO_ATRIBUIBLE:")) {
-                    p.d11 += 1;
-                    continue;
-                }
                 let e = &c["esperado"];
                 let reglas: Vec<&str> = e["reglas"]
                     .as_array()
@@ -1328,8 +1309,7 @@ mod tests {
             println!("  FALLO: {f}");
         }
         assert_eq!(p.evaluados, CASOS_PAQUETE_B, "cambió la cantidad de casos evaluados del corpus");
-        assert_eq!(p.d11, 3, "los casos del corpus con varias órdenes en una causa compartida cambiaron");
-        assert_eq!(diferencias + p.identicos + p.d11, p.evaluados, "hay casos sin clasificar");
+        assert_eq!(diferencias + p.identicos, p.evaluados, "hay casos sin clasificar");
         assert!(p.fallos.is_empty(), "Hubo fallos inesperados en Paquete B");
     }
 
@@ -1368,39 +1348,6 @@ mod tests {
             return format!("esp=<fin> obt={}", pb[n]);
         }
         String::new()
-    }
-
-    /// D-11: en una causa compartida con más de una orden de búsqueda no se sabe de quién es cada orden ni cada cierre.
-    #[test]
-    fn d11_varias_ordenes_en_causa_compartida_no_se_atribuyen() {
-        let tramite = |fecha: &str, descripcion: &str, folio: &str| TramiteCausa {
-            fecha: fecha.parse().unwrap(),
-            descripcion: descripcion.into(),
-            folio: folio.into(),
-            referencia: String::new(),
-            tipo: "resolucion".into(),
-            contexto: false,
-        };
-        // Orden de A (folio 10), orden de B (folio 20) y un cierre (folio 25) que el motor asigna a la más cercana.
-        let dos_ordenes = vec![
-            tramite("2026-10-01", "Orden de búsqueda", "10"),
-            tramite("2026-10-05", "Orden de búsqueda", "20"),
-            tramite("2026-10-10", "Termino de búsqueda", "25"),
-        ];
-        let mut captura = ContextoFila { tramites: Some(dos_ordenes.clone().into()), ..Default::default() };
-        let sola = evaluar_espera(&captura, Cell::Empty);
-        assert!(sola.observacion.contains("se decretó orden de búsqueda"), "causa de un solo ingreso: se redacta como en Python");
-        assert!(sola.avisos.iter().all(|a| !a.starts_with("HISTORIA.R11_NO_ATRIBUIBLE:")));
-        captura.varios_ingresos = true;
-        let compartida = evaluar_espera(&captura, Cell::Empty);
-        assert!(!compartida.observacion.contains("orden de búsqueda") && !compartida.observacion.contains("término de la búsqueda"), "{}", compartida.observacion);
-        assert!(compartida.avisos.iter().any(|a| a == "HISTORIA.R11_NO_ATRIBUIBLE: Orden de búsqueda de la causa no atribuible a este ingreso."));
-        assert!(compartida.marcas.iter().any(|m| m.codigo == "R11_BUSQUEDA_VIGENTE"), "la marca de orden vigente se conserva");
-        // Con una sola orden la causa compartida no cambia la redacción (paridad con Python).
-        let una = ContextoFila { tramites: Some(dos_ordenes[1..].to_vec().into()), varios_ingresos: true, ..Default::default() };
-        let r = evaluar_espera(&una, Cell::Empty);
-        assert!(r.observacion.contains("se decretó orden de búsqueda"));
-        assert!(r.avisos.iter().all(|a| !a.starts_with("HISTORIA.R11_NO_ATRIBUIBLE:")));
     }
 
     #[test]

@@ -245,3 +245,11 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Acredita: `correos_iguales_a_python` (24 casos), `actualizar_desde_excel_igual_a_python` (25 casos), las dos pruebas permanentes que alteran lo esperado y dos de comportamiento. `probar_app.sh todo`: 72 y 92 pruebas, 0 fallos; clippy limpio.
 - Diferencias: solo la gestión de correo de `NURUS_DECISIONES` se combina (Python combina todo el estado de la fila); sin exclusión manual, anulaciones de origen ni variables de Word por fila.
 - CI: run 45634055296 verde (`linux` y `validar`, `correos.json` y `sync.json` regenerados igual en Windows).
+
+## 2026-11-25 · Decisiones del usuario: reversión de D-10 y D-11
+
+- El usuario respondió las decisiones pendientes: «módulo» con tilde, revertir D-10 y D-11, D-12 diferida y D-13 conservar.
+- Cambió: `conciliar.rs`, `estadisticas.rs`, `ui.rs` y `motor/historia.rs` vuelven a su estado anterior a `a8a0338` (se quitan la clasificación de ausentes, el aviso `HISTORIA.R11_NO_ATRIBUIBLE`, los conteos `d11` de los dos oráculos de historia y las dos pruebas propias). Se conserva la corrección del oráculo de correos (fecha fija).
+- Acredita: los oráculos de conciliación e historia vuelven a pasar sin casos declarados. `probar_app.sh todo`: 72 y 90 pruebas, 0 fallos; clippy limpio.
+- Pendiente: CI de Windows verde.
+
