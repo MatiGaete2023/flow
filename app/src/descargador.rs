@@ -10,6 +10,7 @@ pub mod bitacoras;
 pub mod archivo_local;
 pub mod extension;
 pub mod flujo_paquete;
+pub mod flujo_csmp;
 pub mod historia;
 pub mod historico;
 pub mod lecturas;
