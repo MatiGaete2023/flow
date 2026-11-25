@@ -180,6 +180,8 @@ PUBLICACIÓN: commits en estudio/paridad-python-rust-20261119 con las líneas de
 
 INFORME: docs/migracion_python_rust/informes/AGENTE_A_20261125.md, en un commit aparte y el último: 1) resumen ≤10 líneas; 2) ruta del clon, commits y archivos; 3) pruebas y conteos antes → después; 4) run de CI, con la conclusión y el log del paso «Regenerar los oráculos» (debe nombrar word_tribunal); 5) hallazgos (hechos | inferencias | especulación); 6) texto propuesto para ESTADO, PLAN y registro (≤10 líneas); 7) riesgos y pendientes. Estado del encargo en el informe: ENTREGADO o BLOQUEADO.
 
+FIRMA (obligatoria): el informe empieza con un bloque «Firma» con: agente y letra; herramienta y modelo; identidad git `nombre <correo>` usada en tus commits; ruta del clon; rama; y la lista de commits hechos por esta sesión, uno por línea con su SHA. Termina cada mensaje de commit con la línea `Agente: C · ChatGPT Luna`. No listes commits de otras sesiones como tuyos; si encuentras commits de otra sesión en tus archivos, nómbralos aparte. Un informe sin firma no se integra.
+
 ESTILO: español chileno, primera línea = la respuesta, sin cortesías, código completo.
 ```
 
@@ -234,13 +236,15 @@ PUBLICACIÓN: commits en tu rama con las líneas de atribución del sistema; git
 
 INFORME: docs/migracion_python_rust/informes/AGENTE_B_20261125b.md, en un commit aparte y el último: 1) resumen ≤10 líneas; 2) ruta del clon, commits y archivos; 3) pruebas y conteos antes → después; 4) run de CI con la conclusión y la última línea del paso de regeneración; 5) hallazgos (hechos | inferencias | especulación); 6) texto propuesto para ESTADO, PLAN y registro (≤10 líneas); 7) riesgos y pendientes (incluido run_por_hoja). Estado: ENTREGADO o BLOQUEADO; el HECHO lo pone el coordinador.
 
+FIRMA (obligatoria): el informe empieza con un bloque «Firma» con: agente y letra; herramienta y modelo; identidad git `nombre <correo>` usada en tus commits; ruta del clon; rama; y la lista de commits hechos por esta sesión, uno por línea con su SHA. Termina cada mensaje de commit con la línea `Agente: B · DeepSeek`. No listes commits de otras sesiones como tuyos; si encuentras commits de otra sesión en tus archivos, nómbralos aparte. Un informe sin firma no se integra.
+
 ESTILO: español chileno, primera línea = la respuesta, sin cortesías, código completo.
 ```
 
 ## Prompt del Agente A · E-P2 Word por tribunal con imágenes, numeración y relaciones (GPT-5.6 Luna)
 
 ```
-Eres el Agente A (ejecutor único: si hay otra sesión de A abierta, detente y avisa al usuario). Trabajas en MatiGaete2023/flow, directamente en la rama estudio/paridad-python-rust-20261119. Otros agentes: B (rama estudio/agente-b-flujo-20261125: flujo_paquete.rs, descargador_ui.rs) y C (rama estudio/agente-c-conjuntos-20261125: descargador_resultados_ui.rs, archivo_local.rs). No toques lo suyo.
+Eres el Agente A para este encargo (E-P2), ejecutado por ChatGPT Luna por excepción: desde el próximo encargo A es Antigravity y tú eres C. Ejecutor único: si hay otra sesión trabajando E-P2, detente y avisa al usuario. Trabajas en MatiGaete2023/flow, directamente en la rama estudio/paridad-python-rust-20261119. Otros agentes: B (rama estudio/agente-b-flujo-20261125: flujo_paquete.rs, descargador_ui.rs) y C (rama estudio/agente-c-conjuntos-20261125: descargador_resultados_ui.rs, archivo_local.rs). No toques lo suyo.
 
 EVALUACIÓN DE TU ENTREGA ANTERIOR (E-P1, cerrada como HECHO por el coordinador en el run 45665516823):
 - Bien: respetaste los archivos y los documentos de estado, pusiste ENTREGADO con la salida literal del paso de regeneración y resolviste el determinismo con ZIP_STORED.
@@ -279,5 +283,34 @@ PUBLICACIÓN: commits en estudio/paridad-python-rust-20261119 con las líneas de
 
 INFORME: docs/migracion_python_rust/informes/AGENTE_A_20261125b.md, en un commit aparte y el último: 1) resumen ≤10 líneas; 2) ruta del clon, commits y archivos; 3) conteos antes → después copiados de la línea literal «test result», con su commit; 4) run de tu push con la conclusión y la última línea del paso de regeneración; 5) hallazgos (hechos | inferencias | especulación); 6) texto propuesto para ESTADO, PLAN y registro (≤10 líneas); 7) riesgos y pendientes. Estado: ENTREGADO o BLOQUEADO.
 
+FIRMA (obligatoria): el informe empieza con un bloque «Firma» con: agente y letra; herramienta y modelo; identidad git `nombre <correo>` usada en tus commits; ruta del clon; rama; y la lista de commits hechos por esta sesión, uno por línea con su SHA. Termina cada mensaje de commit con la línea `Agente: A (encargo E-P2) · ChatGPT Luna`. No listes commits de otras sesiones como tuyos; si encuentras commits de otra sesión en tus archivos, nómbralos aparte. Un informe sin firma no se integra.
+
 ESTILO: español chileno, primera línea = la respuesta, sin cortesías, código completo.
+```
+
+## Prompt del Agente B · Corrección de E-Q9 (DeepSeek)
+
+```
+Eres el Agente B (DeepSeek). Sigues en MatiGaete2023/flow, rama estudio/agente-b-flujo-20261125, mismo clon. E-Q9 vuelve a ti: el coordinador no lo integra.
+
+POR QUÉ SE DEVUELVE (hechos verificados por el coordinador):
+1. CI roja. El run 45671145795 (7b051b4) falló y en el 45672730810 (9952dab) el job linux falló en descargador::flujo_paquete::pruebas::flujo_paquete_igual_a_python. Tu informe proponía «CI Windows verde, run 45671145795» y dejó el paso de regeneración como «REGENERACION_CI» sin completar. Nunca escribas un run como verde sin haber leído su conclusión.
+2. Diferencia exacta en Linux (casos retomado y bitacora_retomada): el historial de Python trae «consultas reutilizadas del intento anterior» entre «fase consultas» y «fase bitacoras», y el de Rust no. Rust no reutiliza las consultas al retomar.
+3. El oráculo depende del sistema: flujo_paquete.json se generó en Windows y su respaldo/proceso.json guarda «respaldo\\<fecha>»; generado en Linux sale «respaldo/<fecha>», y también cambia el ZIP de «Paquete CSMP 2026-10-08 13-02-17-123456». En el repositorio todos los oráculos deben regenerarse idénticos en Windows y Linux.
+4. El informe no trae el bloque «Firma» (regla nueva en AGENTS.md, «Trabajo en paralelo»).
+
+TAREAS, en orden:
+1. git fetch origin; git merge --no-edit origin/estudio/paridad-python-rust-20261119 en tu rama (sin rebase ni --force). Si hay conflicto en la línea de oráculos del workflow, deja las dos entradas: ... 'anulaciones', 'word_tribunal', 'flujo_paquete'.
+2. Generador (app/qa/generar_flujo_paquete.py): todo texto escrito por Python que vaya al oráculo debe quedar igual en cualquier sistema. Antes del base64, en proceso.json y en cualquier JSON o CSV del paquete, reemplaza los separadores «\\» de rutas relativas por «/» (solo en rutas, no en texto libre); importa app/qa/generar_lote.py como hacen generar_paquete.py y generar_excel.py (fija el reloj y hace que Path.write_text escriba LF). Comprueba en Linux que dos corridas dan bytes idénticos y que el resultado no depende de os.sep: corre el generador también con la carpeta de trabajo bajo una ruta con espacios.
+3. Rust (descargador/flujo_paquete.rs): al retomar, resuelve las carpetas guardadas en proceso.json aceptando «/» y «\\» en cualquier sistema, y reutiliza las consultas validadas igual que Python (_consultas_validadas), con la línea «consultas reutilizadas del intento anterior» en el historial. Agrega una prueba que retoma un proceso.json con separadores «\\» en Linux y otra con «/», y que ambas reutilizan.
+4. Regenera app/tests/datos/flujo_paquete.json en Linux con el generador corregido y verifica: tools/probar_app.sh todo sin fallos, clippy, inventario_escrituras.py y verificar_solo_lectura.py.
+5. Publica y espera la CI: linux y validar en success, y «Regenerar los oráculos» CORRIDO terminando en «Oráculos regenerados sin diferencias.» con flujo_paquete listado. Si falla, lee el log y corrige; si falla dos veces por la misma causa sin entenderla, BLOQUEADO con el log.
+
+Archivos: los mismos de E-Q9 (flujo_paquete.rs, la línea de descargador.rs, tu parte de descargador_ui.rs, generar_flujo_paquete.py, flujo_paquete.json, tu línea del workflow y del inventario). Sigue prohibido: paquete.rs, lote.rs, bitacoras.rs, lecturas.rs, sitfa_ficticio.rs, descargador_resultados_ui.rs, archivo_local.rs, productos.rs, ui.rs, Cargo.toml/Cargo.lock, Python de descargador/, src/ y tests/, y ESTADO, PLAN, REGISTRO, AGENTS y CONTINUACION. Las dos diferencias del escritor de paquetes que declaraste (escritos/historico_proteccion NO_SOLICITADA y CONSOLIDADO_OMITIDO) quedan anotadas: no las corrijas aquí.
+
+FIRMA (obligatoria): el informe empieza con un bloque «Firma» con: agente y letra (B); herramienta y modelo (DeepSeek, versión exacta); identidad git `nombre <correo>` usada en tus commits; ruta del clon; rama; y la lista de commits hechos por esta sesión, uno por línea con su SHA (incluye 7b051b4, 9952dab y c4dffd9 si son tuyos). Termina cada mensaje de commit con la línea `Agente: B · DeepSeek`. Un informe sin firma no se integra.
+
+INFORME: actualiza docs/migracion_python_rust/informes/AGENTE_B_20261125b.md en un commit aparte y el último: corrige el punto 4 (CI) con los runs reales, su conclusión y la última línea literal del paso de regeneración; agrega en hallazgos la causa de la falla y cómo la corregiste; ajusta el texto propuesto (sin «HECHO»: el coordinador lo pone). Estado: ENTREGADO solo con CI verde en ambos trabajos; si no, BLOQUEADO.
+
+ESTILO: español chileno, primera línea = la respuesta, sin cortesías, hechos | inferencias | especulación separados, código completo.
 ```
