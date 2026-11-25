@@ -103,7 +103,7 @@ def run(destino):
                         libro = corredor.run(tribunales, ('2',), modo, raiz, days=dias, today=fecha)
                     except motor.PocError:
                         if nombre not in ('retomar_principal', 'retomar_informes'): raise
-                        carpeta = next(raiz.glob('Flujo CSMP *'))
+                        carpeta = next(iter(sorted(raiz.glob('Flujo CSMP *'))))
                         libro = corredor.run(tribunales, ('2',), modo, raiz, days=dias, today=fecha, resume=carpeta)
             except (motor.PocError, ValueError, OSError) as exc:
                 error = str(exc)
