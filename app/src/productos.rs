@@ -266,8 +266,12 @@ pub fn preparar_borradores(w: &Trabajo, cfg: &Config, o: &OpcionesCorreo) -> Vec
     for kind in ["programa_espera", "programa_vencido", "programa_por_vencer", "medidas"] {
         let mut grupos: BTreeMap<(String, String), Vec<(usize, &Registro)>> = BTreeMap::new();
         for (i, r) in &regs {
-            if !r.acciones.contains(&kind) || (kind != "medidas" && !permite_correo(r)) {
-                continue;
+            // Gestión por fila (`record_edits.mail_decision`): `omit` la saca; `include` la agrega aunque la regla no la pida.
+            match r.gestiones_correo.get(kind).map(String::as_str) {
+                Some("omit") => continue,
+                Some("include") => {}
+                _ if !r.acciones.contains(&kind) || (kind != "medidas" && !permite_correo(r)) => continue,
+                _ => {}
             }
             let prog = if kind == "medidas" { String::new() } else { w.value(r, "programa") };
             grupos.entry((w.tribunal_clave(r), clave(&prog))).or_default().push((*i, r));
@@ -1040,6 +1044,11 @@ mod cotejo_correos {
                 r.seleccionada = rits.iter().any(|x| x == &Value::String(w_rit(&r.values, &caso["modo"], datos)));
             }
         }
+        for d in caso["decisiones"].as_array().into_iter().flatten() {
+            let (rit, tipo, decision) = (texto(&d[0]), texto(&d[1]), texto(&d[2]));
+            let r = w.registros.iter_mut().find(|r| w_rit(&r.values, &caso["modo"], datos) == rit).unwrap();
+            r.gestiones_correo.insert(tipo, decision);
+        }
         let todas = ["RES", "AMB", "FAE", "DCE"];
         let claves: Vec<String> = caso["modalidades"].as_array().map(|a| a.iter().map(texto).collect()).unwrap_or_default();
         let modalidades: Vec<&str> = if claves.is_empty() { todas.to_vec() } else { todas.iter().copied().filter(|k| claves.contains(&k.to_string())).collect() };
@@ -1110,7 +1119,7 @@ mod cotejo_correos {
         let sin_tilde = casos.iter().flat_map(|c| c["borradores"].as_array().unwrap()).filter(|b| b["tipo"] == "cumplimiento" && texto(&b["cuerpo"]).contains("del modulo RUS")).count();
         println!("DIFERENCIA_DECLARADA modulo/módulo: {sin_tilde} correos de Cumplimiento");
         assert!(sin_tilde > 0, "la diferencia declarada debe estar en el oráculo");
-        assert_eq!(casos.len(), 18, "el oráculo debe traer 18 casos");
+        assert_eq!(casos.len(), 24, "el oráculo debe traer 24 casos");
         assert!(fallos.is_empty());
     }
 
@@ -1122,5 +1131,11 @@ mod cotejo_correos {
         assert!(antes.is_empty(), "{antes:?}");
         caso["borradores"][0]["para"] = Value::String("otro@ejemplo.invalid".into());
         assert!(!comparar(&datos, &caso).is_empty(), "un destinatario esperado alterado no se detecta");
+        // F08: la fila que Python sacó del correo con `omit` debe seguir fuera.
+        let mut gestion = datos["casos"].as_array().unwrap().iter().find(|c| c["nombre"] == "espera_omite_un_programa").unwrap().clone();
+        assert!(comparar(&datos, &gestion).is_empty());
+        let b = gestion["borradores"].as_array_mut().unwrap().iter_mut().find(|b| b["tipo"] == "programa_espera").unwrap();
+        b["rits"] = serde_json::json!(["X-1-2026", "X-2-2026"]);
+        assert!(!comparar(&datos, &gestion).is_empty(), "una gestión de correo esperada alterada no se detecta");
     }
 }

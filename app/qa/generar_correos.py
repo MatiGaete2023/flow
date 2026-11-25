@@ -22,6 +22,7 @@ for _m in ('tkinter', 'tkinter.ttk', 'tkinter.filedialog', 'tkinter.messagebox',
 from openpyxl import Workbook  # noqa: E402
 from nurus.personal.config import defaults  # noqa: E402
 from nurus.personal.mail_controls import alcance_modalidades, selected_court_record_ids  # noqa: E402
+from nurus.personal.record_edits import apply  # noqa: E402
 import nurus.personal.outputs as outputs  # noqa: E402
 from nurus.personal.outputs import prepare_drafts, value  # noqa: E402
 from nurus.personal.work import Work  # noqa: E402
@@ -110,13 +111,17 @@ def trabajo(modo, cfg, carpeta):
     return Work(cfg).analyze(ruta, modo, as_of=CORTE)
 
 
-def escenario(nombre, modo, claves=None, rits=None, tribunales=None, firma=True, cc_adicional=True):
-    """`claves`: modalidades (None = todas); `rits`: filas elegidas; `tribunales`: claves de tribunal elegidas."""
+def escenario(nombre, modo, claves=None, rits=None, tribunales=None, firma=True, cc_adicional=True, decisiones=()):
+    """`claves`: modalidades (None = todas); `rits`: filas elegidas; `tribunales`: claves de tribunal elegidas;
+    `decisiones`: (rit, tipo de correo, include|omit) de la gestión de correo por fila (`record_edits.apply`)."""
     cfg = configuracion(firma, cc_adicional)
     caso = {'nombre': nombre, 'modo': modo, 'modalidades': claves, 'rits': rits, 'tribunales': tribunales, 'firma': firma,
-            'cc_adicional': cc_adicional, 'borradores': []}
+            'cc_adicional': cc_adicional, 'decisiones': [list(d) for d in decisiones], 'borradores': []}
     with tempfile.TemporaryDirectory() as t:
         obra = trabajo(modo, cfg, Path(t))
+        for rit, tipo_correo, decision in decisiones:
+            fila = next(r for r in obra.rows if value(obra, r, 'rit') == rit)
+            apply(obra, [fila.id], decisions={'mail': {**fila.decisions.get('mail', {}), tipo_correo: decision}})
         elegidas = None
         if rits is not None:
             elegidas = {r.id for r in obra.rows if value(obra, r, 'rit') in rits}
@@ -150,6 +155,14 @@ def main():
         casos.append(escenario(f'{modo.lower()}_solo_elegidas', modo, rits=['X-1-2026', 'X-3-2026']))
         casos.append(escenario(f'{modo.lower()}_un_tribunal', modo, tribunales=['LAJA']))
         casos.append(escenario(f'{modo.lower()}_sin_firma_ni_cc_adicional', modo, firma=False, cc_adicional=False))
+    # E-A8 (F08): gestión de correo por fila. `omit` saca la fila del correo de ese tipo; `include` la agrega aunque la
+    # regla no la pida; las demás filas y tipos no cambian.
+    casos.append(escenario('espera_omite_un_programa', 'ESPERA', decisiones=[('X-1-2026', 'programa_espera', 'omit')]))
+    casos.append(escenario('espera_incluye_una_fila_sin_accion', 'ESPERA', decisiones=[('X-6-2026', 'programa_espera', 'include')]))
+    casos.append(escenario('cumplimiento_incluye_medidas', 'CUMPLIMIENTO', decisiones=[('X-4-2026', 'medidas', 'include'), ('X-1-2026', 'programa_vencido', 'omit')]))
+    casos.append(escenario('cumplimiento_omite_y_otro_tipo_sin_efecto', 'CUMPLIMIENTO', decisiones=[('X-2-2026', 'medidas', 'omit'), ('X-2-2026', 'programa_espera', 'omit')]))
+    casos.append(escenario('informes_incluye_por_vencer', 'INFORMES', decisiones=[('X-4-2026', 'programa_por_vencer', 'include')]))
+    casos.append(escenario('informes_omite_vencido', 'INFORMES', decisiones=[('X-1-2026', 'programa_vencido', 'omit')]))
     datos = {'corte': CORTE.isoformat(), 'hoy': HOY.isoformat(), 'periodo': PERIODO, 'contactos': CONTACTOS, 'tribunales': TRIBUNALES, 'firma': FIRMA,
              'cc_adicional': CC_ADICIONAL,
              'trabajos': {m: {'encabezados': e, 'filas': f} for m, (e, f, _) in TRABAJOS.items()}, 'casos': casos}

@@ -1460,6 +1460,39 @@ impl App {
                         }
                     });
                 }
+                if !r.excluido {
+                    ui.add_space(4.0);
+                    theme::seccion(ui, p, "Gestión de correo de esta fila");
+                    for (tipo, etiqueta) in [
+                        ("programa_espera", "Lista de espera"),
+                        ("programa_vencido", "Informe pendiente"),
+                        ("programa_por_vencer", "Informe por vencer"),
+                        ("medidas", "Nómina de medidas"),
+                    ] {
+                        ui.horizontal(|ui| {
+                            ui.label(RichText::new(etiqueta).color(p.muted));
+                            let actual = match r.gestiones_correo.get(tipo).map(String::as_str) {
+                                Some("include") => "Incluir siempre",
+                                Some("omit") => "Omitir",
+                                _ => "Automático",
+                            };
+                            egui::ComboBox::from_id_salt(("gestion correo", tipo)).selected_text(actual).show_ui(ui, |ui| {
+                                if ui.selectable_label(actual == "Automático", "Automático").clicked() {
+                                    r.gestiones_correo.remove(tipo);
+                                    cambio = true;
+                                }
+                                if ui.selectable_label(actual == "Incluir siempre", "Incluir siempre").clicked() {
+                                    r.gestiones_correo.insert(tipo.into(), "include".into());
+                                    cambio = true;
+                                }
+                                if ui.selectable_label(actual == "Omitir", "Omitir").clicked() {
+                                    r.gestiones_correo.insert(tipo.into(), "omit".into());
+                                    cambio = true;
+                                }
+                            });
+                        });
+                    }
+                }
                 if !r.avisos.is_empty() || !r.marcas.is_empty() {
                     ui.add_space(4.0);
                     theme::seccion(ui, p, "Avisos");

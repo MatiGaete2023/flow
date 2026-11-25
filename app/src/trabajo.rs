@@ -31,6 +31,10 @@ pub struct Registro {
     pub otros_programas: Vec<String>,
     /// Campos de revisión que solo viven en Excel (`FECHA_OBS`, `TT`, `CC`).
     pub campos: BTreeMap<String, String>,
+    /// Gestión de correo por fila (`decisions.mail`): tipo de correo → `include` u `omit`; sin entrada es `auto`.
+    pub gestiones_correo: BTreeMap<String, String>,
+    /// Gestiones de correo que tenía la última copia de Excel guardada o importada (línea base de `NURUS_DECISIONES`).
+    pub sync_correo: Option<String>,
     /// Identificador de la fila en la última copia de Excel que se guardó (`NURUS_ID_REGISTRO`).
     pub id_excel: String,
     /// Revisión que tenía la copia de Excel al guardarla o al importarla, y la local en ese momento (`sync_base`, `sync_local`).
@@ -136,6 +140,10 @@ struct Decision {
     propuesta: String,
     #[serde(default)]
     campos: BTreeMap<String, String>,
+    #[serde(default)]
+    gestiones_correo: BTreeMap<String, String>,
+    #[serde(default)]
+    sync_correo: Option<String>,
     #[serde(default)]
     id_excel: String,
     #[serde(default)]
@@ -351,6 +359,8 @@ impl Trabajo {
                 reg.editada = v.editada.clone();
                 reg.revisada = v.revisada;
                 reg.seleccionada = v.seleccionada;
+                reg.gestiones_correo = v.gestiones_correo.clone();
+                reg.sync_correo = v.sync_correo.clone();
                 if !v.res.is_empty() {
                     reg.res = v.res.clone();
                 }
@@ -516,12 +526,12 @@ impl Trabajo {
             ..Default::default()
         };
         for r in &self.registros {
-            if r.editada.is_some() || r.revisada || r.seleccionada || !r.res.is_empty() || !r.campos.is_empty() || r.sync_base.is_some() {
+            if r.editada.is_some() || r.revisada || r.seleccionada || !r.res.is_empty() || !r.campos.is_empty() || !r.gestiones_correo.is_empty() || r.sync_base.is_some() {
                 s.decisiones.insert(
                     r.fila_excel,
                     Decision {
                         editada: r.editada.clone(), revisada: r.revisada, seleccionada: r.seleccionada, res: r.res.clone(), propuesta: r.propuesta.clone(),
-                        campos: r.campos.clone(), id_excel: r.id_excel.clone(), sync_base: r.sync_base.clone(), sync_local: r.sync_local.clone(),
+                        campos: r.campos.clone(), gestiones_correo: r.gestiones_correo.clone(), sync_correo: r.sync_correo.clone(), id_excel: r.id_excel.clone(), sync_base: r.sync_base.clone(), sync_local: r.sync_local.clone(),
                     },
                 );
             }
@@ -552,6 +562,8 @@ impl Trabajo {
                 r.revisada = d.revisada;
                 r.seleccionada = d.seleccionada;
                 r.campos = d.campos.clone();
+                r.gestiones_correo = d.gestiones_correo.clone();
+                r.sync_correo = d.sync_correo.clone();
                 r.id_excel = d.id_excel.clone();
                 r.sync_base = d.sync_base.clone();
                 r.sync_local = d.sync_local.clone();
@@ -623,6 +635,26 @@ mod tests {
         assert_eq!(w.registros.iter().map(|r| r.seleccionada).collect::<Vec<_>>(), [false, true, false]);
         assert_eq!(w.registros[0].editada.as_deref(), Some("Edición ficticia"));
     }
+    /// F08: la gestión de correo de una fila y su línea base de sincronización sobreviven a la sesión.
+    #[test]
+    fn la_gestion_de_correo_sobrevive_a_la_sesion() {
+        let mut w = Trabajo {
+            registros: vec![Registro { fila_excel: 2, ..Default::default() }, Registro { fila_excel: 3, ..Default::default() }],
+            ..Default::default()
+        };
+        w.registros[0].gestiones_correo.insert("medidas".into(), "omit".into());
+        w.registros[0].sync_correo = Some(r#"{"medidas":"omit"}"#.into());
+        let carpeta = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target/test_out");
+        let ruta = carpeta.join(format!("gestion_correo_{}.json", chrono::Utc::now().timestamp_micros()));
+        w.escribir_sesion(&ruta).unwrap();
+        w.registros[0].gestiones_correo.clear();
+        w.registros[0].sync_correo = None;
+        w.restaurar_desde(&ruta);
+        assert_eq!(w.registros[0].gestiones_correo["medidas"], "omit");
+        assert_eq!(w.registros[0].sync_correo.as_deref(), Some(r#"{"medidas":"omit"}"#));
+        assert!(w.registros[1].gestiones_correo.is_empty(), "una fila sin gestión no se guarda");
+    }
+
     use crate::productos;
 
     fn hoy() -> NaiveDate {

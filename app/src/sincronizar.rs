@@ -43,10 +43,11 @@ impl Error {
 }
 
 /// Lo que `Trabajo::analizar` no conserva de una fila: campos de Excel, identificador de copia y línea base.
-type Extras = (BTreeMap<String, String>, String, Option<BTreeMap<String, String>>, Option<BTreeMap<String, String>>);
+type Extras = (BTreeMap<String, String>, String, Option<BTreeMap<String, String>>, Option<BTreeMap<String, String>>, Option<String>);
 
 /// Fila de Trabajo, valores a aplicar y revisión que ve Excel.
-type Cambio = (usize, BTreeMap<&'static str, String>, BTreeMap<String, String>);
+/// Además, las gestiones de correo que deja la combinación (si cambian) y las que trae Excel (nueva línea base).
+type Cambio = (usize, BTreeMap<&'static str, String>, BTreeMap<String, String>, Option<(Option<BTreeMap<String, String>>, String)>);
 
 /// Elecciones de la persona ante un conflicto: (fila, campo) → valor.
 pub type Resoluciones = BTreeMap<(usize, String), String>;
@@ -82,6 +83,37 @@ fn revision_local(r: &Registro) -> BTreeMap<&'static str, Option<String>> {
     m
 }
 
+/// Texto canónico de las gestiones de correo de una fila (el valor que se compara y se muestra en un conflicto).
+fn texto_correo(m: &BTreeMap<String, String>) -> String {
+    serde_json::to_string(m).unwrap_or_default()
+}
+
+/// `record_edits.decode`: la celda técnica `NURUS_DECISIONES` de la copia. `Ok(None)` si está vacía; el error es el de
+/// Python. Devuelve las gestiones de correo (sin las `auto`, que son la ausencia de gestión).
+fn leer_decisiones(texto: &str) -> Result<Option<BTreeMap<String, String>>, Error> {
+    let invalida = || rechazo("La columna técnica NURUS_DECISIONES no es válida. No se importaron cambios.");
+    if texto.trim().is_empty() {
+        return Ok(None);
+    }
+    let datos: serde_json::Value = serde_json::from_str(texto).map_err(|_| invalida())?;
+    let decisiones = datos["decisions"].as_object().ok_or_else(invalida)?;
+    let correo = match decisiones.get("mail") {
+        None => serde_json::Map::new(),
+        Some(m) => m.as_object().ok_or_else(invalida)?.clone(),
+    };
+    let resolucion = decisiones.get("resolution").and_then(serde_json::Value::as_str).unwrap_or("auto");
+    if datos["version"] != 1
+        || !datos["overrides"].is_object()
+        || !datos["word_overrides"].is_object()
+        || !datos["excluded"].is_boolean()
+        || !["auto", "review", "none", "PC_IE", "PC_INFO", "NOMENCL"].contains(&resolucion)
+        || correo.values().any(|v| !matches!(v.as_str(), Some("auto" | "include" | "omit")))
+    {
+        return Err(invalida());
+    }
+    Ok(Some(correo.into_iter().filter_map(|(k, v)| v.as_str().filter(|v| *v != "auto").map(|v| (k, v.to_string()))).collect()))
+}
+
 fn pos(headers: &[String], titulo: &str) -> Option<usize> {
     let k = normalizar(titulo);
     headers.iter().position(|h| normalizar(h) == k)
@@ -101,6 +133,7 @@ pub fn recordar_exportacion(w: &mut Trabajo, hoja: &str) {
         let base = revision_excel(&cols, &fila);
         r.sync_local = Some(base.clone());
         r.sync_base = Some(base);
+        r.sync_correo = Some(texto_correo(&r.gestiones_correo));
         r.id_excel = id;
     }
 }
@@ -217,7 +250,26 @@ pub fn actualizar(w: &mut Trabajo, cfg: &Config, headers: &[String], filas: &[Ve
                 },
             }
         }
-        cambios.push((i, fusion, excel));
+        // Gestiones de correo (`NURUS_DECISIONES`): Excel solo manda si cambió desde la última copia y la fila no cambió aquí.
+        let mut correo = None;
+        if let Some(c) = pos(headers, "NURUS_DECISIONES") {
+            if let Some(remotas) = leer_decisiones(&fila.get(c).map(|v| v.display()).unwrap_or_default())? {
+                let (local, remoto) = (texto_correo(&r.gestiones_correo), texto_correo(&remotas));
+                let base = r.sync_correo.as_ref();
+                let nuevo = match combinar("NURUS_DECISIONES", &Some(local.clone()), base, base, &remoto, base.is_some()) {
+                    Ok(v) => Some(v.map(|_| remotas.clone())),
+                    Err((b, l, e)) => match resoluciones.get(&(i, "NURUS_DECISIONES".to_string())) {
+                        Some(v) => Some(Some(serde_json::from_str(v).unwrap_or_default())),
+                        None => {
+                            conflictos.push(Conflicto { fila: i, campo: "NURUS_DECISIONES".into(), base: b, local: l, entrante: e });
+                            None
+                        }
+                    },
+                };
+                correo = nuevo.map(|n| (n, remoto));
+            }
+        }
+        cambios.push((i, fusion, excel, correo));
     }
     if !conflictos.is_empty() {
         return Err(Error::Conflictos(conflictos));
@@ -225,9 +277,9 @@ pub fn actualizar(w: &mut Trabajo, cfg: &Config, headers: &[String], filas: &[Ve
     let mut resumen = Resumen::default();
     let mut origen_editado = 0;
     let mut nuevos_valores: Vec<(usize, Vec<(usize, Cell)>)> = Vec::new();
-    for ((i, fusion, excel), fila) in cambios.into_iter().zip(filas) {
+    for ((i, fusion, excel, correo), fila) in cambios.into_iter().zip(filas) {
         let r = &mut w.registros[i];
-        let antes = (r.editada.clone(), r.res.clone(), r.campos.clone());
+        let antes = (r.editada.clone(), r.res.clone(), r.campos.clone(), r.gestiones_correo.clone());
         for (campo, v) in fusion {
             match campo {
                 // Una observación vaciada en Excel no borra la local ni la propuesta.
@@ -242,7 +294,13 @@ pub fn actualizar(w: &mut Trabajo, cfg: &Config, headers: &[String], filas: &[Ve
                 }
             }
         }
-        if antes != (r.editada.clone(), r.res.clone(), r.campos.clone()) {
+        if let Some((nuevas, remoto)) = correo {
+            if let Some(nuevas) = nuevas {
+                r.gestiones_correo = nuevas;
+            }
+            r.sync_correo = Some(remoto);
+        }
+        if antes != (r.editada.clone(), r.res.clone(), r.campos.clone(), r.gestiones_correo.clone()) {
             resumen.filas_cambiadas += 1;
         }
         r.sync_base = Some(excel.clone());
@@ -275,7 +333,7 @@ pub fn actualizar(w: &mut Trabajo, cfg: &Config, headers: &[String], filas: &[Ve
         let extras: HashMap<usize, Extras> = w
             .registros
             .iter()
-            .map(|r| (r.fila_excel, (r.campos.clone(), r.id_excel.clone(), r.sync_base.clone(), r.sync_local.clone())))
+            .map(|r| (r.fila_excel, (r.campos.clone(), r.id_excel.clone(), r.sync_base.clone(), r.sync_local.clone(), r.sync_correo.clone())))
             .collect();
         let hoja = w.sheet;
         for (i, valores) in nuevos_valores {
@@ -288,11 +346,12 @@ pub fn actualizar(w: &mut Trabajo, cfg: &Config, headers: &[String], filas: &[Ve
         }
         w.analizar(cfg);
         for r in &mut w.registros {
-            if let Some((campos, id, base, local)) = extras.get(&r.fila_excel) {
+            if let Some((campos, id, base, local, correo)) = extras.get(&r.fila_excel) {
                 r.campos = campos.clone();
                 r.id_excel = id.clone();
                 r.sync_base = base.clone();
                 r.sync_local = local.clone();
+                r.sync_correo = correo.clone();
             }
         }
         resumen.recalculadas = origen_editado;
@@ -377,6 +436,10 @@ mod pruebas {
                 }
             }
         }
+        for c in caso["correos_locales"].as_array().into_iter().flatten() {
+            let mapa = c[1].as_object().unwrap().iter().map(|(k, v)| (k.clone(), texto(v))).collect();
+            w.registros[c[0].as_u64().unwrap() as usize].gestiones_correo = mapa;
+        }
         let mut headers = producto_excel::encabezados(&w);
         let mut filas = producto_excel::filas(&w);
         for e in caso["remotas"].as_array().unwrap() {
@@ -410,8 +473,12 @@ mod pruebas {
         match (&resultado, caso.get("error"), caso.get("conflictos")) {
             (Err(Error::Rechazo(m)), Some(e), _) if *m == texto(e) => {}
             (Err(Error::Conflictos(c)), None, Some(esperados)) => {
-                let mut obtenidos: Vec<Vec<String>> =
-                    c.iter().map(|x| vec![x.fila.to_string(), x.campo.clone(), x.base.clone(), x.local.clone(), x.entrante.clone()]).collect();
+                // La celda técnica trae todo el estado de la fila en Python: solo se compara qué fila y qué campo chocan.
+                let tecnica = |x: &Conflicto, v: &String| if x.campo == "NURUS_DECISIONES" { String::new() } else { v.clone() };
+                let mut obtenidos: Vec<Vec<String>> = c
+                    .iter()
+                    .map(|x| vec![x.fila.to_string(), x.campo.clone(), tecnica(x, &x.base), tecnica(x, &x.local), tecnica(x, &x.entrante)])
+                    .collect();
                 obtenidos.sort();
                 let mut previstos: Vec<Vec<String>> = esperados
                     .as_array()
@@ -438,6 +505,12 @@ mod pruebas {
             let esperada = texto(propuesta).replace("AFT Ejemplo DOS", "AFT Ejemplo Dos");
             if r.propuesta != esperada {
                 d.push(format!("fila {i} propuesta: Rust {:?} · Python {esperada:?}", r.propuesta));
+            }
+        }
+        for (i, esperado) in caso["correo"].as_array().unwrap().iter().enumerate() {
+            let previsto: BTreeMap<String, String> = esperado.as_object().unwrap().iter().map(|(k, v)| (k.clone(), texto(v))).collect();
+            if w.registros[i].gestiones_correo != previsto {
+                d.push(format!("fila {i} gestiones de correo: Rust {:?} · Python {previsto:?}", w.registros[i].gestiones_correo));
             }
         }
         for (i, esperada) in caso["revision"].as_array().unwrap().iter().enumerate() {
@@ -477,7 +550,7 @@ mod pruebas {
             println!("FALLA {f}");
         }
         println!("SYNC: {iguales}/{}, fallos {}", casos.len(), fallos.len());
-        assert_eq!(casos.len(), 17, "el oráculo debe traer 17 casos");
+        assert_eq!(casos.len(), 25, "el oráculo debe traer 25 casos");
         assert!(fallos.is_empty());
     }
 
@@ -494,6 +567,11 @@ mod pruebas {
         assert!(comparar(&datos, &recalculo).is_empty());
         recalculo["reglas"][1] = serde_json::json!(["ESPERA.E05_PROYECTO_Y_CORREO"]);
         assert!(!comparar(&datos, &recalculo).is_empty(), "una regla recalculada alterada no se detecta");
+        // Y la gestión de correo que Python combinó desde la celda técnica.
+        let mut correo = datos["casos"].as_array().unwrap().iter().find(|c| c["escenario"] == "correo_remoto").unwrap().clone();
+        assert!(comparar(&datos, &correo).is_empty());
+        correo["correo"][0] = serde_json::json!({"medidas": "include"});
+        assert!(!comparar(&datos, &correo).is_empty(), "una gestión de correo esperada alterada no se detecta");
     }
 
     /// El archivo que guarda Flow Rust se puede volver a leer y a importar sin cambios ni conflictos.
@@ -509,5 +587,34 @@ mod pruebas {
         let resumen = actualizar(&mut w, &Config::default(), &headers, &filas, &Resoluciones::new()).unwrap();
         assert_eq!(resumen.filas_cambiadas, 0, "{resumen:?}");
         assert!(resumen.avisos.is_empty(), "{:?}", resumen.avisos);
+    }
+
+    /// Un conflicto en las gestiones de correo se resuelve con el valor que elige la persona (el texto que muestra el
+    /// diálogo: el de aquí o el de Excel) y la línea base pasa a la de Excel.
+    #[test]
+    fn un_conflicto_de_gestion_de_correo_se_resuelve_con_el_valor_elegido() {
+        let datos: Value = serde_json::from_str(include_str!("../tests/datos/sync.json")).unwrap();
+        let celda = |mail: &str| {
+            Cell::Text(format!(r#"{{"version":1,"decisions":{{"mail":{{"medidas":"{mail}"}}}},"overrides":{{}},"word_overrides":{{}},"excluded":false}}"#))
+        };
+        for (elegido, esperado) in [("local", "omit"), ("excel", "include")] {
+            let mut w = trabajo(&datos);
+            recordar_exportacion(&mut w, "ESPERA");
+            w.registros[0].gestiones_correo.insert("medidas".into(), "omit".into());
+            let headers = producto_excel::encabezados(&w);
+            let mut filas = producto_excel::filas(&w);
+            let c = pos(&headers, "NURUS_DECISIONES").unwrap();
+            filas[0][c] = celda("include");
+            let Err(Error::Conflictos(conflictos)) = actualizar(&mut w, &Config::default(), &headers, &filas, &Resoluciones::new()) else {
+                panic!("debía haber un conflicto");
+            };
+            assert_eq!((conflictos.len(), conflictos[0].campo.as_str()), (1, "NURUS_DECISIONES"));
+            assert_eq!(w.registros[0].gestiones_correo["medidas"], "omit", "sin resolver no se aplica nada");
+            let texto = if elegido == "local" { conflictos[0].local.clone() } else { conflictos[0].entrante.clone() };
+            let resoluciones = Resoluciones::from([((0, "NURUS_DECISIONES".to_string()), texto)]);
+            actualizar(&mut w, &Config::default(), &headers, &filas, &resoluciones).unwrap();
+            assert_eq!(w.registros[0].gestiones_correo["medidas"], esperado, "{elegido}");
+            assert_eq!(w.registros[0].sync_correo.as_deref(), Some(r#"{"medidas":"include"}"#), "la línea base es la de Excel");
+        }
     }
 }

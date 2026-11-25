@@ -209,9 +209,13 @@ pub(crate) fn identificadores(w: &Trabajo, hoja: &str) -> Vec<String> {
 /// `record_edits.encode` (versión 1): decisiones legibles por Flow Python al reimportar la copia.
 pub(crate) fn decisiones(r: &Registro) -> String {
     let resolucion = if TIPOS_RES.contains(&r.res.as_str()) { r.res.as_str() } else { "auto" };
+    let mut decisions = json!({"resolution": resolucion});
+    if !r.gestiones_correo.is_empty() {
+        decisions["mail"] = json!(r.gestiones_correo);
+    }
     json!({
         "version": 1,
-        "decisions": {"resolution": resolucion},
+        "decisions": decisions,
         "overrides": {},
         "word_overrides": {},
         "excluded": r.excluido,

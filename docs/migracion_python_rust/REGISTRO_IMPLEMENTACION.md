@@ -238,3 +238,11 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Acredita: `actualizar_desde_excel_igual_a_python` (17 casos: reglas iguales y propuesta igual salvo R6) y `oraculo_de_sync_detecta_alteraciones`. `probar_app.sh todo`: 72 y 90 pruebas, 0 fallos; clippy limpio.
 - Diferencias: solo archivos de RUS (un paquete avisa); se reanalizan todas las filas; `NURUS_DECISIONES` no se combina (sin F08 no hay estado que combinar).
 - CI: run 45625544370 verde (`linux` y `validar`, `sync.json` regenerado igual en Windows).
+
+## 2026-11-25 · E-A8 · Gestión de correo por fila y NURUS_DECISIONES
+
+- Cambió: `trabajo.rs` (`gestiones_correo`, `sync_correo`, sesión), `productos.rs` (borradores), `conciliar.rs`, `copia_excel.rs`, `sincronizar.rs` (`leer_decisiones`, combinación) y el selector de la fila en `ui.rs`; `generar_correos.py` y `generar_sync.py` con sus JSON.
+- Acredita: `correos_iguales_a_python` (24 casos), `actualizar_desde_excel_igual_a_python` (25 casos), las dos pruebas permanentes que alteran lo esperado y dos de comportamiento. `probar_app.sh todo`: 72 y 92 pruebas, 0 fallos; clippy limpio.
+- Diferencias: solo la gestión de correo de `NURUS_DECISIONES` se combina (Python combina todo el estado de la fila); sin exclusión manual, anulaciones de origen ni variables de Word por fila.
+- Pendiente: CI de Windows verde.
+

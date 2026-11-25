@@ -10,6 +10,7 @@ Uso (desde la raíz; la CI lo regenera en Windows y exige el mismo resultado (si
 import json
 import sys
 import tempfile
+from copy import deepcopy
 from datetime import date
 from pathlib import Path
 
@@ -20,7 +21,7 @@ sys.path[:0] = [str(RAIZ / 'src')]
 
 from openpyxl import Workbook, load_workbook  # noqa: E402
 from nurus.personal.config import defaults  # noqa: E402
-from nurus.personal.record_edits import apply  # noqa: E402
+from nurus.personal.record_edits import apply, encode  # noqa: E402
 from nurus.personal.sync import SyncConflict  # noqa: E402
 from nurus.personal.work import Work  # noqa: E402
 
@@ -81,24 +82,39 @@ def editar_excel(obra, ediciones, quitar_id=False, quitar_filas=0, cambiar_ident
     libro.save(obra.output)
 
 
-def caso(nombre, locales=(), remotas=(), resoluciones=None, **excel):
+def tecnico(obra, fila, mail):
+    """La celda `NURUS_DECISIONES` que dejaría Flow Python con esas gestiones de correo en la fila."""
+    copia = deepcopy(obra.rows[fila])
+    copia.decisions = {**copia.decisions, 'mail': dict(mail), 'structured': True}
+    return encode(copia)
+
+
+def caso(nombre, locales=(), remotas=(), resoluciones=None, correos_locales=(), correos_remotos=(), celda_tecnica=None, **excel):
     with tempfile.TemporaryDirectory() as t:
         carpeta = Path(t)
         obra = trabajo(carpeta)
         indice = {fila.id: i for i, fila in enumerate(obra.rows)}
         for fila, campo, valor in locales:
             apply(obra, [obra.rows[fila].id], review={campo: valor})
+        for fila, mail in correos_locales:
+            apply(obra, [obra.rows[fila].id], decisions={'mail': dict(mail)})
+        remotas = list(remotas) + [(fila, 'NURUS_DECISIONES', tecnico(obra, fila, mail)) for fila, mail in correos_remotos]
+        if celda_tecnica is not None:
+            remotas.append((0, 'NURUS_DECISIONES', celda_tecnica))
         editar_excel(obra, remotas, **excel)
         claves = {(obra.rows[i].id, c): v for (i, c), v in (resoluciones or {}).items()}
         salida = {'escenario': nombre, 'locales': [list(x) for x in locales], 'remotas': [list(x) for x in remotas],
+                  'correos_locales': [[f, m] for f, m in correos_locales],
                   'excel': {k: v for k, v in excel.items()},
                   'resoluciones': [[i, c, v] for (i, c), v in (resoluciones or {}).items()]}
         try:
             cambio = obra.refresh(claves or None)
             salida['cambio'] = bool(cambio)
         except SyncConflict as e:
+            # La celda técnica trae todo el estado de la fila: solo se compara qué fila y qué campo chocan.
             salida['conflictos'] = sorted(
-                [[indice[c.record_id], c.field, texto(c.base), texto(c.local), texto(c.incoming)] for c in e.conflicts]
+                [[indice[c.record_id], c.field] + ([''] * 3 if c.field == 'NURUS_DECISIONES' else [texto(c.base), texto(c.local), texto(c.incoming)])
+                 for c in e.conflicts]
             )
         except ValueError as e:
             salida['error'] = str(e)
@@ -106,6 +122,7 @@ def caso(nombre, locales=(), remotas=(), resoluciones=None, **excel):
         # Lo que recalcula Python al cambiar una columna de origen en la copia: la propuesta y las reglas de cada fila.
         salida['propuestas'] = [fila.observation for fila in obra.rows]
         salida['reglas'] = [list(fila.rules) for fila in obra.rows]
+        salida['correo'] = [dict(fila.decisions.get('mail', {})) for fila in obra.rows]
         return salida
 
 
@@ -136,6 +153,18 @@ def main():
         caso('origen_editado_con_conflicto', locales=[(1, 'OBSERVACION', 'Versión local')],
              remotas=[(1, 'T ESPERA', 120), (1, 'OBSERVACION', 'Versión de Excel')]),
         caso('origen_con_el_mismo_valor', remotas=[(0, 'T ESPERA', 30)]),
+        # E-A8 (F08): gestiones de correo por fila en `NURUS_DECISIONES`.
+        caso('correo_remoto', correos_remotos=[(0, {'medidas': 'omit'})]),
+        caso('correo_local', correos_locales=[(1, {'programa_espera': 'include'})]),
+        caso('correo_remoto_y_revision', correos_remotos=[(2, {'programa_espera': 'omit', 'medidas': 'include'})],
+             remotas=[(2, 'CC', 1)]),
+        caso('correo_conflicto', correos_locales=[(0, {'medidas': 'omit'})], correos_remotos=[(0, {'medidas': 'include'})]),
+        caso('correo_igual_en_ambos', correos_locales=[(0, {'medidas': 'omit'})], correos_remotos=[(0, {'medidas': 'omit'})]),
+        caso('correo_local_y_remoto_en_filas_distintas', correos_locales=[(0, {'medidas': 'omit'})],
+             correos_remotos=[(1, {'programa_espera': 'include'})]),
+        caso('celda_tecnica_invalida', celda_tecnica='esto no es json'),
+        caso('celda_tecnica_con_gestion_invalida',
+             celda_tecnica=json.dumps({'version': 1, 'decisions': {'mail': {'medidas': 'siempre'}}, 'overrides': {}, 'word_overrides': {}, 'excluded': False})),
     ]
     # Bytes y no texto: en Windows `write_text` cambiaría los saltos de línea y la CI compara byte a byte.
     destino.write_bytes(json.dumps({

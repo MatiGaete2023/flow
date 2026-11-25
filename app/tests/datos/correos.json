@@ -181,6 +181,7 @@
    "tribunales": null,
    "firma": true,
    "cc_adicional": true,
+   "decisiones": [],
    "borradores": [
     {
      "tipo": "espera",
@@ -305,6 +306,7 @@
    "tribunales": null,
    "firma": true,
    "cc_adicional": true,
+   "decisiones": [],
    "borradores": [
     {
      "tipo": "espera",
@@ -406,6 +408,7 @@
    "tribunales": null,
    "firma": true,
    "cc_adicional": true,
+   "decisiones": [],
    "borradores": [
     {
      "tipo": "espera",
@@ -531,6 +534,7 @@
    "tribunales": null,
    "firma": true,
    "cc_adicional": true,
+   "decisiones": [],
    "borradores": [
     {
      "tipo": "espera",
@@ -604,6 +608,7 @@
    ],
    "firma": true,
    "cc_adicional": true,
+   "decisiones": [],
    "borradores": [
     {
      "tipo": "espera",
@@ -678,6 +683,7 @@
    "tribunales": null,
    "firma": false,
    "cc_adicional": false,
+   "decisiones": [],
    "borradores": [
     {
      "tipo": "espera",
@@ -800,6 +806,7 @@
    "tribunales": null,
    "firma": true,
    "cc_adicional": true,
+   "decisiones": [],
    "borradores": [
     {
      "tipo": "cumplimiento",
@@ -887,6 +894,7 @@
    "tribunales": null,
    "firma": true,
    "cc_adicional": true,
+   "decisiones": [],
    "borradores": [
     {
      "tipo": "cumplimiento",
@@ -963,6 +971,7 @@
    "tribunales": null,
    "firma": true,
    "cc_adicional": true,
+   "decisiones": [],
    "borradores": [
     {
      "tipo": "cumplimiento",
@@ -1051,6 +1060,7 @@
    "tribunales": null,
    "firma": true,
    "cc_adicional": true,
+   "decisiones": [],
    "borradores": [
     {
      "tipo": "cumplimiento",
@@ -1124,6 +1134,7 @@
    ],
    "firma": true,
    "cc_adicional": true,
+   "decisiones": [],
    "borradores": [
     {
      "tipo": "cumplimiento",
@@ -1173,6 +1184,7 @@
    "tribunales": null,
    "firma": false,
    "cc_adicional": false,
+   "decisiones": [],
    "borradores": [
     {
      "tipo": "cumplimiento",
@@ -1258,6 +1270,7 @@
    "tribunales": null,
    "firma": true,
    "cc_adicional": true,
+   "decisiones": [],
    "borradores": [
     {
      "tipo": "informes",
@@ -1358,6 +1371,7 @@
    "tribunales": null,
    "firma": true,
    "cc_adicional": true,
+   "decisiones": [],
    "borradores": [
     {
      "tipo": "informes",
@@ -1435,6 +1449,7 @@
    "tribunales": null,
    "firma": true,
    "cc_adicional": true,
+   "decisiones": [],
    "borradores": [
     {
      "tipo": "informes",
@@ -1536,6 +1551,7 @@
    "tribunales": null,
    "firma": true,
    "cc_adicional": true,
+   "decisiones": [],
    "borradores": [
     {
      "tipo": "informes",
@@ -1599,6 +1615,7 @@
    ],
    "firma": true,
    "cc_adicional": true,
+   "decisiones": [],
    "borradores": [
     {
      "tipo": "informes",
@@ -1661,6 +1678,7 @@
    "tribunales": null,
    "firma": false,
    "cc_adicional": false,
+   "decisiones": [],
    "borradores": [
     {
      "tipo": "informes",
@@ -1729,6 +1747,679 @@
      "para": "fae@ejemplo.invalid",
      "cc": "ucc_concepcion@pjud.cl",
      "cuerpo": "Buen día:\n\nJunto con saludar, se acompaña nómina de informes que figuran pendientes de entrega en RUS, correspondientes a FAE EJEMPLO y Juzgado de Familia de Tomé. Se solicita informar su estado y remitir los antecedentes que correspondan, o precisar si ya fueron presentados.\n\nAtentamente,",
+     "rits": [
+      "X-4-2026"
+     ],
+     "obligatorio": true,
+     "destino": "programas"
+    }
+   ],
+   "acciones": {
+    "X-1-2026": [
+     "programa_vencido",
+     "PC_INFO"
+    ],
+    "X-2-2026": [
+     "programa_por_vencer"
+    ],
+    "X-3-2026": [],
+    "X-4-2026": [
+     "programa_vencido",
+     "PC_INFO"
+    ]
+   }
+  },
+  {
+   "nombre": "espera_omite_un_programa",
+   "modo": "ESPERA",
+   "modalidades": null,
+   "rits": null,
+   "tribunales": null,
+   "firma": true,
+   "cc_adicional": true,
+   "decisiones": [
+    [
+     "X-1-2026",
+     "programa_espera",
+     "omit"
+    ]
+   ],
+   "borradores": [
+    {
+     "tipo": "espera",
+     "asunto": "Revisión pestaña \"Espera\" del módulo RUS — Jgdo. L. y G. de Laja",
+     "para": "laja@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña espera del módulo RUS en SITFA, se revisaron todos los registros pertenecientes a todas las modalidades y se registraron observaciones en bitácora.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-1-2026",
+      "X-2-2026",
+      "X-3-2026",
+      "X-6-2026"
+     ],
+     "obligatorio": false,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "espera",
+     "asunto": "Revisión pestaña \"Espera\" del módulo RUS — Jgdo. L. y G. de Mulchén",
+     "para": "mulchen@ejemplo.invalid; mulchen2@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña espera del módulo RUS en SITFA, se revisaron todos los registros pertenecientes a todas las modalidades y se registraron observaciones en bitácora.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-4-2026"
+     ],
+     "obligatorio": false,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "espera",
+     "asunto": "Revisión pestaña \"Espera\" del módulo RUS — Juzgado de Familia de Tomé",
+     "para": "",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña espera del módulo RUS en SITFA, se revisaron todos los registros pertenecientes a todas las modalidades y se registraron observaciones en bitácora.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-5-2026"
+     ],
+     "obligatorio": false,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "programa_espera",
+     "asunto": "Lista de espera — AFT EJEMPLO DOS — Jgdo. L. y G. de Laja",
+     "para": "",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se acompaña nómina de registros en lista de espera de AFT EJEMPLO DOS, correspondientes a Jgdo. L. y G. de Laja. Se solicita informar la fecha estimada de ingreso efectivo y el estado de las gestiones realizadas.\n\nAtentamente,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-3-2026"
+     ],
+     "obligatorio": true,
+     "destino": "programas"
+    },
+    {
+     "tipo": "programa_espera",
+     "asunto": "Lista de espera — AFT EJEMPLO UNO — Jgdo. L. y G. de Laja",
+     "para": "uno@ejemplo.invalid; uno2@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se acompaña nómina de registros en lista de espera de AFT EJEMPLO UNO, correspondientes a Jgdo. L. y G. de Laja. Se solicita informar la fecha estimada de ingreso efectivo y el estado de las gestiones realizadas.\n\nAtentamente,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-2-2026"
+     ],
+     "obligatorio": true,
+     "destino": "programas"
+    },
+    {
+     "tipo": "programa_espera",
+     "asunto": "Lista de espera — AFT EJEMPLO UNO — Jgdo. L. y G. de Mulchén",
+     "para": "uno@ejemplo.invalid; uno2@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se acompaña nómina de registros en lista de espera de AFT EJEMPLO UNO, correspondientes a Jgdo. L. y G. de Mulchén. Se solicita informar la fecha estimada de ingreso efectivo y el estado de las gestiones realizadas.\n\nAtentamente,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-4-2026"
+     ],
+     "obligatorio": true,
+     "destino": "programas"
+    },
+    {
+     "tipo": "programa_espera",
+     "asunto": "Lista de espera — FAE EJEMPLO — Juzgado de Familia de Tomé",
+     "para": "fae@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se acompaña nómina de registros en lista de espera de FAE EJEMPLO, correspondientes a Juzgado de Familia de Tomé. Se solicita informar la fecha estimada de ingreso efectivo y el estado de las gestiones realizadas.\n\nAtentamente,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-5-2026"
+     ],
+     "obligatorio": true,
+     "destino": "programas"
+    }
+   ],
+   "acciones": {
+    "X-1-2026": [
+     "programa_espera",
+     "PC_IE"
+    ],
+    "X-2-2026": [
+     "programa_espera",
+     "PC_IE"
+    ],
+    "X-3-2026": [
+     "programa_espera",
+     "PC_IE"
+    ],
+    "X-4-2026": [
+     "programa_espera",
+     "PC_IE"
+    ],
+    "X-5-2026": [
+     "programa_espera",
+     "PC_IE"
+    ],
+    "X-6-2026": []
+   }
+  },
+  {
+   "nombre": "espera_incluye_una_fila_sin_accion",
+   "modo": "ESPERA",
+   "modalidades": null,
+   "rits": null,
+   "tribunales": null,
+   "firma": true,
+   "cc_adicional": true,
+   "decisiones": [
+    [
+     "X-6-2026",
+     "programa_espera",
+     "include"
+    ]
+   ],
+   "borradores": [
+    {
+     "tipo": "espera",
+     "asunto": "Revisión pestaña \"Espera\" del módulo RUS — Jgdo. L. y G. de Laja",
+     "para": "laja@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña espera del módulo RUS en SITFA, se revisaron todos los registros pertenecientes a todas las modalidades y se registraron observaciones en bitácora.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-1-2026",
+      "X-2-2026",
+      "X-3-2026",
+      "X-6-2026"
+     ],
+     "obligatorio": false,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "espera",
+     "asunto": "Revisión pestaña \"Espera\" del módulo RUS — Jgdo. L. y G. de Mulchén",
+     "para": "mulchen@ejemplo.invalid; mulchen2@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña espera del módulo RUS en SITFA, se revisaron todos los registros pertenecientes a todas las modalidades y se registraron observaciones en bitácora.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-4-2026"
+     ],
+     "obligatorio": false,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "espera",
+     "asunto": "Revisión pestaña \"Espera\" del módulo RUS — Juzgado de Familia de Tomé",
+     "para": "",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña espera del módulo RUS en SITFA, se revisaron todos los registros pertenecientes a todas las modalidades y se registraron observaciones en bitácora.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-5-2026"
+     ],
+     "obligatorio": false,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "programa_espera",
+     "asunto": "Lista de espera — AFT EJEMPLO DOS — Jgdo. L. y G. de Laja",
+     "para": "",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se acompaña nómina de registros en lista de espera de AFT EJEMPLO DOS, correspondientes a Jgdo. L. y G. de Laja. Se solicita informar la fecha estimada de ingreso efectivo y el estado de las gestiones realizadas.\n\nAtentamente,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-3-2026"
+     ],
+     "obligatorio": true,
+     "destino": "programas"
+    },
+    {
+     "tipo": "programa_espera",
+     "asunto": "Lista de espera — AFT EJEMPLO UNO — Jgdo. L. y G. de Laja",
+     "para": "uno@ejemplo.invalid; uno2@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se acompaña nómina de registros en lista de espera de AFT EJEMPLO UNO, correspondientes a Jgdo. L. y G. de Laja. Se solicita informar la fecha estimada de ingreso efectivo y el estado de las gestiones realizadas.\n\nAtentamente,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-1-2026",
+      "X-2-2026",
+      "X-6-2026"
+     ],
+     "obligatorio": true,
+     "destino": "programas"
+    },
+    {
+     "tipo": "programa_espera",
+     "asunto": "Lista de espera — AFT EJEMPLO UNO — Jgdo. L. y G. de Mulchén",
+     "para": "uno@ejemplo.invalid; uno2@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se acompaña nómina de registros en lista de espera de AFT EJEMPLO UNO, correspondientes a Jgdo. L. y G. de Mulchén. Se solicita informar la fecha estimada de ingreso efectivo y el estado de las gestiones realizadas.\n\nAtentamente,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-4-2026"
+     ],
+     "obligatorio": true,
+     "destino": "programas"
+    },
+    {
+     "tipo": "programa_espera",
+     "asunto": "Lista de espera — FAE EJEMPLO — Juzgado de Familia de Tomé",
+     "para": "fae@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se acompaña nómina de registros en lista de espera de FAE EJEMPLO, correspondientes a Juzgado de Familia de Tomé. Se solicita informar la fecha estimada de ingreso efectivo y el estado de las gestiones realizadas.\n\nAtentamente,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-5-2026"
+     ],
+     "obligatorio": true,
+     "destino": "programas"
+    }
+   ],
+   "acciones": {
+    "X-1-2026": [
+     "programa_espera",
+     "PC_IE"
+    ],
+    "X-2-2026": [
+     "programa_espera",
+     "PC_IE"
+    ],
+    "X-3-2026": [
+     "programa_espera",
+     "PC_IE"
+    ],
+    "X-4-2026": [
+     "programa_espera",
+     "PC_IE"
+    ],
+    "X-5-2026": [
+     "programa_espera",
+     "PC_IE"
+    ],
+    "X-6-2026": []
+   }
+  },
+  {
+   "nombre": "cumplimiento_incluye_medidas",
+   "modo": "CUMPLIMIENTO",
+   "modalidades": null,
+   "rits": null,
+   "tribunales": null,
+   "firma": true,
+   "cc_adicional": true,
+   "decisiones": [
+    [
+     "X-4-2026",
+     "medidas",
+     "include"
+    ],
+    [
+     "X-1-2026",
+     "programa_vencido",
+     "omit"
+    ]
+   ],
+   "borradores": [
+    {
+     "tipo": "cumplimiento",
+     "asunto": "Revisión pestaña \"Cumplimiento\" del módulo RUS — Jgdo. L. y G. de Laja",
+     "para": "laja@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña cumplimiento del modulo RUS en SITFA, se revisaron todos los registros pertenecientes a todas las modalidades y se registraron observaciones en bitácora.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-1-2026",
+      "X-2-2026"
+     ],
+     "obligatorio": false,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "cumplimiento",
+     "asunto": "Revisión pestaña \"Cumplimiento\" del módulo RUS — Jgdo. L. y G. de Mulchén",
+     "para": "mulchen@ejemplo.invalid; mulchen2@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña cumplimiento del modulo RUS en SITFA, se revisaron todos los registros pertenecientes a todas las modalidades y se registraron observaciones en bitácora.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-3-2026"
+     ],
+     "obligatorio": false,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "cumplimiento",
+     "asunto": "Revisión pestaña \"Cumplimiento\" del módulo RUS — Juzgado de Familia de Tomé",
+     "para": "",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña cumplimiento del modulo RUS en SITFA, se revisaron todos los registros pertenecientes a todas las modalidades y se registraron observaciones en bitácora.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-4-2026"
+     ],
+     "obligatorio": false,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "medidas",
+     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Laja — 01/01/2099",
+     "para": "laja@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 01/01/2099 en todas las modalidades.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-1-2026",
+      "X-2-2026"
+     ],
+     "obligatorio": true,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "medidas",
+     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Mulchén — 01/01/2099",
+     "para": "mulchen@ejemplo.invalid; mulchen2@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 01/01/2099 en todas las modalidades.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-3-2026"
+     ],
+     "obligatorio": true,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "medidas",
+     "asunto": "Medidas sin vigencia y por vencer — Juzgado de Familia de Tomé — 01/01/2099",
+     "para": "",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 01/01/2099 en todas las modalidades.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-4-2026"
+     ],
+     "obligatorio": true,
+     "destino": "tribunales"
+    }
+   ],
+   "acciones": {
+    "X-1-2026": [
+     "medidas"
+    ],
+    "X-2-2026": [
+     "medidas"
+    ],
+    "X-3-2026": [
+     "medidas"
+    ],
+    "X-4-2026": []
+   }
+  },
+  {
+   "nombre": "cumplimiento_omite_y_otro_tipo_sin_efecto",
+   "modo": "CUMPLIMIENTO",
+   "modalidades": null,
+   "rits": null,
+   "tribunales": null,
+   "firma": true,
+   "cc_adicional": true,
+   "decisiones": [
+    [
+     "X-2-2026",
+     "medidas",
+     "omit"
+    ],
+    [
+     "X-2-2026",
+     "programa_espera",
+     "omit"
+    ]
+   ],
+   "borradores": [
+    {
+     "tipo": "cumplimiento",
+     "asunto": "Revisión pestaña \"Cumplimiento\" del módulo RUS — Jgdo. L. y G. de Laja",
+     "para": "laja@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña cumplimiento del modulo RUS en SITFA, se revisaron todos los registros pertenecientes a todas las modalidades y se registraron observaciones en bitácora.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-1-2026",
+      "X-2-2026"
+     ],
+     "obligatorio": false,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "cumplimiento",
+     "asunto": "Revisión pestaña \"Cumplimiento\" del módulo RUS — Jgdo. L. y G. de Mulchén",
+     "para": "mulchen@ejemplo.invalid; mulchen2@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña cumplimiento del modulo RUS en SITFA, se revisaron todos los registros pertenecientes a todas las modalidades y se registraron observaciones en bitácora.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-3-2026"
+     ],
+     "obligatorio": false,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "cumplimiento",
+     "asunto": "Revisión pestaña \"Cumplimiento\" del módulo RUS — Juzgado de Familia de Tomé",
+     "para": "",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña cumplimiento del modulo RUS en SITFA, se revisaron todos los registros pertenecientes a todas las modalidades y se registraron observaciones en bitácora.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-4-2026"
+     ],
+     "obligatorio": false,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "medidas",
+     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Laja — 01/01/2099",
+     "para": "laja@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 01/01/2099 en todas las modalidades.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-1-2026"
+     ],
+     "obligatorio": true,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "medidas",
+     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Mulchén — 01/01/2099",
+     "para": "mulchen@ejemplo.invalid; mulchen2@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 01/01/2099 en todas las modalidades.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-3-2026"
+     ],
+     "obligatorio": true,
+     "destino": "tribunales"
+    }
+   ],
+   "acciones": {
+    "X-1-2026": [
+     "medidas"
+    ],
+    "X-2-2026": [
+     "medidas"
+    ],
+    "X-3-2026": [
+     "medidas"
+    ],
+    "X-4-2026": []
+   }
+  },
+  {
+   "nombre": "informes_incluye_por_vencer",
+   "modo": "INFORMES",
+   "modalidades": null,
+   "rits": null,
+   "tribunales": null,
+   "firma": true,
+   "cc_adicional": true,
+   "decisiones": [
+    [
+     "X-4-2026",
+     "programa_por_vencer",
+     "include"
+    ]
+   ],
+   "borradores": [
+    {
+     "tipo": "informes",
+     "asunto": "Revisión pestaña \"Informes\" del módulo RUS — Jgdo. L. y G. de Laja",
+     "para": "laja@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña informes del módulo RUS en SITFA, se revisaron todos los registros pertenecientes a todas las modalidades y se registraron observaciones en bitácora.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-1-2026",
+      "X-2-2026"
+     ],
+     "obligatorio": false,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "informes",
+     "asunto": "Revisión pestaña \"Informes\" del módulo RUS — Jgdo. L. y G. de Mulchén",
+     "para": "mulchen@ejemplo.invalid; mulchen2@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña informes del módulo RUS en SITFA, se revisaron todos los registros pertenecientes a todas las modalidades y se registraron observaciones en bitácora.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-3-2026"
+     ],
+     "obligatorio": false,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "informes",
+     "asunto": "Revisión pestaña \"Informes\" del módulo RUS — Juzgado de Familia de Tomé",
+     "para": "",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña informes del módulo RUS en SITFA, se revisaron todos los registros pertenecientes a todas las modalidades y se registraron observaciones en bitácora.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-4-2026"
+     ],
+     "obligatorio": false,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "programa_por_vencer",
+     "asunto": "Informes por vencer — AFT EJEMPLO UNO — Jgdo. L. y G. de Laja",
+     "para": "uno@ejemplo.invalid; uno2@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se envía planilla con RIT de causas en las cuales, informes de avances se encuentran pronto a vencer. Se ruega acusar recibo de la información.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-2-2026"
+     ],
+     "obligatorio": true,
+     "destino": "programas"
+    },
+    {
+     "tipo": "programa_por_vencer",
+     "asunto": "Informes por vencer — FAE EJEMPLO — Juzgado de Familia de Tomé",
+     "para": "fae@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se envía planilla con RIT de causas en las cuales, informes de avances se encuentran pronto a vencer. Se ruega acusar recibo de la información.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-4-2026"
+     ],
+     "obligatorio": true,
+     "destino": "programas"
+    },
+    {
+     "tipo": "programa_vencido",
+     "asunto": "Informes pendientes — AFT EJEMPLO UNO — Jgdo. L. y G. de Laja",
+     "para": "uno@ejemplo.invalid; uno2@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se acompaña nómina de informes que figuran pendientes de entrega en RUS, correspondientes a AFT EJEMPLO UNO y Jgdo. L. y G. de Laja. Se solicita informar su estado y remitir los antecedentes que correspondan, o precisar si ya fueron presentados.\n\nAtentamente,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-1-2026"
+     ],
+     "obligatorio": true,
+     "destino": "programas"
+    },
+    {
+     "tipo": "programa_vencido",
+     "asunto": "Informes pendientes — FAE EJEMPLO — Juzgado de Familia de Tomé",
+     "para": "fae@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se acompaña nómina de informes que figuran pendientes de entrega en RUS, correspondientes a FAE EJEMPLO y Juzgado de Familia de Tomé. Se solicita informar su estado y remitir los antecedentes que correspondan, o precisar si ya fueron presentados.\n\nAtentamente,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-4-2026"
+     ],
+     "obligatorio": true,
+     "destino": "programas"
+    }
+   ],
+   "acciones": {
+    "X-1-2026": [
+     "programa_vencido",
+     "PC_INFO"
+    ],
+    "X-2-2026": [
+     "programa_por_vencer"
+    ],
+    "X-3-2026": [],
+    "X-4-2026": [
+     "programa_vencido",
+     "PC_INFO"
+    ]
+   }
+  },
+  {
+   "nombre": "informes_omite_vencido",
+   "modo": "INFORMES",
+   "modalidades": null,
+   "rits": null,
+   "tribunales": null,
+   "firma": true,
+   "cc_adicional": true,
+   "decisiones": [
+    [
+     "X-1-2026",
+     "programa_vencido",
+     "omit"
+    ]
+   ],
+   "borradores": [
+    {
+     "tipo": "informes",
+     "asunto": "Revisión pestaña \"Informes\" del módulo RUS — Jgdo. L. y G. de Laja",
+     "para": "laja@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña informes del módulo RUS en SITFA, se revisaron todos los registros pertenecientes a todas las modalidades y se registraron observaciones en bitácora.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-1-2026",
+      "X-2-2026"
+     ],
+     "obligatorio": false,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "informes",
+     "asunto": "Revisión pestaña \"Informes\" del módulo RUS — Jgdo. L. y G. de Mulchén",
+     "para": "mulchen@ejemplo.invalid; mulchen2@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña informes del módulo RUS en SITFA, se revisaron todos los registros pertenecientes a todas las modalidades y se registraron observaciones en bitácora.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-3-2026"
+     ],
+     "obligatorio": false,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "informes",
+     "asunto": "Revisión pestaña \"Informes\" del módulo RUS — Juzgado de Familia de Tomé",
+     "para": "",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se informa que pestaña informes del módulo RUS en SITFA, se revisaron todos los registros pertenecientes a todas las modalidades y se registraron observaciones en bitácora.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-4-2026"
+     ],
+     "obligatorio": false,
+     "destino": "tribunales"
+    },
+    {
+     "tipo": "programa_por_vencer",
+     "asunto": "Informes por vencer — AFT EJEMPLO UNO — Jgdo. L. y G. de Laja",
+     "para": "uno@ejemplo.invalid; uno2@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se envía planilla con RIT de causas en las cuales, informes de avances se encuentran pronto a vencer. Se ruega acusar recibo de la información.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "rits": [
+      "X-2-2026"
+     ],
+     "obligatorio": true,
+     "destino": "programas"
+    },
+    {
+     "tipo": "programa_vencido",
+     "asunto": "Informes pendientes — FAE EJEMPLO — Juzgado de Familia de Tomé",
+     "para": "fae@ejemplo.invalid",
+     "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se acompaña nómina de informes que figuran pendientes de entrega en RUS, correspondientes a FAE EJEMPLO y Juzgado de Familia de Tomé. Se solicita informar su estado y remitir los antecedentes que correspondan, o precisar si ya fueron presentados.\n\nAtentamente,\n\nFirma ficticia\nUnidad de prueba",
      "rits": [
       "X-4-2026"
      ],
