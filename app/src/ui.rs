@@ -306,8 +306,9 @@ impl App {
                 let mut texto = String::new();
                 if let Some(c) = &nuevo.cambios {
                     let m = c.resumen();
+                    let (con, sin) = c.ausentes();
                     texto = format!(
-                        " Frente a la captura anterior: {} nuevas, {} con fuente cambiada, {} con reglas cambiadas, {} egresadas.",
+                        " Frente a la captura anterior: {} nuevas, {} con fuente cambiada, {} con reglas cambiadas, {} ausentes ({con} con cobertura, {sin} sin cobertura).",
                         m["Nuevas"], m["Fuente"], m["Reglas"], m["Egresados"]
                     );
                 }
@@ -1048,13 +1049,20 @@ impl App {
         }
         if let Some(c) = self.work.as_ref().and_then(|w| w.cambios.as_ref()) {
             let m = c.resumen();
-            let egresados: Vec<String> = c.egresados.iter().map(|e| format!("{} · {} · {}", e.rit, e.nombre, e.programa)).collect();
+            let sin_cobertura = crate::conciliar::Ausencia::SinCobertura;
+            let egresados: Vec<String> = c
+                .egresados
+                .iter()
+                .map(|e| format!("{} · {} · {}{}", e.rit, e.nombre, e.programa, if e.ausencia == sin_cobertura { " · sin cobertura" } else { "" }))
+                .collect();
+            let (con, sin) = c.ausentes();
             egui::CollapsingHeader::new(format!(
-                "Frente a la captura anterior · {} nuevas · {} con fuente cambiada · {} con reglas cambiadas · {} egresadas",
+                "Frente a la captura anterior · {} nuevas · {} con fuente cambiada · {} con reglas cambiadas · {} ausentes ({con} con cobertura, {sin} sin cobertura)",
                 m["Nuevas"], m["Fuente"], m["Reglas"], m["Egresados"]
             ))
             .id_salt("cambios de captura")
             .show(ui, |ui| {
+                ui.label(RichText::new("Ausente no implica egreso ni eliminación: sin cobertura, la consulta de la captura nueva no es la misma o no está completa.").color(p.muted).size(12.5));
                 for e in &egresados {
                     ui.label(RichText::new(e).color(p.muted).size(12.5));
                 }

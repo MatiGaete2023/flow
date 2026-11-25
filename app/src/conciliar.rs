@@ -63,6 +63,15 @@ pub struct CambioFila {
     pub reglas_despues: Vec<String>,
 }
 
+/// D-10: una fila que estaba en la captura anterior y no está en la nueva solo cuenta como ausente «con cobertura» si la
+/// captura nueva trae la misma consulta (pantalla, pestaña, tribunal, modalidad y filtros) completa; si no, no es
+/// comparable (otro tribunal, otra modalidad, una consulta parcial o fallida). Ausente no implica egreso.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Ausencia {
+    ConCobertura,
+    SinCobertura,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Egresado {
     pub id_anterior: String,
@@ -70,6 +79,7 @@ pub struct Egresado {
     pub nombre: String,
     pub tribunal: String,
     pub programa: String,
+    pub ausencia: Ausencia,
 }
 
 /// Comparación anónima entre dos capturas de un trabajo (`capture_changes`).
@@ -94,6 +104,35 @@ impl Cambios {
         m.insert("Egresados", self.egresados.len());
         m
     }
+
+    /// Ausentes con la misma consulta completa en la captura nueva, y ausentes sin esa cobertura.
+    pub fn ausentes(&self) -> (usize, usize) {
+        let con = self.egresados.iter().filter(|e| e.ausencia == Ausencia::ConCobertura).count();
+        (con, self.egresados.len() - con)
+    }
+}
+
+/// La consulta quedó completa, o verificada sin registros: lo que no aparece en ella no está en el origen.
+fn cobertura_completa(cobertura: &str) -> bool {
+    matches!(cobertura, "COMPLETA" | "VACIA_COMPROBADA")
+}
+
+/// Consulta de una captura: pantalla, pestaña, tribunal, modalidad y filtros sin la fecha de descarga.
+type ClaveConsulta = (String, String, String, String, BTreeMap<String, Value>);
+
+fn consultas(t: &Trabajo) -> HashMap<String, (ClaveConsulta, bool)> {
+    let Some(paquete) = t.paquete.as_ref() else { return HashMap::new() };
+    paquete
+        .fuente
+        .filas("consultas")
+        .map(|q| {
+            let mut filtros: BTreeMap<String, Value> =
+                serde_json::from_str::<serde_json::Map<String, Value>>(q.get("filters_json")).map(|m| m.into_iter().collect()).unwrap_or_default();
+            filtros.remove("fecha_descarga");
+            let clave = (q.get("screen").to_string(), q.get("tab").to_string(), q.get("court_code").to_string(), q.get("modality_code").to_string(), filtros);
+            (q.get("query_id").to_string(), (clave, cobertura_completa(q.get("coverage"))))
+        })
+        .collect()
 }
 
 #[derive(Debug, Default)]
@@ -338,15 +377,22 @@ pub fn conciliar(nuevo: &mut Trabajo, previo: &Trabajo, respuestas: &Respuestas,
         cambios.filas.insert(id.clone(), cambio);
     }
     let emparejadas_viejas: BTreeSet<usize> = mapa.values().copied().collect();
+    let (consultas_viejas, consultas_nuevas) = (consultas(previo), consultas(nuevo));
+    let completas_nuevas: Vec<&ClaveConsulta> = consultas_nuevas.values().filter(|(_, completa)| *completa).map(|(k, _)| k).collect();
     for (i, id) in ids_viejos.iter().enumerate() {
         if !emparejadas_viejas.contains(&i) {
             let r = &previo.registros[i];
+            let ausencia = match consultas_viejas.get(viejas.filas[i].2.get("query_id")) {
+                Some((clave, _)) if completas_nuevas.contains(&clave) => Ausencia::ConCobertura,
+                _ => Ausencia::SinCobertura,
+            };
             cambios.egresados.push(Egresado {
                 id_anterior: id.clone(),
                 rit: previo.value(r, "rit"),
                 nombre: previo.value(r, "nombre"),
                 tribunal: previo.value(r, "tribunal"),
                 programa: previo.value(r, "programa"),
+                ausencia,
             });
         }
     }
@@ -564,5 +610,28 @@ mod pruebas {
         caso["revision"][&etq]["OBSERVACION"] = Value::String("otra".into());
         assert!(!comparar(&banco, &caso).is_empty(), "una revisión esperada alterada no se detecta");
         let _ = std::fs::remove_dir_all(&raiz);
+    }
+
+
+    /// D-10: una fila ausente solo cuenta «con cobertura» si la captura nueva trae la misma consulta completa.
+    #[test]
+    fn ausente_no_implica_egreso_sin_la_misma_consulta_completa() {
+        let datos: Value = serde_json::from_str(include_str!("../tests/datos/conciliacion.json")).unwrap();
+        let (_candado, perfil) = crate::prueba_entorno::perfil_aislado();
+        let banco = banco(&datos, &perfil.join("ausentes"));
+        let ausentes = |previo: &str, nuevo: &str| {
+            let (previo, mut nuevo) = (banco.abrir(previo), banco.abrir(nuevo));
+            conciliar(&mut nuevo, &previo, &Respuestas::new(), &Config::default()).unwrap();
+            nuevo.cambios.unwrap().ausentes()
+        };
+        // La captura nueva no trae la modalidad de dos de las filas anteriores: no es comparable.
+        assert_eq!(ausentes("listados_dos_pestanas", "listados"), (0, 2));
+        // Mismo alcance y completo: la fila que ya no está sí es una ausencia con cobertura.
+        assert_eq!(ausentes("listados", "modificado"), (1, 0));
+        // Una captura que agrega consultas no deja ausentes.
+        assert_eq!(ausentes("listados", "listados_dos_pestanas"), (0, 0));
+        // Solo una consulta completa o verificada vacía da cobertura.
+        assert!(cobertura_completa("COMPLETA") && cobertura_completa("VACIA_COMPROBADA"));
+        assert!(!cobertura_completa("PARCIAL") && !cobertura_completa("FALLIDA") && !cobertura_completa(""));
     }
 }

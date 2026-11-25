@@ -224,3 +224,11 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - CI: el run 45502222110 pasó las pruebas y falló al regenerar `catastro.json`: `ZipInfo.create_system` vale 0 en Windows y 3 en Linux, y cambiaba los bytes del `.xlsx`. Fijado a 3 en el generador.
 - CI: run 45503587810 verde (`linux` y `validar`, `catastro.json` regenerado igual en Windows).
 
+## 2026-11-25 · D-10 y D-11 (decisiones delegadas) y oráculo de correos
+
+- Decisiones del asistente por delegación del usuario («Decide tú»): D-10 y D-11 aprobadas, D-12 diferida, D-13 conservar (ver `PLAN.md`).
+- Cambió: `conciliar.rs` y `ui.rs` (ausentes con/sin cobertura), `motor/historia.rs` (R11 no se redacta con varias órdenes en causa compartida), `util.rs`/`productos.rs` (`hoy()`), `generar_correos.py` y `correos.json` (fecha fija).
+- Acredita: `ausente_no_implica_egreso_sin_la_misma_consulta_completa`, `d11_varias_ordenes_en_causa_compartida_no_se_atribuyen` y los oráculos de historia con `d11 == 3` declarados. `probar_app.sh todo`: 72 y 90 pruebas, 0 fallos; clippy limpio.
+- Corrige: `correos_iguales_a_python` fallaba al cambiar el día (el oráculo guardaba la fecha de generación).
+- Pendiente: CI de Windows verde; el contraste E3 con el ZIP de Python no se pudo correr aquí (sin `tkinter`).
+

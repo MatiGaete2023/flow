@@ -22,10 +22,27 @@ for _m in ('tkinter', 'tkinter.ttk', 'tkinter.filedialog', 'tkinter.messagebox',
 from openpyxl import Workbook  # noqa: E402
 from nurus.personal.config import defaults  # noqa: E402
 from nurus.personal.mail_controls import alcance_modalidades, selected_court_record_ids  # noqa: E402
+import nurus.personal.outputs as outputs  # noqa: E402
 from nurus.personal.outputs import prepare_drafts, value  # noqa: E402
 from nurus.personal.work import Work  # noqa: E402
 
 CORTE = date(2026, 11, 20)
+# `date.today()` de Python, fijo y lejos de las fechas de los datos: el oráculo no depende del día en que se genera.
+HOY = date(2099, 1, 1)
+
+
+class _FijaMeta(type(date)):
+    def __instancecheck__(cls, obj):  # las fechas reales siguen siendo fechas para `isinstance`
+        return isinstance(obj, date)
+
+
+class _Fija(date, metaclass=_FijaMeta):
+    @classmethod
+    def today(cls):
+        return HOY
+
+
+outputs.date = _Fija
 PERIODO = 'el período revisado'
 CONTACTOS = {'AFT EJEMPLO UNO': 'uno@ejemplo.invalid; uno2@ejemplo.invalid', 'FAE EJEMPLO': 'fae@ejemplo.invalid'}
 TRIBUNALES = {'LAJA': 'laja@ejemplo.invalid', 'MULCHEN': 'mulchen@ejemplo.invalid; mulchen2@ejemplo.invalid'}
@@ -133,7 +150,7 @@ def main():
         casos.append(escenario(f'{modo.lower()}_solo_elegidas', modo, rits=['X-1-2026', 'X-3-2026']))
         casos.append(escenario(f'{modo.lower()}_un_tribunal', modo, tribunales=['LAJA']))
         casos.append(escenario(f'{modo.lower()}_sin_firma_ni_cc_adicional', modo, firma=False, cc_adicional=False))
-    datos = {'corte': CORTE.isoformat(), 'periodo': PERIODO, 'contactos': CONTACTOS, 'tribunales': TRIBUNALES, 'firma': FIRMA,
+    datos = {'corte': CORTE.isoformat(), 'hoy': HOY.isoformat(), 'periodo': PERIODO, 'contactos': CONTACTOS, 'tribunales': TRIBUNALES, 'firma': FIRMA,
              'cc_adicional': CC_ADICIONAL,
              'trabajos': {m: {'encabezados': e, 'filas': f} for m, (e, f, _) in TRABAJOS.items()}, 'casos': casos}
     destino.write_bytes((json.dumps(datos, ensure_ascii=False, indent=1) + '\n').encode('utf-8'))

@@ -318,7 +318,7 @@ mod pruebas {
         };
         Some(Cambios {
             filas: v["filas"].as_object().unwrap().iter().map(|(k, f)| (k.clone(), CambioFila { tipo: tipo(f["tipo"].as_str().unwrap()), campos: vec![], reglas_antes: vec![], reglas_despues: vec![] })).collect(),
-            egresados: v["egresados"].as_array().unwrap().iter().map(|e| crate::conciliar::Egresado { id_anterior: texto(&e["id_anterior"]), rit: String::new(), nombre: String::new(), tribunal: String::new(), programa: String::new() }).collect(),
+            egresados: v["egresados"].as_array().unwrap().iter().map(|e| crate::conciliar::Egresado { id_anterior: texto(&e["id_anterior"]), rit: String::new(), nombre: String::new(), tribunal: String::new(), programa: String::new(), ausencia: crate::conciliar::Ausencia::SinCobertura }).collect(),
         })
     }
 

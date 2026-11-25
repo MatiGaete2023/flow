@@ -464,3 +464,18 @@ mod tests {
         assert_eq!(fecha_mayoria(NaiveDate::from_ymd_opt(2008, 2, 29).unwrap()), NaiveDate::from_ymd_opt(2026, 2, 28).unwrap());
     }
 }
+
+#[cfg(test)]
+thread_local! {
+    /// Fecha de hoy fija para las pruebas que contrastan con Flow Python (su `date.today()` se fija en el generador).
+    pub static HOY_FIJO: std::cell::Cell<Option<chrono::NaiveDate>> = const { std::cell::Cell::new(None) };
+}
+
+/// La fecha de hoy; en pruebas puede fijarse con `HOY_FIJO`.
+pub fn hoy() -> chrono::NaiveDate {
+    #[cfg(test)]
+    if let Some(d) = HOY_FIJO.with(|c| c.get()) {
+        return d;
+    }
+    chrono::Local::now().date_naive()
+}

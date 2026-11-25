@@ -1,5 +1,6 @@
 {
  "corte": "2026-11-20",
+ "hoy": "2099-01-01",
  "periodo": "el período revisado",
  "contactos": {
   "AFT EJEMPLO UNO": "uno@ejemplo.invalid; uno2@ejemplo.invalid",
@@ -839,10 +840,10 @@
     },
     {
      "tipo": "medidas",
-     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Laja — 24/11/2026",
+     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Laja — 01/01/2099",
      "para": "laja@ejemplo.invalid",
      "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
-     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 24/11/2026 en todas las modalidades.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 01/01/2099 en todas las modalidades.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
      "rits": [
       "X-1-2026",
       "X-2-2026"
@@ -852,10 +853,10 @@
     },
     {
      "tipo": "medidas",
-     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Mulchén — 24/11/2026",
+     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Mulchén — 01/01/2099",
      "para": "mulchen@ejemplo.invalid; mulchen2@ejemplo.invalid",
      "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
-     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 24/11/2026 en todas las modalidades.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 01/01/2099 en todas las modalidades.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
      "rits": [
       "X-3-2026"
      ],
@@ -914,10 +915,10 @@
     },
     {
      "tipo": "medidas",
-     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Laja — 24/11/2026",
+     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Laja — 01/01/2099",
      "para": "laja@ejemplo.invalid",
      "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
-     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 24/11/2026 en la modalidad Intervención ambulatoria de reparación.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 01/01/2099 en la modalidad Intervención ambulatoria de reparación.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
      "rits": [
       "X-1-2026",
       "X-2-2026"
@@ -927,10 +928,10 @@
     },
     {
      "tipo": "medidas",
-     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Mulchén — 24/11/2026",
+     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Mulchén — 01/01/2099",
      "para": "mulchen@ejemplo.invalid; mulchen2@ejemplo.invalid",
      "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
-     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 24/11/2026 en la modalidad Intervención ambulatoria de reparación.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 01/01/2099 en la modalidad Intervención ambulatoria de reparación.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
      "rits": [
       "X-3-2026"
      ],
@@ -1002,10 +1003,10 @@
     },
     {
      "tipo": "medidas",
-     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Laja — 24/11/2026",
+     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Laja — 01/01/2099",
      "para": "laja@ejemplo.invalid",
      "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
-     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 24/11/2026 en las modalidades Intervención ambulatoria de reparación y Cuidado alternativo familia de acogida.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 01/01/2099 en las modalidades Intervención ambulatoria de reparación y Cuidado alternativo familia de acogida.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
      "rits": [
       "X-1-2026",
       "X-2-2026"
@@ -1015,10 +1016,10 @@
     },
     {
      "tipo": "medidas",
-     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Mulchén — 24/11/2026",
+     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Mulchén — 01/01/2099",
      "para": "mulchen@ejemplo.invalid; mulchen2@ejemplo.invalid",
      "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
-     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 24/11/2026 en las modalidades Intervención ambulatoria de reparación y Cuidado alternativo familia de acogida.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 01/01/2099 en las modalidades Intervención ambulatoria de reparación y Cuidado alternativo familia de acogida.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
      "rits": [
       "X-3-2026"
      ],
@@ -1077,10 +1078,10 @@
     },
     {
      "tipo": "medidas",
-     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Laja — 24/11/2026",
+     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Laja — 01/01/2099",
      "para": "laja@ejemplo.invalid",
      "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
-     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 24/11/2026 en todas las modalidades.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 01/01/2099 en todas las modalidades.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
      "rits": [
       "X-1-2026"
      ],
@@ -1089,10 +1090,10 @@
     },
     {
      "tipo": "medidas",
-     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Mulchén — 24/11/2026",
+     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Mulchén — 01/01/2099",
      "para": "mulchen@ejemplo.invalid; mulchen2@ejemplo.invalid",
      "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
-     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 24/11/2026 en todas las modalidades.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 01/01/2099 en todas las modalidades.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
      "rits": [
       "X-3-2026"
      ],
@@ -1139,10 +1140,10 @@
     },
     {
      "tipo": "medidas",
-     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Laja — 24/11/2026",
+     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Laja — 01/01/2099",
      "para": "laja@ejemplo.invalid",
      "cc": "ucc_concepcion@pjud.cl; adicional@ejemplo.invalid",
-     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 24/11/2026 en todas las modalidades.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 01/01/2099 en todas las modalidades.\n\nAtte. a Ud.,\n\nFirma ficticia\nUnidad de prueba",
      "rits": [
       "X-1-2026",
       "X-2-2026"
@@ -1212,10 +1213,10 @@
     },
     {
      "tipo": "medidas",
-     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Laja — 24/11/2026",
+     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Laja — 01/01/2099",
      "para": "laja@ejemplo.invalid",
      "cc": "ucc_concepcion@pjud.cl",
-     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 24/11/2026 en todas las modalidades.\n\nAtte. a Ud.,",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 01/01/2099 en todas las modalidades.\n\nAtte. a Ud.,",
      "rits": [
       "X-1-2026",
       "X-2-2026"
@@ -1225,10 +1226,10 @@
     },
     {
      "tipo": "medidas",
-     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Mulchén — 24/11/2026",
+     "asunto": "Medidas sin vigencia y por vencer — Jgdo. L. y G. de Mulchén — 01/01/2099",
      "para": "mulchen@ejemplo.invalid; mulchen2@ejemplo.invalid",
      "cc": "ucc_concepcion@pjud.cl",
-     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 24/11/2026 en todas las modalidades.\n\nAtte. a Ud.,",
+     "cuerpo": "Buen día:\n\nJunto con saludar, se remite archivo Excel adjunto con nomina de medidas sin vigencia y por vencer al día 01/01/2099 en todas las modalidades.\n\nAtte. a Ud.,",
      "rits": [
       "X-3-2026"
      ],

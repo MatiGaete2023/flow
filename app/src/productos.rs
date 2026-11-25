@@ -259,7 +259,7 @@ fn permite_correo(r: &Registro) -> bool {
 
 /// Prepara los borradores automáticos (programas y medidas) y el informativo de la etapa a cada tribunal.
 pub fn preparar_borradores(w: &Trabajo, cfg: &Config, o: &OpcionesCorreo) -> Vec<Borrador> {
-    let fecha = chrono::Local::now().format("%d/%m/%Y").to_string();
+    let fecha = crate::util::hoy().format("%d/%m/%Y").to_string();
     let alcance = alcance_modalidades(o.modalidades);
     let mut out = Vec::new();
     let regs: Vec<(usize, &Registro)> = w.registros.iter().enumerate().filter(|(_, r)| !r.excluido && fila_en_alcance(w, r, o)).collect();
@@ -345,7 +345,7 @@ pub fn preparar_borradores(w: &Trabajo, cfg: &Config, o: &OpcionesCorreo) -> Vec
 /// Borrador libre (gestión particular u otra plantilla) para las filas dadas.
 pub fn borrador_plantilla(w: Option<&Trabajo>, cfg: &Config, kind: &str, filas: &[usize]) -> Option<Borrador> {
     let tpl = cfg.plantillas.get(kind).filter(|t| !t.archivada)?;
-    let fecha = chrono::Local::now().format("%d/%m/%Y").to_string();
+    let fecha = crate::util::hoy().format("%d/%m/%Y").to_string();
     let (trib, trib_nombre) = match (w, filas.first()) {
         (Some(w), Some(i)) => {
             let r = &w.registros[*i];
@@ -579,7 +579,7 @@ pub fn preparar_proyectos(w: &Trabajo, cfg: &Config, solo_seleccionadas: bool) -
                 });
                 lista_y(&p)
             });
-            vars.insert("FECHA".into(), fecha_en_palabras(chrono::Local::now().date_naive()));
+            vars.insert("FECHA".into(), fecha_en_palabras(crate::util::hoy()));
             let mut fechas: Vec<String> = Vec::new();
             for f in regs.iter().filter_map(|r| w.date(r, "resolucion")).map(fecha_en_palabras) {
                 if !fechas.contains(&f) {
@@ -1090,6 +1090,9 @@ mod cotejo_correos {
     #[test]
     fn correos_iguales_a_python() {
         let datos: Value = serde_json::from_str(include_str!("../tests/datos/correos.json")).unwrap();
+        // El generador fija `date.today()` de Python en esa fecha: el oráculo no depende del día en que se corre.
+        let hoy: NaiveDate = datos["hoy"].as_str().unwrap().parse().unwrap();
+        crate::util::HOY_FIJO.with(|c| c.set(Some(hoy)));
         let (mut iguales, mut fallos) = (0, Vec::new());
         let casos = datos["casos"].as_array().unwrap();
         for caso in casos {
