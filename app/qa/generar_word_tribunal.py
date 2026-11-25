@@ -95,7 +95,7 @@ def _crear_docx_propio(*, con_cursivas: bool, etiqueta: str) -> str:
         '</Relationships>'
     )
     buf = io.BytesIO()
-    with zipfile.ZipFile(buf, 'w', compression=zipfile.ZIP_DEFLATED) as z:
+    with zipfile.ZipFile(buf, 'w', compression=zipfile.ZIP_STORED) as z:
         for nombre, cuerpo in (
             ('[Content_Types].xml', ct_xml),
             ('_rels/.rels', rels_xml),
@@ -105,7 +105,8 @@ def _crear_docx_propio(*, con_cursivas: bool, etiqueta: str) -> str:
         ):
             zi = zipfile.ZipInfo(nombre, date_time=(2026, 11, 20, 0, 0, 0))
             zi.create_system = 3
-            zi.compress_type = zipfile.ZIP_DEFLATED
+            zi.external_attr = 0o644 << 16
+            zi.compress_type = zipfile.ZIP_STORED
             z.writestr(zi, cuerpo.encode('utf-8'))
     return base64.b64encode(buf.getvalue()).decode('ascii')
 
