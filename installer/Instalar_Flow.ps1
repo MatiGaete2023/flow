@@ -26,6 +26,22 @@ function Test-MzHeader {
     return ($n -eq 2 -and $bytes[0] -eq 0x4D -and $bytes[1] -eq 0x5A)
 }
 
+function Get-Sha256Hex {
+    param([Parameter(Mandatory = $true)][string]$Path)
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $fs = [IO.File]::OpenRead($Path)
+        try {
+            $hashBytes = $sha.ComputeHash($fs)
+        } finally {
+            $fs.Dispose()
+        }
+    } finally {
+        $sha.Dispose()
+    }
+    return ([BitConverter]::ToString($hashBytes) -replace '-', '').ToLowerInvariant()
+}
+
 function Read-ExpectedSha256 {
     param([Parameter(Mandatory = $true)][string]$ShaPath)
     $lines = Get-Content -LiteralPath $ShaPath -Encoding UTF8
@@ -83,7 +99,7 @@ if (-not (Test-MzHeader -Path $exeSource)) {
     throw "El archivo flow_rust.exe no es un ejecutable Windows valido."
 }
 
-$actualHash = (Get-FileHash -LiteralPath $exeSource -Algorithm SHA256).Hash.ToLowerInvariant()
+$actualHash = Get-Sha256Hex -Path $exeSource
 $hasShaFile = Test-Path -LiteralPath $shaSource -PathType Leaf
 if ($RequireSha256 -and -not $hasShaFile) {
     throw "Falta SHA256.txt junto a flow_rust.exe en: $sourceFull"
