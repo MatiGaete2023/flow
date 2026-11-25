@@ -9,7 +9,7 @@ Claude es el **orquestador y coordinador**: decide, integra y valida. Tres agent
 | Agente | Rama | Encargo | Archivos propios |
 |---|---|---|---|
 | A | `estudio/paridad-python-rust-20261119` | E-A10 (anulaciones de columnas de origen por fila), luego E-P1 (Word por tribunal con índice) y E-I1 (instalador) | `trabajo.rs`, `ui.rs`, `sincronizar.rs`, `conciliar.rs`, `productos.rs`, `producto_excel.rs`, `copia_excel.rs`, `personalizar.rs`, instalador |
-| B | `estudio/agente-b-meta4-20261125` | Meta 4: ampliar el contraste con Python (Espera, FAE, otros tribunales, regeneración, plantilla) | `descargador/meta4.rs`, `meta4_ui.rs`, `generar_meta4.py`, `meta4.json` |
+| B | `estudio/agente-b-meta4-20261125` → `estudio/agente-b-flujo-20261125` | E-R3 Meta 4 (`HECHO`, run 45656558813); E-Q9: «Consultar y crear paquete» en una acción | E-Q9: `descargador/flujo_paquete.rs` (nuevo), la acción y su avance en `descargador_ui.rs`, `generar_flujo_paquete.py` y `flujo_paquete.json`, la línea `flujo_paquete` del workflow y su línea del inventario |
 | C | `estudio/agente-c-parciales-20261125` → `estudio/agente-c-conjuntos-20261125` | E-Q8 (entregado e integrado); E-S2: conjuntos `flujo.json` de Flow Python en Resultados | E-S2: `descargador/archivo_local.rs` (nuevo), `descargador_resultados_ui.rs`, `generar_archivo_local.py` y `archivo_local.json`, la línea `archivo_local` del workflow y su línea del inventario |
 
 Los prompts completos están en [informes/PROMPTS_AGENTES_20261125.md](informes/PROMPTS_AGENTES_20261125.md). Cada agente entrega un informe en `informes/AGENTE_<letra>_<fecha>.md` y no edita `ESTADO`, `PLAN`, `REGISTRO`, `AGENTS`, `CONTINUACION` ni el workflow.
