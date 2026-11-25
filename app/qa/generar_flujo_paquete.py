@@ -8,8 +8,9 @@ Mundo sintético (el mismo en ambos lados): una consulta de Seguimiento · Cumpl
 personas ficticias y sus enlaces de bitácora; cada bitácora trae una observación del centro y cada ingreso su calendario.
 La historia y el histórico no se sirven (el puente devuelve error), así que el paquete queda parcial por esa vía.
 
-Determinista: reloj fijo (`motor.now`), JSON con LF y la carpeta temporal tomada con `Path(tmp).resolve()` (en Windows
-llega como `RUNNER~1`).
+Determinista: reloj fijo que avanza un segundo por llamada, JSON con LF, rutas relativas con `/` (también en
+`proceso.json`), historial sin hora ni zona, entrada sin ZIP y la carpeta temporal tomada con `Path(tmp).resolve()`
+(en Windows llega como `RUNNER~1`). Dos corridas y una carpeta de trabajo con espacios dan bytes idénticos.
 
 Uso (desde la raíz): python app/qa/generar_flujo_paquete.py [salida.json]
 """
