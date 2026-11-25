@@ -11,7 +11,7 @@ use sha2::{Digest, Sha256};
 use std::collections::{BTreeMap, HashMap};
 use std::path::PathBuf;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct Registro {
     pub fila_excel: usize,
     pub values: Vec<Cell>,
@@ -39,11 +39,46 @@ pub struct Registro {
     pub anulaciones: BTreeMap<String, String>,
     /// Anulaciones de origen que tenía la última copia de Excel guardada o importada (línea base de `NURUS_DECISIONES`).
     pub sync_anulaciones: Option<String>,
+    /// Estado completo de `NURUS_DECISIONES` en la última copia de Excel guardada o importada (`sync_state` de Python).
+    pub sync_decisiones: Option<String>,
+    /// Resolución del registro en `decisions["resolution"]` (`auto`, `review`, `none`, `PC_IE`, `PC_INFO`, `NOMENCL`).
+    pub resolucion: String,
     /// Identificador de la fila en la última copia de Excel que se guardó (`NURUS_ID_REGISTRO`).
     pub id_excel: String,
     /// Revisión que tenía la copia de Excel al guardarla o al importarla, y la local en ese momento (`sync_base`, `sync_local`).
     pub sync_base: Option<BTreeMap<String, String>>,
     pub sync_local: Option<BTreeMap<String, String>>,
+}
+
+impl Default for Registro {
+    fn default() -> Self {
+        Self {
+            fila_excel: 0,
+            values: Vec::new(),
+            propuesta: String::new(),
+            eventos: Vec::new(),
+            acciones: Vec::new(),
+            marcas: Vec::new(),
+            avisos: Vec::new(),
+            excluido: false,
+            fecha_hoja2: None,
+            editada: None,
+            revisada: false,
+            seleccionada: false,
+            res: String::new(),
+            otros_programas: Vec::new(),
+            campos: BTreeMap::new(),
+            gestiones_correo: BTreeMap::new(),
+            sync_correo: None,
+            anulaciones: BTreeMap::new(),
+            sync_anulaciones: None,
+            sync_decisiones: None,
+            resolucion: "auto".to_string(),
+            id_excel: String::new(),
+            sync_base: None,
+            sync_local: None,
+        }
+    }
 }
 
 impl Registro {
@@ -150,6 +185,10 @@ struct Decision {
     anulaciones: BTreeMap<String, String>,
     #[serde(default)]
     sync_anulaciones: Option<String>,
+    #[serde(default)]
+    sync_decisiones: Option<String>,
+    #[serde(default)]
+    resolucion: String,
     #[serde(default)]
     id_excel: String,
     #[serde(default)]
@@ -369,6 +408,8 @@ impl Trabajo {
                 reg.id_excel = v.id_excel.clone();
                 reg.sync_base = v.sync_base.clone();
                 reg.sync_local = v.sync_local.clone();
+                reg.sync_decisiones = v.sync_decisiones.clone();
+                reg.resolucion = v.resolucion.clone();
                 if !v.res.is_empty() {
                     reg.res = v.res.clone();
                 }
@@ -697,13 +738,16 @@ impl Trabajo {
                 || !r.anulaciones.is_empty()
                 || r.sync_base.is_some()
                 || r.sync_anulaciones.is_some()
+                || r.sync_decisiones.is_some()
+                || (!r.resolucion.is_empty() && r.resolucion != "auto")
             {
                 s.decisiones.insert(
                     r.fila_excel,
                     Decision {
                         editada: r.editada.clone(), revisada: r.revisada, seleccionada: r.seleccionada, res: r.res.clone(), propuesta: r.propuesta.clone(),
                         campos: r.campos.clone(), gestiones_correo: r.gestiones_correo.clone(), sync_correo: r.sync_correo.clone(),
-                        anulaciones: r.anulaciones.clone(), sync_anulaciones: r.sync_anulaciones.clone(),
+                        anulaciones: r.anulaciones.clone(), sync_anulaciones: r.sync_anulaciones.clone(), sync_decisiones: r.sync_decisiones.clone(),
+                        resolucion: r.resolucion.clone(),
                         id_excel: r.id_excel.clone(), sync_base: r.sync_base.clone(), sync_local: r.sync_local.clone(),
                     },
                 );
@@ -739,6 +783,10 @@ impl Trabajo {
                 r.sync_correo = d.sync_correo.clone();
                 r.anulaciones = d.anulaciones.clone();
                 r.sync_anulaciones = d.sync_anulaciones.clone();
+                r.sync_decisiones = d.sync_decisiones.clone();
+                if !d.resolucion.is_empty() {
+                    r.resolucion = d.resolucion.clone();
+                }
                 r.id_excel = d.id_excel.clone();
                 r.sync_base = d.sync_base.clone();
                 r.sync_local = d.sync_local.clone();

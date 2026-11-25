@@ -47,7 +47,8 @@ struct Cambio {
     fila: usize,
     fusion: BTreeMap<&'static str, String>,
     excel: BTreeMap<String, String>,
-    decisiones: Option<(Option<(BTreeMap<String, String>, BTreeMap<String, String>)>, BTreeMap<String, String>, BTreeMap<String, String>)>,
+    decisiones: Option<Option<serde_json::Value>>,
+    raw_entrante: Option<String>,
 }
 
 /// Elecciones de la persona ante un conflicto: (fila, campo) → valor.
@@ -84,69 +85,106 @@ fn revision_local(r: &Registro) -> BTreeMap<&'static str, Option<String>> {
     m
 }
 
-/// Texto canónico de un mapa de decisiones (`gestiones_correo` o `anulaciones`).
-fn texto_mapa(m: &BTreeMap<String, String>) -> String {
-    serde_json::to_string(m).unwrap_or_default()
-}
-
-/// Texto canónico de `NURUS_DECISIONES` (gestiones de correo y anulaciones de origen) para comparar y resolver conflictos.
-fn texto_decisiones(correo: &BTreeMap<String, String>, anul: &BTreeMap<String, String>) -> String {
-    serde_json::to_string(&serde_json::json!({ "mail": correo, "overrides": anul })).unwrap_or_default()
-}
-
-fn parsear_decisiones(texto: &str) -> (BTreeMap<String, String>, BTreeMap<String, String>) {
-    let Ok(v) = serde_json::from_str::<serde_json::Value>(texto) else {
-        return (BTreeMap::new(), BTreeMap::new());
-    };
-    let leer = |obj: Option<&serde_json::Map<String, serde_json::Value>>| -> BTreeMap<String, String> {
-        obj.into_iter()
-            .flatten()
-            .filter_map(|(k, val)| val.as_str().map(|s| (k.clone(), s.to_string())))
-            .collect()
-    };
-    if v.get("mail").is_some() || v.get("overrides").is_some() {
-        (leer(v.get("mail").and_then(serde_json::Value::as_object)), leer(v.get("overrides").and_then(serde_json::Value::as_object)))
+/// Codifica el estado completo del registro en la celda técnica `NURUS_DECISIONES` (`record_edits.encode` de Python).
+pub fn codificar_decisiones(r: &Registro) -> String {
+    let mut decisions = serde_json::Map::new();
+    decisions.insert("structured".into(), serde_json::Value::Bool(true));
+    let mail_val: serde_json::Value = serde_json::to_value(&r.gestiones_correo).unwrap_or_else(|_| serde_json::json!({}));
+    decisions.insert("mail".into(), mail_val);
+    let resolucion = if !r.res.is_empty() {
+        "review"
+    } else if !r.resolucion.is_empty() {
+        &r.resolucion
     } else {
-        (leer(v.as_object()), BTreeMap::new())
-    }
+        "auto"
+    };
+    decisions.insert("resolution".into(), serde_json::Value::String(resolucion.into()));
+
+    let mut obj = serde_json::Map::new();
+    obj.insert("decisions".into(), serde_json::Value::Object(decisions));
+    obj.insert("excluded".into(), serde_json::Value::Bool(r.excluido));
+    let overrides_val: serde_json::Value = serde_json::to_value(&r.anulaciones).unwrap_or_else(|_| serde_json::json!({}));
+    obj.insert("overrides".into(), overrides_val);
+    obj.insert("proposal".into(), serde_json::Value::String(r.propuesta.clone()));
+    obj.insert("resolution_cell".into(), serde_json::Value::String(r.res.clone()));
+    obj.insert("version".into(), serde_json::Value::Number(1.into()));
+    obj.insert("word_overrides".into(), serde_json::json!({}));
+
+    serde_json::to_string(&serde_json::Value::Object(obj)).unwrap_or_default()
 }
 
 /// `record_edits.decode`: la celda técnica `NURUS_DECISIONES` de la copia. `Ok(None)` si está vacía; el error es el de
-/// Python. Devuelve `(gestiones_correo, overrides)` (sin las `auto`, que son la ausencia de gestión).
-fn leer_decisiones(texto: &str) -> Result<Option<(BTreeMap<String, String>, BTreeMap<String, String>)>, Error> {
+/// Python. Valida la estructura y tipos exactos.
+pub fn decodificar_decisiones(texto: &str) -> Result<Option<serde_json::Value>, Error> {
     let invalida = || rechazo("La columna técnica NURUS_DECISIONES no es válida. No se importaron cambios.");
-    if texto.trim().is_empty() {
+    let t = texto.trim();
+    if t.is_empty() {
         return Ok(None);
     }
-    let datos: serde_json::Value = serde_json::from_str(texto).map_err(|_| invalida())?;
-    let decisiones = datos["decisions"].as_object().ok_or_else(invalida)?;
-    let correo = match decisiones.get("mail") {
-        None => serde_json::Map::new(),
-        Some(m) => m.as_object().ok_or_else(invalida)?.clone(),
-    };
-    let overrides_obj = datos["overrides"].as_object().ok_or_else(invalida)?;
-    let resolucion = decisiones.get("resolution").and_then(serde_json::Value::as_str).unwrap_or("auto");
-    if datos["version"] != 1
-        || !datos["word_overrides"].is_object()
-        || !datos["excluded"].is_boolean()
-        || !["auto", "review", "none", "PC_IE", "PC_INFO", "NOMENCL"].contains(&resolucion)
-        || correo.values().any(|v| !matches!(v.as_str(), Some("auto" | "include" | "omit")))
-        || overrides_obj.values().any(|v| !v.is_string() && !v.is_number() && !v.is_boolean())
-    {
+    let datos: serde_json::Value = serde_json::from_str(t).map_err(|_| invalida())?;
+    let Some(obj) = datos.as_object() else { return Err(invalida()); };
+    if datos["version"] != 1 {
         return Err(invalida());
     }
-    let mail = correo.into_iter().filter_map(|(k, v)| v.as_str().filter(|v| *v != "auto").map(|v| (k, v.to_string()))).collect();
-    let overrides = overrides_obj
-        .iter()
-        .map(|(k, v)| {
-            let s = match v.as_str() {
-                Some(s) => s.to_string(),
-                None => v.to_string(),
-            };
-            (k.clone(), s)
-        })
-        .collect();
-    Ok(Some((mail, overrides)))
+    let Some(decisions) = obj.get("decisions").and_then(serde_json::Value::as_object) else { return Err(invalida()); };
+    let Some(overrides_obj) = obj.get("overrides").and_then(serde_json::Value::as_object) else { return Err(invalida()); };
+    if !datos["word_overrides"].is_object() || !datos["excluded"].is_boolean() {
+        return Err(invalida());
+    }
+    let resolucion = decisions.get("resolution").and_then(serde_json::Value::as_str).unwrap_or("auto");
+    if !["auto", "review", "none", "PC_IE", "PC_INFO", "NOMENCL"].contains(&resolucion) {
+        return Err(invalida());
+    }
+    let mail_obj = match decisions.get("mail") {
+        None => None,
+        Some(m) => Some(m.as_object().ok_or_else(invalida)?),
+    };
+    if let Some(m) = mail_obj {
+        if m.values().any(|v| !matches!(v.as_str(), Some("auto" | "include" | "omit"))) {
+            return Err(invalida());
+        }
+    }
+    if overrides_obj.values().any(|v| !v.is_string() && !v.is_number() && !v.is_boolean()) {
+        return Err(invalida());
+    }
+    Ok(Some(datos))
+}
+
+/// `record_edits.restore`: restaura las decisiones, anulaciones y estado de la fila desde el JSON decodificado.
+pub fn restaurar_decisiones(r: &mut Registro, data: &serde_json::Value) {
+    if let Some(decisions) = data.get("decisions").and_then(serde_json::Value::as_object) {
+        if let Some(res) = decisions.get("resolution").and_then(serde_json::Value::as_str) {
+            r.resolucion = res.to_string();
+        }
+        if let Some(mail) = decisions.get("mail").and_then(serde_json::Value::as_object) {
+            r.gestiones_correo = mail
+                .iter()
+                .filter_map(|(k, v)| v.as_str().filter(|v| *v != "auto").map(|v| (k.clone(), v.to_string())))
+                .collect();
+        }
+    }
+    if let Some(overrides) = data.get("overrides").and_then(serde_json::Value::as_object) {
+        r.anulaciones = overrides
+            .iter()
+            .map(|(k, v)| {
+                let s = match v.as_str() {
+                    Some(s) => s.to_string(),
+                    None => v.to_string(),
+                };
+                (k.clone(), s)
+            })
+            .collect();
+    }
+    if let Some(excluded) = data.get("excluded").and_then(serde_json::Value::as_bool) {
+        r.excluido = excluded;
+    }
+    if let Some(prop) = data.get("proposal").and_then(serde_json::Value::as_str) {
+        r.propuesta = prop.to_string();
+    }
+    let res_cell = data.get("resolution_cell").and_then(serde_json::Value::as_str).unwrap_or("");
+    if r.res.trim() != res_cell.trim() {
+        r.resolucion = "review".to_string();
+    }
 }
 
 fn pos(headers: &[String], titulo: &str) -> Option<usize> {
@@ -168,8 +206,9 @@ pub fn recordar_exportacion(w: &mut Trabajo, hoja: &str) {
         let base = revision_excel(&cols, &fila);
         r.sync_local = Some(base.clone());
         r.sync_base = Some(base);
-        r.sync_correo = Some(texto_mapa(&r.gestiones_correo));
-        r.sync_anulaciones = Some(texto_mapa(&r.anulaciones));
+        r.sync_correo = Some(serde_json::to_string(&r.gestiones_correo).unwrap_or_default());
+        r.sync_anulaciones = Some(serde_json::to_string(&r.anulaciones).unwrap_or_default());
+        r.sync_decisiones = Some(codificar_decisiones(r));
         r.id_excel = id;
     }
 }
@@ -286,38 +325,47 @@ pub fn actualizar(w: &mut Trabajo, cfg: &Config, headers: &[String], filas: &[Ve
                 },
             }
         }
-        // Gestiones de correo y anulaciones (`NURUS_DECISIONES`): Excel solo manda si cambió desde la última copia y la fila no cambió aquí.
+        // Gestiones de correo, anulaciones y resoluciones (`NURUS_DECISIONES`):
+        // Se compara el estado completo codificado (decisions, overrides, word_overrides, excluded, proposal, resolution_cell).
         let mut decisiones = None;
+        let mut raw_entrante = None;
         if let Some(c) = pos(headers, "NURUS_DECISIONES") {
-            if let Some((rem_correo, rem_anul)) = leer_decisiones(&fila.get(c).map(|v| v.display()).unwrap_or_default())? {
-                let parse_mapa = |opt: Option<&String>| -> BTreeMap<String, String> {
-                    opt.and_then(|s| serde_json::from_str(s).ok()).unwrap_or_default()
-                };
-                let con_base = r.sync_correo.is_some() || r.sync_anulaciones.is_some();
-                let base_dec = texto_decisiones(&parse_mapa(r.sync_correo.as_ref()), &parse_mapa(r.sync_anulaciones.as_ref()));
-                let local_dec = texto_decisiones(&r.gestiones_correo, &r.anulaciones);
-                let remoto_dec = texto_decisiones(&rem_correo, &rem_anul);
-                let nuevo = match combinar("NURUS_DECISIONES", &Some(local_dec), Some(&base_dec), Some(&base_dec), &remoto_dec, con_base) {
-                    Ok(v) => Some(v.map(|_| (rem_correo.clone(), rem_anul.clone()))),
-                    Err((b, l, e)) => match resoluciones.get(&(i, "NURUS_DECISIONES".to_string())) {
-                        Some(v) => Some(Some(parsear_decisiones(v))),
-                        None => {
-                            conflictos.push(Conflicto { fila: i, campo: "NURUS_DECISIONES".into(), base: b, local: l, entrante: e });
-                            None
+            let technical_raw = fila.get(c).map(|v| v.display().trim().to_string()).unwrap_or_default();
+            raw_entrante = Some(technical_raw.clone());
+            let technical_data = decodificar_decisiones(&technical_raw)?;
+            let baseline_data = r.sync_decisiones.as_deref().and_then(|s| decodificar_decisiones(s).ok().flatten());
+            if technical_data.is_some() && technical_data != baseline_data {
+                let local_raw = codificar_decisiones(r);
+                let local_data = decodificar_decisiones(&local_raw)?;
+                let conflict = local_data != baseline_data && local_data != technical_data;
+                let mut data_to_restore = technical_data;
+                if conflict {
+                    match resoluciones.get(&(i, "NURUS_DECISIONES".to_string())) {
+                        Some(res_str) => {
+                            data_to_restore = decodificar_decisiones(res_str)?;
                         }
-                    },
-                };
-                decisiones = nuevo.map(|n| (n, rem_correo, rem_anul));
+                        None => {
+                            let base_str = r.sync_decisiones.clone().unwrap_or_default();
+                            conflictos.push(Conflicto {
+                                fila: i,
+                                campo: "NURUS_DECISIONES".into(),
+                                base: base_str,
+                                local: local_raw,
+                                entrante: technical_raw,
+                            });
+                        }
+                    }
+                }
+                decisiones = Some(data_to_restore);
             }
         }
-        cambios.push(Cambio { fila: i, fusion, excel, decisiones });
+        cambios.push(Cambio { fila: i, fusion, excel, decisiones, raw_entrante });
     }
     if !conflictos.is_empty() {
         return Err(Error::Conflictos(conflictos));
     }
     let mut resumen = Resumen::default();
     let mut origen_editado = 0;
-    let mut anulaciones_cambiadas = false;
     let mut nuevos_valores: Vec<(usize, Vec<(usize, Cell)>)> = Vec::new();
     for (c, fila) in cambios.into_iter().zip(filas) {
         let i = c.fila;
@@ -328,6 +376,7 @@ pub fn actualizar(w: &mut Trabajo, cfg: &Config, headers: &[String], filas: &[Ve
             r.campos.clone(),
             r.gestiones_correo.clone(),
             r.anulaciones.clone(),
+            r.resolucion.clone(),
         );
         for (campo, v) in c.fusion {
             match campo {
@@ -343,16 +392,31 @@ pub fn actualizar(w: &mut Trabajo, cfg: &Config, headers: &[String], filas: &[Ve
                 }
             }
         }
-        if let Some((nuevas, rem_correo, rem_anul)) = c.decisiones {
-            if let Some((correo, anul)) = nuevas {
-                if r.anulaciones != anul {
-                    anulaciones_cambiadas = true;
-                }
-                r.gestiones_correo = correo;
-                r.anulaciones = anul;
+        if let Some(Some(data)) = c.decisiones {
+            restaurar_decisiones(r, &data);
+        }
+        // Si cambió RES en Excel respecto de la línea base, la resolución pasa a "review"
+        if r.sync_base.is_some() {
+            let base_res = r.sync_base.as_ref().and_then(|b| b.get("RES")).map_or("", String::as_str);
+            let remote_res = c.excel.get("RES").map_or("", String::as_str);
+            if normalizar(remote_res.trim()) != normalizar(base_res.trim()) {
+                r.resolucion = "review".to_string();
             }
-            r.sync_correo = Some(texto_mapa(&rem_correo));
-            r.sync_anulaciones = Some(texto_mapa(&rem_anul));
+        }
+        r.sync_correo = c.raw_entrante.as_deref().and_then(|raw| {
+            decodificar_decisiones(raw).ok().flatten().and_then(|d| {
+                d.get("decisions")
+                    .and_then(|dec| dec.get("mail"))
+                    .map(|m| serde_json::to_string(m).unwrap_or_default())
+            })
+        }).or_else(|| Some(serde_json::to_string(&r.gestiones_correo).unwrap_or_default()));
+        r.sync_anulaciones = c.raw_entrante.as_deref().and_then(|raw| {
+            decodificar_decisiones(raw).ok().flatten().and_then(|d| {
+                d.get("overrides").map(|o| serde_json::to_string(o).unwrap_or_default())
+            })
+        }).or_else(|| Some(serde_json::to_string(&r.anulaciones).unwrap_or_default()));
+        if let Some(raw) = c.raw_entrante {
+            r.sync_decisiones = Some(raw);
         }
         if antes != (
             r.editada.clone(),
@@ -360,6 +424,7 @@ pub fn actualizar(w: &mut Trabajo, cfg: &Config, headers: &[String], filas: &[Ve
             r.campos.clone(),
             r.gestiones_correo.clone(),
             r.anulaciones.clone(),
+            r.resolucion.clone(),
         ) {
             resumen.filas_cambiadas += 1;
         }
@@ -384,7 +449,7 @@ pub fn actualizar(w: &mut Trabajo, cfg: &Config, headers: &[String], filas: &[Ve
             nuevos_valores.push((i, editadas.into_iter().map(|(c, j)| (c, fila.get(j).cloned().unwrap_or(Cell::Empty))).collect()));
         }
     }
-    if origen_editado > 0 || anulaciones_cambiadas {
+    if origen_editado > 0 {
         let hoja = w.sheet;
         for (i, valores) in nuevos_valores {
             let fila_hoja = w.registros[i].fila_excel - 1;
@@ -492,6 +557,20 @@ mod pruebas {
         }
         let mut headers = producto_excel::encabezados(&w);
         let mut filas = producto_excel::filas(&w);
+        // Si no se pasaron remotas de NURUS_DECISIONES, la copia de Excel conserva la exportada inicialmente
+        let col_dec = pos(&headers, "NURUS_DECISIONES").unwrap();
+        for (i, r) in w.registros.iter().enumerate() {
+            filas[i][col_dec] = Cell::Text(codificar_decisiones(r));
+        }
+        if caso.get("sesion_antigua").and_then(Value::as_bool) == Some(true) {
+            for r in &mut w.registros {
+                r.sync_base = None;
+                r.sync_local = None;
+                r.sync_decisiones = None;
+                r.sync_correo = None;
+                r.sync_anulaciones = None;
+            }
+        }
         for e in caso["remotas"].as_array().unwrap() {
             let (i, campo, v) = (e[0].as_u64().unwrap() as usize, e[1].as_str().unwrap(), texto(&e[2]));
             let c = pos(&headers, campo).unwrap();
@@ -569,6 +648,13 @@ mod pruebas {
                 d.push(format!("fila {i} anulaciones: Rust {:?} · Python {previsto:?}", w.registros[i].anulaciones));
             }
         }
+        for (i, esperado) in caso.get("resolucion").and_then(Value::as_array).into_iter().flatten().enumerate() {
+            let previsto = texto(esperado);
+            let obtenido = if w.registros[i].resolucion.is_empty() { "auto" } else { &w.registros[i].resolucion };
+            if obtenido != previsto {
+                d.push(format!("fila {i} resolución: Rust {obtenido:?} · Python {previsto:?}"));
+            }
+        }
         for (i, esperada) in caso["revision"].as_array().unwrap().iter().enumerate() {
             let r = &w.registros[i];
             for campo in CAMPOS {
@@ -606,7 +692,7 @@ mod pruebas {
             println!("FALLA {f}");
         }
         println!("SYNC: {iguales}/{}, fallos {}", casos.len(), fallos.len());
-        assert_eq!(casos.len(), 31, "el oráculo debe traer 31 casos");
+        assert_eq!(casos.len(), 38, "el oráculo debe traer 38 casos");
         assert!(fallos.is_empty());
     }
 
@@ -633,6 +719,11 @@ mod pruebas {
         assert!(comparar(&datos, &anul).is_empty());
         anul["anulaciones"][0] = serde_json::json!({"espera": "5"});
         assert!(!comparar(&datos, &anul).is_empty(), "una anulación esperada alterada no se detecta");
+        // E-A11: y el estado combinado de resolución que Python combinó desde la celda técnica.
+        let mut res_rem = datos["casos"].as_array().unwrap().iter().find(|c| c["escenario"] == "resolucion_remota").unwrap().clone();
+        assert!(comparar(&datos, &res_rem).is_empty());
+        res_rem["resolucion"][0] = serde_json::json!("PC_IE");
+        assert!(!comparar(&datos, &res_rem).is_empty(), "una resolución esperada alterada no se detecta");
     }
 
     /// El archivo que guarda Flow Rust se puede volver a leer y a importar sin cambios ni conflictos.

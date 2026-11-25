@@ -147,6 +147,19 @@ pub fn guardar_outlook(b: &Borrador, cuenta: &str) -> Result<ReciboOutlook, Erro
     resultado
 }
 
+/// Guarda un borrador sintético de prueba en Outlook (`Save()`, nunca envío) con CC obligatorio.
+pub fn borrador_prueba(cuenta: Option<&str>) -> Result<ReciboOutlook, ErrorOutlook> {
+    let b = Borrador {
+        titulo: "Borrador de prueba".into(),
+        para: cuenta.unwrap_or_default().trim().to_string(),
+        cc: CC_OBLIGATORIO.to_string(),
+        asunto: "Flow Rust · borrador de prueba".to_string(),
+        cuerpo: "Este es un borrador sintético de comprobación generado por Flow Rust.\n\nNo contiene datos de causas ni de personas y no fue enviado. Puedes revisarlo en la carpeta Borradores de Outlook y eliminarlo manualmente.".to_string(),
+        ..Default::default()
+    };
+    guardar_outlook(&b, cuenta.unwrap_or_default())
+}
+
 #[cfg(not(target_os = "windows"))]
 pub fn guardar_outlook(_b: &Borrador, _cuenta: &str) -> Result<ReciboOutlook, ErrorOutlook> {
     Err(ErrorOutlook::NoGuardado("Guardar en Outlook solo está disponible en Windows; usa archivos .eml.".into()))
@@ -195,5 +208,23 @@ mod pruebas {
         // Salida de éxito sin identidad completa: también incierto.
         assert!(matches!(interpretar(true, "PREPARADO\nGUARDADO||ALMACEN\n", "", "T"), Err(ErrorOutlook::Incierto(_))));
         assert!(matches!(interpretar(true, "PREPARADO\nGUARDADO|ENTRADA|\n", "", "T"), Err(ErrorOutlook::Incierto(_))));
+    }
+
+    /// E-T6: borrador de prueba sintético para verificar la configuración de Outlook.
+    #[test]
+    fn borrador_de_prueba_cumple_requisitos_y_solo_guarda() {
+        let b = Borrador {
+            titulo: "Borrador de prueba".into(),
+            para: "funcionario@pjud.cl".into(),
+            cc: CC_OBLIGATORIO.into(),
+            asunto: "Flow Rust · borrador de prueba".into(),
+            cuerpo: "Cuerpo de prueba sin datos de causas".into(),
+            ..Default::default()
+        };
+        let d = datos(&b, "funcionario@pjud.cl", &[]);
+        assert_eq!(d["subject"], "Flow Rust · borrador de prueba");
+        assert!(d["cc"].as_str().unwrap().contains(CC_OBLIGATORIO));
+        assert!(SCRIPT.contains(".Save()"));
+        assert!(!SCRIPT.to_lowercase().contains(".send("));
     }
 }

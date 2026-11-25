@@ -131,6 +131,8 @@ pub struct App {
     actualizacion: Option<crate::actualizacion::Pendiente>,
     actualizacion_error: Option<String>,
     actualizacion_oculta: bool,
+    actualizacion_rx: Option<std::sync::mpsc::Receiver<Result<Option<crate::actualizacion::Pendiente>, String>>>,
+    estado_borrador_prueba: Option<Result<crate::outlook::ReciboOutlook, crate::outlook::ErrorOutlook>>,
     /// Huella del programa en uso, calculada una sola vez (leer el ejecutable en cada cuadro congelaría la ventana).
     huella_programa: Option<String>,
     descargador: crate::descargador_ui::Descargador,
@@ -203,6 +205,8 @@ impl App {
             actualizacion: None,
             actualizacion_error: None,
             actualizacion_oculta: false,
+            actualizacion_rx: None,
+            estado_borrador_prueba: None,
             huella_programa: None,
             anon_inf: None,
             descargador: Default::default(),
@@ -227,7 +231,18 @@ impl App {
             app.avisos.clear();
             app.sel = Some(1);
         } else {
-            app.revisar_actualizacion();
+            let (tx, rx) = std::sync::mpsc::channel();
+            app.actualizacion_rx = Some(rx);
+            let dir_act = crate::actualizacion::carpeta();
+            let adic = (!app.cfg.carpeta_actualizaciones_adicional.trim().is_empty())
+                .then(|| PathBuf::from(app.cfg.carpeta_actualizaciones_adicional.trim()));
+            let actual = std::env::current_exe().ok();
+            std::thread::spawn(move || {
+                if let Some(act) = actual {
+                    let res = crate::actualizacion::buscar_con_adicional(&dir_act, adic.as_deref(), &act);
+                    let _ = tx.send(res);
+                }
+            });
         }
         app
     }
@@ -725,6 +740,21 @@ impl App {
         }
         if !matches!(self.vista, Vista::Descargador | Vista::Meta4) && ctx.input_mut(|i| i.consume_shortcut(&KeyboardShortcut::new(Modifiers::COMMAND, Key::S))) {
             self.guardar_excel();
+        }
+        if let Some(rx) = &self.actualizacion_rx {
+            if let Ok(res) = rx.try_recv() {
+                match res {
+                    Ok(act) => {
+                        self.actualizacion = act;
+                        self.actualizacion_error = None;
+                    }
+                    Err(e) => {
+                        self.actualizacion = None;
+                        self.actualizacion_error = Some(e);
+                    }
+                }
+                self.actualizacion_rx = None;
+            }
         }
         // Archivos arrastrados a la ventana
         let dropped: Vec<PathBuf> = ctx.input(|i| i.raw.dropped_files.iter().filter_map(|f| f.path.clone()).collect());
@@ -3188,6 +3218,30 @@ impl App {
                             .add(egui::TextEdit::singleline(&mut self.cfg.cuenta_outlook).hint_text("dirección o nombre exactos; vacío: la predeterminada").desired_width(340.0))
                             .lost_focus();
                     });
+                    ui.horizontal(|ui| {
+                        if ui.button("Guardar un borrador de prueba en Outlook").on_hover_text("Crea un borrador sintético sin datos de causas con CC fijo en la carpeta Borradores de Outlook (usa Save(), nunca se envía).").clicked() {
+                            let cuenta = (!self.cfg.cuenta_outlook.trim().is_empty()).then(|| self.cfg.cuenta_outlook.trim());
+                            self.estado_borrador_prueba = Some(crate::outlook::borrador_prueba(cuenta));
+                        }
+                    });
+                    if let Some(resultado) = &self.estado_borrador_prueba {
+                        match resultado {
+                            Ok(recibo) => {
+                                ui.label(RichText::new(format!(
+                                    "✓ Borrador guardado («Flow Rust · borrador de prueba») con CC ucc_concepcion@pjud.cl (ID {}…). Revisa en Borradores de Outlook y elimínalo manualmente.",
+                                    &recibo.entry_id[..recibo.entry_id.len().min(12)]
+                                )).color(p.green).size(12.5));
+                            }
+                            Err(crate::outlook::ErrorOutlook::Incierto(msg)) => {
+                                ui.label(RichText::new(format!(
+                                    "⚠ Estado incierto: {msg}. El borrador pudo haberse guardado sin confirmación suficiente; revisa en Borradores de Outlook antes de intentar de nuevo.",
+                                )).color(p.amber).size(12.5));
+                            }
+                            Err(e) => {
+                                ui.label(RichText::new(format!("✗ Error al guardar el borrador de prueba: {}", e.mensaje())).color(p.red).size(12.5));
+                            }
+                        }
+                    }
                     ui.add_space(6.0);
                     self.editor_plantillas(ui, p);
                     ui.add_space(10.0);

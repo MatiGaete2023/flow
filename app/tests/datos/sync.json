@@ -99,6 +99,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -179,6 +184,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -244,6 +254,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -320,6 +335,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -399,6 +419,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -476,6 +501,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -553,6 +583,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -624,6 +659,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -689,6 +729,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "review",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -761,6 +806,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -828,6 +878,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -889,6 +944,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -959,6 +1019,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -1034,6 +1099,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -1105,6 +1175,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -1189,6 +1264,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -1254,6 +1334,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -1321,6 +1406,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -1389,6 +1479,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -1462,6 +1557,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -1544,6 +1644,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -1618,6 +1723,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -1694,6 +1804,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -1759,6 +1874,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -1824,6 +1944,11 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -1898,6 +2023,11 @@
     },
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -1972,6 +2102,11 @@
     },
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -2044,6 +2179,11 @@
     },
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -2126,6 +2266,11 @@
     },
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -2200,6 +2345,11 @@
     },
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   },
   {
@@ -2282,6 +2432,559 @@
     {},
     {},
     {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
+   ]
+  },
+  {
+   "escenario": "resolucion_remota",
+   "locales": [],
+   "remotas": [
+    [
+     0,
+     "NURUS_DECISIONES",
+     "{\"decisions\": {\"mail\": {}, \"resolution\": \"NOMENCL\", \"structured\": true}, \"excluded\": false, \"overrides\": {}, \"proposal\": \"Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}"
+    ]
+   ],
+   "correos_locales": [],
+   "anulaciones_locales": [],
+   "excel": {},
+   "resoluciones": [],
+   "cambio": true,
+   "revision": [
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    },
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    },
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    }
+   ],
+   "propuestas": [
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso."
+   ],
+   "reglas": [
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ],
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ],
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ]
+   ],
+   "correo": [
+    {},
+    {},
+    {}
+   ],
+   "anulaciones": [
+    {},
+    {},
+    {}
+   ],
+   "resolucion": [
+    "NOMENCL",
+    "auto",
+    "auto"
+   ]
+  },
+  {
+   "escenario": "decisiones_conflicto_resuelto_con_excel",
+   "locales": [],
+   "remotas": [
+    [
+     0,
+     "NURUS_DECISIONES",
+     "{\"decisions\": {\"mail\": {\"medidas\": \"omit\"}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {\"espera\": \"5\"}, \"proposal\": \"Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}"
+    ]
+   ],
+   "correos_locales": [
+    [
+     0,
+     {
+      "medidas": "omit"
+     }
+    ]
+   ],
+   "anulaciones_locales": [],
+   "excel": {},
+   "resoluciones": [
+    [
+     0,
+     "NURUS_DECISIONES",
+     "{\"decisions\": {\"mail\": {\"medidas\": \"omit\"}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {\"espera\": \"5\"}, \"proposal\": \"Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}"
+    ]
+   ],
+   "cambio": true,
+   "revision": [
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    },
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    },
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    }
+   ],
+   "propuestas": [
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso."
+   ],
+   "reglas": [
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ],
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ],
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ]
+   ],
+   "correo": [
+    {
+     "medidas": "omit"
+    },
+    {},
+    {}
+   ],
+   "anulaciones": [
+    {
+     "espera": "5"
+    },
+    {},
+    {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
+   ]
+  },
+  {
+   "escenario": "decisiones_conflicto_resuelto_con_local",
+   "locales": [],
+   "remotas": [
+    [
+     0,
+     "NURUS_DECISIONES",
+     "{\"decisions\": {\"mail\": {\"medidas\": \"omit\"}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {\"espera\": \"5\"}, \"proposal\": \"Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}"
+    ]
+   ],
+   "correos_locales": [
+    [
+     0,
+     {
+      "medidas": "omit"
+     }
+    ]
+   ],
+   "anulaciones_locales": [],
+   "excel": {},
+   "resoluciones": [
+    [
+     0,
+     "NURUS_DECISIONES",
+     "{\"decisions\": {\"mail\": {\"medidas\": \"omit\"}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {}, \"proposal\": \"Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}"
+    ]
+   ],
+   "cambio": true,
+   "revision": [
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    },
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    },
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    }
+   ],
+   "propuestas": [
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso."
+   ],
+   "reglas": [
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ],
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ],
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ]
+   ],
+   "correo": [
+    {
+     "medidas": "omit"
+    },
+    {},
+    {}
+   ],
+   "anulaciones": [
+    {},
+    {},
+    {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
+   ]
+  },
+  {
+   "escenario": "mismas_gestiones_distinto_resto_choca",
+   "locales": [],
+   "remotas": [
+    [
+     0,
+     "NURUS_DECISIONES",
+     "{\"decisions\": {\"mail\": {\"medidas\": \"omit\"}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {\"espera\": \"5\"}, \"proposal\": \"Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}"
+    ]
+   ],
+   "correos_locales": [
+    [
+     0,
+     {
+      "medidas": "omit"
+     }
+    ]
+   ],
+   "anulaciones_locales": [],
+   "excel": {},
+   "resoluciones": [],
+   "conflictos": [
+    [
+     0,
+     "NURUS_DECISIONES",
+     "",
+     "",
+     ""
+    ]
+   ],
+   "revision": [
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    },
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    },
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    }
+   ],
+   "propuestas": [
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso."
+   ],
+   "reglas": [
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ],
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ],
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ]
+   ],
+   "correo": [
+    {
+     "medidas": "omit"
+    },
+    {},
+    {}
+   ],
+   "anulaciones": [
+    {},
+    {},
+    {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
+   ]
+  },
+  {
+   "escenario": "res_cambiado_en_excel_marca_review",
+   "locales": [],
+   "remotas": [
+    [
+     0,
+     "RES",
+     "NOMENCL"
+    ]
+   ],
+   "correos_locales": [],
+   "anulaciones_locales": [],
+   "excel": {},
+   "resoluciones": [],
+   "cambio": true,
+   "revision": [
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": "NOMENCL"
+    },
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    },
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    }
+   ],
+   "propuestas": [
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso."
+   ],
+   "reglas": [
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ],
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ],
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ]
+   ],
+   "correo": [
+    {},
+    {},
+    {}
+   ],
+   "anulaciones": [
+    {},
+    {},
+    {}
+   ],
+   "resolucion": [
+    "review",
+    "auto",
+    "auto"
+   ]
+  },
+  {
+   "escenario": "celda_tecnica_invalida_mensaje",
+   "locales": [],
+   "remotas": [
+    [
+     0,
+     "NURUS_DECISIONES",
+     "{\"version\": 2}"
+    ]
+   ],
+   "correos_locales": [],
+   "anulaciones_locales": [],
+   "excel": {},
+   "resoluciones": [],
+   "error": "La columna técnica NURUS_DECISIONES no es válida. No se importaron cambios.",
+   "revision": [
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    },
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    },
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    }
+   ],
+   "propuestas": [
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso."
+   ],
+   "reglas": [
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ],
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ],
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ]
+   ],
+   "correo": [
+    {},
+    {},
+    {}
+   ],
+   "anulaciones": [
+    {},
+    {},
+    {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
+   ]
+  },
+  {
+   "escenario": "sesion_antigua_sin_linea_base",
+   "locales": [],
+   "remotas": [
+    [
+     0,
+     "NURUS_DECISIONES",
+     "{\"decisions\": {\"mail\": {}, \"resolution\": \"auto\", \"structured\": true}, \"excluded\": false, \"overrides\": {\"espera\": \"5\"}, \"proposal\": \"Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.\", \"resolution_cell\": \"\", \"version\": 1, \"word_overrides\": {}}"
+    ]
+   ],
+   "correos_locales": [],
+   "anulaciones_locales": [],
+   "excel": {},
+   "resoluciones": [],
+   "sesion_antigua": true,
+   "conflictos": [
+    [
+     0,
+     "NURUS_DECISIONES",
+     "",
+     "",
+     ""
+    ]
+   ],
+   "revision": [
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    },
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    },
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    }
+   ],
+   "propuestas": [
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+    "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso."
+   ],
+   "reglas": [
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ],
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ],
+    [
+     "ESPERA.E05_PROYECTO_Y_CORREO"
+    ]
+   ],
+   "correo": [
+    {},
+    {},
+    {}
+   ],
+   "anulaciones": [
+    {},
+    {},
+    {}
+   ],
+   "resolucion": [
+    "auto",
+    "auto",
+    "auto"
    ]
   }
  ]
