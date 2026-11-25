@@ -14,7 +14,7 @@ Claude es el **orquestador y coordinador**: decide, integra y valida. Tres agent
 
 Los prompts completos están en [informes/PROMPTS_AGENTES_20261125.md](informes/PROMPTS_AGENTES_20261125.md). Cada agente entrega un informe en `informes/AGENTE_<letra>_<fecha>.md` y no edita `ESTADO`, `PLAN`, `REGISTRO`, `AGENTS`, `CONTINUACION` ni el workflow.
 
-**Estado a las 16:40 UTC del 25-nov:** C entregó E-Q8 (informe `AGENTE_C_20261125.md`) y quedó integrado (`3689c92`); su siguiente encargo es E-S2 (abrir conjuntos `flujo.json` de Flow Python en Resultados, prompt en `informes/PROMPTS_AGENTES_20261125.md`), en una rama nueva desde la principal. A publicó E-A10 (`faee8ea`) con la CI de Windows en rojo por una carrera entre pruebas; A y el orquestador la corrigieron en paralelo; quedó la de A (`886d222`). B aún no publica.
+**Estado a las 16:45 UTC del 25-nov:** E-Q8 `HECHO` (run 45652560712). E-A10 espera la corrida manual que regenera todos los oráculos. **Antes:** C entregó E-Q8 (informe `AGENTE_C_20261125.md`) y quedó integrado (`3689c92`); su siguiente encargo es E-S2 (abrir conjuntos `flujo.json` de Flow Python en Resultados, prompt en `informes/PROMPTS_AGENTES_20261125.md`), en una rama nueva desde la principal. A publicó E-A10 (`faee8ea`) con la CI de Windows en rojo por una carrera entre pruebas; A y el orquestador la corrigieron en paralelo; quedó la de A (`886d222`). B aún no publica.
 
 ## Procedimiento de revisión e integración
 
