@@ -359,3 +359,4 @@ E-R3 · Meta 4: contraste ampliado (`92ab9c1`, CI Windows verde, run 45656558813
 ## 2026-11-25 · Decisión del usuario: fuera del proyecto
 
 - Manuales aparte (F28 pasa a «Sí»), registrador de observaciones RUS y extractores de estructura (`extraer_estructura_*.py`). `AGENTS.md` deja de citar `extraer_estructura_har.py` en la regla de datos; la regla (solo estructura anónima) no cambia. La referencia Python no se toca.
+- Cierre: E-Q10, E-S3 y E-I3 `HECHO` (CI de la rama principal verde con todos los oráculos regenerados, runs 45708615263 y 45708628960, sobre `60fe600`).
