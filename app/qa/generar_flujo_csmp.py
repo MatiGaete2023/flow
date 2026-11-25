@@ -1,10 +1,13 @@
 """E-Q11: contraste sintético de plan, recuperación y libro de flujo_csmp."""
 import hashlib
 import io
+import base64
 import json
+import re
 import sys
 import tempfile
 import threading
+import zipfile
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -50,6 +53,30 @@ def run(destino):
                         bruto = (carpeta / 'pagina-1.xls').read_bytes()
                         datos['archivos'][0].update(bytes=len(bruto), sha256=hashlib.sha256(bruto).hexdigest())
                         meta.write_text(json.dumps(datos), encoding='utf-8')
+                    # Normaliza cada XLSX sintético para que los archivos incrustados
+                    # no dependan del reloj, zlib ni de la plataforma.
+                    for original in sorted(carpeta.glob('pagina-*.xls')):
+                        libro = load_workbook(io.BytesIO(original.read_bytes()))
+                        libro.properties.created = libro.properties.modified = generar_lote.AHORA.replace(tzinfo=None)
+                        intermedio = io.BytesIO(); libro.save(intermedio); libro.close()
+                        salida = io.BytesIO()
+                        with zipfile.ZipFile(io.BytesIO(intermedio.getvalue())) as fuente, zipfile.ZipFile(salida, 'w') as destino_zip:
+                            for entrada in fuente.infolist():
+                                info = zipfile.ZipInfo(entrada.filename, (2020, 1, 1, 0, 0, 0))
+                                info.compress_type = zipfile.ZIP_STORED
+                                info.create_system = 3
+                                info.external_attr = 0o600 << 16
+                                contenido = fuente.read(entrada.filename)
+                                if entrada.filename == 'docProps/core.xml':
+                                    contenido = re.sub(rb'(<dcterms:modified\b[^>]*>).*?(</dcterms:modified>)', rb'\g<1>2026-10-08T13:00:00Z\g<2>', contenido)
+                                destino_zip.writestr(info, contenido)
+                        bruto = salida.getvalue(); original.write_bytes(bruto)
+                        for meta in sorted(carpeta.glob('verificacion *.json')):
+                            datos = json.loads(meta.read_text(encoding='utf-8'))
+                            for item in datos.get('archivos', []):
+                                if item.get('archivo') == original.name:
+                                    item.update(bytes=len(bruto), sha256=hashlib.sha256(bruto).hexdigest())
+                            meta.write_text(json.dumps(datos, ensure_ascii=False), encoding='utf-8')
                     if cortar:
                         falla[0] = False
                         raise motor.PocError('Corte ficticio')
@@ -79,17 +106,25 @@ def run(destino):
                         carpeta = next(raiz.glob('Flujo CSMP *'))
                         libro = corredor.run(tribunales, ('2',), modo, raiz, days=dias, today=fecha, resume=carpeta)
             except (motor.PocError, ValueError, OSError) as exc:
-                error = 'JSON inválido' if nombre == 'control_danado' else str(exc)
+                error = str(exc)
+            fuentes = None
             if libro:
                 datos = json.loads((libro.parent / 'flujo.json').read_text(encoding='utf-8'))
-                estado = {'estado': datos['estado'], 'fases': [{'clave': k, 'estado': v['estado'], 'consultas': v.get('consultas')} for k, v in datos['fases'].items()]}
+                estado = {'estado': datos['estado'], 'fases': [{'clave': k, 'estado': v['estado'], 'consultas': v.get('consultas'),
+                          'carpeta': str(v.get('carpeta', '')).replace('\\', '/')} for k, v in datos['fases'].items()]}
                 xlsx = load_workbook(libro, data_only=True)
-                hojas = {s.title: [list(row[:6]) for row in s.iter_rows(values_only=True)] for s in xlsx if s.title in ('ESPERA', 'CUMPLIMIENTO', 'INFORMES', 'SITFA_COBERTURA')}
+                anchos = {'ESPERA': 8, 'CUMPLIMIENTO': 8, 'INFORMES': 6, 'SITFA_COBERTURA': 6}
+                hojas = {s.title: [list(row[:anchos[s.title]]) for row in s.iter_rows(values_only=True)] for s in xlsx if s.title in anchos}
                 xlsx.close()
+                fuentes = []
+                for fase in datos['fases'].values():
+                    carpeta = libro.parent / fase['carpeta']
+                    fuentes.append({p.relative_to(carpeta).as_posix(): base64.b64encode(p.read_bytes()).decode('ascii')
+                                    for p in sorted(carpeta.rglob('*')) if p.is_file()})
             else:
                 hojas = None
             casos.append({'caso': nombre, 'modo': modo, 'tribunales': list(tribunales), 'modalidades': ['2'], 'dias': dias,
-                          'fecha': fecha.isoformat(), 'error': error, 'llamadas': llamadas, 'estado': estado, 'hojas': hojas})
+                          'fecha': fecha.isoformat(), 'error': error, 'llamadas': llamadas, 'estado': estado, 'hojas': hojas, 'fuentes': fuentes})
     Path(destino).write_bytes((json.dumps({'version': 1, 'casos': casos}, ensure_ascii=False, indent=2, default=str) + '\n').encode('utf-8'))
     print(f'flujo_csmp: {len(casos)} casos')
 

@@ -1367,7 +1367,7 @@ impl Descargador {
         self.ejecucion.recibir();
         self.conjunta.recibir();
         if let Some(carpeta) = flow_rust::descargador::flujo_csmp::tomar_solicitud() {
-            if let Some(puente) = self.conexion.puente.clone().filter(|p| p.conectado() && self.conjunta.recepcion.is_none() && !self.ejecucion.activa()) {
+            if let Some(puente) = self.conexion.puente.clone().filter(|p| p.conectado() && self.conjunta.recepcion.is_none() && !self.ejecucion.activa() && !self.ejecucion.contexto.activa() && !self.ejecucion.flujo.activa()) {
                 if let Err(error) = self.conjunta.retomar(ui.ctx(), puente, carpeta, self.ejecucion.pausa) { self.conjunta.mensajes.push(error); }
             } else {
                 self.conjunta.mensajes.push("Conecta Chrome y termina la operación actual antes de retomar un flujo.".into());
@@ -1376,7 +1376,7 @@ impl Descargador {
         if let Some(catalogo) = self.conexion.catalogo() {
             self.usar_catalogo(Some(catalogo), true);
         }
-        let ejecutando = self.ejecucion.activa() || self.conjunta.recepcion.is_some();
+        let ejecutando = self.ejecucion.activa() || self.ejecucion.contexto.activa() || self.ejecucion.flujo.activa() || self.conjunta.recepcion.is_some();
         theme::titulo(
             ui,
             p,
@@ -1874,6 +1874,39 @@ fn opciones<'a>(
 #[cfg(test)]
 mod pruebas_interfaz {
     use super::*;
+
+    #[test]
+    fn ui_flujo_csmp_ofrece_accion_sin_conexion() {
+        use egui_kittest::{kittest::Queryable, Harness};
+        let (_candado, _) = crate::prueba_entorno::perfil_aislado();
+        let pal = theme::pal(false);
+        let mut h = Harness::builder().with_size(egui::Vec2::new(1200.0, 800.0))
+            .build_ui_state(move |ui, vista: &mut Descargador| vista.mostrar(ui, &pal), Descargador::default());
+        h.run();
+        assert!(h.get_by_label("Descarga conjunta CSMP").is_disabled());
+        assert!(h.get_by_label("Retomar flujo…").is_disabled());
+    }
+
+    #[test]
+    fn ui_flujo_csmp_retomar_desde_resultados() {
+        use egui_kittest::{kittest::Queryable, Harness};
+        let (_candado, perfil) = crate::prueba_entorno::perfil_aislado();
+        let _ = flow_rust::descargador::flujo_csmp::tomar_solicitud();
+        let carpeta = perfil.join("conjunto-ficticio");
+        std::fs::create_dir_all(&carpeta).unwrap();
+        std::fs::write(carpeta.join("flujo.json"), br#"{"estado":"INCOMPLETO","seleccion":{"modo":"Espera","corte":"2026-10-02"},"fases":{}}"#).unwrap();
+        let mut estado = Resultados::default();
+        estado.carpeta = carpeta.display().to_string();
+        let pal = theme::pal(false);
+        let mut h = Harness::builder().with_size(egui::Vec2::new(1200.0, 800.0))
+            .build_ui_state(move |ui, vista: &mut Resultados| vista.mostrar(ui, &pal), estado);
+        h.run();
+        h.get_by_label("Ver descarga conjunta").click();
+        h.run();
+        h.get_by_label("Retomar pendientes").click();
+        h.run();
+        assert_eq!(flow_rust::descargador::flujo_csmp::tomar_solicitud(), Some(carpeta));
+    }
 
     #[test]
     fn ui_descargador_limita_pausa_y_conserva_preferencias() {

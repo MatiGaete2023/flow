@@ -160,6 +160,7 @@ fn guardar_estado(ruta: &Path, datos: &Value) -> Result<(), String> {
 }
 
 /// Ejecuta o recupera una fase, reutilizando las consultas validadas ya guardadas.
+#[allow(clippy::too_many_arguments)]
 pub fn ejecutar_fase(
     conexion: &dyn lote::Conexion, fase: &FasePlan, tribunales: &[String], modalidades: &[String],
     raiz: &Path, estado: &mut Value, opciones: &lote::Opciones, cancelar: &AtomicBool,
@@ -233,7 +234,13 @@ pub fn ensamblar(lotes: &[paquete::Lote], tribunales: &[String], hoy: NaiveDate,
             Data::Float(x) => Celda::Real(*x),
             Data::Int(x) => Celda::Entero(*x),
             Data::Bool(x) => Celda::Logico(*x),
-            Data::DateTime(x) => Celda::Real(x.as_f64()),
+            Data::DateTime(x) => {
+                let serial = x.as_f64();
+                if (1.0..2_958_466.0).contains(&serial) {
+                    let base = NaiveDate::from_ymd_opt(1899, 12, 30).unwrap().and_hms_opt(0, 0, 0).unwrap();
+                    Celda::Fecha(base + chrono::Duration::days(serial.floor() as i64) + chrono::Duration::seconds(((serial - serial.floor()) * 86_400.0).round() as i64))
+                } else { Celda::Real(serial) }
+            },
         }).collect()).collect();
         Hoja::simple(&nombre, filas)
     }).collect();
@@ -293,8 +300,15 @@ pub fn ejecutar(
         "corte": hoy.to_string(), "dias_firmas": dias, "consultar_firmas": false});
     let (raiz, mut estado) = if let Some(carpeta) = recuperar {
         let raiz = carpeta.canonicalize().map_err(|e| e.to_string())?;
-        let mut estado: Value = serde_json::from_slice(&std::fs::read(raiz.join("flujo.json")).map_err(|e| e.to_string())?)
-            .map_err(|_| "Resumen JSON inválido.".to_string())?;
+        let bytes = std::fs::read(raiz.join("flujo.json")).map_err(|e| e.to_string())?;
+        let mut estado: Value = serde_json::from_slice(&bytes).map_err(|error| {
+            if error.is_eof() && bytes.iter().rev().find(|b| !b.is_ascii_whitespace()) == Some(&b'{') {
+                let texto = String::from_utf8_lossy(&bytes);
+                let posicion = texto.chars().count();
+                let columna = texto.rsplit('\n').next().unwrap_or("").chars().count() + 1;
+                format!("Expecting property name enclosed in double quotes: line {} column {columna} (char {posicion})", texto.lines().count().max(1))
+            } else { format!("Resumen JSON inválido: {error}") }
+        })?;
         if !estado.is_object() || !estado["fases"].is_object() || !estado["seleccion"].is_object() {
             return Err("Resumen JSON inválido.".into());
         }
@@ -347,6 +361,200 @@ pub fn ejecutar(
 #[cfg(test)]
 mod pruebas {
     use super::*;
+
+    fn comparar_caso(caso: &Value) -> Result<(), String> {
+        use base64::Engine;
+        let nombre = caso["caso"].as_str().unwrap();
+        let hoy = NaiveDate::parse_from_str(caso["fecha"].as_str().unwrap(), "%Y-%m-%d").unwrap();
+        let lista = |clave: &str| caso[clave].as_array().unwrap().iter().map(|x| x.as_str().unwrap().to_string()).collect::<Vec<_>>();
+        let tribunales = lista("tribunales");
+        let modalidades = lista("modalidades");
+        let dias = caso["dias"].as_i64().unwrap() as i32;
+        let fases = match plan(&tribunales, &modalidades, caso["modo"].as_str().unwrap(), hoy, dias) {
+            Err(error) => return if caso["error"] == error { Ok(()) } else { Err(format!("{nombre}: mensaje {error}")) },
+            Ok(fases) => fases,
+        };
+        if nombre == "control_danado" {
+            struct SinConexion;
+            impl lote::Conexion for SinConexion {
+                fn llamar(&self, _: &str, _: Value, _: Duration) -> Result<Value, String> { Err("No se esperaban consultas.".into()) }
+            }
+            let carpeta = std::env::temp_dir().join(format!("flujo-danado-{}-{}", std::process::id(), chrono::Local::now().timestamp_nanos_opt().unwrap_or_default()));
+            std::fs::create_dir_all(&carpeta).map_err(|e| e.to_string())?;
+            std::fs::write(carpeta.join("flujo.json"), b"{").map_err(|e| e.to_string())?;
+            let resultado = ejecutar(&SinConexion, &tribunales, &modalidades, caso["modo"].as_str().unwrap(), &carpeta, hoy, dias as u32, Some(&carpeta), &lote::Opciones::default(), &AtomicBool::new(false), &mut |_| {});
+            let _ = std::fs::remove_dir_all(carpeta);
+            return match resultado { Err(error) if caso["error"] == error => Ok(()), Err(error) => Err(format!("{nombre}: {error} != {}", caso["error"])), Ok(_) => Err("Se aceptó el control dañado".into()) };
+        }
+        let esperadas = caso["estado"]["fases"].as_array().ok_or("Sin fases esperadas")?;
+        if fases.len() != esperadas.len() || fases.iter().zip(esperadas).any(|(a, b)| b["clave"] != a.clave || b["estado"] != "VALIDADA") {
+            return Err(format!("{nombre}: fases distintas"));
+        }
+        let base = std::env::temp_dir().join(format!("flow-csmp-oraculo-{}-{}", std::process::id(), chrono::Local::now().timestamp_nanos_opt().unwrap_or_default()));
+        std::fs::create_dir_all(&base).map_err(|e| e.to_string())?;
+        let resultado = (|| {
+            struct SinConsultas;
+            impl lote::Conexion for SinConsultas {
+                fn llamar(&self, _: &str, _: Value, _: Duration) -> Result<Value, String> { Err("Una fase validada no debe volver a consultarse.".into()) }
+            }
+            let mut estado = json!({"version_contrato": 1, "estado":"INCOMPLETO", "seleccion": {
+                "tribunales":tribunales, "modalidades":modalidades, "modo":caso["modo"], "corte":caso["fecha"],
+                "dias_firmas":dias, "consultar_firmas":false}, "fases":{}});
+            for (i, archivos) in caso["fuentes"].as_array().ok_or("Sin fuentes")?.iter().enumerate() {
+                let carpeta = base.join(format!("fase-{i}"));
+                for (ruta, contenido) in archivos.as_object().ok_or("Fuentes inválidas")? {
+                    let archivo = carpeta.join(ruta);
+                    std::fs::create_dir_all(archivo.parent().unwrap()).map_err(|e| e.to_string())?;
+                    std::fs::write(archivo, base64::engine::general_purpose::STANDARD.decode(contenido.as_str().unwrap()).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+                }
+                paquete::cargar_lote(&carpeta)?;
+                estado["fases"][&fases[i].clave] = json!({"estado":"VALIDADA", "carpeta":format!("fase-{i}"), "consultas":esperadas[i]["consultas"]});
+            }
+            guardar_estado(&base.join("flujo.json"), &estado)?;
+            let ruta = ejecutar(&SinConsultas, &tribunales, &modalidades, caso["modo"].as_str().unwrap(), &base, hoy, dias as u32,
+                Some(&base), &lote::Opciones::default(), &AtomicBool::new(false), &mut |_| {})?;
+            let resultado_estado: Value = serde_json::from_slice(&std::fs::read(base.join("flujo.json")).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+            if resultado_estado["estado"] != caso["estado"]["estado"] { return Err(format!("{nombre}: estado final distinto")); }
+            let mut libro = calamine::open_workbook_auto(&ruta).map_err(|e| e.to_string())?;
+            for (nombre_hoja, esperado) in caso["hojas"].as_object().ok_or("Sin hojas esperadas")? {
+                let rango = libro.worksheet_range(nombre_hoja).map_err(|e| e.to_string())?;
+                let ancho = if matches!(nombre_hoja.as_str(), "ESPERA" | "CUMPLIMIENTO") { 8 } else { 6 };
+                let filas: Vec<Vec<Value>> = rango.rows().map(|fila| (0..ancho.min(fila.len())).map(|i| match &fila[i] {
+                    Data::Empty => Value::Null,
+                    Data::String(s) | Data::DateTimeIso(s) | Data::DurationIso(s) => json!(s),
+                    Data::Int(n) => json!(n),
+                    Data::Float(n) if n.fract() == 0.0 => json!(*n as i64),
+                    Data::Float(n) => json!(n),
+                    Data::Bool(b) => json!(b),
+                    Data::DateTime(n) => json!(n.as_f64()),
+                    Data::Error(e) => json!(format!("{e:?}")),
+                }).collect()).collect();
+                if json!(filas) != *esperado { return Err(format!("{nombre}: hoja {nombre_hoja} distinta\nRust: {}\nPython: {esperado}", json!(filas))); }
+            }
+            Ok(())
+        })();
+        let _ = std::fs::remove_dir_all(base);
+        resultado
+    }
+
+    #[test]
+    fn flujo_csmp_igual_a_python() {
+        let oracle: Value = serde_json::from_str(include_str!("../../tests/datos/flujo_csmp.json")).unwrap();
+        let casos = oracle["casos"].as_array().unwrap();
+        assert_eq!(casos.len(), 8);
+        for caso in casos { comparar_caso(caso).unwrap(); }
+    }
+
+    #[test]
+    fn oraculo_de_flujo_csmp_detecta_alteraciones() {
+        let oracle: Value = serde_json::from_str(include_str!("../../tests/datos/flujo_csmp.json")).unwrap();
+        let casos = oracle["casos"].as_array().unwrap();
+        let mut fase = casos.iter().find(|v| v["caso"] == "cumplimiento").unwrap().clone();
+        fase["estado"]["fases"][0]["estado"] = json!("ALTERADA");
+        assert!(comparar_caso(&fase).is_err());
+        let mut mensaje = casos.iter().find(|v| v["caso"] == "modo_invalido").unwrap().clone();
+        mensaje["error"] = json!("ALTERADO");
+        assert!(comparar_caso(&mensaje).is_err());
+        let mut celda = casos.iter().find(|v| v["caso"] == "cumplimiento").unwrap().clone();
+        celda["hojas"]["SITFA_COBERTURA"][1][3] = json!("ALTERADA");
+        assert!(comparar_caso(&celda).is_err());
+    }
+
+    #[test]
+    fn flujo_csmp_reune_solo_consultas_comprobadas() {
+        use base64::Engine;
+        let oracle: Value = serde_json::from_str(include_str!("../../tests/datos/flujo_csmp.json")).unwrap();
+        let caso = oracle["casos"].as_array().unwrap().iter().find(|v| v["caso"] == "retomar_principal").unwrap();
+        let base = std::env::temp_dir().join(format!("flow-csmp-reunir-{}-{}", std::process::id(), chrono::Local::now().timestamp_nanos_opt().unwrap_or_default()));
+        let fuente = base.join("fuente");
+        for (ruta, contenido) in caso["fuentes"][0].as_object().unwrap() {
+            let archivo = fuente.join(ruta);
+            std::fs::create_dir_all(archivo.parent().unwrap()).unwrap();
+            std::fs::write(archivo, base64::engine::general_purpose::STANDARD.decode(contenido.as_str().unwrap()).unwrap()).unwrap();
+        }
+        let original = paquete::cargar_lote(&fuente).unwrap();
+        assert_eq!(original.consultas.len(), 2);
+        let esperadas: Vec<_> = original.consultas.iter().map(|(q, _)| q["seleccion"].clone()).collect();
+        let partes: Vec<_> = original.consultas.iter().map(|c| paquete::Lote { carpeta: original.carpeta.clone(), resumen: original.resumen.clone(), consultas: vec![c.clone()], parcial: true }).collect();
+        let reunido = reunir_fase(&partes, &esperadas, &base.join("salida")).unwrap();
+        assert_eq!(paquete::cargar_lote(&reunido).unwrap().consultas.len(), 2);
+        let duplicados = vec![paquete::Lote { carpeta: original.carpeta.clone(), resumen: original.resumen.clone(), consultas: vec![original.consultas[0].clone(), original.consultas[0].clone()], parcial: true }];
+        assert_eq!(reunir_fase(&duplicados, &esperadas, &base.join("duplicado")).unwrap_err(), "Consulta duplicada o fuera del alcance al recuperar la fase.");
+        let _ = std::fs::remove_dir_all(base);
+    }
+
+    #[test]
+    fn flujo_csmp_retomar_consulta_solo_tribunal_pendiente() {
+        use base64::Engine;
+        use std::cell::RefCell;
+        use super::super::sitfa_ficticio::SitfaFicticio;
+        struct PuenteFicticio { interno: SitfaFicticio, preparados: RefCell<Vec<String>> }
+        impl lote::Conexion for PuenteFicticio {
+            fn llamar(&self, comando: &str, carga: Value, plazo: Duration) -> Result<Value, String> {
+                if comando == "catalog" { return Ok(json!({"pantalla":"seguimiento", "tribunales":{"113":"Jgdo. L. y G. de Laja", "119":"Jgdo. L. y G. de Mulchén"}, "pestanas":["Cumplimiento"], "modalidades":{"2":"Ambulatorio"}, "medidas":{"0":"Todas"}})); }
+                if comando == "prepare" { self.preparados.borrow_mut().push(carga["selection"]["tribunal"].as_str().unwrap_or("").to_string()); }
+                self.interno.llamar(comando, carga, plazo)
+            }
+        }
+        let oracle: Value = serde_json::from_str(include_str!("../../tests/datos/flujo_csmp.json")).unwrap();
+        let caso = oracle["casos"].as_array().unwrap().iter().find(|v| v["caso"] == "retomar_principal").unwrap();
+        let base = std::env::temp_dir().join(format!("flow-csmp-reanudar-{}-{}", std::process::id(), chrono::Local::now().timestamp_nanos_opt().unwrap_or_default()));
+        let raiz = base.join("conjunto");
+        let anterior = raiz.join("anterior");
+        for (ruta, contenido) in caso["fuentes"][0].as_object().unwrap() {
+            let archivo = anterior.join(ruta);
+            std::fs::create_dir_all(archivo.parent().unwrap()).unwrap();
+            std::fs::write(archivo, base64::engine::general_purpose::STANDARD.decode(contenido.as_str().unwrap()).unwrap()).unwrap();
+        }
+        let resumen_path = anterior.join("resumen.json");
+        let mut resumen: Value = serde_json::from_slice(&std::fs::read(&resumen_path).unwrap()).unwrap();
+        resumen["consultas"].as_array_mut().unwrap().truncate(1);
+        resumen["estado"] = json!("INCOMPLETA");
+        resumen["consultas_completadas"] = json!(1);
+        std::fs::write(&resumen_path, serde_json::to_vec(&resumen).unwrap()).unwrap();
+        let raiz = raiz.canonicalize().unwrap();
+        let mut estado = json!({"fases":{"principal":{"estado":"INCOMPLETA", "carpeta":"anterior", "carpetas_parciales":[]}}});
+        let puente = PuenteFicticio { interno: SitfaFicticio::nuevo("seguimiento", &[]), preparados: RefCell::new(Vec::new()) };
+        let tribunales = vec!["113".into(), "119".into()];
+        let modalidades = vec!["2".into()];
+        let fase = plan(&tribunales, &modalidades, "Cumplimiento", NaiveDate::from_ymd_opt(2026, 10, 2).unwrap(), 60).unwrap().remove(0);
+        let salida = ejecutar_fase(&puente, &fase, &tribunales, &modalidades, &raiz, &mut estado, &lote::Opciones::default(), &AtomicBool::new(false), &mut |_| {}).unwrap();
+        assert_eq!(*puente.preparados.borrow(), ["119"]);
+        assert_eq!(paquete::cargar_lote(&salida).unwrap().consultas.len(), 2);
+        assert_eq!(estado["fases"]["principal"]["estado"], "VALIDADA");
+        let _ = std::fs::remove_dir_all(base);
+    }
+
+    #[test]
+    fn flujo_csmp_retomar_informes_completos_sin_repetir_consultas() {
+        use base64::Engine;
+        struct SoloCatalogo;
+        impl lote::Conexion for SoloCatalogo {
+            fn llamar(&self, comando: &str, _: Value, _: Duration) -> Result<Value, String> {
+                if comando != "catalog" { return Err("No se debe repetir una consulta validada.".into()); }
+                Ok(json!({"pantalla":"calendario_informes", "tribunales":{"113":"Jgdo. L. y G. de Laja"}, "meses":{"10":"Octubre", "11":"Noviembre"}, "anios":{"2026":"2026"}}))
+            }
+        }
+        let oracle: Value = serde_json::from_str(include_str!("../../tests/datos/flujo_csmp.json")).unwrap();
+        let caso = oracle["casos"].as_array().unwrap().iter().find(|v| v["caso"] == "retomar_informes").unwrap();
+        let base = std::env::temp_dir().join(format!("flow-csmp-informes-{}-{}", std::process::id(), chrono::Local::now().timestamp_nanos_opt().unwrap_or_default()));
+        let anterior = base.join("anterior");
+        for (ruta, contenido) in caso["fuentes"][1].as_object().unwrap() {
+            let archivo = anterior.join(ruta);
+            std::fs::create_dir_all(archivo.parent().unwrap()).unwrap();
+            std::fs::write(archivo, base64::engine::general_purpose::STANDARD.decode(contenido.as_str().unwrap()).unwrap()).unwrap();
+        }
+        let raiz = base.canonicalize().unwrap();
+        let tribunales = vec!["113".into()];
+        let modalidades = vec!["2".into()];
+        let fase = plan(&tribunales, &modalidades, "Cumplimiento", NaiveDate::from_ymd_opt(2026, 10, 2).unwrap(), 60).unwrap().remove(1);
+        let mut estado = json!({"fases":{}});
+        estado["fases"][&fase.clave] = json!({"estado":"INCOMPLETA", "carpeta":"anterior", "carpetas_parciales":[]});
+        let salida = ejecutar_fase(&SoloCatalogo, &fase, &tribunales, &modalidades, &raiz, &mut estado, &lote::Opciones::default(), &AtomicBool::new(false), &mut |_| {}).unwrap();
+        assert_eq!(paquete::cargar_lote(&salida).unwrap().consultas.len(), 1);
+        assert_eq!(estado["fases"][&fase.clave]["estado"], "VALIDADA");
+        let _ = std::fs::remove_dir_all(base);
+    }
 
     #[test]
     fn flujo_csmp_planifica_fases_y_valida_alcance() {
