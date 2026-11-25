@@ -40,6 +40,59 @@ pub struct Descargador {
     favoritos: Option<Vec<String>>,
     favorito_mensaje: Option<Result<String, String>>,
     resultados: Resultados,
+    conjunta: FlujoConjunto,
+}
+
+#[derive(Default)]
+struct FlujoConjunto {
+    recepcion: Option<mpsc::Receiver<Result<String, String>>>,
+    cancelar: Option<Arc<AtomicBool>>,
+    mensajes: Vec<String>,
+}
+
+impl FlujoConjunto {
+    fn lanzar(&mut self, ctx: &egui::Context, puente: Arc<Puente>, destino: PathBuf, tribunales: Vec<String>, modalidades: Vec<String>, modo: String, fecha: chrono::NaiveDate, dias: u32, recuperar: Option<PathBuf>, pausa: f32) {
+        let (envio, recepcion) = mpsc::channel();
+        let cancelar = Arc::new(AtomicBool::new(false));
+        self.recepcion = Some(recepcion);
+        self.cancelar = Some(cancelar.clone());
+        self.mensajes.clear();
+        let ctx = ctx.clone();
+        std::thread::spawn(move || {
+            let opciones = lote::Opciones { pausa: Duration::from_secs_f64(preferencias::limitar_pausa(f64::from(pausa))), ..Default::default() };
+            let resultado = puente.verificar(Edicion::Integral).and_then(|_| flow_rust::descargador::flujo_csmp::ejecutar(puente.as_ref(), &tribunales, &modalidades, &modo, &destino, fecha, dias, recuperar.as_deref(), &opciones, &cancelar, &mut |evento| {
+                let _ = envio.send(Ok(format!("{evento:?}")));
+                ctx.request_repaint();
+            }));
+            let _ = envio.send(resultado.map(|ruta| format!("Conjunto preparado: {}", ruta.display())));
+            ctx.request_repaint();
+        });
+    }
+
+    fn retomar(&mut self, ctx: &egui::Context, puente: Arc<Puente>, carpeta: PathBuf, pausa: f32) -> Result<(), String> {
+        let datos: Value = serde_json::from_slice(&std::fs::read(carpeta.join("flujo.json")).map_err(|e| e.to_string())?).map_err(|_| "Resumen JSON inválido.")?;
+        let seleccion = &datos["seleccion"];
+        let lista = |k: &str| -> Result<Vec<String>, String> { seleccion[k].as_array().ok_or("Resumen JSON inválido.")?.iter().map(|v| v.as_str().map(str::to_owned).ok_or_else(|| "Resumen JSON inválido.".into())).collect() };
+        let tribunales = lista("tribunales")?;
+        let modalidades = lista("modalidades")?;
+        let modo = seleccion["modo"].as_str().ok_or("Resumen JSON inválido.")?.to_string();
+        let fecha = chrono::NaiveDate::parse_from_str(seleccion["corte"].as_str().ok_or("Resumen JSON inválido.")?, "%Y-%m-%d").map_err(|_| "Resumen JSON inválido.")?;
+        let dias = seleccion["dias_firmas"].as_u64().and_then(|n| u32::try_from(n).ok()).unwrap_or(60);
+        self.lanzar(ctx, puente, carpeta.clone(), tribunales, modalidades, modo, fecha, dias, Some(carpeta), pausa);
+        Ok(())
+    }
+
+    fn recibir(&mut self) {
+        if let Some(recepcion) = &self.recepcion {
+            loop {
+                match recepcion.try_recv() {
+                    Ok(mensaje) => self.mensajes.push(mensaje.unwrap_or_else(|e| format!("Error: {e}"))),
+                    Err(mpsc::TryRecvError::Empty) => break,
+                    Err(mpsc::TryRecvError::Disconnected) => { self.recepcion = None; self.cancelar = None; break; }
+                }
+            }
+        }
+    }
 }
 
 enum Mensaje {
@@ -1312,10 +1365,18 @@ impl Descargador {
 
     pub fn mostrar(&mut self, ui: &mut Ui, p: &Pal) {
         self.ejecucion.recibir();
+        self.conjunta.recibir();
+        if let Some(carpeta) = flow_rust::descargador::flujo_csmp::tomar_solicitud() {
+            if let Some(puente) = self.conexion.puente.clone().filter(|p| p.conectado() && self.conjunta.recepcion.is_none() && !self.ejecucion.activa()) {
+                if let Err(error) = self.conjunta.retomar(ui.ctx(), puente, carpeta, self.ejecucion.pausa) { self.conjunta.mensajes.push(error); }
+            } else {
+                self.conjunta.mensajes.push("Conecta Chrome y termina la operación actual antes de retomar un flujo.".into());
+            }
+        }
         if let Some(catalogo) = self.conexion.catalogo() {
             self.usar_catalogo(Some(catalogo), true);
         }
-        let ejecutando = self.ejecucion.activa();
+        let ejecutando = self.ejecucion.activa() || self.conjunta.recepcion.is_some();
         theme::titulo(
             ui,
             p,
@@ -1326,6 +1387,26 @@ impl Descargador {
             ui.set_width(ui.available_width());
             ui.add_enabled_ui(!ejecutando, |ui| self.mostrar_perfiles(ui, p));
         });
+        let conectado = self.edicion == Edicion::Integral && self.conexion.puente.as_ref().is_some_and(|p| p.conectado());
+        let seguimiento = self.catalogo.as_ref().is_some_and(|c| c.pantalla == Pantalla::Seguimiento) && self.catalogo_remoto;
+        ui.horizontal_wrapped(|ui| {
+            if ui.add_enabled(!ejecutando && conectado && seguimiento && !self.lote.tribunales.is_empty(), egui::Button::new("Descarga conjunta CSMP")).clicked() {
+                if self.lote.pestanas.len() != 1 || !matches!(self.lote.pestanas[0].as_str(), "Espera" | "Cumplimiento") {
+                    self.conjunta.mensajes.push("Selecciona Espera o Cumplimiento para la descarga conjunta.".into());
+                } else if let Some(puente) = self.conexion.puente.clone() {
+                    self.conjunta.lanzar(ui.ctx(), puente, PathBuf::from(&self.ejecucion.destino), self.lote.tribunales.clone(), self.lote.modalidades.clone(), self.lote.pestanas[0].clone(), chrono::Local::now().date_naive(), 60, None, self.ejecucion.pausa);
+                }
+            }
+            if ui.add_enabled(!ejecutando && conectado, egui::Button::new("Retomar flujo…")).clicked() {
+                if let (Some(carpeta), Some(puente)) = (rfd::FileDialog::new().set_title("Elegir carpeta de descarga conjunta").pick_folder(), self.conexion.puente.clone()) {
+                    if let Err(error) = self.conjunta.retomar(ui.ctx(), puente, carpeta, self.ejecucion.pausa) { self.conjunta.mensajes.push(error); }
+                }
+            }
+            if let Some(cancelar) = &self.conjunta.cancelar {
+                if ui.button("Cancelar descarga conjunta").clicked() { cancelar.store(true, Ordering::Relaxed); }
+            }
+        });
+        for mensaje in self.conjunta.mensajes.iter().rev().take(5).rev() { ui.label(mensaje); }
         if let Some(catalogo) = &self.catalogo {
             if catalogo.pantalla != Pantalla::Carga || self.edicion == Edicion::Integral {
                 ui.add_space(8.0);

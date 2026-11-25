@@ -12,6 +12,15 @@ use super::excel::{self, Hoja};
 use super::xls::Celda;
 
 pub const FLOW_DONE: &str = "PREPARADO_SIN_CONSULTA_FIRMAS";
+static SOLICITUD_REANUDAR: std::sync::Mutex<Option<PathBuf>> = std::sync::Mutex::new(None);
+
+pub fn solicitar_retomar(carpeta: PathBuf) {
+    if let Ok(mut solicitud) = SOLICITUD_REANUDAR.lock() { *solicitud = Some(carpeta); }
+}
+
+pub fn tomar_solicitud() -> Option<PathBuf> {
+    SOLICITUD_REANUDAR.lock().ok().and_then(|mut solicitud| solicitud.take())
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FasePlan {
