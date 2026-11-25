@@ -3,6 +3,7 @@ use crate::theme::{self, Pal};
 use crate::util::parse_date_text;
 use egui::{ComboBox, RichText, Ui};
 use flow_rust::descargador::bitacoras::{self, LoteBitacoras};
+use flow_rust::descargador::flujo_paquete;
 use flow_rust::descargador::lote::{self, Evento, Fin, Opciones};
 use flow_rust::descargador::paquete;
 use serde_json::Value;
@@ -74,6 +75,7 @@ struct Ejecucion {
     fin: Option<Fin>,
     carpeta: Option<PathBuf>,
     contexto: Contexto,
+    flujo: Flujo,
 }
 
 impl Default for Ejecucion {
@@ -103,6 +105,7 @@ impl Default for Ejecucion {
             fin: None,
             carpeta: None,
             contexto: Contexto::desde(&guardadas_contexto()),
+            flujo: Flujo::default(),
         }
     }
 }
@@ -113,6 +116,280 @@ fn texto_valor(v: &Value) -> String {
 
 fn guardadas_contexto() -> Preferencias {
     Preferencias::cargar(&Preferencias::ruta())
+}
+
+enum MensajeFlujo {
+    Evento(flujo_paquete::Evento),
+    Termino(Result<flujo_paquete::Resultado, String>),
+}
+
+/// E-Q9 · «Consultar y crear paquete»: las fases del flujo en un hilo, con su avance, cancelación y resultado.
+#[derive(Default)]
+struct Flujo {
+    informes: bool,
+    recepcion: Option<mpsc::Receiver<MensajeFlujo>>,
+    cancelar: Option<Arc<AtomicBool>>,
+    fase: String,
+    avance: Vec<String>,
+    avisos: Vec<String>,
+    error: Option<String>,
+    resultado: Option<Value>,
+    abrir_en_trabajo: Option<PathBuf>,
+}
+
+impl Flujo {
+    fn activa(&self) -> bool {
+        self.recepcion.is_some()
+    }
+
+    fn limpiar(&mut self) {
+        self.fase.clear();
+        self.avance.clear();
+        self.avisos.clear();
+        self.error = None;
+        self.resultado = None;
+    }
+
+    fn recibir(&mut self) {
+        let Some(recepcion) = &self.recepcion else { return };
+        let mensajes: Vec<MensajeFlujo> = recepcion.try_iter().collect();
+        let desconectado = matches!(recepcion.try_recv(), Err(mpsc::TryRecvError::Disconnected));
+        for mensaje in mensajes {
+            if let MensajeFlujo::Evento(evento) = mensaje {
+                match evento {
+                    flujo_paquete::Evento::Carpeta(_) => {}
+                    flujo_paquete::Evento::Fase(f) => {
+                        self.fase = f.clone();
+                        self.avance.push(format!("Fase: {f}"));
+                    }
+                    flujo_paquete::Evento::Origen { .. } => {}
+                    flujo_paquete::Evento::Estado(texto) => self.avance.push(texto),
+                    flujo_paquete::Evento::Avance(nombre, valor) => {
+                        let texto = |k: &str| valor[k].as_str().unwrap_or("").to_string();
+                        match nombre.as_str() {
+                            "query" => self.avance.push(format!(
+                                "Consulta {} de {} · {}",
+                                texto("index"),
+                                texto("total"),
+                                texto("label")
+                            )),
+                            "diary_progress" => self.avance.push(format!("Bitácora {} · {}", texto("rit"), texto("estado"))),
+                            _ => {}
+                        }
+                    }
+                    flujo_paquete::Evento::Aviso(a) => self.avisos.push(a),
+                    flujo_paquete::Evento::Paquete(v) => self.resultado = Some(v),
+                }
+                if self.avance.len() > 200 {
+                    self.avance.drain(..100);
+                }
+                continue;
+            }
+            self.recepcion = None;
+            self.cancelar = None;
+            if let MensajeFlujo::Termino(Err(e)) = mensaje {
+                self.error = Some(e);
+            }
+        }
+        if desconectado && self.recepcion.is_some() {
+            self.recepcion = None;
+            self.cancelar = None;
+            self.error = Some("Se interrumpió el flujo del paquete.".into());
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn lanzar(
+        &mut self,
+        ctx: &egui::Context,
+        conexion: Arc<dyn lote::Conexion + Send + Sync>,
+        catalogo: Catalogo,
+        plan: PlanLote,
+        alcance: LoteBitacoras,
+        destino: PathBuf,
+        opciones: flujo_paquete::Opciones,
+    ) {
+        self.limpiar();
+        let (envio, recepcion) = mpsc::channel();
+        self.recepcion = Some(recepcion);
+        let cancelar = Arc::new(AtomicBool::new(false));
+        self.cancelar = Some(cancelar.clone());
+        let ctx = ctx.clone();
+        std::thread::spawn(move || {
+            let mut emitir = |evento| {
+                let _ = envio.send(MensajeFlujo::Evento(evento));
+                ctx.request_repaint();
+            };
+            let resultado = flujo_paquete::ejecutar(
+                conexion.as_ref(),
+                &catalogo,
+                Edicion::Integral,
+                &plan,
+                &alcance,
+                &destino,
+                &opciones,
+                &cancelar,
+                &mut emitir,
+            );
+            let _ = envio.send(MensajeFlujo::Termino(resultado));
+            ctx.request_repaint();
+        });
+    }
+
+    fn retomar(
+        &mut self,
+        ctx: &egui::Context,
+        conexion: Arc<dyn lote::Conexion + Send + Sync>,
+        catalogo: Catalogo,
+        carpeta: PathBuf,
+        opciones: flujo_paquete::Opciones,
+    ) {
+        self.limpiar();
+        let (envio, recepcion) = mpsc::channel();
+        self.recepcion = Some(recepcion);
+        let cancelar = Arc::new(AtomicBool::new(false));
+        self.cancelar = Some(cancelar.clone());
+        let ctx = ctx.clone();
+        std::thread::spawn(move || {
+            let mut emitir = |evento: flujo_paquete::Evento| {
+                let _ = envio.send(MensajeFlujo::Evento(evento));
+                ctx.request_repaint();
+            };
+            let resultado = flujo_paquete::retomar(
+                conexion.as_ref(),
+                &catalogo,
+                Edicion::Integral,
+                &carpeta,
+                &opciones,
+                &cancelar,
+                &mut emitir,
+            );
+            let _ = envio.send(MensajeFlujo::Termino(resultado));
+            ctx.request_repaint();
+        });
+    }
+
+    /// Sección «Paquete en una acción»: la acción principal con Seguimiento, su avance y su resultado.
+    #[allow(clippy::too_many_arguments)]
+    fn mostrar(
+        &mut self,
+        ui: &mut Ui,
+        p: &Pal,
+        conectado: bool,
+        catalogo: &Catalogo,
+        lote: &SeleccionLote,
+        destino: &str,
+        pausa: f64,
+        opciones: flujo_paquete::Opciones,
+        conexion: Option<Arc<dyn lote::Conexion + Send + Sync>>,
+    ) {
+        self.recibir();
+        theme::seccion(ui, p, "Paquete en una acción");
+        ui.label(
+            RichText::new(
+                "Consulta SITFA, lee bitácoras, calendarios, historia e histórico y crea el paquete en una sola \
+                 carpeta «Paquete CSMP …».",
+            )
+            .color(p.muted),
+        );
+        let activa = self.activa();
+        let seguimiento = catalogo.pantalla == Pantalla::Seguimiento;
+        let plan = if seguimiento && !lote.tribunales.is_empty() && !lote.modalidades.is_empty() && !lote.pestanas.is_empty() {
+            catalogo.planificar(Edicion::Integral, lote).ok()
+        } else {
+            None
+        };
+        let puede = conectado && plan.is_some() && !destino.trim().is_empty() && conexion.is_some();
+        if activa {
+            ui.horizontal_wrapped(|ui| {
+                ui.spinner();
+                ui.label(if self.fase.is_empty() { "Preparando el paquete…".to_string() } else { format!("Fase: {}", self.fase) });
+                if let Some(c) = &self.cancelar {
+                    if ui.add_enabled(!c.load(Ordering::SeqCst), egui::Button::new("Cancelar")).clicked() {
+                        c.store(true, Ordering::SeqCst);
+                    }
+                }
+            });
+        } else {
+            ui.horizontal_wrapped(|ui| {
+                ui.checkbox(&mut self.informes, "Informes por vencer (60 días)");
+                let boton = ui.add_enabled(
+                    puede,
+                    egui::Button::new(RichText::new("Consultar y crear paquete").color(egui::Color32::WHITE).strong())
+                        .fill(p.accent),
+                );
+                if boton.clicked() {
+                    if let (Some(conexion), Some(plan)) = (conexion.clone(), plan.clone()) {
+                        let alcance = LoteBitacoras {
+                            tribunales: lote.tribunales.clone(),
+                            modalidades: lote.modalidades.clone(),
+                            pestanas: lote.pestanas.clone(),
+                        };
+                        let mut opciones = opciones.clone();
+                        opciones.informes = self.informes;
+                        opciones.pausa = Duration::from_secs_f64(preferencias::limitar_pausa(pausa));
+                        self.lanzar(ui.ctx(), conexion, catalogo.clone(), plan, alcance, PathBuf::from(destino.trim()), opciones);
+                    }
+                }
+                if ui.add_enabled(conectado, egui::Button::new("Retomar paquete…")).clicked() {
+                    if let (Some(conexion), Some(carpeta)) = (
+                        conexion.clone(),
+                        rfd::FileDialog::new().set_title("Carpeta «Paquete CSMP …» a retomar").pick_folder(),
+                    ) {
+                        let mut opciones = opciones.clone();
+                        opciones.informes = self.informes;
+                        opciones.pausa = Duration::from_secs_f64(preferencias::limitar_pausa(pausa));
+                        self.retomar(ui.ctx(), conexion, catalogo.clone(), carpeta, opciones);
+                    }
+                }
+                if !seguimiento {
+                    ui.label(
+                        RichText::new("Consultar y crear paquete requiere Seguimiento; las otras consultas siguen en Avanzado.")
+                            .color(p.muted),
+                    );
+                } else if !puede {
+                    ui.label(RichText::new("Conecta la extensión Integral, elige el alcance y la carpeta de destino.").color(p.muted));
+                }
+            });
+        }
+        if !self.avance.is_empty() {
+            egui::ScrollArea::vertical().id_salt("avance del flujo").max_height(140.0).stick_to_bottom(true).show(ui, |ui| {
+                for linea in &self.avance {
+                    ui.label(RichText::new(linea).color(p.text));
+                }
+            });
+        }
+        for aviso in &self.avisos {
+            ui.label(RichText::new(aviso).color(p.amber));
+        }
+        if let Some(r) = &self.resultado {
+            let parcial = r["partial"].as_bool().unwrap_or(false);
+            let texto = format!(
+                "{}: {}",
+                if parcial { "Paquete parcial" } else { "Paquete completo" },
+                r["path"].as_str().unwrap_or("")
+            );
+            ui.label(RichText::new(texto).color(if parcial { p.amber } else { p.green }));
+            if let Some(aviso) = r["aviso_cobertura"].as_str() {
+                ui.label(RichText::new(aviso).color(p.amber));
+            }
+            ui.horizontal_wrapped(|ui| {
+                if let Some(ruta) = r["path"].as_str().map(PathBuf::from) {
+                    if theme::primary(ui, p, "Abrir en Trabajo").clicked() {
+                        self.abrir_en_trabajo = Some(ruta.clone());
+                    }
+                    if let Some(carpeta) = ruta.parent() {
+                        if ui.button("Abrir carpeta del paquete").clicked() {
+                            crate::ui::abrir_en_sistema(carpeta);
+                        }
+                    }
+                }
+            });
+        }
+        if let Some(e) = &self.error {
+            ui.label(RichText::new(e).color(p.amber));
+        }
+    }
 }
 
 enum Trabajo {
@@ -621,9 +898,13 @@ impl Ejecucion {
         puente: Option<Arc<Puente>>,
         remoto: bool,
         lote: &SeleccionLote,
+        opciones_paquete: flujo_paquete::Opciones,
     ) {
+        let conectado = puente.as_ref().is_some_and(|b| b.conectado());
+        let conexion: Option<Arc<dyn lote::Conexion + Send + Sync>> = puente.clone().map(|p| p as Arc<dyn lote::Conexion + Send + Sync>);
+        self.flujo.mostrar(ui, p, conectado, catalogo, lote, &self.destino, f64::from(self.pausa), opciones_paquete, conexion);
         ui.add_space(8.0);
-        theme::seccion(ui, p, "Ejecutar lote");
+        theme::seccion(ui, p, "Avanzado · pasos sueltos");
         let activa = self.activa();
         ui.add_enabled_ui(!activa, |ui| {
             ui.horizontal_wrapped(|ui| {
@@ -938,7 +1219,7 @@ impl Descargador {
 
     /// El paquete que la persona pidió abrir en Trabajo desde «Crear paquete de este lote…».
     pub fn paquete_para_trabajo(&mut self) -> Option<PathBuf> {
-        self.ejecucion.contexto.abrir_en_trabajo.take()
+        self.ejecucion.contexto.abrir_en_trabajo.take().or_else(|| self.ejecucion.flujo.abrir_en_trabajo.take())
     }
 
     pub fn mostrar(&mut self, ui: &mut Ui, p: &Pal) {
@@ -1042,6 +1323,19 @@ impl Descargador {
                                 }
                             });
                             let plan = self.plan.as_ref().and_then(|r| r.as_ref().ok());
+                            let opciones_paquete = flujo_paquete::Opciones {
+                                consolidado: self.ejecucion.contexto.consolidado,
+                                calendarios: self.ejecucion.contexto.calendarios,
+                                historia: self.ejecucion.contexto.historia,
+                                historico: self.ejecucion.contexto.historico,
+                                historia_en_paquete: self.ejecucion.contexto.historia_en_paquete,
+                                meses: self.ejecucion.contexto.meses,
+                                informes: false,
+                                fecha_informes: chrono::Local::now().date_naive(),
+                                pdf_vacias: self.ejecucion.evidencia,
+                                pausa: Duration::from_secs_f64(preferencias::limitar_pausa(f64::from(self.ejecucion.pausa))),
+                                reutilizar: self.ejecucion.contexto.reutilizar,
+                            };
                             self.ejecucion.mostrar(
                                 ui,
                                 p,
@@ -1051,6 +1345,7 @@ impl Descargador {
                                 self.conexion.puente.clone(),
                                 self.catalogo_remoto,
                                 &self.lote,
+                                opciones_paquete,
                             );
                         });
                 });
@@ -1601,5 +1896,80 @@ mod pruebas_interfaz {
         );
         let _ = std::fs::remove_dir_all(&base);
         println!("E-Q6_DESCARGADOR: opciones, preferencias, impedimentos y paquete del lote verificados");
+    }
+
+    /// E-Q9 · Con Seguimiento, «Paquete en una acción» es la acción principal: ofrece «Consultar y crear paquete» y
+    /// «Retomar paquete…», muestra el error de la extensión y no deja hilos colgados.
+    #[test]
+    fn ui_flujo_consultar_y_crear_paquete() {
+        use egui_kittest::kittest::Queryable;
+        use egui_kittest::Harness;
+
+        struct SinExtension;
+        impl lote::Conexion for SinExtension {
+            fn llamar(&self, _comando: &str, _payload: Value, _plazo: Duration) -> Result<Value, String> {
+                Err("Carga en Chrome la extensión Flow Python de la edición elegida (2.9.0) y vuelve a conectar.".into())
+            }
+        }
+
+        let (_candado, perfil) = crate::prueba_entorno::perfil_aislado();
+        let catalogo: Catalogo = serde_json::from_value(serde_json::json!({
+            "pantalla": "seguimiento", "tribunales": {"901": "Juzgado de Familia Ficticio Norte"},
+            "pestanas": ["Cumplimiento"], "modalidades": {"2": "Ambulatorio"},
+            "informes": {"1": "Por vencer"}, "medidas": {"4": "Medidas por vencer"},
+        }))
+        .unwrap();
+        let lote = SeleccionLote {
+            tribunales: vec!["901".into()],
+            pestanas: vec!["Cumplimiento".into()],
+            modalidades: vec!["2".into()],
+            informes: vec!["1".into()],
+            medidas: vec![flow_rust::descargador::TODAS_LAS_MEDIDAS.into()],
+            ..Default::default()
+        };
+        let plan = catalogo.planificar(Edicion::Integral, &lote).unwrap();
+        let alcance = LoteBitacoras {
+            tribunales: vec!["901".into()],
+            modalidades: vec!["2".into()],
+            pestanas: vec!["Cumplimiento".into()],
+        };
+        let destino = perfil.join("paquete-en-una-accion");
+        let mut flujo = Flujo::default();
+        let ctx = egui::Context::default();
+        flujo.lanzar(
+            &ctx,
+            Arc::new(SinExtension),
+            catalogo.clone(),
+            plan,
+            alcance,
+            destino.clone(),
+            flujo_paquete::Opciones { pausa: Duration::ZERO, ..Default::default() },
+        );
+        let inicio = std::time::Instant::now();
+        while flujo.error.is_none() && flujo.activa() {
+            assert!(inicio.elapsed() < Duration::from_secs(30), "el flujo no terminó");
+            flujo.recibir();
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        assert!(flujo.error.as_deref().unwrap().contains("extensión"), "{:?}", flujo.error);
+        let pal = theme::pal(false);
+        let catalogo_pantalla = catalogo.clone();
+        let lote_pantalla = SeleccionLote {
+            tribunales: lote.tribunales.clone(),
+            pestanas: lote.pestanas.clone(),
+            modalidades: lote.modalidades.clone(),
+            ..Default::default()
+        };
+        let mut h = Harness::builder().with_size(egui::Vec2::new(1200.0, 700.0)).build_ui_state(
+            move |ui, f: &mut Flujo| {
+                f.mostrar(ui, &pal, true, &catalogo_pantalla, &lote_pantalla, "", 0.0, flujo_paquete::Opciones::default(), None);
+            },
+            flujo,
+        );
+        h.run();
+        assert!(h.query_by_label("Consultar y crear paquete").is_some(), "falta la acción principal");
+        assert!(h.query_by_label("Retomar paquete…").is_some(), "falta retomar");
+        assert!(h.state().resultado.is_none());
+        let _ = std::fs::remove_dir_all(&destino);
     }
 }
