@@ -338,8 +338,14 @@ impl Resultados {
             ui.horizontal_wrapped(|ui| {
                 ui.label(format!("{} · {} · {} · {}", referencia.tipo, referencia.estado, referencia.conteo, referencia.carpeta.display()));
                 if ui.add_enabled(!self.ocupado && referencia.estado != "NO_DISPONIBLE" && referencia.estado != "ERROR_CONTROL", egui::Button::new("Abrir referencia")).clicked() {
-                    self.carpeta = referencia.carpeta.display().to_string();
-                    self.cargar(ui.ctx());
+                    if referencia.tipo == "Bitácoras" {
+                        let ruta = referencia.carpeta.join("bitacoras.json");
+                        if !self.bitacoras_paquete.contains(&ruta) { self.bitacoras_paquete.push(ruta); }
+                        self.estado = Some(Ok("Control de bitácoras añadido al paquete.".into()));
+                    } else {
+                        self.carpeta = referencia.carpeta.display().to_string();
+                        self.cargar(ui.ctx());
+                    }
                 }
                 if ui.button("Quitar del historial").clicked() {
                     preferencias.historial_lotes.retain(|p| Path::new(p) != referencia.carpeta);

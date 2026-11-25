@@ -275,6 +275,19 @@ mod pruebas {
         let casos = oracle["casos"].as_array().unwrap();
         assert_eq!(casos.len(), 14);
         for caso in casos { comparar_historial(caso).unwrap(); }
+        let base = std::env::temp_dir().join(format!("flow-recordar-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&base);
+        let mut p = Preferencias::default();
+        for (carpeta, control) in [("lote", "resumen.json"), ("conjunto", "flujo.json"), ("diario", "bitacoras.json")] {
+            let ruta = base.join(carpeta);
+            std::fs::create_dir_all(&ruta).unwrap();
+            std::fs::write(ruta.join(control), "{}").unwrap();
+            recordar(&mut p, &ruta).unwrap();
+            recordar(&mut p, &ruta).unwrap();
+        }
+        assert_eq!((p.historial_lotes.len(), p.historial_bitacoras.len()), (2, 1));
+        assert!(p.historial_bitacoras[0].ends_with("bitacoras.json"));
+        let _ = std::fs::remove_dir_all(base);
     }
 
     #[test]
