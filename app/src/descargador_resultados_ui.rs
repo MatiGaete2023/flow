@@ -8,6 +8,8 @@ use egui::{RichText, Ui};
 use flow_rust::descargador::archivo_local::{self, Tipo};
 use flow_rust::descargador::paquete::{self, Lote};
 use flow_rust::descargador::resultados;
+use flow_rust::descargador::preferencias::Preferencias;
+use sha2::{Digest, Sha256};
 use serde_json::Value;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
@@ -62,6 +64,7 @@ pub struct Resultados {
     ocupado: bool,
     recepcion: Option<Receiver<Mensaje>>,
     ofrecida: Option<PathBuf>,
+    conjunta: bool,
 }
 
 fn ahora() -> chrono::DateTime<chrono::FixedOffset> {
@@ -204,6 +207,11 @@ impl Resultados {
         self.estado = Some(Ok("Comprobando archivos y procesando resultados localmente…".into()));
         let carpeta = self.ruta();
         if let Ok(tipo) = archivo_local::tipo(&carpeta) {
+            let ruta_preferencias = Preferencias::ruta();
+            let mut preferencias = Preferencias::cargar(&ruta_preferencias);
+            if archivo_local::recordar(&mut preferencias, &carpeta).is_ok() {
+                if let Err(error) = preferencias.guardar(&ruta_preferencias) { self.estado = Some(Err(error)); }
+            }
             if tipo != Tipo::Bitacoras {
                 let carpeta = carpeta.canonicalize().unwrap_or(carpeta);
                 if !self.carpetas_paquete.contains(&carpeta) { self.carpetas_paquete.push(carpeta); }
@@ -248,6 +256,11 @@ impl Resultados {
             for path in paths {
                 if path.file_name().is_some_and(|name| name == "bitacoras.json") {
                     let path = path.canonicalize().unwrap_or(path);
+                    if let Some(carpeta) = path.parent() {
+                        let ruta = Preferencias::ruta();
+                        let mut preferencias = Preferencias::cargar(&ruta);
+                        if archivo_local::recordar(&mut preferencias, carpeta).is_ok() { let _ = preferencias.guardar(&ruta); }
+                    }
                     if !self.bitacoras_paquete.contains(&path) { self.bitacoras_paquete.push(path); }
                 }
             }
@@ -303,6 +316,23 @@ impl Resultados {
         self.recibir();
         ui.add_space(8.0);
         theme::seccion(ui, p, "Resultados del lote");
+        let ruta_preferencias = Preferencias::ruta();
+        let mut preferencias = Preferencias::cargar(&ruta_preferencias);
+        let referencias = archivo_local::descubrir(Path::new(&preferencias.destino), &preferencias, None);
+        for referencia in referencias {
+            ui.horizontal_wrapped(|ui| {
+                ui.label(format!("{} · {} · {} · {}", referencia.tipo, referencia.estado, referencia.conteo, referencia.carpeta.display()));
+                if ui.add_enabled(!self.ocupado && referencia.estado != "NO_DISPONIBLE" && referencia.estado != "ERROR_CONTROL", egui::Button::new("Abrir referencia")).clicked() {
+                    self.carpeta = referencia.carpeta.display().to_string();
+                    self.cargar(ui.ctx());
+                }
+                if ui.button("Quitar del historial").clicked() {
+                    preferencias.historial_lotes.retain(|p| Path::new(p) != referencia.carpeta);
+                    preferencias.historial_bitacoras.retain(|p| Path::new(p).parent() != Some(referencia.carpeta.as_path()));
+                    if let Err(error) = preferencias.guardar(&ruta_preferencias) { self.estado = Some(Err(error)); }
+                }
+            });
+        }
         ui.horizontal_wrapped(|ui| {
             ui.label("Carpeta del lote o conjunto");
             ui.add_enabled(!self.ocupado, egui::TextEdit::singleline(&mut self.carpeta).desired_width(360.0));
@@ -323,6 +353,7 @@ impl Resultados {
         });
         if let Some(c) = &self.cargado {
             if c.conjunto {
+                if ui.button("Ver descarga conjunta").clicked() { self.conjunta = true; }
                 ui.label(RichText::new("Conjunto disponible. Crear paquete reúne sus fases; los productos por lote se ofrecen por fase.").color(p.green));
                 for (i, fase) in c.fases.iter().enumerate() {
                     ui.horizontal(|ui| {
@@ -358,6 +389,40 @@ impl Resultados {
                 });
             });
             }
+        }
+        if self.conjunta {
+            let carpeta = self.ruta();
+            let mut abierta = self.conjunta;
+            egui::Window::new("Resultados · descarga conjunta CSMP").open(&mut abierta).show(ui.ctx(), |ui| {
+                let datos = std::fs::read(carpeta.join("flujo.json")).ok().and_then(|b| serde_json::from_slice::<Value>(&b).ok());
+                if let Some(datos) = datos {
+                    ui.label(datos["estado"].as_str().unwrap_or("DESCONOCIDO"));
+                    ui.label(format!("{} completo · corte {} · informes del mes actual y siguiente", datos["seleccion"]["modo"].as_str().unwrap_or(""), datos["seleccion"]["corte"].as_str().unwrap_or("")));
+                    ui.label("La consulta de resoluciones firmadas se retiró de la descarga conjunta. No se acredita ausencia de movimientos.");
+                    if let Some(fases) = datos["fases"].as_object() {
+                        for (nombre, fase) in fases {
+                            if ui.button(format!("{} · {}", nombre, fase["estado"].as_str().unwrap_or(""))).clicked() {
+                                if let Some(fase_carpeta) = fase["carpeta"].as_str() {
+                                    if let Ok(rutas) = archivo_local::fases_conjunto(&carpeta, true) {
+                                        if let Some(ruta) = rutas.iter().find(|r| r.ends_with(fase_carpeta)) { crate::ui::abrir_en_sistema(ruta); }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if let Some(nombre) = datos["archivo"].as_str().filter(|s| !s.is_empty()) {
+                        if ui.button("Abrir libro para CSMP").clicked() {
+                            let ruta = carpeta.join(nombre);
+                            let seguro = Path::new(nombre).file_name().and_then(|n| n.to_str()) == Some(nombre) && !nombre.contains('\\');
+                            let bytes = if seguro { std::fs::read(&ruta).ok() } else { None };
+                            if bytes.as_ref().is_some_and(|b| format!("{:x}", Sha256::digest(b)) == datos["sha256"].as_str().unwrap_or("")) { crate::ui::abrir_en_sistema(&ruta); }
+                            else { self.estado = Some(Err("El resultado cambió; genera una copia nueva desde las fuentes.".into())); }
+                        }
+                    }
+                    if ui.button("Abrir carpeta").clicked() { crate::ui::abrir_en_sistema(&carpeta); }
+                }
+            });
+            self.conjunta = abierta;
         }
         let listo = self.cargado.is_some() && !self.ocupado;
         let ctx = ui.ctx().clone();

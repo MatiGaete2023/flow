@@ -4,6 +4,70 @@ use super::paquete::{self, Lote};
 use serde_json::Value;
 use std::collections::HashSet;
 use std::path::{Component, Path, PathBuf};
+use super::preferencias::Preferencias;
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Referencia {
+    pub carpeta: PathBuf,
+    pub tipo: String,
+    pub estado: String,
+    pub conteo: String,
+}
+
+fn resolver_referencia(ruta: &Path) -> PathBuf {
+    let absoluta = if ruta.is_absolute() { ruta.to_path_buf() } else { std::env::current_dir().unwrap_or_default().join(ruta) };
+    resolver_tolerante(&absoluta).unwrap_or(absoluta)
+}
+
+pub fn recordar(preferencias: &mut Preferencias, carpeta: &Path) -> Result<PathBuf, String> {
+    let carpeta = std::fs::canonicalize(carpeta).map_err(|e| e.to_string())?;
+    let clase = tipo(&carpeta)?;
+    let (historial, ruta) = if clase == Tipo::Bitacoras {
+        (&mut preferencias.historial_bitacoras, carpeta.join("bitacoras.json"))
+    } else {
+        (&mut preferencias.historial_lotes, carpeta.clone())
+    };
+    let ruta = ruta.to_string_lossy().into_owned();
+    if !historial.contains(&ruta) { historial.push(ruta); }
+    Ok(carpeta)
+}
+
+pub fn referencias_bitacoras(preferencias: &Preferencias, excluidas: &[PathBuf]) -> Vec<PathBuf> {
+    let excluidas: HashSet<_> = excluidas.iter().map(|p| resolver_referencia(p)).collect();
+    let mut vistas = HashSet::new();
+    preferencias.historial_bitacoras.iter().map(|p| resolver_referencia(Path::new(p)))
+        .filter(|p| !excluidas.contains(p) && vistas.insert(p.clone())).collect()
+}
+
+pub fn descubrir(base: &Path, preferencias: &Preferencias, ultimo: Option<&Path>) -> Vec<Referencia> {
+    let lotes: HashSet<_> = preferencias.historial_lotes.iter().map(|p| resolver_referencia(Path::new(p))).collect();
+    let diarios: HashSet<_> = referencias_bitacoras(preferencias, &[]).iter().filter_map(|p| p.parent().map(Path::to_path_buf)).collect();
+    let mut carpetas = lotes.clone();
+    carpetas.extend(diarios.iter().cloned());
+    if base.is_dir() {
+        carpetas.insert(resolver_referencia(base));
+        if let Ok(entradas) = std::fs::read_dir(base) {
+            carpetas.extend(entradas.flatten().map(|e| e.path()).filter(|p| p.is_dir()).map(|p| resolver_referencia(&p)));
+        }
+    }
+    if let Some(ruta) = ultimo { carpetas.insert(resolver_referencia(ruta)); }
+    let mut carpetas: Vec<_> = carpetas.into_iter().collect();
+    carpetas.sort_by(|a, b| b.cmp(a));
+    carpetas.into_iter().filter_map(|carpeta| {
+        let control = tipo(&carpeta).ok().and_then(|t| {
+            let archivo = match t { Tipo::Bitacoras => "bitacoras.json", Tipo::Conjunto => "flujo.json", Tipo::Descarga => "resumen.json" };
+            let data: Value = serde_json::from_slice(&std::fs::read(carpeta.join(archivo)).ok()?).ok()?;
+            let conteo = if t == Tipo::Bitacoras { data["registros"].as_array().map_or(0, Vec::len).to_string() }
+                else { data.get("consultas_completadas").map(Value::to_string).unwrap_or_else(|| data["fases"].as_object().map_or(0, |v| v.len()).to_string()) };
+            Some(Referencia { carpeta: carpeta.clone(), tipo: t.etiqueta().into(), estado: data["estado"].as_str().unwrap_or("DESCONOCIDO").into(), conteo })
+        });
+        control.or_else(|| {
+            let (tipo, estado) = if diarios.contains(&carpeta) { ("Bitácoras", if carpeta.join("bitacoras.json").is_file() { "ERROR_CONTROL" } else { "NO_DISPONIBLE" }) }
+                else if lotes.contains(&carpeta) { ("Lote", "NO_DISPONIBLE") } else { return None };
+            Some(Referencia { carpeta, tipo: tipo.into(), estado: estado.into(), conteo: "—".into() })
+        })
+    }).collect()
+}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Tipo {
