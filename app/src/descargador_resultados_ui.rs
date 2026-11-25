@@ -65,6 +65,7 @@ pub struct Resultados {
     recepcion: Option<Receiver<Mensaje>>,
     ofrecida: Option<PathBuf>,
     conjunta: bool,
+    historial_cargado: bool,
 }
 
 fn ahora() -> chrono::DateTime<chrono::FixedOffset> {
@@ -257,6 +258,12 @@ impl Resultados {
             Ok(Tipo::Bitacoras) => self.estado = Some(Err("La carpeta es de bitácoras. Elige «Añadir bitácoras…» y selecciona bitacoras.json.".into())),
             Ok(_) => {
                 let carpeta = carpeta.canonicalize().unwrap_or(carpeta);
+                let ruta = Preferencias::ruta();
+                let mut preferencias = Preferencias::cargar(&ruta);
+                if let Err(error) = archivo_local::recordar(&mut preferencias, &carpeta).and_then(|_| preferencias.guardar(&ruta)) {
+                    self.estado = Some(Err(error));
+                    return;
+                }
                 if !self.carpetas_paquete.contains(&carpeta) { self.carpetas_paquete.push(carpeta); }
                 self.estado = Some(Ok("Carpeta añadida al paquete.".into()));
             }
@@ -333,6 +340,10 @@ impl Resultados {
         theme::seccion(ui, p, "Resultados del lote");
         let ruta_preferencias = Preferencias::ruta();
         let mut preferencias = Preferencias::cargar(&ruta_preferencias);
+        if !self.historial_cargado {
+            self.bitacoras_paquete = archivo_local::referencias_bitacoras(&preferencias, &[]);
+            self.historial_cargado = true;
+        }
         let referencias = archivo_local::descubrir(Path::new(&preferencias.destino), &preferencias, None);
         for referencia in referencias {
             ui.horizontal_wrapped(|ui| {
