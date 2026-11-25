@@ -362,6 +362,99 @@ pub fn ejecutar(
 mod pruebas {
     use super::*;
 
+    /// Dos pantallas ficticias con planillas compatibles con CSMP.
+    struct SitfaConjunto {
+        seguimiento: super::super::sitfa_ficticio::SitfaFicticio,
+        informes: super::super::sitfa_ficticio::SitfaFicticio,
+        pantalla: std::cell::RefCell<String>,
+        consultas: std::cell::RefCell<Vec<(String, String)>>,
+        corte: std::cell::RefCell<Option<(String, usize)>>,
+    }
+
+    impl SitfaConjunto {
+        fn nuevo(corte: Option<(&str, usize)>) -> Self {
+            Self { seguimiento: super::super::sitfa_ficticio::SitfaFicticio::nuevo("seguimiento", &[]),
+                informes: super::super::sitfa_ficticio::SitfaFicticio::nuevo("calendario_informes", &[]),
+                pantalla: std::cell::RefCell::new(String::new()), consultas: std::cell::RefCell::new(Vec::new()),
+                corte: std::cell::RefCell::new(corte.map(|(s, n)| (s.to_string(), n))) }
+        }
+    }
+
+    impl lote::Conexion for SitfaConjunto {
+        fn llamar(&self, comando: &str, carga: Value, plazo: Duration) -> Result<Value, String> {
+            use base64::Engine;
+            if comando == "catalog" {
+                let pantalla = carga["screen"].as_str().unwrap_or("");
+                *self.pantalla.borrow_mut() = pantalla.to_string();
+                return Ok(if pantalla == "seguimiento" { json!({"pantalla":pantalla,"tribunales":{"901":"Juzgado de Familia Ficticio Norte","902":"Juzgado de Familia Ficticio Sur"},"modalidades":{"2":"Ambulatorio"},"pestanas":["Espera","Cumplimiento"],"medidas":{"0":"Todas"}}) }
+                    else { json!({"pantalla":pantalla,"tribunales":{"901":"Juzgado de Familia Ficticio Norte","902":"Juzgado de Familia Ficticio Sur"},"meses":{"10":"Octubre","11":"Noviembre"},"anios":{"2026":"2026"}}) });
+            }
+            let pantalla = self.pantalla.borrow().clone();
+            if comando == "prepare" {
+                let tribunal = carga["selection"]["tribunal"].as_str().unwrap_or("").to_string();
+                self.consultas.borrow_mut().push((pantalla.clone(), tribunal));
+                let mut corte = self.corte.borrow_mut();
+                if let Some((fase, faltan)) = corte.as_mut() {
+                    if *fase == pantalla {
+                        if *faltan == 0 { *corte = None; return Err("Corte ficticio".into()); }
+                        *faltan -= 1;
+                    }
+                }
+            }
+            let conectado = if pantalla == "seguimiento" { &self.seguimiento } else { &self.informes };
+            let mut respuesta = conectado.llamar(comando, carga, plazo)?;
+            if comando == "download" {
+                let contenido = base64::engine::general_purpose::STANDARD.decode(respuesta["body"].as_str().unwrap()).unwrap();
+                let texto = String::from_utf8(contenido).unwrap();
+                let mut filas = texto.split("</tr>");
+                let cabecera = filas.next().unwrap_or("");
+                let extra = if pantalla == "seguimiento" { "<td>NOMBRE CENTRO</td><td>T ESPERA</td><td>DIAS DE CUMPLIMIENTO</td><td>DIAS PARA EGRESAR</td>" } else { "<td>NOMBRE CENTRO</td>" };
+                let valores = if pantalla == "seguimiento" { "<td>PRM ficticio</td><td>20</td><td>50</td><td>90</td>" } else { "<td>PRM ficticio</td>" };
+                let mut nuevo = format!("{cabecera}{extra}</tr>");
+                for fila in filas {
+                    if fila.contains("<tr>") { nuevo.push_str(fila); nuevo.push_str(valores); nuevo.push_str("</tr>"); }
+                    else { nuevo.push_str(fila); }
+                }
+                respuesta["body"] = json!(base64::engine::general_purpose::STANDARD.encode(nuevo.as_bytes()));
+            }
+            Ok(respuesta)
+        }
+    }
+
+    #[test]
+    fn flujo_csmp_integral_con_cortes_y_reanudacion() {
+        for (modo, corte) in [("Espera", None), ("Cumplimiento", None),
+            ("Cumplimiento", Some(("seguimiento", 1))), ("Cumplimiento", Some(("calendario_informes", 0)))] {
+            let base = std::env::temp_dir().join(format!("flow-csmp-integral-{}-{}", std::process::id(), chrono::Local::now().timestamp_nanos_opt().unwrap_or_default()));
+            std::fs::create_dir_all(&base).unwrap();
+            let puente = SitfaConjunto::nuevo(corte);
+            let tribunales = vec!["901".to_string(), "902".to_string()];
+            let modalidades = vec!["2".to_string()];
+            let fecha = NaiveDate::from_ymd_opt(2026, 10, 2).unwrap();
+            let opciones = lote::Opciones { evidencia: false, ..Default::default() };
+            let cancelar = AtomicBool::new(false);
+            let primera = ejecutar(&puente, &tribunales, &modalidades, modo, &base, fecha, 60, None, &opciones, &cancelar, &mut |_| {});
+            let libro = if corte.is_some() {
+                assert!(primera.is_err(), "el corte debe interrumpir el flujo");
+                let carpeta = std::fs::read_dir(&base).unwrap().next().unwrap().unwrap().path();
+                let previo: Value = serde_json::from_slice(&std::fs::read(carpeta.join("flujo.json")).unwrap()).unwrap();
+                assert_eq!(previo["estado"], "INCOMPLETO");
+                ejecutar(&puente, &tribunales, &modalidades, modo, &base, fecha, 60, Some(&carpeta), &opciones, &cancelar, &mut |_| {}).unwrap()
+            } else { primera.unwrap() };
+            let estado: Value = serde_json::from_slice(&std::fs::read(libro.parent().unwrap().join("flujo.json")).unwrap()).unwrap();
+            assert_eq!(estado["estado"], FLOW_DONE);
+            assert_eq!(estado["fases"].as_object().unwrap().len(), 3);
+            assert!(estado["fases"].as_object().unwrap().values().all(|f| f["estado"] == "VALIDADA"));
+            let mut xlsx = calamine::open_workbook_auto(&libro).unwrap();
+            assert_eq!(xlsx.worksheet_range("SITFA_COBERTURA").unwrap().height(), 3);
+            if corte == Some(("seguimiento", 1)) {
+                let consultas = puente.consultas.borrow();
+                assert_eq!(consultas.iter().filter(|(pantalla, tribunal)| pantalla == "seguimiento" && tribunal == "901").count(), 1);
+            }
+            let _ = std::fs::remove_dir_all(base);
+        }
+    }
+
     fn comparar_caso(caso: &Value) -> Result<(), String> {
         use base64::Engine;
         let nombre = caso["caso"].as_str().unwrap();
