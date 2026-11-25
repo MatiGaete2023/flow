@@ -1,0 +1,458 @@
+{
+  "version": 1,
+  "casos": [
+    {
+      "caso": "recordar_lote",
+      "lotes": [
+        "lote"
+      ],
+      "bitacoras": [],
+      "base": "sin-base",
+      "ultimo": null,
+      "archivos": {
+        "conjunto/flujo.json": "{\"estado\": \"COMPLETA\", \"fases\": {\"a\": {}, \"b\": {}}}",
+        "diario/bitacoras.json": "{\"estado\": \"COMPLETA\", \"registros\": [{}, {}]}",
+        "lote/resumen.json": "{\"estado\": \"VALIDADA\", \"consultas_completadas\": 3}"
+      },
+      "excluidas": [],
+      "referencias": [],
+      "resultado": [
+        [
+          "lote",
+          "Descarga",
+          "VALIDADA",
+          "3"
+        ]
+      ]
+    },
+    {
+      "caso": "recordar_conjunto",
+      "lotes": [
+        "lote",
+        "conjunto"
+      ],
+      "bitacoras": [],
+      "base": "sin-base",
+      "ultimo": null,
+      "archivos": {
+        "conjunto/flujo.json": "{\"estado\": \"COMPLETA\", \"fases\": {\"a\": {}, \"b\": {}}}",
+        "diario/bitacoras.json": "{\"estado\": \"COMPLETA\", \"registros\": [{}, {}]}",
+        "lote/resumen.json": "{\"estado\": \"VALIDADA\", \"consultas_completadas\": 3}"
+      },
+      "excluidas": [],
+      "referencias": [],
+      "resultado": [
+        [
+          "lote",
+          "Descarga",
+          "VALIDADA",
+          "3"
+        ],
+        [
+          "conjunto",
+          "Conjunto",
+          "COMPLETA",
+          "2"
+        ]
+      ]
+    },
+    {
+      "caso": "recordar_bitacoras",
+      "lotes": [
+        "lote",
+        "conjunto"
+      ],
+      "bitacoras": [
+        "diario/bitacoras.json"
+      ],
+      "base": "sin-base",
+      "ultimo": null,
+      "archivos": {
+        "conjunto/flujo.json": "{\"estado\": \"COMPLETA\", \"fases\": {\"a\": {}, \"b\": {}}}",
+        "diario/bitacoras.json": "{\"estado\": \"COMPLETA\", \"registros\": [{}, {}]}",
+        "lote/resumen.json": "{\"estado\": \"VALIDADA\", \"consultas_completadas\": 3}"
+      },
+      "excluidas": [],
+      "referencias": [
+        "diario/bitacoras.json"
+      ],
+      "resultado": [
+        [
+          "lote",
+          "Descarga",
+          "VALIDADA",
+          "3"
+        ],
+        [
+          "diario",
+          "Bitácoras",
+          "COMPLETA",
+          "2"
+        ],
+        [
+          "conjunto",
+          "Conjunto",
+          "COMPLETA",
+          "2"
+        ]
+      ]
+    },
+    {
+      "caso": "sin_duplicados",
+      "lotes": [
+        "lote",
+        "conjunto"
+      ],
+      "bitacoras": [
+        "diario/bitacoras.json"
+      ],
+      "base": "sin-base",
+      "ultimo": null,
+      "archivos": {
+        "conjunto/flujo.json": "{\"estado\": \"COMPLETA\", \"fases\": {\"a\": {}, \"b\": {}}}",
+        "diario/bitacoras.json": "{\"estado\": \"COMPLETA\", \"registros\": [{}, {}]}",
+        "lote/resumen.json": "{\"estado\": \"VALIDADA\", \"consultas_completadas\": 3}"
+      },
+      "excluidas": [],
+      "referencias": [
+        "diario/bitacoras.json"
+      ],
+      "resultado": [
+        [
+          "lote",
+          "Descarga",
+          "VALIDADA",
+          "3"
+        ],
+        [
+          "diario",
+          "Bitácoras",
+          "COMPLETA",
+          "2"
+        ],
+        [
+          "conjunto",
+          "Conjunto",
+          "COMPLETA",
+          "2"
+        ]
+      ]
+    },
+    {
+      "caso": "descubrir_base",
+      "lotes": [],
+      "bitacoras": [],
+      "base": ".",
+      "ultimo": null,
+      "archivos": {
+        "conjunto/flujo.json": "{\"estado\": \"COMPLETA\", \"fases\": {\"a\": {}, \"b\": {}}}",
+        "diario/bitacoras.json": "{\"estado\": \"COMPLETA\", \"registros\": [{}, {}]}",
+        "lote/resumen.json": "{\"estado\": \"VALIDADA\", \"consultas_completadas\": 3}"
+      },
+      "excluidas": [],
+      "referencias": [],
+      "resultado": [
+        [
+          "lote",
+          "Descarga",
+          "VALIDADA",
+          "3"
+        ],
+        [
+          "diario",
+          "Bitácoras",
+          "COMPLETA",
+          "2"
+        ],
+        [
+          "conjunto",
+          "Conjunto",
+          "COMPLETA",
+          "2"
+        ]
+      ]
+    },
+    {
+      "caso": "descubrir_ultimo",
+      "lotes": [],
+      "bitacoras": [],
+      "base": "sin-base",
+      "ultimo": "lote",
+      "archivos": {
+        "conjunto/flujo.json": "{\"estado\": \"COMPLETA\", \"fases\": {\"a\": {}, \"b\": {}}}",
+        "diario/bitacoras.json": "{\"estado\": \"COMPLETA\", \"registros\": [{}, {}]}",
+        "lote/resumen.json": "{\"estado\": \"VALIDADA\", \"consultas_completadas\": 3}"
+      },
+      "excluidas": [],
+      "referencias": [],
+      "resultado": [
+        [
+          "lote",
+          "Descarga",
+          "VALIDADA",
+          "3"
+        ]
+      ]
+    },
+    {
+      "caso": "orden",
+      "lotes": [
+        "lote",
+        "conjunto"
+      ],
+      "bitacoras": [
+        "diario/bitacoras.json"
+      ],
+      "base": ".",
+      "ultimo": null,
+      "archivos": {
+        "conjunto/flujo.json": "{\"estado\": \"COMPLETA\", \"fases\": {\"a\": {}, \"b\": {}}}",
+        "diario/bitacoras.json": "{\"estado\": \"COMPLETA\", \"registros\": [{}, {}]}",
+        "lote/resumen.json": "{\"estado\": \"VALIDADA\", \"consultas_completadas\": 3}"
+      },
+      "excluidas": [],
+      "referencias": [
+        "diario/bitacoras.json"
+      ],
+      "resultado": [
+        [
+          "lote",
+          "Descarga",
+          "VALIDADA",
+          "3"
+        ],
+        [
+          "diario",
+          "Bitácoras",
+          "COMPLETA",
+          "2"
+        ],
+        [
+          "conjunto",
+          "Conjunto",
+          "COMPLETA",
+          "2"
+        ]
+      ]
+    },
+    {
+      "caso": "excluidas",
+      "lotes": [
+        "lote",
+        "conjunto"
+      ],
+      "bitacoras": [
+        "diario/bitacoras.json"
+      ],
+      "base": "sin-base",
+      "ultimo": null,
+      "archivos": {
+        "conjunto/flujo.json": "{\"estado\": \"COMPLETA\", \"fases\": {\"a\": {}, \"b\": {}}}",
+        "diario/bitacoras.json": "{\"estado\": \"COMPLETA\", \"registros\": [{}, {}]}",
+        "lote/resumen.json": "{\"estado\": \"VALIDADA\", \"consultas_completadas\": 3}"
+      },
+      "excluidas": [
+        "diario/bitacoras.json"
+      ],
+      "referencias": [],
+      "resultado": [
+        [
+          "lote",
+          "Descarga",
+          "VALIDADA",
+          "3"
+        ],
+        [
+          "diario",
+          "Bitácoras",
+          "COMPLETA",
+          "2"
+        ],
+        [
+          "conjunto",
+          "Conjunto",
+          "COMPLETA",
+          "2"
+        ]
+      ]
+    },
+    {
+      "caso": "lote_ausente",
+      "lotes": [
+        "lote",
+        "conjunto",
+        "lote_ausente"
+      ],
+      "bitacoras": [
+        "diario/bitacoras.json"
+      ],
+      "base": "sin-base",
+      "ultimo": null,
+      "archivos": {
+        "conjunto/flujo.json": "{\"estado\": \"COMPLETA\", \"fases\": {\"a\": {}, \"b\": {}}}",
+        "diario/bitacoras.json": "{\"estado\": \"COMPLETA\", \"registros\": [{}, {}]}",
+        "lote/resumen.json": "{\"estado\": \"VALIDADA\", \"consultas_completadas\": 3}"
+      },
+      "excluidas": [],
+      "referencias": [
+        "diario/bitacoras.json"
+      ],
+      "resultado": [
+        [
+          "lote_ausente",
+          "Lote",
+          "NO_DISPONIBLE",
+          "—"
+        ],
+        [
+          "lote",
+          "Descarga",
+          "VALIDADA",
+          "3"
+        ],
+        [
+          "diario",
+          "Bitácoras",
+          "COMPLETA",
+          "2"
+        ],
+        [
+          "conjunto",
+          "Conjunto",
+          "COMPLETA",
+          "2"
+        ]
+      ]
+    },
+    {
+      "caso": "bitacora_ausente",
+      "lotes": [
+        "lote",
+        "conjunto",
+        "lote_ausente"
+      ],
+      "bitacoras": [
+        "diario/bitacoras.json",
+        "diario_ausente/bitacoras.json"
+      ],
+      "base": "sin-base",
+      "ultimo": null,
+      "archivos": {
+        "conjunto/flujo.json": "{\"estado\": \"COMPLETA\", \"fases\": {\"a\": {}, \"b\": {}}}",
+        "diario/bitacoras.json": "{\"estado\": \"COMPLETA\", \"registros\": [{}, {}]}",
+        "lote/resumen.json": "{\"estado\": \"VALIDADA\", \"consultas_completadas\": 3}"
+      },
+      "excluidas": [],
+      "referencias": [
+        "diario/bitacoras.json",
+        "diario_ausente/bitacoras.json"
+      ],
+      "resultado": [
+        [
+          "lote_ausente",
+          "Lote",
+          "NO_DISPONIBLE",
+          "—"
+        ],
+        [
+          "lote",
+          "Descarga",
+          "VALIDADA",
+          "3"
+        ],
+        [
+          "diario_ausente",
+          "Bitácoras",
+          "NO_DISPONIBLE",
+          "—"
+        ],
+        [
+          "diario",
+          "Bitácoras",
+          "COMPLETA",
+          "2"
+        ],
+        [
+          "conjunto",
+          "Conjunto",
+          "COMPLETA",
+          "2"
+        ]
+      ]
+    },
+    {
+      "caso": "bitacora_danada",
+      "lotes": [
+        "lote",
+        "conjunto",
+        "lote_ausente"
+      ],
+      "bitacoras": [
+        "diario/bitacoras.json",
+        "diario_ausente/bitacoras.json"
+      ],
+      "base": "sin-base",
+      "ultimo": null,
+      "archivos": {
+        "conjunto/flujo.json": "{\"estado\": \"COMPLETA\", \"fases\": {\"a\": {}, \"b\": {}}}",
+        "diario/bitacoras.json": "{",
+        "lote/resumen.json": "{\"estado\": \"VALIDADA\", \"consultas_completadas\": 3}"
+      },
+      "excluidas": [],
+      "referencias": [
+        "diario/bitacoras.json",
+        "diario_ausente/bitacoras.json"
+      ],
+      "resultado": [
+        [
+          "lote_ausente",
+          "Lote",
+          "NO_DISPONIBLE",
+          "—"
+        ],
+        [
+          "lote",
+          "Descarga",
+          "VALIDADA",
+          "3"
+        ],
+        [
+          "diario_ausente",
+          "Bitácoras",
+          "NO_DISPONIBLE",
+          "—"
+        ],
+        [
+          "diario",
+          "Bitácoras",
+          "ERROR_CONTROL",
+          "—"
+        ],
+        [
+          "conjunto",
+          "Conjunto",
+          "COMPLETA",
+          "2"
+        ]
+      ]
+    },
+    {
+      "caso": "libro_correcto",
+      "archivo": "libro.xlsx",
+      "sha256": "2cc646d0aca5c5d34b0540cd74e5982f5545d0a165dd52e8bb03203b5aa10ffd",
+      "resultado": true
+    },
+    {
+      "caso": "libro_alterado",
+      "archivo": "libro.xlsx",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "resultado": false
+    },
+    {
+      "caso": "sin_archivo",
+      "archivo": null,
+      "sha256": null,
+      "resultado": null
+    }
+  ]
+}
