@@ -74,9 +74,12 @@ def make_lot(root, bound=False):
         with zipfile.ZipFile(io.BytesIO(original)) as source_zip, zipfile.ZipFile(output, 'w', zipfile.ZIP_DEFLATED) as target_zip:
             for info in source_zip.infolist():
                 fixed = zipfile.ZipInfo(info.filename, (2020, 1, 1, 0, 0, 0))
-                fixed.compress_type = info.compress_type
+                # XLSX payloads must be byte-identical across Python/zlib versions.
+                # Stored ZIP entries keep the generated oracle independent of the
+                # runner's deflate implementation.
+                fixed.compress_type = zipfile.ZIP_STORED
                 fixed.create_system = 3
-                fixed.external_attr = info.external_attr
+                fixed.external_attr = 0o600 << 16
                 content = source_zip.read(info.filename)
                 if info.filename == 'docProps/core.xml':
                     content = re.sub(rb'(<dcterms:modified\b[^>]*>).*?(</dcterms:modified>)', rb'\g<1>2026-10-08T12:00:00Z\g<2>', content)
