@@ -895,5 +895,506 @@
    "retomar": false,
    "otra_pantalla": true
   }
+ ],
+ "por_hoja": [
+  {
+   "caso": "dos_hojas",
+   "hojas": [
+    "Cumplimiento",
+    "Espera"
+   ],
+   "error": null,
+   "paquetes": [
+    {
+     "resultado": {
+      "parcial": false,
+      "historia": null,
+      "zip": "Captura_CSMP.zip"
+     },
+     "proceso": {
+      "estado": "COMPLETO",
+      "fase": "paquete",
+      "reintentos": 0,
+      "paquete": "Captura_CSMP.zip",
+      "carpetas": {
+       "consultas": "respaldo/<FECHA>",
+       "bitacoras": "respaldo/Bitacoras <FECHA>"
+      },
+      "historial": [
+       "inicio",
+       "fase consultas",
+       "fase bitacoras",
+       "bitácoras COMPLETA; leídas 3; no leídas 0; consultas fallidas 0",
+       "fase paquete",
+       "fin COMPLETO"
+      ],
+      "opciones": {
+       "consolidado": true,
+       "calendarios": false,
+       "historia": false,
+       "historico": false,
+       "historia_en_paquete": true,
+       "meses": 4,
+       "informes": false,
+       "fecha_informes": "2026-10-14",
+       "pdf_vacias": true
+      }
+     },
+     "zip": {
+      "nombre": "Captura_CSMP.zip",
+      "tablas": {
+       "consultas": 4,
+       "registros": 3,
+       "bitacoras": 3,
+       "calendarios": 0,
+       "historia_tramites": 0,
+       "documentos": 0,
+       "incidencias": 6,
+       "escritos": 0,
+       "historico_proteccion": 0
+      },
+      "estados": {
+       "bitacoras": "PARCIAL",
+       "calendarios": "NO_SOLICITADA",
+       "consultas": "PARCIAL",
+       "documentos": "NO_SOLICITADA",
+       "historia_tramites": "NO_SOLICITADA",
+       "incidencias": "COMPLETA",
+       "registros": "COMPLETA",
+       "escritos": "NO_SOLICITADA",
+       "historico_proteccion": "NO_SOLICITADA"
+      },
+      "consolidado": false,
+      "schema": "1.0.0",
+      "incidencias": [
+       "BITACORAS_REUTILIZADAS",
+       "BITACORA_ADVERTENCIA"
+      ]
+     }
+    },
+    {
+     "resultado": {
+      "parcial": false,
+      "historia": null,
+      "zip": "Captura_CSMP.zip"
+     },
+     "proceso": {
+      "estado": "COMPLETO",
+      "fase": "paquete",
+      "reintentos": 0,
+      "paquete": "Captura_CSMP.zip",
+      "carpetas": {
+       "consultas": "respaldo/<FECHA>",
+       "bitacoras": "respaldo/Bitacoras <FECHA>"
+      },
+      "historial": [
+       "inicio",
+       "fase consultas",
+       "fase bitacoras",
+       "bitácoras COMPLETA; leídas 3; no leídas 0; consultas fallidas 0",
+       "fase paquete",
+       "fin COMPLETO"
+      ],
+      "opciones": {
+       "consolidado": true,
+       "calendarios": false,
+       "historia": false,
+       "historico": false,
+       "historia_en_paquete": true,
+       "meses": 4,
+       "informes": false,
+       "fecha_informes": "2026-10-14",
+       "pdf_vacias": true
+      }
+     },
+     "zip": {
+      "nombre": "Captura_CSMP.zip",
+      "tablas": {
+       "consultas": 4,
+       "registros": 3,
+       "bitacoras": 3,
+       "calendarios": 0,
+       "historia_tramites": 0,
+       "documentos": 0,
+       "incidencias": 6,
+       "escritos": 0,
+       "historico_proteccion": 0
+      },
+      "estados": {
+       "bitacoras": "PARCIAL",
+       "calendarios": "NO_SOLICITADA",
+       "consultas": "PARCIAL",
+       "documentos": "NO_SOLICITADA",
+       "historia_tramites": "NO_SOLICITADA",
+       "incidencias": "COMPLETA",
+       "registros": "COMPLETA",
+       "escritos": "NO_SOLICITADA",
+       "historico_proteccion": "NO_SOLICITADA"
+      },
+      "consolidado": false,
+      "schema": "1.0.0",
+      "incidencias": [
+       "BITACORAS_REUTILIZADAS",
+       "BITACORA_ADVERTENCIA"
+      ]
+     }
+    }
+   ],
+   "fases": [
+    "consultas",
+    "bitacoras",
+    "paquete",
+    "consultas",
+    "bitacoras",
+    "paquete"
+   ],
+   "avisos": []
+  },
+  {
+   "caso": "una_hoja_falla",
+   "hojas": [
+    "Cumplimiento",
+    "Espera"
+   ],
+   "error": null,
+   "paquetes": [
+    {
+     "resultado": {
+      "parcial": false,
+      "historia": null,
+      "zip": "Captura_CSMP.zip"
+     },
+     "proceso": {
+      "estado": "COMPLETO",
+      "fase": "paquete",
+      "reintentos": 0,
+      "paquete": "Captura_CSMP.zip",
+      "carpetas": {
+       "consultas": "respaldo/<FECHA>",
+       "bitacoras": "respaldo/Bitacoras <FECHA>"
+      },
+      "historial": [
+       "inicio",
+       "fase consultas",
+       "fase bitacoras",
+       "bitácoras COMPLETA; leídas 3; no leídas 0; consultas fallidas 0",
+       "fase paquete",
+       "fin COMPLETO"
+      ],
+      "opciones": {
+       "consolidado": true,
+       "calendarios": false,
+       "historia": false,
+       "historico": false,
+       "historia_en_paquete": true,
+       "meses": 4,
+       "informes": false,
+       "fecha_informes": "2026-10-14",
+       "pdf_vacias": true
+      }
+     },
+     "zip": {
+      "nombre": "Captura_CSMP.zip",
+      "tablas": {
+       "consultas": 4,
+       "registros": 3,
+       "bitacoras": 3,
+       "calendarios": 0,
+       "historia_tramites": 0,
+       "documentos": 0,
+       "incidencias": 6,
+       "escritos": 0,
+       "historico_proteccion": 0
+      },
+      "estados": {
+       "bitacoras": "PARCIAL",
+       "calendarios": "NO_SOLICITADA",
+       "consultas": "PARCIAL",
+       "documentos": "NO_SOLICITADA",
+       "historia_tramites": "NO_SOLICITADA",
+       "incidencias": "COMPLETA",
+       "registros": "COMPLETA",
+       "escritos": "NO_SOLICITADA",
+       "historico_proteccion": "NO_SOLICITADA"
+      },
+      "consolidado": false,
+      "schema": "1.0.0",
+      "incidencias": [
+       "BITACORAS_REUTILIZADAS",
+       "BITACORA_ADVERTENCIA"
+      ]
+     }
+    }
+   ],
+   "fases": [
+    "consultas",
+    "bitacoras",
+    "paquete",
+    "consultas"
+   ],
+   "avisos": [
+    "La hoja Espera no se pudo completar: La hoja Espera no se pudo preparar."
+   ]
+  },
+  {
+   "caso": "una_sola_hoja",
+   "hojas": [
+    "Cumplimiento"
+   ],
+   "error": null,
+   "paquetes": [
+    {
+     "resultado": {
+      "parcial": false,
+      "historia": null,
+      "zip": "Captura_CSMP.zip"
+     },
+     "proceso": {
+      "estado": "COMPLETO",
+      "fase": "paquete",
+      "reintentos": 0,
+      "paquete": "Captura_CSMP.zip",
+      "carpetas": {
+       "consultas": "respaldo/<FECHA>",
+       "bitacoras": "respaldo/Bitacoras <FECHA>"
+      },
+      "historial": [
+       "inicio",
+       "fase consultas",
+       "fase bitacoras",
+       "bitácoras COMPLETA; leídas 3; no leídas 0; consultas fallidas 0",
+       "fase paquete",
+       "fin COMPLETO"
+      ],
+      "opciones": {
+       "consolidado": true,
+       "calendarios": false,
+       "historia": false,
+       "historico": false,
+       "historia_en_paquete": true,
+       "meses": 4,
+       "informes": false,
+       "fecha_informes": "2026-10-14",
+       "pdf_vacias": true
+      }
+     },
+     "zip": {
+      "nombre": "Captura_CSMP.zip",
+      "tablas": {
+       "consultas": 4,
+       "registros": 3,
+       "bitacoras": 3,
+       "calendarios": 0,
+       "historia_tramites": 0,
+       "documentos": 0,
+       "incidencias": 6,
+       "escritos": 0,
+       "historico_proteccion": 0
+      },
+      "estados": {
+       "bitacoras": "PARCIAL",
+       "calendarios": "NO_SOLICITADA",
+       "consultas": "PARCIAL",
+       "documentos": "NO_SOLICITADA",
+       "historia_tramites": "NO_SOLICITADA",
+       "incidencias": "COMPLETA",
+       "registros": "COMPLETA",
+       "escritos": "NO_SOLICITADA",
+       "historico_proteccion": "NO_SOLICITADA"
+      },
+      "consolidado": false,
+      "schema": "1.0.0",
+      "incidencias": [
+       "BITACORAS_REUTILIZADAS",
+       "BITACORA_ADVERTENCIA"
+      ]
+     }
+    }
+   ],
+   "fases": [
+    "consultas",
+    "bitacoras",
+    "paquete"
+   ],
+   "avisos": []
+  },
+  {
+   "caso": "cancelada_y_retomada",
+   "hojas": [
+    "Cumplimiento",
+    "Espera"
+   ],
+   "error": "Proceso detenido. Los originales verificados se conservan en respaldo.",
+   "paquetes": [
+    {
+     "resultado": null,
+     "proceso": {
+      "estado": "COMPLETO",
+      "fase": "paquete",
+      "reintentos": 0,
+      "paquete": "Captura_CSMP.zip",
+      "carpetas": {
+       "consultas": "respaldo/<FECHA>",
+       "bitacoras": "respaldo/Bitacoras <FECHA>"
+      },
+      "historial": [
+       "inicio",
+       "fase consultas",
+       "fase bitacoras",
+       "bitácoras COMPLETA; leídas 3; no leídas 0; consultas fallidas 0",
+       "fase paquete",
+       "fin COMPLETO"
+      ],
+      "opciones": {
+       "consolidado": true,
+       "calendarios": false,
+       "historia": false,
+       "historico": false,
+       "historia_en_paquete": true,
+       "meses": 4,
+       "informes": false,
+       "fecha_informes": "2026-10-14",
+       "pdf_vacias": true
+      }
+     },
+     "zip": null
+    },
+    {
+     "resultado": null,
+     "proceso": {
+      "estado": "INCOMPLETO",
+      "fase": "consultas",
+      "reintentos": 0,
+      "paquete": "",
+      "carpetas": {
+       "consultas": "respaldo/<FECHA>"
+      },
+      "historial": [
+       "inicio",
+       "fase consultas",
+       "error en fase consultas (ERROR_OPERACION)"
+      ],
+      "opciones": {
+       "consolidado": true,
+       "calendarios": false,
+       "historia": false,
+       "historico": false,
+       "historia_en_paquete": true,
+       "meses": 4,
+       "informes": false,
+       "fecha_informes": "2026-10-14",
+       "pdf_vacias": true
+      }
+     },
+     "zip": null
+    }
+   ],
+   "entrada": {
+    "Paquete CSMP 2026-10-08 13-04-23-123456/respaldo/2026-10-08 13-04-26/ESP Ambulatorio Jdo Familia Ficticio Norte.xls": "PGh0bWw+PG1ldGEgY2hhcnNldD0idXRmLTgiPjx0YWJsZSBpZD0idGFibGFDdW1wbGltaWVudG8iPjx0cj48dGQ+UklUPC90ZD48dGQ+UlVUPC90ZD48dGQ+Tm9tYnJlPC90ZD48dGQ+RGVyaXZhY2lvbjwvdGQ+PHRkPkFjY2lvbmVzPC90ZD48L3RyPjx0cj48dGQ+WC0xLTIwMjY8L3RkPjx0ZD4xMTExMTExMS0wPC90ZD48dGQ+UGVyc29uYSBGaWN0aWNpYSAxPC90ZD48dGQ+UFJNIENlbnRybyBGaWN0aWNpbzwvdGQ+PHRkPjwvdGQ+PC90cj48dHI+PHRkPlgtMi0yMDI2PC90ZD48dGQ+MTExMTExMTItMDwvdGQ+PHRkPlBlcnNvbmEgRmljdGljaWEgMjwvdGQ+PHRkPlBSTSBDZW50cm8gRmljdGljaW88L3RkPjx0ZD48L3RkPjwvdHI+PHRyPjx0ZD5YLTMtMjAyNjwvdGQ+PHRkPjExMTExMTEzLTA8L3RkPjx0ZD5QZXJzb25hIEZpY3RpY2lhIDM8L3RkPjx0ZD5QUk0gQ2VudHJvIEZpY3RpY2lvPC90ZD48dGQ+PC90ZD48L3RyPjwvdGFibGU+PC9odG1sPg==",
+    "Paquete CSMP 2026-10-08 13-04-23-123456/respaldo/2026-10-08 13-04-26/resumen.json": "ewogICJ2ZXJzaW9uX2NvbnRyYXRvIjogMSwKICAiZmVjaGFfaG9yYSI6ICIyMDI2LTEwLTA4VDEzOjA0OjMzLjEyMzQ1Ni0wMzowMCIsCiAgImVzdGFkbyI6ICJWQUxJREFEQSIsCiAgInBsYW4iOiBbCiAgICB7CiAgICAgICJ0cmlidW5hbCI6ICI5MDEiLAogICAgICAidGFiIjogIkVzcGVyYSIsCiAgICAgICJtb2RhbGl0eSI6ICIyIiwKICAgICAgInJlcG9ydCI6IG51bGwsCiAgICAgICJzY3JlZW4iOiAic2VndWltaWVudG8iLAogICAgICAic3RhdGUiOiAiMSIsCiAgICAgICJtb250aCI6IG51bGwsCiAgICAgICJ5ZWFyIjogbnVsbCwKICAgICAgInN0YXJ0IjogbnVsbCwKICAgICAgImVuZCI6IG51bGwsCiAgICAgICJ0cmlidW5hbF9ub21icmUiOiAiSnV6Z2FkbyBkZSBGYW1pbGlhIEZpY3RpY2lvIE5vcnRlIiwKICAgICAgIm1vZGFsaWRhZF9ub21icmUiOiAiQW1idWxhdG9yaW8iLAogICAgICAiZmVjaGFfZGVzY2FyZ2EiOiAiMjAyNi0xMC0wOFQxMzowNDoyNy4xMjM0NTYtMDM6MDAiCiAgICB9CiAgXSwKICAiY29uc3VsdGFzX2VzcGVyYWRhcyI6IDEsCiAgImNvbnN1bHRhc19jb21wbGV0YWRhcyI6IDEsCiAgImNvbnN1bHRhcyI6IFsKICAgIHsKICAgICAgImNvbnN1bHRhIjogIkp1emdhZG8gZGUgRmFtaWxpYSBGaWN0aWNpbyBOb3J0ZSAvIEVzcGVyYSAvIEFtYnVsYXRvcmlvIiwKICAgICAgImVzdGFkbyI6ICJWQUxJREFEQSIsCiAgICAgICJwYWdpbmFzIjogMSwKICAgICAgInJlZ2lzdHJvcyI6IDMsCiAgICAgICJ2ZXJpZmljYWNpb24iOiAidmVyaWZpY2FjaW9uIDAwMS5qc29uIiwKICAgICAgInNlbGVjY2lvbiI6IHsKICAgICAgICAidHJpYnVuYWwiOiAiOTAxIiwKICAgICAgICAidGFiIjogIkVzcGVyYSIsCiAgICAgICAgIm1vZGFsaXR5IjogIjIiLAogICAgICAgICJyZXBvcnQiOiBudWxsLAogICAgICAgICJzY3JlZW4iOiAic2VndWltaWVudG8iLAogICAgICAgICJzdGF0ZSI6ICIxIiwKICAgICAgICAibW9udGgiOiBudWxsLAogICAgICAgICJ5ZWFyIjogbnVsbCwKICAgICAgICAic3RhcnQiOiBudWxsLAogICAgICAgICJlbmQiOiBudWxsLAogICAgICAgICJ0cmlidW5hbF9ub21icmUiOiAiSnV6Z2FkbyBkZSBGYW1pbGlhIEZpY3RpY2lvIE5vcnRlIiwKICAgICAgICAibW9kYWxpZGFkX25vbWJyZSI6ICJBbWJ1bGF0b3JpbyIsCiAgICAgICAgImZlY2hhX2Rlc2NhcmdhIjogIjIwMjYtMTAtMDhUMTM6MDQ6MjcuMTIzNDU2LTAzOjAwIgogICAgICB9CiAgICB9CiAgXSwKICAiZmlsdHJvX2ZlY2hhIjogbnVsbCwKICAib3Ryb3NfZmlsdHJvcyI6ICJ0b2RvcyBsb3MgcmVnaXN0cm9zIgp9",
+    "Paquete CSMP 2026-10-08 13-04-23-123456/respaldo/2026-10-08 13-04-26/verificacion 001.json": "ewogICJmZWNoYV9ob3JhIjogIjIwMjYtMTAtMDhUMTM6MDQ6MzEuMTIzNDU2LTAzOjAwIiwKICAiY2FzbyI6ICJUOTAxLUVzcGVyYS1NMiIsCiAgImNvbnN1bHRhIjogIkp1emdhZG8gZGUgRmFtaWxpYSBGaWN0aWNpbyBOb3J0ZSAvIEVzcGVyYSAvIEFtYnVsYXRvcmlvIiwKICAiZXN0YWRvIjogIlZBTElEQURBIiwKICAicGFnaW5hc19lc3BlcmFkYXMiOiAxLAogICJwYWdpbmFzX3ZlcmlmaWNhZGFzIjogMSwKICAiYXJjaGl2b3MiOiBbCiAgICB7CiAgICAgICJwYWdpbmEiOiAxLAogICAgICAidG90YWwiOiAxLAogICAgICAiYXJjaGl2byI6ICJFU1AgQW1idWxhdG9yaW8gSmRvIEZhbWlsaWEgRmljdGljaW8gTm9ydGUueGxzIiwKICAgICAgImJ5dGVzIjogNDg0LAogICAgICAic2hhMjU2IjogImJkYTYxMzZkYzk0ODFlMzc5NjFkOTEyM2VmMzQxOWFlZDNmNWY5NDAzNDk3MzhkNmZkOGEyYzE4NmYzZGEyNjQiLAogICAgICAiZm9ybWF0byI6ICJIVE1MLXRhYnVsYXItY29uLWV4dGVuc2lvbi14bHMiLAogICAgICAicmVnaXN0cm9zIjogMywKICAgICAgImNvaW5jaWRlX2Nvbl9odG1sIjogdHJ1ZSwKICAgICAgImVzdGFkbyI6ICJPSyIsCiAgICAgICJ2aW5jdWxvc19pbmdyZXNvIjogWwogICAgICAgIHsKICAgICAgICAgICJyaXQiOiAiWC0xLTIwMjYiLAogICAgICAgICAgIm5vbWJyZSI6ICJQZXJzb25hIEZpY3RpY2lhIDEiLAogICAgICAgICAgInJ1dCI6ICIxMTExMTExMS0wIiwKICAgICAgICAgICJwcm9ncmFtYSI6ICJQUk0gQ2VudHJvIEZpY3RpY2lvIiwKICAgICAgICAgICJ0cmlidW5hbF9jb2RpZ28iOiAiOTAxIiwKICAgICAgICAgICJjYXVzYV9pZCI6ICIxMDEiLAogICAgICAgICAgImluZ3Jlc29faWQiOiAiMjAxIiwKICAgICAgICAgICJldGFwYSI6ICIzIiwKICAgICAgICAgICJhbnRpZ3VvIjogIjAiLAogICAgICAgICAgInRpcG9fcG9wdXAiOiAiMTIiLAogICAgICAgICAgInBlcnNvbmFfaWQiOiAiMzAwIiwKICAgICAgICAgICJjZW50cm9faWQiOiAiNDAwIiwKICAgICAgICAgICJjYWxlbmRhcmlvIjogWwogICAgICAgICAgICAiMTAxIiwKICAgICAgICAgICAgIjMwMCIsCiAgICAgICAgICAgICI5MDEiLAogICAgICAgICAgICAiNDAwIiwKICAgICAgICAgICAgIlgtMS0yMDI2IiwKICAgICAgICAgICAgIjAxLzAzLzIwMjYiLAogICAgICAgICAgICAiUFJNIENlbnRybyBGaWN0aWNpbyIsCiAgICAgICAgICAgICJQZXJzb25hIEZpY3RpY2lhIDEiLAogICAgICAgICAgICAiNiBNZXNlcyIsCiAgICAgICAgICAgICIzIE1lc2VzIiwKICAgICAgICAgICAgIjIwMSIsCiAgICAgICAgICAgICIxIgogICAgICAgICAgXQogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgInJpdCI6ICJYLTItMjAyNiIsCiAgICAgICAgICAibm9tYnJlIjogIlBlcnNvbmEgRmljdGljaWEgMiIsCiAgICAgICAgICAicnV0IjogIjExMTExMTEyLTAiLAogICAgICAgICAgInByb2dyYW1hIjogIlBSTSBDZW50cm8gRmljdGljaW8iLAogICAgICAgICAgInRyaWJ1bmFsX2NvZGlnbyI6ICI5MDEiLAogICAgICAgICAgImNhdXNhX2lkIjogIjEwMiIsCiAgICAgICAgICAiaW5ncmVzb19pZCI6ICIyMDIiLAogICAgICAgICAgImV0YXBhIjogIjMiLAogICAgICAgICAgImFudGlndW8iOiAiMCIsCiAgICAgICAgICAidGlwb19wb3B1cCI6ICIxMiIsCiAgICAgICAgICAicGVyc29uYV9pZCI6ICIzMDAiLAogICAgICAgICAgImNlbnRyb19pZCI6ICI0MDAiLAogICAgICAgICAgImNhbGVuZGFyaW8iOiBbCiAgICAgICAgICAgICIxMDIiLAogICAgICAgICAgICAiMzAwIiwKICAgICAgICAgICAgIjkwMSIsCiAgICAgICAgICAgICI0MDAiLAogICAgICAgICAgICAiWC0yLTIwMjYiLAogICAgICAgICAgICAiMDEvMDMvMjAyNiIsCiAgICAgICAgICAgICJQUk0gQ2VudHJvIEZpY3RpY2lvIiwKICAgICAgICAgICAgIlBlcnNvbmEgRmljdGljaWEgMiIsCiAgICAgICAgICAgICI2IE1lc2VzIiwKICAgICAgICAgICAgIjMgTWVzZXMiLAogICAgICAgICAgICAiMjAyIiwKICAgICAgICAgICAgIjEiCiAgICAgICAgICBdCiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAicml0IjogIlgtMy0yMDI2IiwKICAgICAgICAgICJub21icmUiOiAiUGVyc29uYSBGaWN0aWNpYSAzIiwKICAgICAgICAgICJydXQiOiAiMTExMTExMTMtMCIsCiAgICAgICAgICAicHJvZ3JhbWEiOiAiUFJNIENlbnRybyBGaWN0aWNpbyIsCiAgICAgICAgICAidHJpYnVuYWxfY29kaWdvIjogIjkwMSIsCiAgICAgICAgICAiY2F1c2FfaWQiOiAiMTAzIiwKICAgICAgICAgICJpbmdyZXNvX2lkIjogIjIwMyIsCiAgICAgICAgICAiZXRhcGEiOiAiMyIsCiAgICAgICAgICAiYW50aWd1byI6ICIwIiwKICAgICAgICAgICJ0aXBvX3BvcHVwIjogIjEyIiwKICAgICAgICAgICJwZXJzb25hX2lkIjogIjMwMCIsCiAgICAgICAgICAiY2VudHJvX2lkIjogIjQwMCIsCiAgICAgICAgICAiY2FsZW5kYXJpbyI6IFsKICAgICAgICAgICAgIjEwMyIsCiAgICAgICAgICAgICIzMDAiLAogICAgICAgICAgICAiOTAxIiwKICAgICAgICAgICAgIjQwMCIsCiAgICAgICAgICAgICJYLTMtMjAyNiIsCiAgICAgICAgICAgICIwMS8wMy8yMDI2IiwKICAgICAgICAgICAgIlBSTSBDZW50cm8gRmljdGljaW8iLAogICAgICAgICAgICAiUGVyc29uYSBGaWN0aWNpYSAzIiwKICAgICAgICAgICAgIjYgTWVzZXMiLAogICAgICAgICAgICAiMyBNZXNlcyIsCiAgICAgICAgICAgICIyMDMiLAogICAgICAgICAgICAiMSIKICAgICAgICAgIF0KICAgICAgICB9CiAgICAgIF0KICAgIH0KICBdLAogICJzZWxlY2Npb24iOiB7CiAgICAidHJpYnVuYWwiOiAiOTAxIiwKICAgICJ0YWIiOiAiRXNwZXJhIiwKICAgICJtb2RhbGl0eSI6ICIyIiwKICAgICJyZXBvcnQiOiBudWxsLAogICAgInNjcmVlbiI6ICJzZWd1aW1pZW50byIsCiAgICAic3RhdGUiOiAiMSIsCiAgICAibW9udGgiOiBudWxsLAogICAgInllYXIiOiBudWxsLAogICAgInN0YXJ0IjogbnVsbCwKICAgICJlbmQiOiBudWxsLAogICAgInRyaWJ1bmFsX25vbWJyZSI6ICJKdXpnYWRvIGRlIEZhbWlsaWEgRmljdGljaW8gTm9ydGUiLAogICAgIm1vZGFsaWRhZF9ub21icmUiOiAiQW1idWxhdG9yaW8iLAogICAgImZlY2hhX2Rlc2NhcmdhIjogIjIwMjYtMTAtMDhUMTM6MDQ6MjcuMTIzNDU2LTAzOjAwIgogIH0sCiAgImZpbHRyb19mZWNoYSI6IG51bGwKfQ==",
+    "Paquete CSMP 2026-10-08 13-04-23-123456/respaldo/proceso.json": "ewogICJlc3RhZG8iOiAiSU5DT01QTEVUTyIsCiAgImZhc2UiOiAiY29uc3VsdGFzIiwKICAiY2FycGV0YXMiOiB7CiAgICAiY29uc3VsdGFzIjogInJlc3BhbGRvLzIwMjYtMTAtMDggMTMtMDQtMjYiCiAgfSwKICAic2VsZWNjaW9uIjogewogICAgInRyaWJ1bmFscyI6IFsKICAgICAgIjkwMSIKICAgIF0sCiAgICAibW9kYWxpdGllcyI6IFsKICAgICAgIjIiCiAgICBdLAogICAgInRhYnMiOiBbCiAgICAgICJFc3BlcmEiCiAgICBdLAogICAgInJlcG9ydCI6ICIxIiwKICAgICJkYXRlcyI6IG51bGwsCiAgICAia2VlcF9maWx0ZXJzIjogZmFsc2UsCiAgICAic2NyZWVuIjogInNlZ3VpbWllbnRvIiwKICAgICJzdGF0ZSI6ICIxIiwKICAgICJtb250aCI6IG51bGwsCiAgICAieWVhciI6IG51bGwKICB9LAogICJvcGNpb25lcyI6IHsKICAgICJjb25zb2xpZGFkbyI6IHRydWUsCiAgICAiY2FsZW5kYXJpb3MiOiBmYWxzZSwKICAgICJoaXN0b3JpYSI6IGZhbHNlLAogICAgImhpc3RvcmljbyI6IGZhbHNlLAogICAgImhpc3RvcmlhX2VuX3BhcXVldGUiOiB0cnVlLAogICAgIm1lc2VzIjogNCwKICAgICJpbmZvcm1lcyI6IGZhbHNlLAogICAgImZlY2hhX2luZm9ybWVzIjogIjIwMjYtMTAtMTQiLAogICAgInBkZl92YWNpYXMiOiB0cnVlCiAgfSwKICAiaGlzdG9yaWFsIjogWwogICAgImluaWNpbyIsCiAgICAiZmFzZSBjb25zdWx0YXMiLAogICAgImVycm9yIGVuIGZhc2UgY29uc3VsdGFzIChFUlJPUl9PUEVSQUNJT04pIgogIF0sCiAgImhpc3RvcmlhbF92ZXJzaW9uIjogMgp9"
+   },
+   "retomado": {
+    "caso": "retomado_por_hoja",
+    "entrada": {
+     "Paquete CSMP 2026-10-08 13-04-23-123456/respaldo/2026-10-08 13-04-26/ESP Ambulatorio Jdo Familia Ficticio Norte.xls": "PGh0bWw+PG1ldGEgY2hhcnNldD0idXRmLTgiPjx0YWJsZSBpZD0idGFibGFDdW1wbGltaWVudG8iPjx0cj48dGQ+UklUPC90ZD48dGQ+UlVUPC90ZD48dGQ+Tm9tYnJlPC90ZD48dGQ+RGVyaXZhY2lvbjwvdGQ+PHRkPkFjY2lvbmVzPC90ZD48L3RyPjx0cj48dGQ+WC0xLTIwMjY8L3RkPjx0ZD4xMTExMTExMS0wPC90ZD48dGQ+UGVyc29uYSBGaWN0aWNpYSAxPC90ZD48dGQ+UFJNIENlbnRybyBGaWN0aWNpbzwvdGQ+PHRkPjwvdGQ+PC90cj48dHI+PHRkPlgtMi0yMDI2PC90ZD48dGQ+MTExMTExMTItMDwvdGQ+PHRkPlBlcnNvbmEgRmljdGljaWEgMjwvdGQ+PHRkPlBSTSBDZW50cm8gRmljdGljaW88L3RkPjx0ZD48L3RkPjwvdHI+PHRyPjx0ZD5YLTMtMjAyNjwvdGQ+PHRkPjExMTExMTEzLTA8L3RkPjx0ZD5QZXJzb25hIEZpY3RpY2lhIDM8L3RkPjx0ZD5QUk0gQ2VudHJvIEZpY3RpY2lvPC90ZD48dGQ+PC90ZD48L3RyPjwvdGFibGU+PC9odG1sPg==",
+     "Paquete CSMP 2026-10-08 13-04-23-123456/respaldo/2026-10-08 13-04-26/resumen.json": "ewogICJ2ZXJzaW9uX2NvbnRyYXRvIjogMSwKICAiZmVjaGFfaG9yYSI6ICIyMDI2LTEwLTA4VDEzOjA0OjMzLjEyMzQ1Ni0wMzowMCIsCiAgImVzdGFkbyI6ICJWQUxJREFEQSIsCiAgInBsYW4iOiBbCiAgICB7CiAgICAgICJ0cmlidW5hbCI6ICI5MDEiLAogICAgICAidGFiIjogIkVzcGVyYSIsCiAgICAgICJtb2RhbGl0eSI6ICIyIiwKICAgICAgInJlcG9ydCI6IG51bGwsCiAgICAgICJzY3JlZW4iOiAic2VndWltaWVudG8iLAogICAgICAic3RhdGUiOiAiMSIsCiAgICAgICJtb250aCI6IG51bGwsCiAgICAgICJ5ZWFyIjogbnVsbCwKICAgICAgInN0YXJ0IjogbnVsbCwKICAgICAgImVuZCI6IG51bGwsCiAgICAgICJ0cmlidW5hbF9ub21icmUiOiAiSnV6Z2FkbyBkZSBGYW1pbGlhIEZpY3RpY2lvIE5vcnRlIiwKICAgICAgIm1vZGFsaWRhZF9ub21icmUiOiAiQW1idWxhdG9yaW8iLAogICAgICAiZmVjaGFfZGVzY2FyZ2EiOiAiMjAyNi0xMC0wOFQxMzowNDoyNy4xMjM0NTYtMDM6MDAiCiAgICB9CiAgXSwKICAiY29uc3VsdGFzX2VzcGVyYWRhcyI6IDEsCiAgImNvbnN1bHRhc19jb21wbGV0YWRhcyI6IDEsCiAgImNvbnN1bHRhcyI6IFsKICAgIHsKICAgICAgImNvbnN1bHRhIjogIkp1emdhZG8gZGUgRmFtaWxpYSBGaWN0aWNpbyBOb3J0ZSAvIEVzcGVyYSAvIEFtYnVsYXRvcmlvIiwKICAgICAgImVzdGFkbyI6ICJWQUxJREFEQSIsCiAgICAgICJwYWdpbmFzIjogMSwKICAgICAgInJlZ2lzdHJvcyI6IDMsCiAgICAgICJ2ZXJpZmljYWNpb24iOiAidmVyaWZpY2FjaW9uIDAwMS5qc29uIiwKICAgICAgInNlbGVjY2lvbiI6IHsKICAgICAgICAidHJpYnVuYWwiOiAiOTAxIiwKICAgICAgICAidGFiIjogIkVzcGVyYSIsCiAgICAgICAgIm1vZGFsaXR5IjogIjIiLAogICAgICAgICJyZXBvcnQiOiBudWxsLAogICAgICAgICJzY3JlZW4iOiAic2VndWltaWVudG8iLAogICAgICAgICJzdGF0ZSI6ICIxIiwKICAgICAgICAibW9udGgiOiBudWxsLAogICAgICAgICJ5ZWFyIjogbnVsbCwKICAgICAgICAic3RhcnQiOiBudWxsLAogICAgICAgICJlbmQiOiBudWxsLAogICAgICAgICJ0cmlidW5hbF9ub21icmUiOiAiSnV6Z2FkbyBkZSBGYW1pbGlhIEZpY3RpY2lvIE5vcnRlIiwKICAgICAgICAibW9kYWxpZGFkX25vbWJyZSI6ICJBbWJ1bGF0b3JpbyIsCiAgICAgICAgImZlY2hhX2Rlc2NhcmdhIjogIjIwMjYtMTAtMDhUMTM6MDQ6MjcuMTIzNDU2LTAzOjAwIgogICAgICB9CiAgICB9CiAgXSwKICAiZmlsdHJvX2ZlY2hhIjogbnVsbCwKICAib3Ryb3NfZmlsdHJvcyI6ICJ0b2RvcyBsb3MgcmVnaXN0cm9zIgp9",
+     "Paquete CSMP 2026-10-08 13-04-23-123456/respaldo/2026-10-08 13-04-26/verificacion 001.json": "ewogICJmZWNoYV9ob3JhIjogIjIwMjYtMTAtMDhUMTM6MDQ6MzEuMTIzNDU2LTAzOjAwIiwKICAiY2FzbyI6ICJUOTAxLUVzcGVyYS1NMiIsCiAgImNvbnN1bHRhIjogIkp1emdhZG8gZGUgRmFtaWxpYSBGaWN0aWNpbyBOb3J0ZSAvIEVzcGVyYSAvIEFtYnVsYXRvcmlvIiwKICAiZXN0YWRvIjogIlZBTElEQURBIiwKICAicGFnaW5hc19lc3BlcmFkYXMiOiAxLAogICJwYWdpbmFzX3ZlcmlmaWNhZGFzIjogMSwKICAiYXJjaGl2b3MiOiBbCiAgICB7CiAgICAgICJwYWdpbmEiOiAxLAogICAgICAidG90YWwiOiAxLAogICAgICAiYXJjaGl2byI6ICJFU1AgQW1idWxhdG9yaW8gSmRvIEZhbWlsaWEgRmljdGljaW8gTm9ydGUueGxzIiwKICAgICAgImJ5dGVzIjogNDg0LAogICAgICAic2hhMjU2IjogImJkYTYxMzZkYzk0ODFlMzc5NjFkOTEyM2VmMzQxOWFlZDNmNWY5NDAzNDk3MzhkNmZkOGEyYzE4NmYzZGEyNjQiLAogICAgICAiZm9ybWF0byI6ICJIVE1MLXRhYnVsYXItY29uLWV4dGVuc2lvbi14bHMiLAogICAgICAicmVnaXN0cm9zIjogMywKICAgICAgImNvaW5jaWRlX2Nvbl9odG1sIjogdHJ1ZSwKICAgICAgImVzdGFkbyI6ICJPSyIsCiAgICAgICJ2aW5jdWxvc19pbmdyZXNvIjogWwogICAgICAgIHsKICAgICAgICAgICJyaXQiOiAiWC0xLTIwMjYiLAogICAgICAgICAgIm5vbWJyZSI6ICJQZXJzb25hIEZpY3RpY2lhIDEiLAogICAgICAgICAgInJ1dCI6ICIxMTExMTExMS0wIiwKICAgICAgICAgICJwcm9ncmFtYSI6ICJQUk0gQ2VudHJvIEZpY3RpY2lvIiwKICAgICAgICAgICJ0cmlidW5hbF9jb2RpZ28iOiAiOTAxIiwKICAgICAgICAgICJjYXVzYV9pZCI6ICIxMDEiLAogICAgICAgICAgImluZ3Jlc29faWQiOiAiMjAxIiwKICAgICAgICAgICJldGFwYSI6ICIzIiwKICAgICAgICAgICJhbnRpZ3VvIjogIjAiLAogICAgICAgICAgInRpcG9fcG9wdXAiOiAiMTIiLAogICAgICAgICAgInBlcnNvbmFfaWQiOiAiMzAwIiwKICAgICAgICAgICJjZW50cm9faWQiOiAiNDAwIiwKICAgICAgICAgICJjYWxlbmRhcmlvIjogWwogICAgICAgICAgICAiMTAxIiwKICAgICAgICAgICAgIjMwMCIsCiAgICAgICAgICAgICI5MDEiLAogICAgICAgICAgICAiNDAwIiwKICAgICAgICAgICAgIlgtMS0yMDI2IiwKICAgICAgICAgICAgIjAxLzAzLzIwMjYiLAogICAgICAgICAgICAiUFJNIENlbnRybyBGaWN0aWNpbyIsCiAgICAgICAgICAgICJQZXJzb25hIEZpY3RpY2lhIDEiLAogICAgICAgICAgICAiNiBNZXNlcyIsCiAgICAgICAgICAgICIzIE1lc2VzIiwKICAgICAgICAgICAgIjIwMSIsCiAgICAgICAgICAgICIxIgogICAgICAgICAgXQogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgInJpdCI6ICJYLTItMjAyNiIsCiAgICAgICAgICAibm9tYnJlIjogIlBlcnNvbmEgRmljdGljaWEgMiIsCiAgICAgICAgICAicnV0IjogIjExMTExMTEyLTAiLAogICAgICAgICAgInByb2dyYW1hIjogIlBSTSBDZW50cm8gRmljdGljaW8iLAogICAgICAgICAgInRyaWJ1bmFsX2NvZGlnbyI6ICI5MDEiLAogICAgICAgICAgImNhdXNhX2lkIjogIjEwMiIsCiAgICAgICAgICAiaW5ncmVzb19pZCI6ICIyMDIiLAogICAgICAgICAgImV0YXBhIjogIjMiLAogICAgICAgICAgImFudGlndW8iOiAiMCIsCiAgICAgICAgICAidGlwb19wb3B1cCI6ICIxMiIsCiAgICAgICAgICAicGVyc29uYV9pZCI6ICIzMDAiLAogICAgICAgICAgImNlbnRyb19pZCI6ICI0MDAiLAogICAgICAgICAgImNhbGVuZGFyaW8iOiBbCiAgICAgICAgICAgICIxMDIiLAogICAgICAgICAgICAiMzAwIiwKICAgICAgICAgICAgIjkwMSIsCiAgICAgICAgICAgICI0MDAiLAogICAgICAgICAgICAiWC0yLTIwMjYiLAogICAgICAgICAgICAiMDEvMDMvMjAyNiIsCiAgICAgICAgICAgICJQUk0gQ2VudHJvIEZpY3RpY2lvIiwKICAgICAgICAgICAgIlBlcnNvbmEgRmljdGljaWEgMiIsCiAgICAgICAgICAgICI2IE1lc2VzIiwKICAgICAgICAgICAgIjMgTWVzZXMiLAogICAgICAgICAgICAiMjAyIiwKICAgICAgICAgICAgIjEiCiAgICAgICAgICBdCiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAicml0IjogIlgtMy0yMDI2IiwKICAgICAgICAgICJub21icmUiOiAiUGVyc29uYSBGaWN0aWNpYSAzIiwKICAgICAgICAgICJydXQiOiAiMTExMTExMTMtMCIsCiAgICAgICAgICAicHJvZ3JhbWEiOiAiUFJNIENlbnRybyBGaWN0aWNpbyIsCiAgICAgICAgICAidHJpYnVuYWxfY29kaWdvIjogIjkwMSIsCiAgICAgICAgICAiY2F1c2FfaWQiOiAiMTAzIiwKICAgICAgICAgICJpbmdyZXNvX2lkIjogIjIwMyIsCiAgICAgICAgICAiZXRhcGEiOiAiMyIsCiAgICAgICAgICAiYW50aWd1byI6ICIwIiwKICAgICAgICAgICJ0aXBvX3BvcHVwIjogIjEyIiwKICAgICAgICAgICJwZXJzb25hX2lkIjogIjMwMCIsCiAgICAgICAgICAiY2VudHJvX2lkIjogIjQwMCIsCiAgICAgICAgICAiY2FsZW5kYXJpbyI6IFsKICAgICAgICAgICAgIjEwMyIsCiAgICAgICAgICAgICIzMDAiLAogICAgICAgICAgICAiOTAxIiwKICAgICAgICAgICAgIjQwMCIsCiAgICAgICAgICAgICJYLTMtMjAyNiIsCiAgICAgICAgICAgICIwMS8wMy8yMDI2IiwKICAgICAgICAgICAgIlBSTSBDZW50cm8gRmljdGljaW8iLAogICAgICAgICAgICAiUGVyc29uYSBGaWN0aWNpYSAzIiwKICAgICAgICAgICAgIjYgTWVzZXMiLAogICAgICAgICAgICAiMyBNZXNlcyIsCiAgICAgICAgICAgICIyMDMiLAogICAgICAgICAgICAiMSIKICAgICAgICAgIF0KICAgICAgICB9CiAgICAgIF0KICAgIH0KICBdLAogICJzZWxlY2Npb24iOiB7CiAgICAidHJpYnVuYWwiOiAiOTAxIiwKICAgICJ0YWIiOiAiRXNwZXJhIiwKICAgICJtb2RhbGl0eSI6ICIyIiwKICAgICJyZXBvcnQiOiBudWxsLAogICAgInNjcmVlbiI6ICJzZWd1aW1pZW50byIsCiAgICAic3RhdGUiOiAiMSIsCiAgICAibW9udGgiOiBudWxsLAogICAgInllYXIiOiBudWxsLAogICAgInN0YXJ0IjogbnVsbCwKICAgICJlbmQiOiBudWxsLAogICAgInRyaWJ1bmFsX25vbWJyZSI6ICJKdXpnYWRvIGRlIEZhbWlsaWEgRmljdGljaW8gTm9ydGUiLAogICAgIm1vZGFsaWRhZF9ub21icmUiOiAiQW1idWxhdG9yaW8iLAogICAgImZlY2hhX2Rlc2NhcmdhIjogIjIwMjYtMTAtMDhUMTM6MDQ6MjcuMTIzNDU2LTAzOjAwIgogIH0sCiAgImZpbHRyb19mZWNoYSI6IG51bGwKfQ==",
+     "Paquete CSMP 2026-10-08 13-04-23-123456/respaldo/proceso.json": "ewogICJlc3RhZG8iOiAiSU5DT01QTEVUTyIsCiAgImZhc2UiOiAiY29uc3VsdGFzIiwKICAiY2FycGV0YXMiOiB7CiAgICAiY29uc3VsdGFzIjogInJlc3BhbGRvLzIwMjYtMTAtMDggMTMtMDQtMjYiCiAgfSwKICAic2VsZWNjaW9uIjogewogICAgInRyaWJ1bmFscyI6IFsKICAgICAgIjkwMSIKICAgIF0sCiAgICAibW9kYWxpdGllcyI6IFsKICAgICAgIjIiCiAgICBdLAogICAgInRhYnMiOiBbCiAgICAgICJFc3BlcmEiCiAgICBdLAogICAgInJlcG9ydCI6ICIxIiwKICAgICJkYXRlcyI6IG51bGwsCiAgICAia2VlcF9maWx0ZXJzIjogZmFsc2UsCiAgICAic2NyZWVuIjogInNlZ3VpbWllbnRvIiwKICAgICJzdGF0ZSI6ICIxIiwKICAgICJtb250aCI6IG51bGwsCiAgICAieWVhciI6IG51bGwKICB9LAogICJvcGNpb25lcyI6IHsKICAgICJjb25zb2xpZGFkbyI6IHRydWUsCiAgICAiY2FsZW5kYXJpb3MiOiBmYWxzZSwKICAgICJoaXN0b3JpYSI6IGZhbHNlLAogICAgImhpc3RvcmljbyI6IGZhbHNlLAogICAgImhpc3RvcmlhX2VuX3BhcXVldGUiOiB0cnVlLAogICAgIm1lc2VzIjogNCwKICAgICJpbmZvcm1lcyI6IGZhbHNlLAogICAgImZlY2hhX2luZm9ybWVzIjogIjIwMjYtMTAtMTQiLAogICAgInBkZl92YWNpYXMiOiB0cnVlCiAgfSwKICAiaGlzdG9yaWFsIjogWwogICAgImluaWNpbyIsCiAgICAiZmFzZSBjb25zdWx0YXMiLAogICAgImVycm9yIGVuIGZhc2UgY29uc3VsdGFzIChFUlJPUl9PUEVSQUNJT04pIgogIF0sCiAgImhpc3RvcmlhbF92ZXJzaW9uIjogMgp9"
+    },
+    "opciones": {},
+    "resultado": {
+     "parcial": false,
+     "historia": null,
+     "zip": "Captura_CSMP.zip"
+    },
+    "zip": {
+     "nombre": "Captura_CSMP.zip",
+     "tablas": {
+      "consultas": 4,
+      "registros": 3,
+      "bitacoras": 3,
+      "calendarios": 0,
+      "historia_tramites": 0,
+      "documentos": 0,
+      "incidencias": 6,
+      "escritos": 0,
+      "historico_proteccion": 0
+     },
+     "estados": {
+      "bitacoras": "PARCIAL",
+      "calendarios": "NO_SOLICITADA",
+      "consultas": "PARCIAL",
+      "documentos": "NO_SOLICITADA",
+      "historia_tramites": "NO_SOLICITADA",
+      "incidencias": "COMPLETA",
+      "registros": "COMPLETA",
+      "escritos": "NO_SOLICITADA",
+      "historico_proteccion": "NO_SOLICITADA"
+     },
+     "consolidado": false,
+     "schema": "1.0.0",
+     "incidencias": [
+      "BITACORAS_REUTILIZADAS",
+      "BITACORA_ADVERTENCIA"
+     ]
+    },
+    "error": null,
+    "fases": [
+     "consultas",
+     "bitacoras",
+     "paquete"
+    ],
+    "avisos": [],
+    "proceso": {
+     "estado": "COMPLETO",
+     "fase": "paquete",
+     "reintentos": 1,
+     "paquete": "Captura_CSMP.zip",
+     "carpetas": {
+      "consultas": "respaldo/<FECHA>",
+      "bitacoras": "respaldo/Bitacoras <FECHA>"
+     },
+     "historial": [
+      "inicio",
+      "fase consultas",
+      "error en fase consultas (ERROR_OPERACION)",
+      "inicio; reintento 1",
+      "fase consultas",
+      "consultas reutilizadas del intento anterior",
+      "fase bitacoras",
+      "bitácoras COMPLETA; leídas 3; no leídas 0; consultas fallidas 0",
+      "fase paquete",
+      "fin COMPLETO"
+     ],
+     "opciones": {
+      "consolidado": true,
+      "calendarios": false,
+      "historia": false,
+      "historico": false,
+      "historia_en_paquete": true,
+      "meses": 4,
+      "informes": false,
+      "fecha_informes": "2026-10-14",
+      "pdf_vacias": true
+     }
+    },
+    "subcarpetas": [
+     "<FECHA>",
+     "Bitacoras <FECHA>"
+    ],
+    "raiz": "Paquete CSMP <FECHA>",
+    "retomar": true,
+    "otra_pantalla": false
+   },
+   "fases": [
+    "consultas",
+    "bitacoras",
+    "paquete",
+    "consultas"
+   ],
+   "avisos": []
+  }
  ]
 }

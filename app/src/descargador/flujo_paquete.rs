@@ -767,6 +767,78 @@ pub fn ejecutar(
     correr(conexion, catalogo, edicion, plan, alcance, Some(destino), &raiz, None, opciones, cancelar, emitir)
 }
 
+/// Plan de una sola hoja: las consultas del plan completo cuya pestaña es `hoja`, en el mismo orden.
+fn plan_de_hoja(plan: &PlanLote, hoja: &str) -> PlanLote {
+    let consultas = plan
+        .consultas
+        .iter()
+        .filter(|p| matches!(&p.alcance, crate::descargador::Alcance::Seguimiento { pestana, .. } if pestana == hoja))
+        .cloned()
+        .collect();
+    PlanLote { consultas, fechas: plan.fechas }
+}
+
+/// `run_por_hoja`: un paquete y un ZIP por hoja seleccionada, con su propio `proceso.json`. Cada hoja es un `run`
+/// completo con su alcance reducido a esa pestaña (y los informes solo en Cumplimiento, como Python). Una hoja que
+/// falla no impide las siguientes; si todas fallan se devuelve el primer error.
+#[allow(clippy::too_many_arguments)]
+pub fn ejecutar_por_hoja(
+    conexion: &dyn Conexion,
+    catalogo: &Catalogo,
+    edicion: Edicion,
+    plan: &PlanLote,
+    alcance: &LoteBitacoras,
+    destino: &Path,
+    opciones: &Opciones,
+    cancelar: &AtomicBool,
+    emitir: &mut dyn FnMut(Evento),
+) -> Result<Vec<Resultado>, String> {
+    let mut resultados = Vec::new();
+    let mut fallas: Vec<String> = Vec::new();
+    let total = alcance.pestanas.len();
+    for (numero, hoja) in alcance.pestanas.iter().enumerate() {
+        if cancelar.load(Ordering::SeqCst) {
+            break;
+        }
+        emitir(Evento::Estado(format!("Hoja {} de {total}: {hoja}.", numero + 1)));
+        let de_la_hoja = LoteBitacoras {
+            tribunales: alcance.tribunales.clone(),
+            modalidades: alcance.modalidades.clone(),
+            pestanas: vec![hoja.clone()],
+        };
+        let mut opciones_hoja = opciones.clone();
+        opciones_hoja.informes = opciones.informes && hoja == "Cumplimiento";
+        let plan_hoja = plan_de_hoja(plan, hoja);
+        match correr(
+            conexion,
+            catalogo,
+            edicion,
+            &plan_hoja,
+            &de_la_hoja,
+            Some(destino),
+            &destino.join(nombre_carpeta()),
+            None,
+            &opciones_hoja,
+            cancelar,
+            emitir,
+        ) {
+            Ok(resultado) => resultados.push(resultado),
+            Err(e) => {
+                if cancelar.load(Ordering::SeqCst) {
+                    return Err(e);
+                }
+                // Una hoja que falla no impide las siguientes; sus fuentes quedan en su propia carpeta.
+                emitir(Evento::Aviso(format!("La hoja {hoja} no se pudo completar: {e}")));
+                fallas.push(e);
+            }
+        }
+    }
+    if !fallas.is_empty() && resultados.is_empty() {
+        return Err(fallas.remove(0));
+    }
+    Ok(resultados)
+}
+
 /// `retomar`: continúa un paquete cortado en `carpeta` («Paquete CSMP …»): no repite consultas validadas ni
 /// bitácoras ya leídas y vuelve a crear el ZIP.
 pub fn retomar(
@@ -951,8 +1023,14 @@ pub(crate) mod pruebas {
         /// Cancela el flujo en la primera descarga de las consultas (caso cancelado_tras_consultas).
         cancelar_tras_consultas: bool,
         cancelar: Option<std::sync::Arc<AtomicBool>>,
-        /// Ingreso cuya primera bitácora falla (caso itacora_fallida).
+        /// Ingreso cuya primera bitácora falla (caso bitacora_fallida).
         fallar_bitacora: RefCell<Option<String>>,
+        /// E-Q10: pestaña de la última consulta preparada.
+        tab: RefCell<String>,
+        /// E-Q10: hoja que falla al prepararse.
+        fallar_hoja: Option<&'static str>,
+        /// E-Q10: hoja en la que se pide cancelar al descargar.
+        cancelar_en_hoja: Option<&'static str>,
     }
 
     impl Doble {
@@ -966,6 +1044,9 @@ pub(crate) mod pruebas {
                 cancelar_tras_consultas: false,
                 cancelar: None,
                 fallar_bitacora: RefCell::new(None),
+                tab: RefCell::new(String::new()),
+                fallar_hoja: None,
+                cancelar_en_hoja: None,
             }
         }
 
@@ -992,9 +1073,15 @@ pub(crate) mod pruebas {
                 )
                 .into_bytes()
             } else {
+                let p = self.tab.borrow().clone();
                 let id = match pantalla {
                     "litigantes" => "tablaLitigantes",
-                    _ => "tablaCumplimiento",
+                    _ => match p.as_str() {
+                        "Espera" => "tablaEspera",
+                        "Informes" => "tablaInforme",
+                        "Egresados" => "tablaEgresados",
+                        _ => "tablaCumplimiento",
+                    },
                 };
                 format!(
                     "<html><body><form name=\"InformesPpalForm\" method=\"post\" action=\"/SITFAWEB/InformesDAction.do\">\
@@ -1037,6 +1124,12 @@ pub(crate) mod pruebas {
                         "calendario_medidas" => &self.calendario,
                         _ => &self.seguimiento,
                     };
+                    if let Some(hoja) = payload["selection"]["tab"].as_str() {
+                        *self.tab.borrow_mut() = hoja.to_string();
+                        if self.fallar_hoja == Some(hoja) {
+                            return Err(format!("La hoja {hoja} no se pudo preparar."));
+                        }
+                    }
                     let respuesta = base.llamar("prepare", payload.clone(), plazo)?;
                     let mut pares = BTreeMap::new();
                     for par in respuesta["pairs"].as_array().into_iter().flatten() {
@@ -1065,6 +1158,11 @@ pub(crate) mod pruebas {
                     Ok(respuesta)
                 }
                 "download" => {
+                    if self.cancelar_en_hoja == Some(self.tab.borrow().as_str()) {
+                        if let Some(c) = &self.cancelar {
+                            c.store(true, Ordering::SeqCst);
+                        }
+                    }
                     if self.cancelar_tras_consultas {
                         if let Some(c) = &self.cancelar {
                             c.store(true, Ordering::SeqCst);
@@ -1391,6 +1489,158 @@ pub(crate) mod pruebas {
         let mut caso = datos["casos"][0].clone();
         caso["zip"]["tablas"]["bitacoras"] = json!(99);
         assert!(comparar_caso(&caso).iter().any(|d| d.contains(".zip")), "tabla alterada no detectada");
+        // E-Q10: una alteración por hoja también debe detectarse.
+        let mut por_hoja = datos["por_hoja"][0].clone();
+        por_hoja["paquetes"][1]["zip"]["tablas"]["bitacoras"] = json!(99);
+        assert!(comparar_por_hoja(&por_hoja).iter().any(|d| d.contains("zip")), "alteración por hoja no detectada");
+    }
+
+    /// E-Q10 Â· Un paquete por hoja contra `run_por_hoja`: fases globales, paquetes completos, una hoja que falla y la
+    /// cancelaciÃ³n en la segunda hoja con su retomar.
+    fn comparar_por_hoja(caso: &Value) -> Vec<String> {
+        let nombre = caso["caso"].as_str().unwrap();
+        let hojas: Vec<String> = caso["hojas"].as_array().unwrap().iter().map(|h| h.as_str().unwrap().to_string()).collect();
+        let base = carpeta(&format!("por-hoja-{nombre}"));
+        let mut doble = Doble::nuevo();
+        doble.fallar_hoja = match nombre {
+            "una_hoja_falla" => Some("Espera"),
+            _ => None,
+        };
+        doble.cancelar_en_hoja = if nombre == "cancelada_y_retomada" { Some("Espera") } else { None };
+        let cancelar = std::sync::Arc::new(AtomicBool::new(false));
+        doble.cancelar = Some(cancelar.clone());
+        let catalogo: Catalogo = serde_json::from_value(catalogo_json("seguimiento")).unwrap();
+        let lote = SeleccionLote {
+            tribunales: vec!["901".into()],
+            pestanas: hojas.clone(),
+            modalidades: vec!["2".into()],
+            informes: vec!["1".into()],
+            medidas: vec![TODAS_LAS_MEDIDAS.into()],
+            ..Default::default()
+        };
+        let plan = catalogo.planificar(Edicion::Integral, &lote).unwrap();
+        let alcance = LoteBitacoras {
+            tribunales: vec!["901".into()], modalidades: vec!["2".into()], pestanas: hojas.clone(),
+        };
+        let destino = base.join("destino");
+        std::fs::create_dir_all(&destino).unwrap();
+        let mut eventos = Vec::new();
+        let resultado = ejecutar_por_hoja(
+            &doble, &catalogo, Edicion::Integral, &plan, &alcance, &destino,
+            &Opciones { pausa: Duration::ZERO, fecha_informes: NaiveDate::from_ymd_opt(2026, 10, 14).unwrap(), ..Default::default() },
+            &cancelar, &mut |e| eventos.push(e),
+        );
+        let mut dif = Vec::new();
+        let fases: Vec<String> = eventos.iter().filter_map(|e| match e {
+            Evento::Fase(f) => Some(f.clone()),
+            _ => None,
+        }).collect();
+        if fases != caso["fases"].as_array().unwrap().iter().map(|f| f.as_str().unwrap().to_string()).collect::<Vec<_>>() {
+            dif.push(format!("{nombre}.fases: Rust {fases:?} Â· Python {}", caso["fases"]));
+        }
+        match (&resultado, caso["error"].as_str()) {
+            (Ok(_), None) => {}
+            (Err(e), Some(p)) if e == p => {}
+            (Err(e), Some(p)) => dif.push(format!("{nombre}: error distinto Â· Rust Â«{e}Â» Â· Python Â«{p}Â»")),
+            (Err(e), None) => dif.push(format!("{nombre}: Rust fallÃ³ (Â«{e}Â») y Python no")),
+            (Ok(_), Some(p)) => dif.push(format!("{nombre}: Python fallÃ³ (Â«{p}Â») y Rust no")),
+        }
+        if let Ok(resultados) = &resultado {
+            let paquetes = caso["paquetes"].as_array().unwrap();
+            if resultados.len() != paquetes.len() {
+                dif.push(format!("{nombre}: {} paquetes en Rust y {} en Python", resultados.len(), paquetes.len()));
+            }
+            for (r, p) in resultados.iter().zip(paquetes) {
+                let proceso = volcado_proceso(r.paquete.parent().unwrap());
+                if proceso != p["proceso"] {
+                    dif.push(format!("{nombre}.proceso: Rust {proceso} Â· Python {}", p["proceso"]));
+                }
+                if let Ok(z) = zip(r.paquete.parent().unwrap()) {
+                    let (a, b) = normalizar_zip(&z, &p["zip"]);
+                    if a != b {
+                        dif.push(format!("{nombre}.zip: Rust {a} Â· Python {b}"));
+                    }
+                } else {
+                    dif.push(format!("{nombre}: el ZIP de Rust no se pudo leer"));
+                }
+            }
+        }
+        // La cancelaciÃ³n deja una carpeta cortada: se retoma y debe completarse igual que Python.
+        if let Some(entrada) = caso.get("entrada").and_then(Value::as_object) {
+                let dir = base.join("entrada");
+            reconstruir(&dir, &Value::Object(entrada.clone()));
+            let paquete = std::fs::read_dir(&dir).unwrap().flatten().map(|e| e.path())
+                .find(|p| p.file_name().is_some_and(|n| n.to_string_lossy().starts_with(PREFIJO)))
+                .unwrap();
+            let doble = Doble::nuevo();
+            let (mut eventos, cancelar) = (Vec::new(), AtomicBool::new(false));
+            let retomado = retomar(
+                &doble, &catalogo, Edicion::Integral, &paquete,
+                &Opciones { pausa: Duration::ZERO, ..Default::default() }, &cancelar, &mut |e| eventos.push(e),
+            );
+            let esperado = &caso["retomado"];
+            match (&retomado, esperado["error"].as_str()) {
+                (Ok(r), None) => {
+                    let proceso = volcado_proceso(r.paquete.parent().unwrap());
+                    if proceso != esperado["proceso"] {
+                        dif.push(format!("{nombre}.retomado.proceso: Rust {proceso} Â· Python {}", esperado["proceso"]));
+                    }
+                    if let Ok(z) = zip(r.paquete.parent().unwrap()) {
+                        let (a, b) = normalizar_zip(&z, &esperado["zip"]);
+                        if a != b {
+                            dif.push(format!("{nombre}.retomado.zip: Rust {a} Â· Python {b}"));
+                        }
+                    }
+                }
+                (Err(e), Some(p)) if e == p => {}
+                (otro, p) => dif.push(format!("{nombre}.retomado: Rust {otro:?} Â· Python {p:?}")),
+            }
+        }
+        let _ = std::fs::remove_dir_all(&base);
+        dif
+    }
+
+    #[test]
+    fn por_hoja_igual_a_python() {
+        let datos = datos();
+        let casos = datos["por_hoja"].as_array().unwrap();
+        let mut diferencias = Vec::new();
+        let mut paquetes = 0usize;
+        for caso in casos {
+            diferencias.extend(comparar_por_hoja(caso));
+            paquetes += caso["paquetes"].as_array().unwrap().len();
+        }
+        assert!(diferencias.is_empty(), "{}", diferencias.join("\n"));
+        assert_eq!((casos.len(), paquetes), (4, 6), "conteos del orÃ¡culo por hoja");
+        println!("oraculo por hoja: {} casos, {paquetes} paquetes", casos.len());
+    }
+
+    /// Una sola hoja en el flujo por hoja debe dar lo mismo que `run`: mismas fases, proceso y ZIP.
+    #[test]
+    fn por_hoja_de_una_hoja_igual_a_run() {
+        let catalogo: Catalogo = serde_json::from_value(catalogo_json("seguimiento")).unwrap();
+        let lote = SeleccionLote {
+            tribunales: vec!["901".into()], pestanas: vec!["Cumplimiento".into()], modalidades: vec!["2".into()],
+            informes: vec!["1".into()], medidas: vec![TODAS_LAS_MEDIDAS.into()], ..Default::default()
+        };
+        let plan = catalogo.planificar(Edicion::Integral, &lote).unwrap();
+        let alcance = LoteBitacoras {
+            tribunales: vec!["901".into()], modalidades: vec!["2".into()], pestanas: vec!["Cumplimiento".into()],
+        };
+        let base = carpeta("una-hoja-igual-a-run");
+        let opciones = Opciones { pausa: Duration::ZERO, ..Default::default() };
+        let (mut eventos, cancelar) = (Vec::new(), AtomicBool::new(false));
+        let simple = ejecutar(&Doble::nuevo(), &catalogo, Edicion::Integral, &plan, &alcance, &base.join("a"), &opciones, &cancelar, &mut |e| eventos.push(e)).unwrap();
+        let (mut eventos, cancelar) = (Vec::new(), AtomicBool::new(false));
+        let hojas = ejecutar_por_hoja(&Doble::nuevo(), &catalogo, Edicion::Integral, &plan, &alcance, &base.join("b"), &opciones, &cancelar, &mut |e| eventos.push(e)).unwrap();
+        assert_eq!(hojas.len(), 1);
+        let a = volcado_proceso(simple.paquete.parent().unwrap());
+        let b = volcado_proceso(hojas[0].paquete.parent().unwrap());
+        assert_eq!(a, b, "el proceso por hoja difiere de run");
+        let (za, zb) = (zip(simple.paquete.parent().unwrap()).unwrap(), zip(hojas[0].paquete.parent().unwrap()).unwrap());
+        let (a, b) = normalizar_zip(&za, &zb);
+        assert_eq!(a, b, "el ZIP por hoja difiere de run");
+        let _ = std::fs::remove_dir_all(&base);
     }
 
     /// Retomar un paquete cuyo `proceso.json` trae `respaldo/<fecha>` o `respaldo\\<fecha>` debe resolver la carpeta y

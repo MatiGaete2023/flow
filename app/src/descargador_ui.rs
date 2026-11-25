@@ -121,12 +121,16 @@ fn guardadas_contexto() -> Preferencias {
 enum MensajeFlujo {
     Evento(flujo_paquete::Evento),
     Termino(Result<flujo_paquete::Resultado, String>),
+    /// E-Q10: un paquete por hoja, en el orden de las pestaÃ±as.
+    TerminoPorHoja(Result<Vec<flujo_paquete::Resultado>, String>),
 }
 
 /// E-Q9 · «Consultar y crear paquete»: las fases del flujo en un hilo, con su avance, cancelación y resultado.
 #[derive(Default)]
 struct Flujo {
     informes: bool,
+    /// E-Q10: Â«Un paquete por hojaÂ».
+    por_hoja: bool,
     recepcion: Option<mpsc::Receiver<MensajeFlujo>>,
     cancelar: Option<Arc<AtomicBool>>,
     fase: String,
@@ -134,6 +138,8 @@ struct Flujo {
     avisos: Vec<String>,
     error: Option<String>,
     resultado: Option<Value>,
+    /// Un resultado por hoja cuando se pide Â«Un paquete por hojaÂ».
+    resultados: Vec<Value>,
     abrir_en_trabajo: Option<PathBuf>,
 }
 
@@ -148,6 +154,7 @@ impl Flujo {
         self.avisos.clear();
         self.error = None;
         self.resultado = None;
+        self.resultados.clear();
     }
 
     fn recibir(&mut self) {
@@ -178,7 +185,13 @@ impl Flujo {
                         }
                     }
                     flujo_paquete::Evento::Aviso(a) => self.avisos.push(a),
-                    flujo_paquete::Evento::Paquete(v) => self.resultado = Some(v),
+                    flujo_paquete::Evento::Paquete(v) => {
+                        if self.por_hoja {
+                            self.resultados.push(v);
+                        } else {
+                            self.resultado = Some(v);
+                        }
+                    }
                 }
                 if self.avance.len() > 200 {
                     self.avance.drain(..100);
@@ -187,8 +200,10 @@ impl Flujo {
             }
             self.recepcion = None;
             self.cancelar = None;
-            if let MensajeFlujo::Termino(Err(e)) = mensaje {
-                self.error = Some(e);
+            match mensaje {
+                MensajeFlujo::Termino(Err(e)) | MensajeFlujo::TerminoPorHoja(Err(e)) => self.error = Some(e),
+                MensajeFlujo::Termino(Ok(_)) | MensajeFlujo::TerminoPorHoja(Ok(_)) => {}
+                MensajeFlujo::Evento(_) => {}
             }
         }
         if desconectado && self.recepcion.is_some() {
@@ -232,6 +247,46 @@ impl Flujo {
                 &mut emitir,
             );
             let _ = envio.send(MensajeFlujo::Termino(resultado));
+            ctx.request_repaint();
+        });
+    }
+
+    /// E-Q10 Â· Â«Un paquete por hojaÂ»: un `run` por pestaÃ±a, con su propio ZIP y `proceso.json`.
+    #[allow(clippy::too_many_arguments)]
+    fn lanzar_por_hoja(
+        &mut self,
+        ctx: &egui::Context,
+        conexion: Arc<dyn lote::Conexion + Send + Sync>,
+        catalogo: Catalogo,
+        plan: PlanLote,
+        alcance: LoteBitacoras,
+        destino: PathBuf,
+        opciones: flujo_paquete::Opciones,
+    ) {
+        self.limpiar();
+        self.por_hoja = true;
+        let (envio, recepcion) = mpsc::channel();
+        self.recepcion = Some(recepcion);
+        let cancelar = Arc::new(AtomicBool::new(false));
+        self.cancelar = Some(cancelar.clone());
+        let ctx = ctx.clone();
+        std::thread::spawn(move || {
+            let mut emitir = |evento| {
+                let _ = envio.send(MensajeFlujo::Evento(evento));
+                ctx.request_repaint();
+            };
+            let resultados = flujo_paquete::ejecutar_por_hoja(
+                conexion.as_ref(),
+                &catalogo,
+                Edicion::Integral,
+                &plan,
+                &alcance,
+                &destino,
+                &opciones,
+                &cancelar,
+                &mut emitir,
+            );
+            let _ = envio.send(MensajeFlujo::TerminoPorHoja(resultados));
             ctx.request_repaint();
         });
     }
@@ -328,7 +383,11 @@ impl Flujo {
                         let mut opciones = opciones.clone();
                         opciones.informes = self.informes;
                         opciones.pausa = Duration::from_secs_f64(preferencias::limitar_pausa(pausa));
-                        self.lanzar(ui.ctx(), conexion, catalogo.clone(), plan, alcance, PathBuf::from(destino.trim()), opciones);
+                        if self.por_hoja {
+                            self.lanzar_por_hoja(ui.ctx(), conexion, catalogo.clone(), plan, alcance, PathBuf::from(destino.trim()), opciones);
+                        } else {
+                            self.lanzar(ui.ctx(), conexion, catalogo.clone(), plan, alcance, PathBuf::from(destino.trim()), opciones);
+                        }
                     }
                 }
                 if ui.add_enabled(conectado, egui::Button::new("Retomar paquete…")).clicked() {
@@ -361,6 +420,35 @@ impl Flujo {
         }
         for aviso in &self.avisos {
             ui.label(RichText::new(aviso).color(p.amber));
+        }
+        if !self.resultados.is_empty() {
+            ui.label(RichText::new(format!("{} paquete(s), uno por hoja:", self.resultados.len())).color(p.green));
+            for r in &self.resultados {
+                let parcial = r["partial"].as_bool().unwrap_or(false);
+                ui.horizontal_wrapped(|ui| {
+                    ui.label(
+                        RichText::new(format!(
+                            "{}: {}",
+                            if parcial { "Paquete parcial" } else { "Paquete completo" },
+                            r["path"].as_str().unwrap_or("")
+                        ))
+                        .color(if parcial { p.amber } else { p.green }),
+                    );
+                    if let Some(ruta) = r["path"].as_str().map(PathBuf::from) {
+                        if theme::primary(ui, p, "Abrir en Trabajo").clicked() {
+                            self.abrir_en_trabajo = Some(ruta.clone());
+                        }
+                        if let Some(carpeta) = ruta.parent() {
+                            if ui.button("Abrir carpeta").clicked() {
+                                crate::ui::abrir_en_sistema(carpeta);
+                            }
+                        }
+                    }
+                });
+                if let Some(aviso) = r["aviso_cobertura"].as_str() {
+                    ui.label(RichText::new(aviso).color(p.amber));
+                }
+            }
         }
         if let Some(r) = &self.resultado {
             let parcial = r["partial"].as_bool().unwrap_or(false);
@@ -1900,6 +1988,59 @@ mod pruebas_interfaz {
 
     /// E-Q9 · Con Seguimiento, «Paquete en una acción» es la acción principal: ofrece «Consultar y crear paquete» y
     /// «Retomar paquete…», muestra el error de la extensión y no deja hilos colgados.
+    /// E-Q10 Â· Con Â«Un paquete por hojaÂ» la secciÃ³n lista cada ZIP con Â«Abrir carpetaÂ» y Â«Abrir en TrabajoÂ».
+    #[test]
+    fn ui_flujo_un_paquete_por_hoja() {
+        use egui_kittest::kittest::Queryable;
+        use egui_kittest::Harness;
+
+        let catalogo: Catalogo = serde_json::from_value(serde_json::json!({
+            "pantalla": "seguimiento", "tribunales": {"901": "Juzgado de Familia Ficticio Norte"},
+            "pestanas": ["Cumplimiento", "Espera"], "modalidades": {"2": "Ambulatorio"},
+            "informes": {"1": "Por vencer"}, "medidas": {"4": "Medidas por vencer"},
+        }))
+        .unwrap();
+        let lote = SeleccionLote {
+            tribunales: vec!["901".into()],
+            pestanas: vec!["Cumplimiento".into(), "Espera".into()],
+            modalidades: vec!["2".into()],
+            informes: vec!["1".into()],
+            medidas: vec![flow_rust::descargador::TODAS_LAS_MEDIDAS.into()],
+            ..Default::default()
+        };
+        let mut flujo = Flujo {
+            por_hoja: true,
+            resultados: vec![
+                serde_json::json!({"path": "C:/destino/Paquete CSMP A/Captura_CSMP.zip", "partial": false}),
+                serde_json::json!({"path": "C:/destino/Paquete CSMP B/Captura_CSMP.zip", "partial": true}),
+            ],
+            ..Default::default()
+        };
+        let pal = theme::pal(false);
+        let catalogo_pantalla = catalogo.clone();
+        let lote_pantalla = SeleccionLote {
+            tribunales: lote.tribunales.clone(),
+            pestanas: lote.pestanas.clone(),
+            modalidades: lote.modalidades.clone(),
+            informes: lote.informes.clone(),
+            medidas: lote.medidas.clone(),
+            ..Default::default()
+        };
+        let mut h = Harness::builder().with_size(egui::Vec2::new(1200.0, 700.0)).build_ui_state(
+            move |ui, f: &mut Flujo| {
+                f.mostrar(
+                    ui, &pal, true, &catalogo_pantalla, &lote_pantalla, "C:/destino", 0.0,
+                    flujo_paquete::Opciones::default(), None,
+                );
+            },
+            flujo,
+        );
+        h.run();
+        assert!(h.query_by_label("2 paquete(s), uno por hoja:").is_some(), "falta la lista");
+        assert_eq!(h.get_all_by_label("Abrir carpeta").count(), 2);
+        assert_eq!(h.get_all_by_label("Abrir en Trabajo").count(), 2);
+    }
+
     #[test]
     fn ui_flujo_consultar_y_crear_paquete() {
         use egui_kittest::kittest::Queryable;
