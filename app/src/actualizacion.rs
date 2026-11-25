@@ -10,6 +10,11 @@ use std::path::{Path, PathBuf};
 
 pub const NOMBRE: &str = "flow_rust.exe";
 
+pub const AVISO_SINCRONIZANDO: &str =
+    "La actualización de la carpeta adicional todavía se está sincronizando; vuelve a intentar en unos minutos.";
+
+pub const PAUSA_SINCRONIZACION: std::time::Duration = std::time::Duration::from_secs(2);
+
 /// Una versión nueva lista para aplicar.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Pendiente {
@@ -57,6 +62,144 @@ pub fn buscar(carpeta: &Path, actual: &Path) -> Result<Option<Pendiente>, String
         return Err("La huella de la actualización no coincide con SHA256.txt: el archivo está incompleto o cambió. No se aplicó.".into());
     }
     Ok(Some(Pendiente { ruta: nuevo, huella: h, commit }))
+}
+
+/// Comprueba si el archivo está disponible localmente (no es un marcador de solo nube de OneDrive)
+/// y se puede abrir para lectura.
+#[cfg(windows)]
+fn archivo_disponible_localmente(ruta: &Path) -> bool {
+    use std::os::windows::fs::MetadataExt;
+    if let Ok(meta) = std::fs::metadata(ruta) {
+        let attrs = meta.file_attributes();
+        // FILE_ATTRIBUTE_OFFLINE (0x1000)
+        // FILE_ATTRIBUTE_RECALL_ON_OPEN (0x00040000)
+        // FILE_ATTRIBUTE_RECALL_ON_DATA_ACCESS (0x00400000)
+        if attrs & (0x1000 | 0x0004_0000 | 0x0040_0000) != 0 {
+            return false;
+        }
+    }
+    std::fs::File::open(ruta).is_ok()
+}
+
+#[cfg(not(windows))]
+fn archivo_disponible_localmente(ruta: &Path) -> bool {
+    std::fs::File::open(ruta).is_ok()
+}
+
+/// Comprueba que el tamaño y la fecha de modificación del archivo permanezcan estables entre dos lecturas.
+fn verificar_estabilidad(ruta: &Path, pausa: std::time::Duration) -> bool {
+    let Ok(m1) = std::fs::metadata(ruta) else { return false };
+    let len1 = m1.len();
+    let mod1 = m1.modified().ok();
+    if !pausa.is_zero() {
+        std::thread::sleep(pausa);
+    }
+    let Ok(m2) = std::fs::metadata(ruta) else { return false };
+    let len2 = m2.len();
+    let mod2 = m2.modified().ok();
+    len1 == len2 && mod1 == mod2
+}
+
+/// Copia `flow_rust.exe` y `SHA256.txt` desde la carpeta adicional a la carpeta fija
+/// usando archivos temporales y renombrado atómico para no sobrescribir a medias.
+fn copiar_de_adicional_a_fija(
+    fija: &Path,
+    exe_origen: &Path,
+    sha_origen: &Path,
+    huella_esperada: &str,
+) -> Result<(), String> {
+    std::fs::create_dir_all(fija)
+        .map_err(|e| format!("No se pudo crear la carpeta fija de actualizaciones {}: {e}", fija.display()))?;
+
+    let tmp_exe = fija.join("flow_rust.exe.tmp");
+    let tmp_sha = fija.join("SHA256.txt.tmp");
+    let _ = std::fs::remove_file(&tmp_exe);
+    let _ = std::fs::remove_file(&tmp_sha);
+
+    let limpiar = |e: String| {
+        let _ = std::fs::remove_file(&tmp_exe);
+        let _ = std::fs::remove_file(&tmp_sha);
+        e
+    };
+
+    std::fs::copy(exe_origen, &tmp_exe)
+        .map_err(|e| limpiar(format!("No se pudo copiar el ejecutable a {}: {e}", fija.display())))?;
+
+    let h_copia = huella(&tmp_exe).map_err(|e| limpiar(format!("No se pudo verificar la copia: {e}")))?;
+    if h_copia != huella_esperada {
+        return Err(limpiar(AVISO_SINCRONIZANDO.into()));
+    }
+
+    std::fs::copy(sha_origen, &tmp_sha)
+        .map_err(|e| limpiar(format!("No se pudo copiar SHA256.txt a {}: {e}", fija.display())))?;
+
+    std::fs::rename(&tmp_exe, fija.join(NOMBRE))
+        .map_err(|e| limpiar(format!("No se pudo mover el ejecutable en {}: {e}", fija.display())))?;
+    std::fs::rename(&tmp_sha, fija.join("SHA256.txt"))
+        .map_err(|e| limpiar(format!("No se pudo mover SHA256.txt en {}: {e}", fija.display())))?;
+
+    Ok(())
+}
+
+/// Busca en la carpeta fija y, si está configurada, en la adicional con una pausa configurable para la verificación de sincronización.
+pub fn buscar_con_adicional_pausa(
+    fija: &Path,
+    adicional: Option<&Path>,
+    actual: &Path,
+    pausa: std::time::Duration,
+) -> Result<Option<Pendiente>, String> {
+    if let Some(adicional) = adicional.filter(|p| !p.as_os_str().is_empty()) {
+        let nuevo_adicional = adicional.join(NOMBRE);
+        if nuevo_adicional.is_file() {
+            let h_actual = huella(actual).ok();
+
+            // (c) Verificar si el archivo se puede abrir en lectura exclusiva y no es marcador sólo en la nube
+            if !archivo_disponible_localmente(&nuevo_adicional) {
+                return Err(AVISO_SINCRONIZANDO.into());
+            }
+
+            // (b) Verificar si el tamaño o fecha de modificación cambió entre dos lecturas separadas por al menos 2s
+            if !verificar_estabilidad(&nuevo_adicional, pausa) {
+                return Err(AVISO_SINCRONIZANDO.into());
+            }
+
+            // Leer bytes para verificar si es ejecutable
+            let bytes = std::fs::read(&nuevo_adicional).map_err(|_| AVISO_SINCRONIZANDO.to_string())?;
+            if !bytes.starts_with(b"MZ") {
+                return Err(format!("{NOMBRE} no parece un ejecutable de Windows; vuelve a copiarlo desde la entrega de la CI."));
+            }
+            let h_nuevo = crate::trabajo::hex(&Sha256::digest(&bytes));
+
+            // Si es idéntico al programa que ya está corriendo, no hay nueva versión en la adicional
+            if h_actual.as_deref() == Some(&h_nuevo) {
+                return buscar(fija, actual);
+            }
+
+            // (a) Falta SHA256.txt o no coincide
+            let sha_adicional = adicional.join("SHA256.txt");
+            if !sha_adicional.is_file() {
+                return Err(AVISO_SINCRONIZANDO.into());
+            }
+            let (esperada, _) = declarada(adicional);
+            if esperada.as_deref() != Some(&h_nuevo) {
+                return Err(AVISO_SINCRONIZANDO.into());
+            }
+
+            // Copiar a la fija (por temporal y renombrado, nunca sobrescribe a medias)
+            copiar_de_adicional_a_fija(fija, &nuevo_adicional, &sha_adicional, &h_nuevo)?;
+        }
+    }
+
+    buscar(fija, actual)
+}
+
+/// Busca en la carpeta fija (%LOCALAPPDATA%\FlowRust\actualizaciones) y, si está configurada, en la adicional.
+pub fn buscar_con_adicional(
+    fija: &Path,
+    adicional: Option<&Path>,
+    actual: &Path,
+) -> Result<Option<Pendiente>, String> {
+    buscar_con_adicional_pausa(fija, adicional, actual, PAUSA_SINCRONIZACION)
 }
 
 fn anterior_de(actual: &Path) -> PathBuf {
@@ -196,6 +339,108 @@ mod pruebas {
         assert_eq!(std::fs::read(&actual).unwrap(), b"MZversion vieja");
         assert!(anterior(&actual).is_none());
         assert!(volver(&actual).is_err());
+        let _ = std::fs::remove_dir_all(&base);
+    }
+
+    #[test]
+    fn la_actualizacion_de_la_carpeta_adicional_se_copia_y_aplica() {
+        let base = carpeta_temporal("adicional-aplica");
+        let (programa, fija, adicional) = (base.join("programa"), base.join("fija"), base.join("adicional"));
+        std::fs::create_dir_all(&programa).unwrap();
+        std::fs::create_dir_all(&fija).unwrap();
+        std::fs::create_dir_all(&adicional).unwrap();
+
+        let actual = programa.join(NOMBRE);
+        exe(&actual, "version vieja");
+
+        exe(&adicional.join(NOMBRE), "version nueva");
+        let h = huella(&adicional.join(NOMBRE)).unwrap();
+        std::fs::write(adicional.join("SHA256.txt"), format!("{h}  flow_rust.exe\ncommit def5678\n")).unwrap();
+
+        assert!(!fija.join(NOMBRE).exists());
+        let pendiente = buscar_con_adicional_pausa(&fija, Some(&adicional), &actual, std::time::Duration::ZERO)
+            .unwrap()
+            .expect("debe detectar la versión nueva de la carpeta adicional");
+
+        assert_eq!((pendiente.huella.as_str(), pendiente.commit.as_str()), (h.as_str(), "def5678"));
+        // Se copió a la fija antes de aplicar
+        assert_eq!(std::fs::read(fija.join(NOMBRE)).unwrap(), b"MZversion nueva");
+        assert!(fija.join("SHA256.txt").is_file());
+
+        // Aplicar desde la fija
+        let anterior = aplicar(&pendiente, &actual).unwrap();
+        assert_eq!(std::fs::read(&actual).unwrap(), b"MZversion nueva");
+        assert_eq!(std::fs::read(&anterior).unwrap(), b"MZversion vieja");
+        assert!(fija.join("aplicadas").is_dir());
+
+        // Una búsqueda posterior ve que el programa en uso ya tiene esa versión y no vuelve a ofrecerla ni a copiarla
+        assert_eq!(buscar_con_adicional_pausa(&fija, Some(&adicional), &actual, std::time::Duration::ZERO).unwrap(), None);
+
+        let _ = std::fs::remove_dir_all(&base);
+    }
+
+    #[test]
+    fn una_actualizacion_a_medio_sincronizar_no_se_aplica() {
+        let base = carpeta_temporal("adicional-mediosync");
+        let (programa, fija, adicional) = (base.join("programa"), base.join("fija"), base.join("adicional"));
+        std::fs::create_dir_all(&programa).unwrap();
+        std::fs::create_dir_all(&fija).unwrap();
+        std::fs::create_dir_all(&adicional).unwrap();
+
+        let actual = programa.join(NOMBRE);
+        exe(&actual, "version vieja");
+
+        exe(&adicional.join(NOMBRE), "version parcial");
+        let h = huella(&adicional.join(NOMBRE)).unwrap();
+        std::fs::write(adicional.join("SHA256.txt"), format!("{h}  flow_rust.exe\n")).unwrap();
+
+        // Simular que el tamaño cambia durante la verificación (entre dos lecturas)
+        let exe_adicional = adicional.join(NOMBRE);
+        let h_thread = std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(50));
+            let mut f = std::fs::OpenOptions::new().append(true).open(&exe_adicional).unwrap();
+            use std::io::Write;
+            let _ = f.write_all(b"mas datos que cambian tamano");
+        });
+
+        let res = buscar_con_adicional_pausa(&fija, Some(&adicional), &actual, std::time::Duration::from_millis(150));
+        h_thread.join().unwrap();
+
+        assert!(res.is_err());
+        assert_eq!(res.unwrap_err(), AVISO_SINCRONIZANDO);
+        assert!(!fija.join(NOMBRE).exists(), "no debe copiarse a la fija si está a medio sincronizar");
+        assert_eq!(std::fs::read(&actual).unwrap(), b"MZversion vieja");
+
+        let _ = std::fs::remove_dir_all(&base);
+    }
+
+    #[test]
+    fn sin_sha256_en_la_carpeta_adicional_no_se_aplica() {
+        let base = carpeta_temporal("adicional-sinsha");
+        let (programa, fija, adicional) = (base.join("programa"), base.join("fija"), base.join("adicional"));
+        std::fs::create_dir_all(&programa).unwrap();
+        std::fs::create_dir_all(&fija).unwrap();
+        std::fs::create_dir_all(&adicional).unwrap();
+
+        let actual = programa.join(NOMBRE);
+        exe(&actual, "version vieja");
+
+        exe(&adicional.join(NOMBRE), "version nueva");
+        // No se crea SHA256.txt en la carpeta adicional
+
+        let res = buscar_con_adicional_pausa(&fija, Some(&adicional), &actual, std::time::Duration::ZERO);
+        assert!(res.is_err());
+        assert_eq!(res.unwrap_err(), AVISO_SINCRONIZANDO);
+        assert!(!fija.join(NOMBRE).exists(), "no debe copiarse a la fija si falta SHA256.txt");
+        assert_eq!(std::fs::read(&actual).unwrap(), b"MZversion vieja");
+
+        // Caso con SHA256.txt que no coincide
+        std::fs::write(adicional.join("SHA256.txt"), format!("{}  flow_rust.exe\n", "1".repeat(64))).unwrap();
+        let res2 = buscar_con_adicional_pausa(&fija, Some(&adicional), &actual, std::time::Duration::ZERO);
+        assert!(res2.is_err());
+        assert_eq!(res2.unwrap_err(), AVISO_SINCRONIZANDO);
+        assert!(!fija.join(NOMBRE).exists());
+
         let _ = std::fs::remove_dir_all(&base);
     }
 }

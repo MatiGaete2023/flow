@@ -9,6 +9,7 @@ param(
     [switch]$SkipRegistry,
     [string]$Version = '1.0.0',
     [switch]$RequireSha256,
+    [switch]$SinHuella,
     [switch]$Silent
 )
 
@@ -101,7 +102,7 @@ if (-not (Test-MzHeader -Path $exeSource)) {
 
 $actualHash = Get-Sha256Hex -Path $exeSource
 $hasShaFile = Test-Path -LiteralPath $shaSource -PathType Leaf
-if ($RequireSha256 -and -not $hasShaFile) {
+if (-not $SinHuella -and -not $hasShaFile) {
     throw "Falta SHA256.txt junto a flow_rust.exe en: $sourceFull"
 }
 if ($hasShaFile) {
@@ -178,7 +179,11 @@ if (-not $SkipRegistry -and $UninstallRegistryKey) {
 
 if (-not $Silent) {
     Write-Host "Flow Rust instalado para el usuario actual en: $destFull"
-    Write-Host "SHA-256 verificado: $actualHash"
+    if ($hasShaFile) {
+        Write-Host "SHA-256 verificado: $actualHash"
+    } else {
+        Write-Host "SHA-256 no verificado (instalación sin SHA256.txt)"
+    }
     Write-Host "Carpeta de actualizaciones (E-I2) preservada en: $updatesDir"
     if ($startMenuShortcut) {
         Write-Host "Acceso directo en menu Inicio: $startMenuShortcut"

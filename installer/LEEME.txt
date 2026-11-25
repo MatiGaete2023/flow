@@ -1,0 +1,39 @@
+Flow Rust - Instalación y Actualizaciones
+========================================
+
+Instalación desde OneDrive (o carpeta de red/nube)
+--------------------------------------------------
+Por estabilidad de Windows y sincronización de OneDrive:
+1. Copia la carpeta completa del instalador (o los archivos flow_rust.exe, SHA256.txt,
+   Instalar_Flow.cmd, Instalar_Flow.ps1 y Desinstalar_Flow.ps1) a una carpeta LOCAL
+   en tu equipo (por ejemplo C:\Temp\FlowInstalador o en tu Escritorio).
+2. Haz doble clic en "Instalar_Flow.cmd".
+3. La instalación se realiza por usuario en %LOCALAPPDATA%\Programs\FlowRust sin requerir
+   permisos de administrador, verifica la huella SHA-256 y crea el acceso directo en el
+   menú Inicio.
+
+Actualizaciones sin reinstalar
+------------------------------
+Flow se actualiza en el lugar sin reinstalar el programa ni la extensión de Chrome:
+1. Opción automática (OneDrive / carpeta adicional):
+   - En Flow, abre Ajustes -> Actualizaciones.
+   - En "Carpeta adicional (por ejemplo, OneDrive)", pulsa "Elegir…" y selecciona la
+     carpeta de OneDrive donde dejas las nuevas versiones.
+   - Cuando dejes allí un flow_rust.exe nuevo junto con su SHA256.txt, Flow lo detectará
+     automáticamente (asegurando que la sincronización haya terminado), lo copiará a su
+     carpeta fija local y te ofrecerá actualizar con un botón.
+2. Opción manual:
+   - Deja flow_rust.exe y su SHA256.txt directamente en %LOCALAPPDATA%\FlowRust\actualizaciones.
+   - Flow lo detectará y se actualizará con el botón "Actualizar ahora".
+
+Reglas de uso y sincronización (¡MUY IMPORTANTE!)
+-------------------------------------------------
+Por decisión del usuario y estrictas reglas de seguridad y privacidad:
+- Por OneDrive SOLO viajan los ejecutables del instalador: flow_rust.exe y SHA256.txt.
+- NUNCA sincronices ni coloques en OneDrive:
+  * Lotes de causas
+  * Paquetes CSMP (CSMP_CAPTURE)
+  * Libros Excel con datos de causas o personas
+  * Respaldos de bitácoras ni información judicial de RUS/SITFA
+- Toda la información de trabajo, datos de causas y sesiones reside exclusivamente
+  en tu equipo local (%APPDATA%\FlowRust y %LOCALAPPDATA%\FlowRust).

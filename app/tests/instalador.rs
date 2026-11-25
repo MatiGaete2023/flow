@@ -46,6 +46,7 @@ fn contrato_instalador_por_usuario_y_actualizaciones() {
         "Desinstalar_Flow.ps1",
         "Uninstall",
         "flow_rust.exe",
+        "SinHuella",
     ];
     for c in instalar_checks {
         assert!(instalar.contains(c), "Instalar_Flow.ps1 debe contener `{c}`");
@@ -54,6 +55,10 @@ fn contrato_instalador_por_usuario_y_actualizaciones() {
         !instalar.contains("-Verb RunAs") && !instalar.contains("#Requires -RunAsAdministrator"),
         "Instalar_Flow.ps1 no debe pedir elevación"
     );
+
+    let leeme = std::fs::read_to_string(raiz.join("installer/LEEME.txt"))
+        .expect("debe existir installer/LEEME.txt");
+    assert!(leeme.contains("OneDrive"));
 
     assert!(desinstalar.contains("Flow.lnk"));
     assert!(desinstalar.contains("flowDataDir"));
@@ -225,6 +230,132 @@ fn instalador_instala_reinstala_y_desinstala_preservando_actualizaciones() {
     assert_eq!(std::fs::read(&pendiente).unwrap(), b"MZpendiente");
     assert_eq!(std::fs::read(aplicadas.join("v0.txt")).unwrap(), b"v0");
     assert_eq!(std::fs::read(&ext).unwrap(), b"{\"version\":\"1.0\"}");
+
+    let _ = std::fs::remove_dir_all(&base);
+}
+
+#[cfg(windows)]
+#[test]
+fn instalador_sin_sha256_falla_por_omision() {
+    let raiz = raiz_repo();
+    let script_instalar = raiz.join("installer/Instalar_Flow.ps1");
+    let base = std::env::temp_dir().join(format!(
+        "flow-rust-sinsha-test-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+    let origen = base.join("paquete");
+    let destino = base.join("programa").join("FlowRust");
+    let datos = base.join("local").join("FlowRust");
+    let menu = base.join("menu");
+    std::fs::create_dir_all(&origen).unwrap();
+
+    let contenido_exe = b"MZflow-rust-sintetico-sinsha";
+    let exe_origen = origen.join("flow_rust.exe");
+    std::fs::write(&exe_origen, contenido_exe).unwrap();
+    // Sin crear SHA256.txt
+
+    // 1. Por omisión (sin -RequireSha256 y sin -SinHuella) DEBE fallar porque exige SHA256.txt
+    let salida_omision = std::process::Command::new("powershell.exe")
+        .args([
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            script_instalar.to_str().unwrap(),
+            "-SourceDir",
+            origen.to_str().unwrap(),
+            "-Destination",
+            destino.to_str().unwrap(),
+            "-DataBaseDir",
+            datos.to_str().unwrap(),
+            "-StartMenuDir",
+            menu.to_str().unwrap(),
+            "-SkipRegistry",
+            "-Silent",
+        ])
+        .output()
+        .expect("ejecutar powershell.exe");
+    assert!(!salida_omision.status.success(), "debe fallar por omisión si falta SHA256.txt");
+    let err_omision = String::from_utf8_lossy(&salida_omision.stderr);
+    assert!(err_omision.contains("Falta SHA256.txt"), "debe indicar falta de SHA256.txt: {err_omision}");
+    assert!(!destino.join("flow_rust.exe").exists());
+
+    // 2. Con -SinHuella se permite la instalación y el mensaje advierte la falta de verificación
+    let salida_sin_huella = std::process::Command::new("powershell.exe")
+        .args([
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            script_instalar.to_str().unwrap(),
+            "-SourceDir",
+            origen.to_str().unwrap(),
+            "-Destination",
+            destino.to_str().unwrap(),
+            "-DataBaseDir",
+            datos.to_str().unwrap(),
+            "-StartMenuDir",
+            menu.to_str().unwrap(),
+            "-SkipRegistry",
+            "-SinHuella",
+        ])
+        .output()
+        .expect("ejecutar powershell.exe");
+    assert!(salida_sin_huella.status.success(), "con -SinHuella debe permitir instalar: {}", String::from_utf8_lossy(&salida_sin_huella.stderr));
+    let out_sin_huella = String::from_utf8_lossy(&salida_sin_huella.stdout);
+    assert!(
+        out_sin_huella.contains("SHA-256 no verificado (instalación sin SHA256.txt)"),
+        "debe avisar que no se verificó huella: {out_sin_huella}"
+    );
+    assert_eq!(std::fs::read(destino.join("flow_rust.exe")).unwrap(), contenido_exe);
+
+    let _ = std::fs::remove_dir_all(&base);
+}
+
+#[cfg(windows)]
+#[test]
+fn desinstalador_rechaza_carpeta_flowrust_sin_ejecutable() {
+    let raiz = raiz_repo();
+    let script_desinstalar = raiz.join("installer/Desinstalar_Flow.ps1");
+    let base = std::env::temp_dir().join(format!(
+        "flow-rust-uninst-reject-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+    // Carpeta con nombre «FlowRust» pero sin flow_rust.exe ni Desinstalar_Flow.ps1
+    let falsa_carpeta = base.join("otra_cosa").join("FlowRust");
+    std::fs::create_dir_all(&falsa_carpeta).unwrap();
+    std::fs::write(falsa_carpeta.join("archivo_ajeno.txt"), b"datos ajenos").unwrap();
+
+    let salida = std::process::Command::new("powershell.exe")
+        .args([
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            script_desinstalar.to_str().unwrap(),
+            "-Destination",
+            falsa_carpeta.to_str().unwrap(),
+            "-SkipRegistry",
+            "-Silent",
+        ])
+        .output()
+        .expect("ejecutar desinstalador");
+
+    assert!(!salida.status.success(), "debe rechazar una carpeta sin flow_rust.exe ni Desinstalar_Flow.ps1");
+    let err = String::from_utf8_lossy(&salida.stderr);
+    assert!(
+        err.contains("no corresponde a una instalacion de Flow Rust"),
+        "error inesperado: {err}"
+    );
+    assert!(falsa_carpeta.join("archivo_ajeno.txt").exists(), "no debe borrar la carpeta rechazada");
 
     let _ = std::fs::remove_dir_all(&base);
 }

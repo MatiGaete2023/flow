@@ -29,8 +29,7 @@ if ($destFull.Length -lt 10) {
 
 if (Test-Path -LiteralPath $destFull) {
     $hasProgram = (Test-Path -LiteralPath (Join-Path $destFull 'flow_rust.exe')) -or
-                  (Test-Path -LiteralPath (Join-Path $destFull 'Desinstalar_Flow.ps1')) -or
-                  ([IO.Path]::GetFileName($destFull) -ieq 'FlowRust')
+                  (Test-Path -LiteralPath (Join-Path $destFull 'Desinstalar_Flow.ps1'))
     if (-not $hasProgram) {
         throw "La carpeta indicada no corresponde a una instalacion de Flow Rust: $destFull"
     }

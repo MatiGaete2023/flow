@@ -221,6 +221,8 @@ pub struct Config {
     /// Versión anterior de cada plantilla editada, para «Restaurar» (`template_backups`).
     pub plantillas_anteriores: BTreeMap<String, PlantillaCorreo>,
     pub carpeta_productos: String,
+    /// Carpeta adicional de actualizaciones (por ejemplo, en OneDrive institucional); vacía: solo la fija.
+    pub carpeta_actualizaciones_adicional: String,
     pub tema_oscuro: bool,
     pub periodo: String,
     /// true: guardar en Borradores de Outlook; false: archivos .eml.
@@ -251,6 +253,7 @@ impl Default for Config {
             aliases: BTreeMap::new(),
             plantillas_anteriores: BTreeMap::new(),
             carpeta_productos: String::new(),
+            carpeta_actualizaciones_adicional: String::new(),
             tema_oscuro: false,
             periodo: "el período revisado".into(),
             destino_outlook: false,

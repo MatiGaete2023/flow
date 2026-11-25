@@ -241,7 +241,12 @@ impl App {
         self.actualizacion_error = None;
         self.actualizacion = None;
         let Ok(actual) = std::env::current_exe() else { return };
-        match crate::actualizacion::buscar(&crate::actualizacion::carpeta(), &actual) {
+        let adicional = if !self.cfg.carpeta_actualizaciones_adicional.trim().is_empty() {
+            Some(std::path::Path::new(self.cfg.carpeta_actualizaciones_adicional.trim()))
+        } else {
+            None
+        };
+        match crate::actualizacion::buscar_con_adicional(&crate::actualizacion::carpeta(), adicional, &actual) {
             Ok(p) => {
                 self.actualizacion_oculta = false;
                 self.actualizacion = p;
@@ -3193,6 +3198,31 @@ impl App {
                         "Para actualizar sin reinstalar, deja el flow_rust.exe nuevo (y su SHA256.txt) en {}. Flow lo detecta y se actualiza con un botón; la extensión de Chrome solo cambia si cambia su código.",
                         carpeta_act.display()
                     )).color(p.muted));
+                    ui.add_space(6.0);
+                    ui.label(RichText::new("Carpeta adicional (por ejemplo, OneDrive)").color(p.text));
+                    ui.horizontal(|ui| {
+                        let texto_carpeta = if self.cfg.carpeta_actualizaciones_adicional.trim().is_empty() {
+                            "(ninguna configurada)".to_string()
+                        } else {
+                            self.cfg.carpeta_actualizaciones_adicional.trim().to_string()
+                        };
+                        ui.label(RichText::new(texto_carpeta).color(p.muted));
+                        if ui.button("Elegir…").on_hover_text("Elige una carpeta donde dejar flow_rust.exe y SHA256.txt, por ejemplo en OneDrive.").clicked() {
+                            if let Some(d) = rfd::FileDialog::new().set_title("Carpeta adicional de actualizaciones (por ejemplo, OneDrive)").pick_folder() {
+                                self.cfg.carpeta_actualizaciones_adicional = d.display().to_string();
+                                self.guardar_cfg();
+                                self.revisar_actualizacion();
+                            }
+                        }
+                        if !self.cfg.carpeta_actualizaciones_adicional.trim().is_empty()
+                            && ui.button("Quitar").on_hover_text("Quita la carpeta adicional de actualizaciones.").clicked()
+                        {
+                            self.cfg.carpeta_actualizaciones_adicional.clear();
+                            self.guardar_cfg();
+                            self.revisar_actualizacion();
+                        }
+                    });
+                    ui.add_space(4.0);
                     if ui.button("Mostrar la huella del programa en uso").on_hover_text("Lee el ejecutable una vez para calcular su SHA-256; sirve para comparar con SHA256.txt de la entrega.").clicked() {
                         self.huella_programa = actual_exe.as_deref().and_then(|e| crate::actualizacion::huella(e).ok());
                     }
@@ -3229,6 +3259,14 @@ impl App {
                             }
                         }
                     });
+                    if let Some(err) = &self.actualizacion_error {
+                        ui.label(RichText::new(format!("Estado de la última búsqueda: {err}")).color(p.red).size(12.5));
+                    } else if let Some(p_act) = &self.actualizacion {
+                        let commit_txt = if p_act.commit.is_empty() { String::new() } else { format!(" (commit {})", &p_act.commit[..p_act.commit.len().min(7)]) };
+                        ui.label(RichText::new(format!("Estado de la última búsqueda: versión nueva lista para aplicar{commit_txt}.")).color(p.green).size(12.5));
+                    } else {
+                        ui.label(RichText::new("Estado de la última búsqueda: al día (no hay actualizaciones pendientes).").color(p.muted).size(12.5));
+                    }
                     ui.add_space(10.0);
                     theme::seccion(ui, p, "Ayuda y autodiagnóstico");
                     for (nombre, texto) in crate::ayuda::SECCIONES {
