@@ -41,7 +41,7 @@ CLASIFICACION = {
     'estadisticas.rs': (2, 'usuario/perfil', 'resumen de constancias en la carpeta de productos con nombre nuevo; metricas.json solo con la opción activada, vía config::atomic_write'),
     'manual.rs': (3, 'usuario', 'Word manual en la carpeta de productos con un nombre nuevo (no reemplaza; archivo temporal y renombrado); los favoritos y lo escrito van por config::atomic_write'),
     'outlook.rs': (5, 'temporal', 'borrador.json y la nómina en una carpeta temporal propia que se borra al terminar; Outlook solo recibe Save()'),
-    'productos.rs': (6, 'usuario/temporal', 'EML/XLSX/resoluciones en la carpeta de productos (nombres nuevos, carpeta Resoluciones_* nueva); borrador Outlook vía temp_dir() que se limpia'),
+    'productos.rs': (6, 'usuario/temporal', 'EML/XLSX/resoluciones en la carpeta de productos (nombres nuevos, carpeta Resoluciones_* nueva; Word por tribunal conserva matriz, índice y saltos); borrador Outlook vía temp_dir() que se limpia'),
     'revision_ui.rs': (5, 'usuario', 'carpeta nueva de la revisión de bitácoras (create_dir falla si existe); ante error borra solo lo propio'),
 }
 
