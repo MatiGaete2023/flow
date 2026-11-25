@@ -12,7 +12,8 @@ Determinista: reloj fijo que avanza un segundo por llamada, JSON con LF, rutas r
 `proceso.json`), historial sin hora ni zona, entrada sin ZIP y la carpeta temporal tomada con `Path(tmp).resolve()`
 (en Windows llega como `RUNNER~1`). Dos corridas y una carpeta de trabajo con espacios dan bytes idénticos.
 
-Uso (desde la raíz): python app/qa/generar_flujo_paquete.py [salida.json]
+Incluye por_hoja (E-Q10): un paquete por pestaña, con la hoja que falla, una sola hoja y la cancelación en la
+segunda con su retomar. Uso (desde la raíz): python app/qa/generar_flujo_paquete.py [salida.json]
 """
 
 import base64
