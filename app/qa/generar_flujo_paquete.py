@@ -353,7 +353,11 @@ def rutas_normalizadas(valor):
     if isinstance(valor, list):
         return [rutas_normalizadas(v) for v in valor]
     if isinstance(valor, dict):
-        return {k: rutas_normalizadas(v) for k, v in valor.items()}
+        salida = {k: rutas_normalizadas(v) for k, v in valor.items()}
+        # notar de Python usa stimezone(): la hora del historial cambia con la zona del sistema. Se fija aquí.
+        if isinstance(salida.get('historial'), list):
+            salida['historial'] = [normalizar(h) for h in salida['historial']]
+        return salida
     return valor
 
 
