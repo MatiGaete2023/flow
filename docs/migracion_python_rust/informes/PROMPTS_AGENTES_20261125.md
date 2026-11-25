@@ -88,7 +88,7 @@ Eres el Agente C. Trabajas en MatiGaete2023/flow. Crea la rama estudio/agente-c-
 PASO 0 · CHECKOUT (antes de leer o escribir nada).
 1. Busca un clon válido: una carpeta donde `git remote get-url origin` termine en MatiGaete2023/flow(.git). Una carpeta con otro origen, en `master` o sin `.git` NO sirve, aunque se llame «flow».
 2. Si no existe: git clone https://github.com/MatiGaete2023/flow.git flow-rust-c (en una carpeta nueva y vacía, fuera de carpetas de archivos pegados).
-3. En el clon: git fetch origin estudio/paridad-python-rust-20261119 y luego git checkout -b estudio/agente-c-conjuntos-20261125 origin/estudio/paridad-python-rust-20261119 (si la rama ya existe en origin, git checkout -B estudio/agente-c-conjuntos-20261125 origin/estudio/agente-c-conjuntos-20261125). Comprueba git merge-base --is-ancestor 622a56b HEAD (debe terminar en 0).
+3. En el clon: git fetch origin estudio/paridad-python-rust-20261119 y luego git checkout -b estudio/agente-c-conjuntos-20261125 origin/estudio/paridad-python-rust-20261119 (si la rama ya existe en origin, git checkout -B estudio/agente-c-conjuntos-20261125 origin/estudio/agente-c-conjuntos-20261125). Comprueba git merge-base --is-ancestor a983449 HEAD (debe terminar en 0).
 4. Si el clon o el fetch fallan, responde BLOQUEADO con el error literal y esta línea para el usuario: «Abre el agente en la carpeta de tu clon local de MatiGaete2023/flow, o conecta el repositorio al entorno del agente, y vuelve a pegar este prompt».
 5. Informa en tu primera respuesta la ruta del clon, la rama y el commit de HEAD.
 
@@ -248,9 +248,10 @@ EVALUACIÓN DE TU ENTREGA ANTERIOR (E-P1, cerrada como HECHO por el coordinador 
   1. Trabajo duplicado: 4966b6d reimplementó E-P1 desde una base vieja cuando 9aac149 ya estaba publicado. Antes de escribir código, haz git fetch y revisa git log origin/estudio/paridad-python-rust-20261119 -- <tus archivos>. Si el encargo ya tiene commits publicados, continúa sobre ellos; no lo empieces de nuevo.
   2. Conteos inconsistentes: el resumen dice 81 + 101 y la tabla 76 + 101; el coordinador obtuvo 82 + 100. Copia los conteos de la línea literal «test result» de la corrida que citas, con su commit.
   3. Un run lanzado por el coordinador (workflow_dispatch) no es evidencia tuya: cítalo como «revalidación del coordinador».
-  4. E-I1: hay un commit af0224d («E-I1: instalador…») con la identidad «Matias Gaete», hecho antes de la decisión de firma y alojamiento y con cambios en el workflow. No lo toques, no lo amplíes ni lo reviertas: lo revisa el coordinador. En tu primera respuesta di si ese commit es tuyo (sí o no).
+  4. E-I1 (instalador) quedó ENTREGADO por otra sesión de A (af0224d, 65077ad, informe ee84ffb; CI verde en 45668678717) sin prompt del coordinador y con cambios al workflow. No lo toques, no lo amplíes ni lo reviertas: lo revisa el coordinador y la firma y el alojamiento los decide el usuario. Si eres esa misma sesión, dilo en tu primera respuesta.
+  5. No edites el workflow salvo que tu prompt lo autorice por escrito (en E-I1 se agregaron unas 27 líneas sin autorización).
 
-PASO 0 · CHECKOUT. Usa un solo clon con `git remote get-url origin` = MatiGaete2023/flow. git fetch origin estudio/paridad-python-rust-20261119; git checkout estudio/paridad-python-rust-20261119; git merge --ff-only origin/estudio/paridad-python-rust-20261119; comprueba git merge-base --is-ancestor 8dfc185 HEAD (debe terminar en 0). Si el clon tiene cambios locales que no son tuyos, detente. Si falla el fetch: BLOQUEADO con el error literal. Primera respuesta: ruta del clon, commit de HEAD y la respuesta del punto 4.
+PASO 0 · CHECKOUT. Usa un solo clon con `git remote get-url origin` = MatiGaete2023/flow. git fetch origin estudio/paridad-python-rust-20261119; git checkout estudio/paridad-python-rust-20261119; git merge --ff-only origin/estudio/paridad-python-rust-20261119; comprueba git merge-base --is-ancestor a983449 HEAD (debe terminar en 0). Si el clon tiene cambios locales que no son tuyos, detente. Si falla el fetch: BLOQUEADO con el error literal. Primera respuesta: ruta del clon, commit de HEAD y, si corresponde, la respuesta del punto 4.
 
 Lee solo AGENTS.md, docs/migracion_python_rust/ESTADO.md (F14), PLAN.md (E-P2 y E-I1) y CONTINUACION.md.
 
