@@ -7,6 +7,7 @@ use std::time::Duration;
 
 mod evidencia;
 pub mod bitacoras;
+pub mod archivo_local;
 pub mod extension;
 pub mod flujo_paquete;
 pub mod historia;
