@@ -1,0 +1,509 @@
+{
+  "version": 1,
+  "casos": [
+    {
+      "caso": "espera",
+      "modo": "Espera",
+      "tribunales": [
+        "113"
+      ],
+      "modalidades": [
+        "2"
+      ],
+      "dias": 60,
+      "fecha": "2026-10-02",
+      "error": null,
+      "llamadas": [
+        "seguimiento",
+        "calendario_informes",
+        "calendario_informes"
+      ],
+      "estado": {
+        "estado": "PREPARADO_SIN_CONSULTA_FIRMAS",
+        "fases": [
+          {
+            "clave": "principal",
+            "estado": "VALIDADA",
+            "consultas": 1
+          },
+          {
+            "clave": "informes-2026-10",
+            "estado": "VALIDADA",
+            "consultas": 1
+          },
+          {
+            "clave": "informes-2026-11",
+            "estado": "VALIDADA",
+            "consultas": 1
+          }
+        ]
+      },
+      "hojas": {
+        "ESPERA": [
+          [
+            "RIT",
+            "NOMBRE",
+            "RUT",
+            "NOMBRE CENTRO",
+            "TRIBUNAL",
+            "T ESPERA"
+          ],
+          [
+            "X-1-2026",
+            "Persona ficticia",
+            "11111111-1",
+            "PRM FICTICIO",
+            "Jgdo. L. y G. de Laja",
+            50
+          ]
+        ],
+        "INFORMES": [
+          [
+            "RIT",
+            "NOMBRE",
+            "RUT",
+            "NOMBRE CENTRO",
+            "TRIBUNAL",
+            "F. VENCIMIENTO"
+          ],
+          [
+            "X-1-2026",
+            "Persona ficticia",
+            "11111111-1",
+            "PRM FICTICIO",
+            "Jgdo. L. y G. de Laja",
+            "10/10/2026"
+          ],
+          [
+            "X-1-2026",
+            "Persona ficticia",
+            "11111111-1",
+            "PRM FICTICIO",
+            "Jgdo. L. y G. de Laja",
+            "10/11/2026"
+          ]
+        ],
+        "SITFA_COBERTURA": [
+          [
+            "tribunal_codigo",
+            "desde",
+            "hasta",
+            "estado",
+            "criterio_temporal",
+            "sin_coincidencias"
+          ],
+          [
+            "113",
+            "2026-08-04",
+            "2026-10-02",
+            "NO_CONSULTADA",
+            "consulta_firmas_retirada_del_flujo",
+            "Resoluciones firmadas no consultadas; no acredita ausencia de movimientos."
+          ]
+        ]
+      }
+    },
+    {
+      "caso": "cumplimiento",
+      "modo": "Cumplimiento",
+      "tribunales": [
+        "113"
+      ],
+      "modalidades": [
+        "2"
+      ],
+      "dias": 60,
+      "fecha": "2026-10-02",
+      "error": null,
+      "llamadas": [
+        "seguimiento",
+        "calendario_informes",
+        "calendario_informes"
+      ],
+      "estado": {
+        "estado": "PREPARADO_SIN_CONSULTA_FIRMAS",
+        "fases": [
+          {
+            "clave": "principal",
+            "estado": "VALIDADA",
+            "consultas": 1
+          },
+          {
+            "clave": "informes-2026-10",
+            "estado": "VALIDADA",
+            "consultas": 1
+          },
+          {
+            "clave": "informes-2026-11",
+            "estado": "VALIDADA",
+            "consultas": 1
+          }
+        ]
+      },
+      "hojas": {
+        "CUMPLIMIENTO": [
+          [
+            "RIT",
+            "NOMBRE",
+            "RUT",
+            "NOMBRE CENTRO",
+            "TRIBUNAL",
+            "DIAS DE CUMPLIMIENTO"
+          ],
+          [
+            "X-1-2026",
+            "Persona ficticia",
+            "11111111-1",
+            "PRM FICTICIO",
+            "Jgdo. L. y G. de Laja",
+            50
+          ]
+        ],
+        "INFORMES": [
+          [
+            "RIT",
+            "NOMBRE",
+            "RUT",
+            "NOMBRE CENTRO",
+            "TRIBUNAL",
+            "F. VENCIMIENTO"
+          ],
+          [
+            "X-1-2026",
+            "Persona ficticia",
+            "11111111-1",
+            "PRM FICTICIO",
+            "Jgdo. L. y G. de Laja",
+            "10/10/2026"
+          ],
+          [
+            "X-1-2026",
+            "Persona ficticia",
+            "11111111-1",
+            "PRM FICTICIO",
+            "Jgdo. L. y G. de Laja",
+            "10/11/2026"
+          ]
+        ],
+        "SITFA_COBERTURA": [
+          [
+            "tribunal_codigo",
+            "desde",
+            "hasta",
+            "estado",
+            "criterio_temporal",
+            "sin_coincidencias"
+          ],
+          [
+            "113",
+            "2026-08-04",
+            "2026-10-02",
+            "NO_CONSULTADA",
+            "consulta_firmas_retirada_del_flujo",
+            "Resoluciones firmadas no consultadas; no acredita ausencia de movimientos."
+          ]
+        ]
+      }
+    },
+    {
+      "caso": "modo_invalido",
+      "modo": "Carga",
+      "tribunales": [
+        "113"
+      ],
+      "modalidades": [
+        "2"
+      ],
+      "dias": 60,
+      "fecha": "2026-10-02",
+      "error": "El flujo conjunto admite Espera o Cumplimiento.",
+      "llamadas": [],
+      "estado": null,
+      "hojas": null
+    },
+    {
+      "caso": "sin_tribunales",
+      "modo": "Cumplimiento",
+      "tribunales": [],
+      "modalidades": [
+        "2"
+      ],
+      "dias": 60,
+      "fecha": "2026-10-02",
+      "error": "Selecciona tribunales y modalidades.",
+      "llamadas": [],
+      "estado": null,
+      "hojas": null
+    },
+    {
+      "caso": "dias_invalidos",
+      "modo": "Cumplimiento",
+      "tribunales": [
+        "113"
+      ],
+      "modalidades": [
+        "2"
+      ],
+      "dias": 59,
+      "fecha": "2026-10-02",
+      "error": "Metadato legado de firmas fuera de rango (60–730).",
+      "llamadas": [],
+      "estado": null,
+      "hojas": null
+    },
+    {
+      "caso": "retomar_principal",
+      "modo": "Cumplimiento",
+      "tribunales": [
+        "113",
+        "119"
+      ],
+      "modalidades": [
+        "2"
+      ],
+      "dias": 60,
+      "fecha": "2026-10-02",
+      "error": null,
+      "llamadas": [
+        "seguimiento",
+        "seguimiento",
+        "calendario_informes",
+        "calendario_informes"
+      ],
+      "estado": {
+        "estado": "PREPARADO_SIN_CONSULTA_FIRMAS",
+        "fases": [
+          {
+            "clave": "principal",
+            "estado": "VALIDADA",
+            "consultas": 2
+          },
+          {
+            "clave": "informes-2026-10",
+            "estado": "VALIDADA",
+            "consultas": 2
+          },
+          {
+            "clave": "informes-2026-11",
+            "estado": "VALIDADA",
+            "consultas": 2
+          }
+        ]
+      },
+      "hojas": {
+        "CUMPLIMIENTO": [
+          [
+            "RIT",
+            "NOMBRE",
+            "RUT",
+            "NOMBRE CENTRO",
+            "TRIBUNAL",
+            "DIAS DE CUMPLIMIENTO"
+          ],
+          [
+            "X-1-2026",
+            "Persona ficticia",
+            "11111111-1",
+            "PRM FICTICIO",
+            "Jgdo. L. y G. de Laja",
+            50
+          ],
+          [
+            "X-1-2026",
+            "Persona ficticia",
+            "11111111-1",
+            "PRM FICTICIO",
+            "Jgdo. L. y G. de Mulchén",
+            50
+          ]
+        ],
+        "INFORMES": [
+          [
+            "RIT",
+            "NOMBRE",
+            "RUT",
+            "NOMBRE CENTRO",
+            "TRIBUNAL",
+            "F. VENCIMIENTO"
+          ],
+          [
+            "X-1-2026",
+            "Persona ficticia",
+            "11111111-1",
+            "PRM FICTICIO",
+            "Jgdo. L. y G. de Laja",
+            "10/10/2026"
+          ],
+          [
+            "X-1-2026",
+            "Persona ficticia",
+            "11111111-1",
+            "PRM FICTICIO",
+            "Jgdo. L. y G. de Mulchén",
+            "10/10/2026"
+          ],
+          [
+            "X-1-2026",
+            "Persona ficticia",
+            "11111111-1",
+            "PRM FICTICIO",
+            "Jgdo. L. y G. de Laja",
+            "10/11/2026"
+          ],
+          [
+            "X-1-2026",
+            "Persona ficticia",
+            "11111111-1",
+            "PRM FICTICIO",
+            "Jgdo. L. y G. de Mulchén",
+            "10/11/2026"
+          ]
+        ],
+        "SITFA_COBERTURA": [
+          [
+            "tribunal_codigo",
+            "desde",
+            "hasta",
+            "estado",
+            "criterio_temporal",
+            "sin_coincidencias"
+          ],
+          [
+            "113",
+            "2026-08-04",
+            "2026-10-02",
+            "NO_CONSULTADA",
+            "consulta_firmas_retirada_del_flujo",
+            "Resoluciones firmadas no consultadas; no acredita ausencia de movimientos."
+          ],
+          [
+            "119",
+            "2026-08-04",
+            "2026-10-02",
+            "NO_CONSULTADA",
+            "consulta_firmas_retirada_del_flujo",
+            "Resoluciones firmadas no consultadas; no acredita ausencia de movimientos."
+          ]
+        ]
+      }
+    },
+    {
+      "caso": "retomar_informes",
+      "modo": "Cumplimiento",
+      "tribunales": [
+        "113"
+      ],
+      "modalidades": [
+        "2"
+      ],
+      "dias": 60,
+      "fecha": "2026-10-02",
+      "error": null,
+      "llamadas": [
+        "seguimiento",
+        "calendario_informes",
+        "calendario_informes"
+      ],
+      "estado": {
+        "estado": "PREPARADO_SIN_CONSULTA_FIRMAS",
+        "fases": [
+          {
+            "clave": "principal",
+            "estado": "VALIDADA",
+            "consultas": 1
+          },
+          {
+            "clave": "informes-2026-10",
+            "estado": "VALIDADA",
+            "consultas": 1
+          },
+          {
+            "clave": "informes-2026-11",
+            "estado": "VALIDADA",
+            "consultas": 1
+          }
+        ]
+      },
+      "hojas": {
+        "CUMPLIMIENTO": [
+          [
+            "RIT",
+            "NOMBRE",
+            "RUT",
+            "NOMBRE CENTRO",
+            "TRIBUNAL",
+            "DIAS DE CUMPLIMIENTO"
+          ],
+          [
+            "X-1-2026",
+            "Persona ficticia",
+            "11111111-1",
+            "PRM FICTICIO",
+            "Jgdo. L. y G. de Laja",
+            50
+          ]
+        ],
+        "INFORMES": [
+          [
+            "RIT",
+            "NOMBRE",
+            "RUT",
+            "NOMBRE CENTRO",
+            "TRIBUNAL",
+            "F. VENCIMIENTO"
+          ],
+          [
+            "X-1-2026",
+            "Persona ficticia",
+            "11111111-1",
+            "PRM FICTICIO",
+            "Jgdo. L. y G. de Laja",
+            "10/10/2026"
+          ],
+          [
+            "X-1-2026",
+            "Persona ficticia",
+            "11111111-1",
+            "PRM FICTICIO",
+            "Jgdo. L. y G. de Laja",
+            "10/11/2026"
+          ]
+        ],
+        "SITFA_COBERTURA": [
+          [
+            "tribunal_codigo",
+            "desde",
+            "hasta",
+            "estado",
+            "criterio_temporal",
+            "sin_coincidencias"
+          ],
+          [
+            "113",
+            "2026-08-04",
+            "2026-10-02",
+            "NO_CONSULTADA",
+            "consulta_firmas_retirada_del_flujo",
+            "Resoluciones firmadas no consultadas; no acredita ausencia de movimientos."
+          ]
+        ]
+      }
+    },
+    {
+      "caso": "control_danado",
+      "modo": "Cumplimiento",
+      "tribunales": [
+        "113"
+      ],
+      "modalidades": [
+        "2"
+      ],
+      "dias": 60,
+      "fecha": "2026-10-02",
+      "error": "JSON inválido",
+      "llamadas": [],
+      "estado": null,
+      "hojas": null
+    }
+  ]
+}
