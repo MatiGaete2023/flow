@@ -533,6 +533,13 @@ def normalizar(valor, reemplazos):
     return valor
 
 
+def reemplazos_de_ruta(base, editado):
+    """La carpeta temporal como `<BASE>`: en Windows el perfil puede venir como nombre corto (`RUNNER~1`) y
+    `Path.resolve()` (que usa `regenerar`) lo devuelve expandido; se reemplazan las dos formas."""
+    formas = {str(base), str(Path(base).resolve())}
+    return [(forma, '<BASE>') for forma in sorted(formas, key=len, reverse=True)] + [(editado, '<EDITADO>')]
+
+
 def b64(ruta):
     return base64.b64encode(ruta.read_bytes()).decode()
 
@@ -567,7 +574,7 @@ def regeneracion(escenario, con_bitacoras, con_plantilla):
         return {
             'entrada': entrada,
             'python': {
-                'productos': {'libros': normalizar(productos, [(str(base), '<BASE>'), (editado, '<EDITADO>')])},
+                'productos': {'libros': normalizar(productos, reemplazos_de_ruta(base, editado))},
                 'reporte': proyeccion_reporte(leer(salida / 'Reporte META4.json')),
             },
         }
