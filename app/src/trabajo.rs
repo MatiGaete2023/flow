@@ -35,6 +35,10 @@ pub struct Registro {
     pub gestiones_correo: BTreeMap<String, String>,
     /// Gestiones de correo que tenía la última copia de Excel guardada o importada (línea base de `NURUS_DECISIONES`).
     pub sync_correo: Option<String>,
+    /// Anulaciones de columnas de origen por fila (`overrides`): clave lógica (`w.cols`) → texto editado a mano.
+    pub anulaciones: BTreeMap<String, String>,
+    /// Anulaciones de origen que tenía la última copia de Excel guardada o importada (línea base de `NURUS_DECISIONES`).
+    pub sync_anulaciones: Option<String>,
     /// Identificador de la fila en la última copia de Excel que se guardó (`NURUS_ID_REGISTRO`).
     pub id_excel: String,
     /// Revisión que tenía la copia de Excel al guardarla o al importarla, y la local en ese momento (`sync_base`, `sync_local`).
@@ -82,13 +86,11 @@ impl Estado {
     }
 }
 
-/// Lo editable de una fila antes de una edición masiva (`record_edits.undo`).
+/// Lo editable de una fila antes de una edición masiva o una anulación de origen (`record_edits.undo`).
 #[derive(Clone, Debug)]
 pub struct InstantaneaFila {
     pub fila: usize,
-    pub editada: Option<String>,
-    pub revisada: bool,
-    pub res: String,
+    pub anterior: Registro,
 }
 
 /// Edición que se aplica a varias filas a la vez. La observación se edita fila por fila.
@@ -144,6 +146,10 @@ struct Decision {
     gestiones_correo: BTreeMap<String, String>,
     #[serde(default)]
     sync_correo: Option<String>,
+    #[serde(default)]
+    anulaciones: BTreeMap<String, String>,
+    #[serde(default)]
+    sync_anulaciones: Option<String>,
     #[serde(default)]
     id_excel: String,
     #[serde(default)]
@@ -284,10 +290,15 @@ impl Trabajo {
             }
             filas_idx.push(i);
         }
-        let filas: Vec<Fila> = filas_idx.iter().map(|i| Fila {
-            values: &sheet.rows[*i],
-            cols: columnas_por_fila.map_or(&self.cols, |cols| &cols[*i - self.header_row - 1]),
-        }).collect();
+        let filas_datos: Vec<(Vec<Cell>, Cols)> = filas_idx
+            .iter()
+            .map(|i| {
+                let cols_base = columnas_por_fila.map_or(&self.cols, |cols| &cols[*i - self.header_row - 1]);
+                let anul = viejos.get(&(i + 1)).map(|v| &v.anulaciones);
+                Self::aplicar_overrides_a_fila(cols_base, &self.cols, &sheet.rows[*i], anul)
+            })
+            .collect();
+        let filas: Vec<Fila> = filas_datos.iter().map(|(values, cols)| Fila { values, cols }).collect();
         let columna_id = self.paquete.as_ref().and_then(|_| {
             self.headers.iter().position(|h| h == "ID_REGISTRO_CAPTURA")
         });
@@ -329,19 +340,10 @@ impl Trabajo {
             } else {
                 None
             };
-            let mut r = motor::evaluar_con_captura(cfg, mode, f, corte, (&pre, n), fecha_hoja2, contexto);
-            if let Some(calendario) = calendario.filter(|_| matches!(mode, Mode::Cumplimiento | Mode::Informes)) {
-                let vencimiento_informes = (mode == Mode::Informes).then(|| f.date("vencimiento")).flatten();
-                r.avisos.extend(calendario.avisos_cotejo(corte, vencimiento_informes, fecha_calendario_91));
-            }
-            if let Some(cronologia) = contexto.and_then(|ctx| ctx.cronologia.as_ref()) {
-                cronologia.aplicar_reiteracion(&mut r, cfg);
-            }
-            let excluido = r.eventos.iter().any(|e| e == "COMUN.NO_SEGUIMIENTO");
-            let acciones = if excluido { vec![] } else { motor::acciones(&r.eventos, fecha_hoja2, corte) };
+            let (r, excluido, acciones) = Self::evaluar_fila(cfg, mode, f, corte, &pre, n, fecha_hoja2, contexto);
             let mut reg = Registro {
                 fila_excel: i + 1,
-                values: f.values.to_vec(),
+                values: sheet.rows[*i].to_vec(),
                 propuesta: r.observacion,
                 eventos: r.eventos,
                 acciones,
@@ -359,8 +361,14 @@ impl Trabajo {
                 reg.editada = v.editada.clone();
                 reg.revisada = v.revisada;
                 reg.seleccionada = v.seleccionada;
+                reg.campos = v.campos.clone();
                 reg.gestiones_correo = v.gestiones_correo.clone();
                 reg.sync_correo = v.sync_correo.clone();
+                reg.anulaciones = v.anulaciones.clone();
+                reg.sync_anulaciones = v.sync_anulaciones.clone();
+                reg.id_excel = v.id_excel.clone();
+                reg.sync_base = v.sync_base.clone();
+                reg.sync_local = v.sync_local.clone();
                 if !v.res.is_empty() {
                     reg.res = v.res.clone();
                 }
@@ -371,6 +379,52 @@ impl Trabajo {
         self.analisis_ms = t0.elapsed().as_millis();
     }
 
+    fn aplicar_overrides_a_fila(
+        cols_base: &Cols,
+        global_cols: &Cols,
+        row: &[Cell],
+        anulaciones: Option<&BTreeMap<String, String>>,
+    ) -> (Vec<Cell>, Cols) {
+        let mut vals = row.to_vec();
+        let mut cols = cols_base.clone();
+        if let Some(anul) = anulaciones {
+            for (k, v) in anul {
+                if let Some((&k_static, &idx)) = global_cols.get_key_value(k.as_str()) {
+                    cols.insert(k_static, idx);
+                    if idx >= vals.len() {
+                        vals.resize(idx + 1, Cell::Empty);
+                    }
+                    vals[idx] = Cell::Text(v.clone());
+                }
+            }
+        }
+        (vals, cols)
+    }
+
+    fn evaluar_fila(
+        cfg: &Config,
+        mode: Mode,
+        f: &Fila,
+        corte: NaiveDate,
+        pre: &motor::Prepaso,
+        n: usize,
+        fecha_hoja2: Option<NaiveDate>,
+        contexto: Option<&captura_trabajo::ContextoFila>,
+    ) -> (motor::Resultado, bool, Vec<&'static str>) {
+        let mut r = motor::evaluar_con_captura(cfg, mode, f, corte, (pre, n), fecha_hoja2, contexto);
+        let fecha_calendario_91 = contexto.and_then(|ctx| ctx.vencimiento_calendario_91);
+        if let Some(calendario) = contexto.and_then(|ctx| ctx.calendario.as_ref()).filter(|_| matches!(mode, Mode::Cumplimiento | Mode::Informes)) {
+            let vencimiento_informes = (mode == Mode::Informes).then(|| f.date("vencimiento")).flatten();
+            r.avisos.extend(calendario.avisos_cotejo(corte, vencimiento_informes, fecha_calendario_91));
+        }
+        if let Some(cronologia) = contexto.and_then(|ctx| ctx.cronologia.as_ref()) {
+            cronologia.aplicar_reiteracion(&mut r, cfg);
+        }
+        let excluido = r.eventos.iter().any(|e| e == "COMUN.NO_SEGUIMIENTO");
+        let acciones = if excluido { vec![] } else { motor::acciones(&r.eventos, fecha_hoja2, corte) };
+        (r, excluido, acciones)
+    }
+
     /// Descarta las ediciones y marcas (por elección del usuario) y vuelve a analizar.
     pub fn reiniciar(&mut self, cfg: &Config) {
         self.consignaciones.clear();
@@ -378,6 +432,8 @@ impl Trabajo {
             r.editada = None;
             r.revisada = false;
             r.seleccionada = false;
+            r.anulaciones.clear();
+            r.sync_anulaciones = None;
         }
         self.analizar(cfg);
     }
@@ -401,7 +457,7 @@ impl Trabajo {
                 AccionMasiva::Res(res) => r.res != *res,
             };
             if cambia && !previas.iter().any(|p: &InstantaneaFila| p.fila == i) {
-                previas.push(InstantaneaFila { fila: i, editada: r.editada.clone(), revisada: r.revisada, res: r.res.clone() });
+                previas.push(InstantaneaFila { fila: i, anterior: r.clone() });
             }
         }
         for p in &previas {
@@ -421,14 +477,108 @@ impl Trabajo {
         Ok(n)
     }
 
-    /// `record_edits.undo`: devuelve las filas de la última edición masiva a como estaban.
+    /// `record_edits.apply(..., overrides=…)` y `_prepass_peers`: aplica anulaciones de columnas de origen a una fila,
+    /// recalcula esa fila y las de su causa cuya duplicidad o acumulado cambió, y deja todo en el historial de deshacer.
+    /// Devuelve los índices de las filas pares recalculadas además de `fila`.
+    pub fn aplicar_anulaciones(
+        &mut self,
+        fila: usize,
+        anulaciones: BTreeMap<String, String>,
+        cfg: &Config,
+    ) -> Result<Vec<usize>, String> {
+        if fila >= self.registros.len() {
+            return Err("Selecciona registros del trabajo actual.".into());
+        }
+        if anulaciones.keys().any(|k| !self.cols.contains_key(k.as_str())) {
+            return Err("Columna de origen no reconocida.".into());
+        }
+        if self.registros[fila].anulaciones == anulaciones {
+            return Ok(Vec::new());
+        }
+        let mode = self.mode();
+        let corte = self.corte.unwrap_or_else(|| chrono::Local::now().date_naive());
+        let cols_por_fila = self.paquete.as_ref().and_then(|p| p.columnas_por_fila.get(self.sheet));
+        let datos = |con_nueva: bool| -> Vec<(Vec<Cell>, Cols)> {
+            self.registros
+                .iter()
+                .enumerate()
+                .map(|(n, r)| {
+                    let cols_base = cols_por_fila
+                        .and_then(|c| r.fila_excel.checked_sub(self.header_row + 2).and_then(|idx| c.get(idx)))
+                        .unwrap_or(&self.cols);
+                    let anul = if con_nueva && n == fila { &anulaciones } else { &r.anulaciones };
+                    Self::aplicar_overrides_a_fila(cols_base, &self.cols, &r.values, Some(anul))
+                })
+                .collect()
+        };
+        let antes_datos = datos(false);
+        let despues_datos = datos(true);
+        let filas_antes: Vec<Fila> = antes_datos.iter().map(|(values, cols)| Fila { values, cols }).collect();
+        let filas_despues: Vec<Fila> = despues_datos.iter().map(|(values, cols)| Fila { values, cols }).collect();
+        let columna_id = self.paquete.as_ref().and_then(|_| self.headers.iter().position(|h| h == "ID_REGISTRO_CAPTURA"));
+        let ingresos = self
+            .paquete
+            .as_ref()
+            .filter(|_| mode == Mode::Informes)
+            .map(PaqueteTrabajo::identidades_ingresos)
+            .unwrap_or_default();
+        let pre_antes = motor::prepaso(mode, &filas_antes, corte, |f| {
+            let id = f.values.get(columna_id?)?.display();
+            ingresos.get(id.as_str()).copied()
+        });
+        let mut pre_despues = motor::prepaso(mode, &filas_despues, corte, |f| {
+            let id = f.values.get(columna_id?)?.display();
+            ingresos.get(id.as_str()).copied()
+        });
+        if let Some(col) = columna_id {
+            for (n, f) in filas_despues.iter().enumerate() {
+                let Some(id) = f.values.get(col).map(Cell::display) else { continue };
+                if let Some(programas) = self.consignaciones.get(&id) {
+                    pre_despues.consignados.insert(n, programas.iter().map(|p| captura_trabajo::clave_texto(p)).collect());
+                }
+            }
+        }
+        let peers: Vec<usize> = (0..self.registros.len())
+            .filter(|&j| {
+                j != fila
+                    && (pre_antes.duplicidad.get(&j) != pre_despues.duplicidad.get(&j)
+                        || pre_antes.acumulado.get(&j) != pre_despues.acumulado.get(&j))
+            })
+            .collect();
+        let mut previas = vec![InstantaneaFila { fila, anterior: self.registros[fila].clone() }];
+        for &p in &peers {
+            previas.push(InstantaneaFila { fila: p, anterior: self.registros[p].clone() });
+        }
+        self.historial.push(previas);
+        if self.historial.len() > 20 {
+            self.historial.remove(0);
+        }
+        self.registros[fila].anulaciones = anulaciones;
+        for idx in std::iter::once(fila).chain(peers.iter().copied()) {
+            let f = &filas_despues[idx];
+            let contexto = columna_id
+                .and_then(|col| f.values.get(col))
+                .and_then(|id| self.paquete.as_ref()?.contextos.get(&id.display()));
+            let fecha_hoja2 = self.registros[idx].fecha_hoja2;
+            let (r, excluido, acciones) = Self::evaluar_fila(cfg, mode, f, corte, &pre_despues, idx, fecha_hoja2, contexto);
+            let reg = &mut self.registros[idx];
+            reg.propuesta = r.observacion;
+            reg.eventos = r.eventos;
+            reg.acciones = acciones;
+            reg.marcas = r.marcas;
+            reg.avisos = r.avisos;
+            reg.excluido = excluido;
+            reg.otros_programas = r.otros_programas;
+        }
+        Ok(peers)
+    }
+
+    /// `record_edits.undo`: devuelve las filas de la última edición masiva o anulación de origen a como estaban.
     pub fn deshacer(&mut self) -> bool {
         let Some(previas) = self.historial.pop() else { return false };
         for p in previas {
             if let Some(r) = self.registros.get_mut(p.fila) {
-                r.editada = p.editada;
-                r.revisada = p.revisada;
-                r.res = p.res;
+                *r = p.anterior;
             }
         }
         true
@@ -438,12 +588,24 @@ impl Trabajo {
         self.mode.unwrap_or(Mode::Espera)
     }
 
-    pub fn value(&self, r: &Registro, key: &str) -> String {
+    /// Valor original de la celda en el libro o paquete, sin anulaciones manuales (para asociar filas al sincronizar).
+    pub fn raw_value(&self, r: &Registro, key: &str) -> String {
         let v = self.cols.get(key).and_then(|c| r.values.get(*c)).map(|c| c.display().trim().to_string()).unwrap_or_default();
         if key == "nombre" { sin_parentesis(&v) } else { v }
     }
 
+    pub fn value(&self, r: &Registro, key: &str) -> String {
+        if let Some(v) = r.anulaciones.get(key) {
+            let v = v.trim().to_string();
+            return if key == "nombre" { sin_parentesis(&v) } else { v };
+        }
+        self.raw_value(r, key)
+    }
+
     pub fn date(&self, r: &Registro, key: &str) -> Option<NaiveDate> {
+        if let Some(v) = r.anulaciones.get(key) {
+            return get_date(&Cell::Text(v.clone()));
+        }
         self.cols.get(key).and_then(|c| r.values.get(*c)).and_then(get_date)
     }
 
@@ -526,12 +688,23 @@ impl Trabajo {
             ..Default::default()
         };
         for r in &self.registros {
-            if r.editada.is_some() || r.revisada || r.seleccionada || !r.res.is_empty() || !r.campos.is_empty() || !r.gestiones_correo.is_empty() || r.sync_base.is_some() {
+            if r.editada.is_some()
+                || r.revisada
+                || r.seleccionada
+                || !r.res.is_empty()
+                || !r.campos.is_empty()
+                || !r.gestiones_correo.is_empty()
+                || !r.anulaciones.is_empty()
+                || r.sync_base.is_some()
+                || r.sync_anulaciones.is_some()
+            {
                 s.decisiones.insert(
                     r.fila_excel,
                     Decision {
                         editada: r.editada.clone(), revisada: r.revisada, seleccionada: r.seleccionada, res: r.res.clone(), propuesta: r.propuesta.clone(),
-                        campos: r.campos.clone(), gestiones_correo: r.gestiones_correo.clone(), sync_correo: r.sync_correo.clone(), id_excel: r.id_excel.clone(), sync_base: r.sync_base.clone(), sync_local: r.sync_local.clone(),
+                        campos: r.campos.clone(), gestiones_correo: r.gestiones_correo.clone(), sync_correo: r.sync_correo.clone(),
+                        anulaciones: r.anulaciones.clone(), sync_anulaciones: r.sync_anulaciones.clone(),
+                        id_excel: r.id_excel.clone(), sync_base: r.sync_base.clone(), sync_local: r.sync_local.clone(),
                     },
                 );
             }
@@ -542,7 +715,7 @@ impl Trabajo {
 
     fn restaurar(&mut self, cfg: &Config) {
         self.restaurar_desde(&self.sesion_path());
-        if !self.consignaciones.is_empty() {
+        if !self.consignaciones.is_empty() || self.registros.iter().any(|r| !r.anulaciones.is_empty()) {
             self.analizar(cfg);
         }
     }
@@ -564,6 +737,8 @@ impl Trabajo {
                 r.campos = d.campos.clone();
                 r.gestiones_correo = d.gestiones_correo.clone();
                 r.sync_correo = d.sync_correo.clone();
+                r.anulaciones = d.anulaciones.clone();
+                r.sync_anulaciones = d.sync_anulaciones.clone();
                 r.id_excel = d.id_excel.clone();
                 r.sync_base = d.sync_base.clone();
                 r.sync_local = d.sync_local.clone();
@@ -1227,5 +1402,174 @@ mod tests {
             }
             assert!(w.registros[0].propuesta.starts_with("Sofía PRM:"), "{f}: {}", w.registros[0].propuesta);
         }
+    }
+
+    fn comparar_anulacion(corte: NaiveDate, caso: &serde_json::Value) -> Vec<String> {
+        let mut cfg = Config { redaccion_registro: false, ..Config::default() };
+        cfg.contactos.insert("AFT EJEMPLO UNO".into(), "aft1@ejemplo.invalid".into());
+        if let Some(t) = cfg.tribunales.get_mut("LAJA") {
+            t.para = "laja@ejemplo.invalid".into();
+        }
+        let modo = match caso["modo"].as_str().unwrap() {
+            "CUMPLIMIENTO" => Mode::Cumplimiento,
+            "INFORMES" => Mode::Informes,
+            _ => Mode::Espera,
+        };
+        let mut libro = rust_xlsxwriter::Workbook::new();
+        let hoja = libro.add_worksheet();
+        hoja.set_name("informe_1").unwrap();
+        for (c, h) in caso["encabezados"].as_array().unwrap().iter().enumerate() {
+            hoja.write_string(0, c as u16, h.as_str().unwrap()).unwrap();
+        }
+        for (i, fila) in caso["filas"].as_array().unwrap().iter().enumerate() {
+            for (c, v) in fila.as_array().unwrap().iter().enumerate() {
+                match v.as_f64() {
+                    Some(n) => hoja.write_number(1 + i as u32, c as u16, n).unwrap(),
+                    None => hoja.write_string(1 + i as u32, c as u16, v.as_str().unwrap_or("")).unwrap(),
+                };
+            }
+        }
+        let bytes = libro.save_to_buffer().unwrap();
+        let mut w = Trabajo::abrir(PathBuf::from("anulaciones.xlsx"), bytes, Some(modo), corte, &cfg).unwrap();
+        let mut error = None;
+        for paso in caso["pasos"].as_array().unwrap() {
+            match paso["op"].as_str().unwrap() {
+                "apply" => {
+                    let fila = paso["fila"].as_u64().unwrap() as usize;
+                    let mapa: BTreeMap<String, String> = paso["overrides"]
+                        .as_object()
+                        .unwrap()
+                        .iter()
+                        .map(|(k, v)| (k.clone(), v.as_str().unwrap().to_string()))
+                        .collect();
+                    if let Err(e) = w.aplicar_anulaciones(fila, mapa, &cfg) {
+                        error = Some(e);
+                    }
+                }
+                "undo" => {
+                    assert!(w.deshacer(), "deshacer debe revertir la anulación");
+                }
+                otro => panic!("operación desconocida {otro}"),
+            }
+        }
+        let mut d = Vec::new();
+        match (error, caso.get("error").and_then(|v| v.as_str())) {
+            (Some(obt), Some(esp)) if obt == esp => {}
+            (None, None) => {}
+            (obt, esp) => d.push(format!("error Rust {obt:?} · Python {esp:?}")),
+        }
+        for (i, esp) in caso["despues"].as_array().unwrap().iter().enumerate() {
+            let r = &w.registros[i];
+            let obs_esp = esp["observacion"].as_str().unwrap();
+            if r.propuesta != obs_esp {
+                d.push(format!("fila {i} obs: Rust {:?} · Python {obs_esp:?}", r.propuesta));
+            }
+            let reg_esp: Vec<String> = esp["reglas"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_string()).collect();
+            if r.eventos != reg_esp {
+                d.push(format!("fila {i} reglas: Rust {:?} · Python {reg_esp:?}", r.eventos));
+            }
+            let acc_esp: Vec<String> = esp["acciones"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_string()).collect();
+            let acc_obt: Vec<String> = r.acciones.iter().map(|s| s.to_string()).collect();
+            if acc_obt != acc_esp {
+                d.push(format!("fila {i} acciones: Rust {acc_obt:?} · Python {acc_esp:?}"));
+            }
+            let mar_esp: Vec<String> = esp["marcas"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_string()).collect();
+            let mar_obt: Vec<String> = r.marcas.iter().map(|m| m.codigo.clone()).collect();
+            if mar_obt != mar_esp {
+                d.push(format!("fila {i} marcas: Rust {mar_obt:?} · Python {mar_esp:?}"));
+            }
+            let ov_esp: BTreeMap<String, String> = esp["overrides"]
+                .as_object()
+                .unwrap()
+                .iter()
+                .map(|(k, v)| (k.clone(), v.as_str().unwrap().to_string()))
+                .collect();
+            if r.anulaciones != ov_esp {
+                d.push(format!("fila {i} overrides: Rust {:?} · Python {ov_esp:?}", r.anulaciones));
+            }
+        }
+        if let Some(borradores_esp) = caso.get("borradores").and_then(|v| v.as_array()) {
+            let borradores_obt = productos::preparar_borradores(
+                &w,
+                &cfg,
+                &productos::OpcionesCorreo {
+                    modalidades: &["RES", "AMB", "FAE", "DCE"],
+                    tribunales: &[],
+                    solo_seleccionadas: false,
+                },
+            );
+            let prog_esp: Vec<_> = borradores_obt.iter().filter(|b| b.kind == "programa_espera").collect();
+            if prog_esp.len() != borradores_esp.len() {
+                d.push(format!("borradores len: Rust {} · Python {}", prog_esp.len(), borradores_esp.len()));
+            } else if let Some((obt, esp)) = prog_esp.first().zip(borradores_esp.first()) {
+                let mut filas_obt = vec![obt.nomina.as_ref().unwrap().headers.clone()];
+                filas_obt.extend(obt.nomina.as_ref().unwrap().rows.clone());
+                let filas_esp: Vec<Vec<String>> = esp["filas"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|f| f.as_array().unwrap().iter().map(|c| c.as_str().unwrap().to_string()).collect())
+                    .collect();
+                if filas_obt != filas_esp {
+                    d.push(format!("nómina borrador: Rust {filas_obt:?} · Python {filas_esp:?}"));
+                }
+            }
+        }
+        d
+    }
+
+    /// E-A10 (F08): anulaciones de columnas de origen por fila (`apply(overrides=…)`, `_prepass_peers` y `undo`)
+    /// contra Flow Python (`app/qa/generar_anulaciones.py`).
+    #[test]
+    fn anulaciones_iguales_a_python() {
+        let datos: serde_json::Value = serde_json::from_str(include_str!("../tests/datos/anulaciones.json")).unwrap();
+        let corte = NaiveDate::parse_from_str(datos["corte"].as_str().unwrap(), "%Y-%m-%d").unwrap();
+        let casos = datos["casos"].as_array().unwrap();
+        let (mut ok, mut fallos) = (0, Vec::new());
+        for c in casos {
+            let d = comparar_anulacion(corte, c);
+            if d.is_empty() {
+                ok += 1;
+            } else {
+                fallos.push(format!("{}:\n  {}", c["escenario"], d.join("\n  ")));
+            }
+        }
+        for f in &fallos {
+            println!("FALLA {f}");
+        }
+        println!("ANULACIONES: {ok}/{}, fallos {}", casos.len(), fallos.len());
+        assert_eq!(casos.len(), 13, "el oráculo debe traer 13 casos");
+        assert!(fallos.is_empty());
+    }
+
+    #[test]
+    fn oraculo_de_anulaciones_detecta_alteraciones() {
+        let datos: serde_json::Value = serde_json::from_str(include_str!("../tests/datos/anulaciones.json")).unwrap();
+        let corte = NaiveDate::parse_from_str(datos["corte"].as_str().unwrap(), "%Y-%m-%d").unwrap();
+        let mut caso = datos["casos"].as_array().unwrap().iter().find(|c| c["escenario"] == "espera_crea_duplicidad_en_par").unwrap().clone();
+        assert!(comparar_anulacion(corte, &caso).is_empty());
+        caso["despues"][0]["marcas"] = serde_json::json!([]);
+        assert!(!comparar_anulacion(corte, &caso).is_empty(), "una marca esperada alterada no se detecta");
+    }
+
+    #[test]
+    fn las_anulaciones_sobreviven_a_la_sesion_y_conciliacion() {
+        let cfg = Config::default();
+        let p = crate::demo::libro(Mode::Espera, hoy()).unwrap();
+        let bytes = std::fs::read(&p).unwrap();
+        let mut w = Trabajo::abrir(p.clone(), bytes.clone(), Some(Mode::Espera), hoy(), &cfg).unwrap();
+        w.aplicar_anulaciones(0, BTreeMap::from([("espera".into(), "0".into())]), &cfg).unwrap();
+        assert_eq!(w.registros[0].anulaciones["espera"], "0");
+        assert!(!w.registros[0].acciones.contains(&"programa_espera"));
+
+        let ruta = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("target/test_out")
+            .join(format!("anulaciones_sesion_{}.json", chrono::Utc::now().timestamp_micros()));
+        w.escribir_sesion(&ruta).unwrap();
+        let mut w2 = Trabajo::abrir(p, bytes, Some(Mode::Espera), hoy(), &cfg).unwrap();
+        w2.restaurar_desde(&ruta);
+        w2.analizar(&cfg);
+        assert_eq!(w2.registros[0].anulaciones["espera"], "0");
+        assert!(!w2.registros[0].acciones.contains(&"programa_espera"));
+        let _ = std::fs::remove_file(&ruta);
     }
 }

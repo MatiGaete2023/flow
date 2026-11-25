@@ -42,12 +42,13 @@ impl Error {
     }
 }
 
-/// Lo que `Trabajo::analizar` no conserva de una fila: campos de Excel, identificador de copia y línea base.
-type Extras = (BTreeMap<String, String>, String, Option<BTreeMap<String, String>>, Option<BTreeMap<String, String>>, Option<String>);
-
-/// Fila de Trabajo, valores a aplicar y revisión que ve Excel.
-/// Además, las gestiones de correo que deja la combinación (si cambian) y las que trae Excel (nueva línea base).
-type Cambio = (usize, BTreeMap<&'static str, String>, BTreeMap<String, String>, Option<(Option<BTreeMap<String, String>>, String)>);
+/// Fila de Trabajo, valores a aplicar, revisión que ve Excel y cambios en `NURUS_DECISIONES`.
+struct Cambio {
+    fila: usize,
+    fusion: BTreeMap<&'static str, String>,
+    excel: BTreeMap<String, String>,
+    decisiones: Option<(Option<(BTreeMap<String, String>, BTreeMap<String, String>)>, BTreeMap<String, String>, BTreeMap<String, String>)>,
+}
 
 /// Elecciones de la persona ante un conflicto: (fila, campo) → valor.
 pub type Resoluciones = BTreeMap<(usize, String), String>;
@@ -83,14 +84,36 @@ fn revision_local(r: &Registro) -> BTreeMap<&'static str, Option<String>> {
     m
 }
 
-/// Texto canónico de las gestiones de correo de una fila (el valor que se compara y se muestra en un conflicto).
-fn texto_correo(m: &BTreeMap<String, String>) -> String {
+/// Texto canónico de un mapa de decisiones (`gestiones_correo` o `anulaciones`).
+fn texto_mapa(m: &BTreeMap<String, String>) -> String {
     serde_json::to_string(m).unwrap_or_default()
 }
 
+/// Texto canónico de `NURUS_DECISIONES` (gestiones de correo y anulaciones de origen) para comparar y resolver conflictos.
+fn texto_decisiones(correo: &BTreeMap<String, String>, anul: &BTreeMap<String, String>) -> String {
+    serde_json::to_string(&serde_json::json!({ "mail": correo, "overrides": anul })).unwrap_or_default()
+}
+
+fn parsear_decisiones(texto: &str) -> (BTreeMap<String, String>, BTreeMap<String, String>) {
+    let Ok(v) = serde_json::from_str::<serde_json::Value>(texto) else {
+        return (BTreeMap::new(), BTreeMap::new());
+    };
+    let leer = |obj: Option<&serde_json::Map<String, serde_json::Value>>| -> BTreeMap<String, String> {
+        obj.into_iter()
+            .flatten()
+            .filter_map(|(k, val)| val.as_str().map(|s| (k.clone(), s.to_string())))
+            .collect()
+    };
+    if v.get("mail").is_some() || v.get("overrides").is_some() {
+        (leer(v.get("mail").and_then(serde_json::Value::as_object)), leer(v.get("overrides").and_then(serde_json::Value::as_object)))
+    } else {
+        (leer(v.as_object()), BTreeMap::new())
+    }
+}
+
 /// `record_edits.decode`: la celda técnica `NURUS_DECISIONES` de la copia. `Ok(None)` si está vacía; el error es el de
-/// Python. Devuelve las gestiones de correo (sin las `auto`, que son la ausencia de gestión).
-fn leer_decisiones(texto: &str) -> Result<Option<BTreeMap<String, String>>, Error> {
+/// Python. Devuelve `(gestiones_correo, overrides)` (sin las `auto`, que son la ausencia de gestión).
+fn leer_decisiones(texto: &str) -> Result<Option<(BTreeMap<String, String>, BTreeMap<String, String>)>, Error> {
     let invalida = || rechazo("La columna técnica NURUS_DECISIONES no es válida. No se importaron cambios.");
     if texto.trim().is_empty() {
         return Ok(None);
@@ -101,17 +124,29 @@ fn leer_decisiones(texto: &str) -> Result<Option<BTreeMap<String, String>>, Erro
         None => serde_json::Map::new(),
         Some(m) => m.as_object().ok_or_else(invalida)?.clone(),
     };
+    let overrides_obj = datos["overrides"].as_object().ok_or_else(invalida)?;
     let resolucion = decisiones.get("resolution").and_then(serde_json::Value::as_str).unwrap_or("auto");
     if datos["version"] != 1
-        || !datos["overrides"].is_object()
         || !datos["word_overrides"].is_object()
         || !datos["excluded"].is_boolean()
         || !["auto", "review", "none", "PC_IE", "PC_INFO", "NOMENCL"].contains(&resolucion)
         || correo.values().any(|v| !matches!(v.as_str(), Some("auto" | "include" | "omit")))
+        || overrides_obj.values().any(|v| !v.is_string() && !v.is_number() && !v.is_boolean())
     {
         return Err(invalida());
     }
-    Ok(Some(correo.into_iter().filter_map(|(k, v)| v.as_str().filter(|v| *v != "auto").map(|v| (k, v.to_string()))).collect()))
+    let mail = correo.into_iter().filter_map(|(k, v)| v.as_str().filter(|v| *v != "auto").map(|v| (k, v.to_string()))).collect();
+    let overrides = overrides_obj
+        .iter()
+        .map(|(k, v)| {
+            let s = match v.as_str() {
+                Some(s) => s.to_string(),
+                None => v.to_string(),
+            };
+            (k.clone(), s)
+        })
+        .collect();
+    Ok(Some((mail, overrides)))
 }
 
 fn pos(headers: &[String], titulo: &str) -> Option<usize> {
@@ -133,7 +168,8 @@ pub fn recordar_exportacion(w: &mut Trabajo, hoja: &str) {
         let base = revision_excel(&cols, &fila);
         r.sync_local = Some(base.clone());
         r.sync_base = Some(base);
-        r.sync_correo = Some(texto_correo(&r.gestiones_correo));
+        r.sync_correo = Some(texto_mapa(&r.gestiones_correo));
+        r.sync_anulaciones = Some(texto_mapa(&r.anulaciones));
         r.id_excel = id;
     }
 }
@@ -157,7 +193,7 @@ fn asociar(w: &Trabajo, headers: &[String], filas: &[Vec<Cell>]) -> Result<Vec<u
     let por_id: HashMap<&str, usize> = w.registros.iter().enumerate().filter(|(_, r)| !r.id_excel.is_empty()).map(|(i, r)| (r.id_excel.as_str(), i)).collect();
     let mut por_identidad: HashMap<Vec<String>, Vec<usize>> = HashMap::new();
     for (i, r) in w.registros.iter().enumerate() {
-        let k: Vec<String> = claves.iter().map(|c| historical_match(&w.value(r, c))).collect();
+        let k: Vec<String> = claves.iter().map(|c| historical_match(&w.raw_value(r, c))).collect();
         por_identidad.entry(k).or_default().push(i);
     }
     let mut resultado = Vec::with_capacity(filas.len());
@@ -177,7 +213,7 @@ fn asociar(w: &Trabajo, headers: &[String], filas: &[Vec<Cell>]) -> Result<Vec<u
         if !vistas.insert(i) {
             return Err(rechazo("Hay identidades duplicadas en la copia; no se aplicaron cambios."));
         }
-        let local: Vec<String> = claves.iter().map(|c| historical_match(&w.value(&w.registros[i], c))).collect();
+        let local: Vec<String> = claves.iter().map(|c| historical_match(&w.raw_value(&w.registros[i], c))).collect();
         if local != en_excel {
             return Err(rechazo("Cambió la identidad de una fila; no se aplicaron cambios."));
         }
@@ -250,37 +286,50 @@ pub fn actualizar(w: &mut Trabajo, cfg: &Config, headers: &[String], filas: &[Ve
                 },
             }
         }
-        // Gestiones de correo (`NURUS_DECISIONES`): Excel solo manda si cambió desde la última copia y la fila no cambió aquí.
-        let mut correo = None;
+        // Gestiones de correo y anulaciones (`NURUS_DECISIONES`): Excel solo manda si cambió desde la última copia y la fila no cambió aquí.
+        let mut decisiones = None;
         if let Some(c) = pos(headers, "NURUS_DECISIONES") {
-            if let Some(remotas) = leer_decisiones(&fila.get(c).map(|v| v.display()).unwrap_or_default())? {
-                let (local, remoto) = (texto_correo(&r.gestiones_correo), texto_correo(&remotas));
-                let base = r.sync_correo.as_ref();
-                let nuevo = match combinar("NURUS_DECISIONES", &Some(local.clone()), base, base, &remoto, base.is_some()) {
-                    Ok(v) => Some(v.map(|_| remotas.clone())),
+            if let Some((rem_correo, rem_anul)) = leer_decisiones(&fila.get(c).map(|v| v.display()).unwrap_or_default())? {
+                let parse_mapa = |opt: Option<&String>| -> BTreeMap<String, String> {
+                    opt.and_then(|s| serde_json::from_str(s).ok()).unwrap_or_default()
+                };
+                let con_base = r.sync_correo.is_some() || r.sync_anulaciones.is_some();
+                let base_dec = texto_decisiones(&parse_mapa(r.sync_correo.as_ref()), &parse_mapa(r.sync_anulaciones.as_ref()));
+                let local_dec = texto_decisiones(&r.gestiones_correo, &r.anulaciones);
+                let remoto_dec = texto_decisiones(&rem_correo, &rem_anul);
+                let nuevo = match combinar("NURUS_DECISIONES", &Some(local_dec), Some(&base_dec), Some(&base_dec), &remoto_dec, con_base) {
+                    Ok(v) => Some(v.map(|_| (rem_correo.clone(), rem_anul.clone()))),
                     Err((b, l, e)) => match resoluciones.get(&(i, "NURUS_DECISIONES".to_string())) {
-                        Some(v) => Some(Some(serde_json::from_str(v).unwrap_or_default())),
+                        Some(v) => Some(Some(parsear_decisiones(v))),
                         None => {
                             conflictos.push(Conflicto { fila: i, campo: "NURUS_DECISIONES".into(), base: b, local: l, entrante: e });
                             None
                         }
                     },
                 };
-                correo = nuevo.map(|n| (n, remoto));
+                decisiones = nuevo.map(|n| (n, rem_correo, rem_anul));
             }
         }
-        cambios.push((i, fusion, excel, correo));
+        cambios.push(Cambio { fila: i, fusion, excel, decisiones });
     }
     if !conflictos.is_empty() {
         return Err(Error::Conflictos(conflictos));
     }
     let mut resumen = Resumen::default();
     let mut origen_editado = 0;
+    let mut anulaciones_cambiadas = false;
     let mut nuevos_valores: Vec<(usize, Vec<(usize, Cell)>)> = Vec::new();
-    for ((i, fusion, excel, correo), fila) in cambios.into_iter().zip(filas) {
+    for (c, fila) in cambios.into_iter().zip(filas) {
+        let i = c.fila;
         let r = &mut w.registros[i];
-        let antes = (r.editada.clone(), r.res.clone(), r.campos.clone(), r.gestiones_correo.clone());
-        for (campo, v) in fusion {
+        let antes = (
+            r.editada.clone(),
+            r.res.clone(),
+            r.campos.clone(),
+            r.gestiones_correo.clone(),
+            r.anulaciones.clone(),
+        );
+        for (campo, v) in c.fusion {
             match campo {
                 // Una observación vaciada en Excel no borra la local ni la propuesta.
                 "OBSERVACION" if !v.is_empty() => r.editada = Some(v),
@@ -294,17 +343,28 @@ pub fn actualizar(w: &mut Trabajo, cfg: &Config, headers: &[String], filas: &[Ve
                 }
             }
         }
-        if let Some((nuevas, remoto)) = correo {
-            if let Some(nuevas) = nuevas {
-                r.gestiones_correo = nuevas;
+        if let Some((nuevas, rem_correo, rem_anul)) = c.decisiones {
+            if let Some((correo, anul)) = nuevas {
+                if r.anulaciones != anul {
+                    anulaciones_cambiadas = true;
+                }
+                r.gestiones_correo = correo;
+                r.anulaciones = anul;
             }
-            r.sync_correo = Some(remoto);
+            r.sync_correo = Some(texto_mapa(&rem_correo));
+            r.sync_anulaciones = Some(texto_mapa(&rem_anul));
         }
-        if antes != (r.editada.clone(), r.res.clone(), r.campos.clone(), r.gestiones_correo.clone()) {
+        if antes != (
+            r.editada.clone(),
+            r.res.clone(),
+            r.campos.clone(),
+            r.gestiones_correo.clone(),
+            r.anulaciones.clone(),
+        ) {
             resumen.filas_cambiadas += 1;
         }
-        r.sync_base = Some(excel.clone());
-        r.sync_local = Some(excel);
+        r.sync_base = Some(c.excel.clone());
+        r.sync_local = Some(c.excel);
         // Columnas de origen que cambiaron en la copia (sin las de identidad, que `asociar` ya validó).
         let mapa = lectura::map_columns(headers, w.mode());
         let w_ref: &Trabajo = w;
@@ -324,13 +384,7 @@ pub fn actualizar(w: &mut Trabajo, cfg: &Config, headers: &[String], filas: &[Ve
             nuevos_valores.push((i, editadas.into_iter().map(|(c, j)| (c, fila.get(j).cloned().unwrap_or(Cell::Empty))).collect()));
         }
     }
-    if origen_editado > 0 {
-        // `analizar` conserva la observación editada, la revisión y RES, pero no los campos de Excel ni la línea base.
-        let extras: HashMap<usize, Extras> = w
-            .registros
-            .iter()
-            .map(|r| (r.fila_excel, (r.campos.clone(), r.id_excel.clone(), r.sync_base.clone(), r.sync_local.clone(), r.sync_correo.clone())))
-            .collect();
+    if origen_editado > 0 || anulaciones_cambiadas {
         let hoja = w.sheet;
         for (i, valores) in nuevos_valores {
             let fila_hoja = w.registros[i].fila_excel - 1;
@@ -341,15 +395,6 @@ pub fn actualizar(w: &mut Trabajo, cfg: &Config, headers: &[String], filas: &[Ve
             }
         }
         w.analizar(cfg);
-        for r in &mut w.registros {
-            if let Some((campos, id, base, local, correo)) = extras.get(&r.fila_excel) {
-                r.campos = campos.clone();
-                r.id_excel = id.clone();
-                r.sync_base = base.clone();
-                r.sync_local = local.clone();
-                r.sync_correo = correo.clone();
-            }
-        }
         resumen.recalculadas = origen_editado;
     }
     Ok(resumen)
@@ -440,6 +485,11 @@ mod pruebas {
             let mapa = c[1].as_object().unwrap().iter().map(|(k, v)| (k.clone(), texto(v))).collect();
             w.registros[c[0].as_u64().unwrap() as usize].gestiones_correo = mapa;
         }
+        for a in caso["anulaciones_locales"].as_array().into_iter().flatten() {
+            let fila = a[0].as_u64().unwrap() as usize;
+            let mapa = a[1].as_object().unwrap().iter().map(|(k, v)| (k.clone(), texto(v))).collect();
+            w.aplicar_anulaciones(fila, mapa, &Config::default()).unwrap();
+        }
         let mut headers = producto_excel::encabezados(&w);
         let mut filas = producto_excel::filas(&w);
         for e in caso["remotas"].as_array().unwrap() {
@@ -513,6 +563,12 @@ mod pruebas {
                 d.push(format!("fila {i} gestiones de correo: Rust {:?} · Python {previsto:?}", w.registros[i].gestiones_correo));
             }
         }
+        for (i, esperado) in caso["anulaciones"].as_array().into_iter().flatten().enumerate() {
+            let previsto: BTreeMap<String, String> = esperado.as_object().unwrap().iter().map(|(k, v)| (k.clone(), texto(v))).collect();
+            if w.registros[i].anulaciones != previsto {
+                d.push(format!("fila {i} anulaciones: Rust {:?} · Python {previsto:?}", w.registros[i].anulaciones));
+            }
+        }
         for (i, esperada) in caso["revision"].as_array().unwrap().iter().enumerate() {
             let r = &w.registros[i];
             for campo in CAMPOS {
@@ -550,7 +606,7 @@ mod pruebas {
             println!("FALLA {f}");
         }
         println!("SYNC: {iguales}/{}, fallos {}", casos.len(), fallos.len());
-        assert_eq!(casos.len(), 25, "el oráculo debe traer 25 casos");
+        assert_eq!(casos.len(), 31, "el oráculo debe traer 31 casos");
         assert!(fallos.is_empty());
     }
 
@@ -572,6 +628,11 @@ mod pruebas {
         assert!(comparar(&datos, &correo).is_empty());
         correo["correo"][0] = serde_json::json!({"medidas": "include"});
         assert!(!comparar(&datos, &correo).is_empty(), "una gestión de correo esperada alterada no se detecta");
+        // Y la anulación de origen que Python combinó desde la celda técnica.
+        let mut anul = datos["casos"].as_array().unwrap().iter().find(|c| c["escenario"] == "anulacion_remota_y_origen_editado_en_excel").unwrap().clone();
+        assert!(comparar(&datos, &anul).is_empty());
+        anul["anulaciones"][0] = serde_json::json!({"espera": "5"});
+        assert!(!comparar(&datos, &anul).is_empty(), "una anulación esperada alterada no se detecta");
     }
 
     /// El archivo que guarda Flow Rust se puede volver a leer y a importar sin cambios ni conflictos.

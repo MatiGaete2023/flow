@@ -1,0 +1,959 @@
+{
+ "corte": "2026-09-13",
+ "casos": [
+  {
+   "escenario": "espera_baja_a_alta_y_limpia",
+   "modo": "ESPERA",
+   "encabezados": [
+    "RIT",
+    "TRIBUNAL",
+    "NOMBRE",
+    "RUT",
+    "DERIVACION",
+    "T ESPERA"
+   ],
+   "filas": [
+    [
+     "X-1-2026",
+     "Jgdo. L. y G. de Laja",
+     "Persona Uno",
+     "11111111-1",
+     "AFT EJEMPLO UNO",
+     10
+    ]
+   ],
+   "pasos": [
+    {
+     "op": "apply",
+     "fila": 0,
+     "overrides": {
+      "espera": "45"
+     }
+    }
+   ],
+   "antes": [
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo al programa AFT Ejemplo UNO.",
+     "reglas": [
+      "ESPERA.E06_SIN_RESOLUCION"
+     ],
+     "acciones": [],
+     "marcas": [],
+     "overrides": {}
+    }
+   ],
+   "despues": [
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+     "reglas": [
+      "ESPERA.E05_PROYECTO_Y_CORREO"
+     ],
+     "acciones": [
+      "programa_espera",
+      "PC_IE"
+     ],
+     "marcas": [],
+     "overrides": {
+      "espera": "45"
+     }
+    }
+   ]
+  },
+  {
+   "escenario": "espera_limpia_vuelve_a_origen",
+   "modo": "ESPERA",
+   "encabezados": [
+    "RIT",
+    "TRIBUNAL",
+    "NOMBRE",
+    "RUT",
+    "DERIVACION",
+    "T ESPERA"
+   ],
+   "filas": [
+    [
+     "X-1-2026",
+     "Jgdo. L. y G. de Laja",
+     "Persona Uno",
+     "11111111-1",
+     "AFT EJEMPLO UNO",
+     10
+    ]
+   ],
+   "pasos": [
+    {
+     "op": "apply",
+     "fila": 0,
+     "overrides": {
+      "espera": "45"
+     }
+    },
+    {
+     "op": "apply",
+     "fila": 0,
+     "overrides": {}
+    }
+   ],
+   "antes": [
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo al programa AFT Ejemplo UNO.",
+     "reglas": [
+      "ESPERA.E06_SIN_RESOLUCION"
+     ],
+     "acciones": [],
+     "marcas": [],
+     "overrides": {}
+    }
+   ],
+   "despues": [
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo al programa AFT Ejemplo UNO.",
+     "reglas": [
+      "ESPERA.E06_SIN_RESOLUCION"
+     ],
+     "acciones": [],
+     "marcas": [],
+     "overrides": {}
+    }
+   ]
+  },
+  {
+   "escenario": "espera_cero_explicito",
+   "modo": "ESPERA",
+   "encabezados": [
+    "RIT",
+    "TRIBUNAL",
+    "NOMBRE",
+    "RUT",
+    "DERIVACION",
+    "T ESPERA"
+   ],
+   "filas": [
+    [
+     "X-1-2026",
+     "Jgdo. L. y G. de Laja",
+     "Persona Uno",
+     "11111111-1",
+     "AFT EJEMPLO UNO",
+     45
+    ]
+   ],
+   "pasos": [
+    {
+     "op": "apply",
+     "fila": 0,
+     "overrides": {
+      "espera": "0"
+     }
+    }
+   ],
+   "antes": [
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+     "reglas": [
+      "ESPERA.E05_PROYECTO_Y_CORREO"
+     ],
+     "acciones": [
+      "programa_espera",
+      "PC_IE"
+     ],
+     "marcas": [],
+     "overrides": {}
+    }
+   ],
+   "despues": [
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo al programa AFT Ejemplo UNO.",
+     "reglas": [
+      "ESPERA.E06_SIN_RESOLUCION"
+     ],
+     "acciones": [],
+     "marcas": [],
+     "overrides": {
+      "espera": "0"
+     }
+    }
+   ]
+  },
+  {
+   "escenario": "espera_crea_duplicidad_en_par",
+   "modo": "ESPERA",
+   "encabezados": [
+    "RIT",
+    "TRIBUNAL",
+    "NOMBRE",
+    "RUT",
+    "DERIVACION",
+    "T ESPERA"
+   ],
+   "filas": [
+    [
+     "C-1-2026",
+     "Jgdo. L. y G. de Laja",
+     "Persona Uno",
+     "11111111-1",
+     "AFT EJEMPLO UNO",
+     45
+    ],
+    [
+     "C-1-2026",
+     "Jgdo. L. y G. de Laja",
+     "Persona Dos",
+     "22222222-2",
+     "AFT EJEMPLO UNO",
+     45
+    ]
+   ],
+   "pasos": [
+    {
+     "op": "apply",
+     "fila": 1,
+     "overrides": {
+      "rut": "11111111-1"
+     }
+    }
+   ],
+   "antes": [
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+     "reglas": [
+      "ESPERA.E05_PROYECTO_Y_CORREO"
+     ],
+     "acciones": [
+      "programa_espera",
+      "PC_IE"
+     ],
+     "marcas": [],
+     "overrides": {}
+    },
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+     "reglas": [
+      "ESPERA.E05_PROYECTO_Y_CORREO"
+     ],
+     "acciones": [
+      "programa_espera",
+      "PC_IE"
+     ],
+     "marcas": [],
+     "overrides": {}
+    }
+   ],
+   "despues": [
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+     "reglas": [
+      "ESPERA.E05_PROYECTO_Y_CORREO"
+     ],
+     "acciones": [
+      "programa_espera",
+      "PC_IE"
+     ],
+     "marcas": [
+      "R6_DUPLICIDAD"
+     ],
+     "overrides": {}
+    },
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+     "reglas": [
+      "ESPERA.E05_PROYECTO_Y_CORREO"
+     ],
+     "acciones": [
+      "programa_espera",
+      "PC_IE"
+     ],
+     "marcas": [
+      "R6_DUPLICIDAD"
+     ],
+     "overrides": {
+      "rut": "11111111-1"
+     }
+    }
+   ]
+  },
+  {
+   "escenario": "espera_crea_y_deshace_duplicidad_en_par",
+   "modo": "ESPERA",
+   "encabezados": [
+    "RIT",
+    "TRIBUNAL",
+    "NOMBRE",
+    "RUT",
+    "DERIVACION",
+    "T ESPERA"
+   ],
+   "filas": [
+    [
+     "C-1-2026",
+     "Jgdo. L. y G. de Laja",
+     "Persona Uno",
+     "11111111-1",
+     "AFT EJEMPLO UNO",
+     45
+    ],
+    [
+     "C-1-2026",
+     "Jgdo. L. y G. de Laja",
+     "Persona Dos",
+     "22222222-2",
+     "AFT EJEMPLO UNO",
+     45
+    ]
+   ],
+   "pasos": [
+    {
+     "op": "apply",
+     "fila": 1,
+     "overrides": {
+      "rut": "11111111-1"
+     }
+    },
+    {
+     "op": "undo"
+    }
+   ],
+   "antes": [
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+     "reglas": [
+      "ESPERA.E05_PROYECTO_Y_CORREO"
+     ],
+     "acciones": [
+      "programa_espera",
+      "PC_IE"
+     ],
+     "marcas": [],
+     "overrides": {}
+    },
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+     "reglas": [
+      "ESPERA.E05_PROYECTO_Y_CORREO"
+     ],
+     "acciones": [
+      "programa_espera",
+      "PC_IE"
+     ],
+     "marcas": [],
+     "overrides": {}
+    }
+   ],
+   "despues": [
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+     "reglas": [
+      "ESPERA.E05_PROYECTO_Y_CORREO"
+     ],
+     "acciones": [
+      "programa_espera",
+      "PC_IE"
+     ],
+     "marcas": [],
+     "overrides": {}
+    },
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+     "reglas": [
+      "ESPERA.E05_PROYECTO_Y_CORREO"
+     ],
+     "acciones": [
+      "programa_espera",
+      "PC_IE"
+     ],
+     "marcas": [],
+     "overrides": {}
+    }
+   ]
+  },
+  {
+   "escenario": "espera_rompe_duplicidad_en_par",
+   "modo": "ESPERA",
+   "encabezados": [
+    "RIT",
+    "TRIBUNAL",
+    "NOMBRE",
+    "RUT",
+    "DERIVACION",
+    "T ESPERA"
+   ],
+   "filas": [
+    [
+     "C-1-2026",
+     "Jgdo. L. y G. de Laja",
+     "Persona Uno",
+     "11111111-1",
+     "AFT EJEMPLO UNO",
+     45
+    ],
+    [
+     "C-1-2026",
+     "Jgdo. L. y G. de Laja",
+     "Persona Uno",
+     "11111111-1",
+     "AFT EJEMPLO UNO",
+     45
+    ]
+   ],
+   "pasos": [
+    {
+     "op": "apply",
+     "fila": 1,
+     "overrides": {
+      "rut": "99999999-9"
+     }
+    }
+   ],
+   "antes": [
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+     "reglas": [
+      "ESPERA.E05_PROYECTO_Y_CORREO"
+     ],
+     "acciones": [
+      "programa_espera",
+      "PC_IE"
+     ],
+     "marcas": [
+      "R6_DUPLICIDAD"
+     ],
+     "overrides": {}
+    },
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+     "reglas": [
+      "ESPERA.E05_PROYECTO_Y_CORREO"
+     ],
+     "acciones": [
+      "programa_espera",
+      "PC_IE"
+     ],
+     "marcas": [
+      "R6_DUPLICIDAD"
+     ],
+     "overrides": {}
+    }
+   ],
+   "despues": [
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+     "reglas": [
+      "ESPERA.E05_PROYECTO_Y_CORREO"
+     ],
+     "acciones": [
+      "programa_espera",
+      "PC_IE"
+     ],
+     "marcas": [],
+     "overrides": {}
+    },
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+     "reglas": [
+      "ESPERA.E05_PROYECTO_Y_CORREO"
+     ],
+     "acciones": [
+      "programa_espera",
+      "PC_IE"
+     ],
+     "marcas": [],
+     "overrides": {
+      "rut": "99999999-9"
+     }
+    }
+   ]
+  },
+  {
+   "escenario": "informes_crea_acumulado_en_par",
+   "modo": "INFORMES",
+   "encabezados": [
+    "RIT",
+    "TRIBUNAL",
+    "NOMBRE",
+    "RUT",
+    "DERIVACION",
+    "FECHA VENCIMIENTO"
+   ],
+   "filas": [
+    [
+     "C-2-2026",
+     "Jgdo. L. y G. de Laja",
+     "Persona Uno",
+     "11111111-1",
+     "AFT EJEMPLO UNO",
+     "2026-08-20"
+    ],
+    [
+     "C-2-2026",
+     "Jgdo. L. y G. de Laja",
+     "Persona Uno",
+     "11111111-1",
+     "AFT EJEMPLO UNO",
+     "2026-11-20"
+    ]
+   ],
+   "pasos": [
+    {
+     "op": "apply",
+     "fila": 1,
+     "overrides": {
+      "vencimiento": "2026-09-01"
+     }
+    }
+   ],
+   "antes": [
+    {
+     "observacion": "Persona AFT: Informe de avance vencido desde el 20 de agosto de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa AFT Ejemplo UNO requiriendo su envío.",
+     "reglas": [
+      "INFORMES.I01_VENCIDO_GENERAL"
+     ],
+     "acciones": [
+      "programa_vencido",
+      "PC_INFO"
+     ],
+     "marcas": [],
+     "overrides": {}
+    },
+    {
+     "observacion": "",
+     "reglas": [],
+     "acciones": [],
+     "marcas": [],
+     "overrides": {}
+    }
+   ],
+   "despues": [
+    {
+     "observacion": "Persona AFT: Informe de avance vencido desde el 20 de agosto de 2026. Registra 2 informes vencidos en RUS; el más antiguo venció el 20 de agosto de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa AFT Ejemplo UNO requiriendo su envío.",
+     "reglas": [
+      "INFORMES.I01_VENCIDO_GENERAL",
+      "HISTORIA.J2_ACUMULADOS"
+     ],
+     "acciones": [
+      "programa_vencido",
+      "PC_INFO"
+     ],
+     "marcas": [],
+     "overrides": {}
+    },
+    {
+     "observacion": "Persona AFT: Informe de avance vencido desde el 1 de septiembre de 2026. Registra 2 informes vencidos en RUS; el más antiguo venció el 20 de agosto de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa AFT Ejemplo UNO requiriendo su envío.",
+     "reglas": [
+      "INFORMES.I01_VENCIDO_GENERAL",
+      "HISTORIA.J2_ACUMULADOS"
+     ],
+     "acciones": [
+      "programa_vencido",
+      "PC_INFO"
+     ],
+     "marcas": [],
+     "overrides": {
+      "vencimiento": "2026-09-01"
+     }
+    }
+   ]
+  },
+  {
+   "escenario": "informes_crea_y_deshace_acumulado_en_par",
+   "modo": "INFORMES",
+   "encabezados": [
+    "RIT",
+    "TRIBUNAL",
+    "NOMBRE",
+    "RUT",
+    "DERIVACION",
+    "FECHA VENCIMIENTO"
+   ],
+   "filas": [
+    [
+     "C-2-2026",
+     "Jgdo. L. y G. de Laja",
+     "Persona Uno",
+     "11111111-1",
+     "AFT EJEMPLO UNO",
+     "2026-08-20"
+    ],
+    [
+     "C-2-2026",
+     "Jgdo. L. y G. de Laja",
+     "Persona Uno",
+     "11111111-1",
+     "AFT EJEMPLO UNO",
+     "2026-11-20"
+    ]
+   ],
+   "pasos": [
+    {
+     "op": "apply",
+     "fila": 1,
+     "overrides": {
+      "vencimiento": "2026-09-01"
+     }
+    },
+    {
+     "op": "undo"
+    }
+   ],
+   "antes": [
+    {
+     "observacion": "Persona AFT: Informe de avance vencido desde el 20 de agosto de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa AFT Ejemplo UNO requiriendo su envío.",
+     "reglas": [
+      "INFORMES.I01_VENCIDO_GENERAL"
+     ],
+     "acciones": [
+      "programa_vencido",
+      "PC_INFO"
+     ],
+     "marcas": [],
+     "overrides": {}
+    },
+    {
+     "observacion": "",
+     "reglas": [],
+     "acciones": [],
+     "marcas": [],
+     "overrides": {}
+    }
+   ],
+   "despues": [
+    {
+     "observacion": "Persona AFT: Informe de avance vencido desde el 20 de agosto de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa AFT Ejemplo UNO requiriendo su envío.",
+     "reglas": [
+      "INFORMES.I01_VENCIDO_GENERAL"
+     ],
+     "acciones": [
+      "programa_vencido",
+      "PC_INFO"
+     ],
+     "marcas": [],
+     "overrides": {}
+    },
+    {
+     "observacion": "",
+     "reglas": [],
+     "acciones": [],
+     "marcas": [],
+     "overrides": {}
+    }
+   ]
+  },
+  {
+   "escenario": "espera_cambia_programa_a_dce",
+   "modo": "ESPERA",
+   "encabezados": [
+    "RIT",
+    "TRIBUNAL",
+    "NOMBRE",
+    "RUT",
+    "DERIVACION",
+    "T ESPERA"
+   ],
+   "filas": [
+    [
+     "X-3-2026",
+     "Jgdo. L. y G. de Laja",
+     "Persona Uno",
+     "11111111-1",
+     "AFT EJEMPLO UNO",
+     45
+    ]
+   ],
+   "pasos": [
+    {
+     "op": "apply",
+     "fila": 0,
+     "overrides": {
+      "programa": "DCE EJEMPLO"
+     }
+    }
+   ],
+   "antes": [
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+     "reglas": [
+      "ESPERA.E05_PROYECTO_Y_CORREO"
+     ],
+     "acciones": [
+      "programa_espera",
+      "PC_IE"
+     ],
+     "marcas": [],
+     "overrides": {}
+    }
+   ],
+   "despues": [
+    {
+     "observacion": "Persona DCE: Medida revisada, a la espera de ingreso efectivo. Se remite correo al programa consultando fecha estimada de ingreso.",
+     "reglas": [
+      "ESPERA.E05_SOLO_CORREO"
+     ],
+     "acciones": [
+      "programa_espera"
+     ],
+     "marcas": [],
+     "overrides": {
+      "programa": "DCE EJEMPLO"
+     }
+    }
+   ]
+  },
+  {
+   "escenario": "espera_cambia_programa_a_sin_seguimiento",
+   "modo": "ESPERA",
+   "encabezados": [
+    "RIT",
+    "TRIBUNAL",
+    "NOMBRE",
+    "RUT",
+    "DERIVACION",
+    "T ESPERA"
+   ],
+   "filas": [
+    [
+     "X-4-2026",
+     "Jgdo. L. y G. de Laja",
+     "Persona Uno",
+     "11111111-1",
+     "AFT EJEMPLO UNO",
+     45
+    ]
+   ],
+   "pasos": [
+    {
+     "op": "apply",
+     "fila": 0,
+     "overrides": {
+      "programa": "SIN SEGUIMIENTO"
+     }
+    }
+   ],
+   "antes": [
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+     "reglas": [
+      "ESPERA.E05_PROYECTO_Y_CORREO"
+     ],
+     "acciones": [
+      "programa_espera",
+      "PC_IE"
+     ],
+     "marcas": [],
+     "overrides": {}
+    }
+   ],
+   "despues": [
+    {
+     "observacion": "Persona SIN: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+     "reglas": [
+      "ESPERA.E05_PROYECTO_Y_CORREO"
+     ],
+     "acciones": [
+      "programa_espera",
+      "PC_IE"
+     ],
+     "marcas": [],
+     "overrides": {
+      "programa": "SIN SEGUIMIENTO"
+     }
+    }
+   ]
+  },
+  {
+   "escenario": "cumplimiento_egreso_por_vencer",
+   "modo": "CUMPLIMIENTO",
+   "encabezados": [
+    "RIT",
+    "TRIBUNAL",
+    "NOMBRE",
+    "RUT",
+    "DERIVACION",
+    "F. EGRESO PROYECTADO",
+    "DIAS DE CUMPLIMIENTO",
+    "DIAS PARA EGRESAR"
+   ],
+   "filas": [
+    [
+     "X-5-2026",
+     "Jgdo. L. y G. de Laja",
+     "Persona Uno",
+     "11111111-1",
+     "AFT EJEMPLO UNO",
+     "2026-12-30",
+     50,
+     108
+    ]
+   ],
+   "pasos": [
+    {
+     "op": "apply",
+     "fila": 0,
+     "overrides": {
+      "egreso_proy": "2026-09-25",
+      "dias_egresar": "12"
+     }
+    }
+   ],
+   "antes": [
+    {
+     "observacion": "Persona AFT: Medida revisada, sin observaciones.",
+     "reglas": [
+      "CUMPLIMIENTO.C09_SIN_OBSERVACIONES"
+     ],
+     "acciones": [],
+     "marcas": [],
+     "overrides": {}
+    }
+   ],
+   "despues": [
+    {
+     "observacion": "Persona AFT: Medida revisada, sin observaciones.",
+     "reglas": [
+      "CUMPLIMIENTO.C09_SIN_OBSERVACIONES"
+     ],
+     "acciones": [],
+     "marcas": [],
+     "overrides": {}
+    }
+   ],
+   "error": "Columna de origen no reconocida."
+  },
+  {
+   "escenario": "productos_usan_datos_anulados",
+   "modo": "ESPERA",
+   "encabezados": [
+    "RIT",
+    "TRIBUNAL",
+    "NOMBRE",
+    "RUT",
+    "DERIVACION",
+    "T ESPERA"
+   ],
+   "filas": [
+    [
+     "X-6-2026",
+     "Jgdo. L. y G. de Laja",
+     "Persona Original",
+     "11111111-1",
+     "AFT EJEMPLO UNO",
+     10
+    ]
+   ],
+   "pasos": [
+    {
+     "op": "apply",
+     "fila": 0,
+     "overrides": {
+      "espera": "45",
+      "nombre": "Persona Editada",
+      "rit": "X-99-2026"
+     }
+    }
+   ],
+   "antes": [
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo al programa AFT Ejemplo UNO.",
+     "reglas": [
+      "ESPERA.E06_SIN_RESOLUCION"
+     ],
+     "acciones": [],
+     "marcas": [],
+     "overrides": {}
+    }
+   ],
+   "despues": [
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+     "reglas": [
+      "ESPERA.E05_PROYECTO_Y_CORREO"
+     ],
+     "acciones": [
+      "programa_espera",
+      "PC_IE"
+     ],
+     "marcas": [],
+     "overrides": {
+      "espera": "45",
+      "nombre": "Persona Editada",
+      "rit": "X-99-2026"
+     }
+    }
+   ],
+   "borradores": [
+    {
+     "kind": "programa_espera",
+     "programa": "AFT EJEMPLO UNO",
+     "filas": [
+      [
+       "RIT",
+       "TRIBUNAL",
+       "NOMBRE",
+       "DERIVACION",
+       "T ESPERA"
+      ],
+      [
+       "X-99-2026",
+       "Jgdo. L. y G. de Laja",
+       "Persona Editada",
+       "AFT EJEMPLO UNO",
+       "45"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "escenario": "columna_invalida_rechaza",
+   "modo": "ESPERA",
+   "encabezados": [
+    "RIT",
+    "TRIBUNAL",
+    "NOMBRE",
+    "RUT",
+    "DERIVACION",
+    "T ESPERA"
+   ],
+   "filas": [
+    [
+     "X-7-2026",
+     "Jgdo. L. y G. de Laja",
+     "Persona Uno",
+     "11111111-1",
+     "AFT EJEMPLO UNO",
+     10
+    ]
+   ],
+   "pasos": [
+    {
+     "op": "apply",
+     "fila": 0,
+     "overrides": {
+      "no_existe": "1"
+     }
+    }
+   ],
+   "antes": [
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo al programa AFT Ejemplo UNO.",
+     "reglas": [
+      "ESPERA.E06_SIN_RESOLUCION"
+     ],
+     "acciones": [],
+     "marcas": [],
+     "overrides": {}
+    }
+   ],
+   "despues": [
+    {
+     "observacion": "Persona AFT: Medida revisada, a la espera de ingreso efectivo al programa AFT Ejemplo UNO.",
+     "reglas": [
+      "ESPERA.E06_SIN_RESOLUCION"
+     ],
+     "acciones": [],
+     "marcas": [],
+     "overrides": {}
+    }
+   ],
+   "error": "Columna de origen no reconocida."
+  }
+ ]
+}

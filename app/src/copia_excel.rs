@@ -216,7 +216,7 @@ pub(crate) fn decisiones(r: &Registro) -> String {
     json!({
         "version": 1,
         "decisions": decisions,
-        "overrides": {},
+        "overrides": r.anulaciones,
         "word_overrides": {},
         "excluded": r.excluido,
         "resolution_cell": r.res,

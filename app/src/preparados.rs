@@ -69,6 +69,7 @@ pub fn dependencia(w: &Trabajo, cfg: &Config, registros: &[usize], tipo: &str) -
                 "res": r.res,
                 "excluido": r.excluido,
                 "campos": r.campos,
+                "anulaciones": r.anulaciones,
                 "valores": r.values.iter().map(|c| c.display()).collect::<Vec<_>>(),
             }),
             None => json!({"fila": i, "ausente": true}),

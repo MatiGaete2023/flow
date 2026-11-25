@@ -110,6 +110,8 @@ pub struct App {
     valores_favorito: std::collections::BTreeMap<String, String>,
     /// Lo que se está editando en cada fila de contactos (correos y alias) antes de guardarlo.
     contacto_buf: std::collections::BTreeMap<String, (String, String)>,
+    /// Anulaciones de columnas de origen en edición para la fila seleccionada: (fila, revisión, mapa clave → texto).
+    origen_buf: Option<(usize, u64, std::collections::BTreeMap<String, String>)>,
     /// Plantilla de correo elegida en Ajustes y su copia en edición.
     plantilla_sel: String,
     plantilla_edicion: Option<(String, crate::config::PlantillaCorreo)>,
@@ -184,6 +186,7 @@ impl App {
             favorito_elegido: String::new(),
             valores_favorito: std::collections::BTreeMap::new(),
             contacto_buf: std::collections::BTreeMap::new(),
+            origen_buf: None,
             plantilla_sel: "espera".into(),
             plantilla_edicion: None,
             plantilla_error: None,
@@ -1428,6 +1431,9 @@ impl App {
         let mostrar_cronologia = self.screenshot.is_some();
         let mut cambio = false;
         let mut consignacion: Option<(String, bool)> = None;
+        let mut aplicar_origen: Option<std::collections::BTreeMap<String, String>> = None;
+        let rev = self.revision;
+        let mut origen_buf = self.origen_buf.take();
         egui::ScrollArea::vertical().id_salt("detalle").show(ui, |ui| {
             let w = self.work.as_mut().unwrap();
             if i >= w.registros.len() {
@@ -1690,6 +1696,58 @@ impl App {
             ui.add_space(8.0);
             theme::card(p).show(ui, |ui| {
                 ui.set_width(ui.available_width());
+                let n_anul = w.registros[i].anulaciones.len();
+                let titulo_anul = if n_anul == 0 {
+                    "Corregir datos de origen".to_string()
+                } else {
+                    format!("Corregir datos de origen ({n_anul} activas)")
+                };
+                if origen_buf.as_ref().is_none_or(|(f, r, _)| *f != i || *r != rev) {
+                    origen_buf = Some((i, rev, w.registros[i].anulaciones.clone()));
+                }
+                let buf = &mut origen_buf.as_mut().unwrap().2;
+                let mut campos_origen: Vec<(&'static str, usize, String)> = w
+                    .cols
+                    .iter()
+                    .map(|(&k, &idx)| {
+                        let titulo = headers.get(idx).cloned().unwrap_or_else(|| k.to_string());
+                        (k, idx, titulo)
+                    })
+                    .collect();
+                campos_origen.sort_by_key(|(_, idx, _)| *idx);
+                egui::CollapsingHeader::new(titulo_anul)
+                    .id_salt(("corregir_origen", i))
+                    .default_open(n_anul > 0)
+                    .show(ui, |ui| {
+                        ui.label(RichText::new("Sobrescribe localmente celdas de origen para recalcular esta fila y las afectadas de su causa.").size(12.0).color(p.muted));
+                        egui::Grid::new(("origen_grid", i)).num_columns(3).spacing([8.0, 4.0]).show(ui, |ui| {
+                            for (k, idx, titulo) in &campos_origen {
+                                ui.label(RichText::new(titulo).size(12.0).color(p.muted));
+                                let entrada = buf.entry((*k).to_string()).or_default();
+                                ui.add(egui::TextEdit::singleline(entrada).desired_width(180.0));
+                                let orig = w.registros[i].values.get(*idx).map(|c| c.display()).unwrap_or_default();
+                                ui.label(RichText::new(if orig.trim().is_empty() { "vacío".into() } else { format!("Orig: {orig}") }).size(11.5).color(p.muted));
+                                ui.end_row();
+                            }
+                        });
+                        let limpias: std::collections::BTreeMap<String, String> = buf
+                            .iter()
+                            .filter(|(_, v)| !v.trim().is_empty())
+                            .map(|(k, v)| (k.clone(), v.trim().to_string()))
+                            .collect();
+                        ui.horizontal(|ui| {
+                            if ui.add_enabled(limpias != w.registros[i].anulaciones, egui::Button::new("Aplicar y recalcular")).clicked() {
+                                aplicar_origen = Some(limpias);
+                            }
+                            if n_anul > 0 && ui.button("Quitar correcciones").clicked() {
+                                aplicar_origen = Some(std::collections::BTreeMap::new());
+                            }
+                        });
+                    });
+            });
+            ui.add_space(8.0);
+            theme::card(p).show(ui, |ui| {
+                ui.set_width(ui.available_width());
                 theme::seccion(ui, p, "Datos de RUS");
                 egui::Grid::new("datos").num_columns(2).striped(true).spacing([10.0, 4.0]).show(ui, |ui| {
                     for (h, v) in headers.iter().zip(&w.registros[i].values) {
@@ -1704,6 +1762,25 @@ impl App {
                 });
             });
         });
+        self.origen_buf = origen_buf;
+        if let Some(anulaciones) = aplicar_origen {
+            let res = self.work.as_mut().map(|w| w.aplicar_anulaciones(i, anulaciones, &self.cfg));
+            match res {
+                Some(Ok(peers)) => {
+                    self.origen_buf = None;
+                    let total = 1 + peers.len();
+                    let msg = if peers.is_empty() {
+                        "Datos de origen aplicados y fila recalculada.".to_string()
+                    } else {
+                        format!("Datos de origen aplicados: {total} filas recalculadas (incluidas pares de la causa).")
+                    };
+                    self.aviso(msg, false);
+                    cambio = true;
+                }
+                Some(Err(e)) => self.aviso(e, true),
+                None => {}
+            }
+        }
         if let Some((programa, marcar)) = consignacion {
             let mensaje = self.work.as_mut().and_then(|w| w.consignar(i, &programa, marcar, &self.cfg));
             if let Some(m) = mensaje {

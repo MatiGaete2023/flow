@@ -277,3 +277,11 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Sin resolver: abrir conjuntos `flujo.json` en Resultados; hace falta la lista de nombres de archivos del lote antiguo para confirmar su tipo.
 - Coordinación: toca `descargador_ui.rs` y `paquete.rs`, que usa el Agente C; integrar con cuidado.
 - CI: run 45648680625 verde (`linux` y `validar`). Pendiente: confirmación del usuario con el `.exe` nuevo.
+
+## 2026-11-25 · E-A10 · Anulaciones de origen por fila con recálculo de pares y sincronización
+
+- Cambió: `trabajo.rs` (`anulaciones`, `sync_anulaciones`, `_prepass_peers`, `deshacer`), `sincronizar.rs` (`overrides` en `NURUS_DECISIONES`), `conciliar.rs`, `copia_excel.rs`, `preparados.rs`, `productos.rs` y `ui.rs` (panel "Corregir datos de origen"); oráculos `generar_anulaciones.py` y `generar_sync.py` con sus JSON y workflow.
+- Acredita: `anulaciones_iguales_a_python` (13 casos), `actualizar_desde_excel_igual_a_python` (31 casos), `oraculo_de_anulaciones_detecta_alteraciones` y `oraculo_de_sync_detecta_alteraciones`; `las_anulaciones_sobreviven_a_la_sesion_y_conciliacion`.
+- Verificadores: 98 pruebas pasan en local; `verificar_textos_umbrales`, `check_real_ids` e `inventario_escrituras` en PASA (0 discrepancias).
+- Diferencias declaradas: F08 completado para anulaciones; variables Word y exclusión manual siguen fuera.
+- CI: pendiente.

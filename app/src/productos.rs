@@ -212,7 +212,18 @@ fn nomina_para(w: &Trabajo, kind: &str, regs: &[&Registro]) -> Nomina {
                 .map(|k| match *k {
                     "obs" => r.observacion().to_string(),
                     "vencimiento" if kind == "programa_por_vencer" && w.mode() == crate::motor::Mode::Cumplimiento => {
-                        r.fecha_hoja2.map(|d| d.format("%d/%m/%Y").to_string()).unwrap_or_else(|| "Sin dato".into())
+                        if let Some(v) = r.anulaciones.get("vencimiento") {
+                            let v = v.trim();
+                            if v.is_empty() {
+                                "Sin dato".into()
+                            } else if let Some(d) = get_date(&Cell::Text(v.to_string())) {
+                                d.format("%d/%m/%Y").to_string()
+                            } else {
+                                v.to_string()
+                            }
+                        } else {
+                            r.fecha_hoja2.map(|d| d.format("%d/%m/%Y").to_string()).unwrap_or_else(|| "Sin dato".into())
+                        }
                     }
                     "espera" | "vencimiento" | "egreso_proy" => {
                         let v = w.value(r, k);

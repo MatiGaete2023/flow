@@ -129,7 +129,12 @@ fn clave(f: &Fila<'_>) -> Vec<String> {
 
 /// `_edited`: la persona tomó alguna decisión sobre la fila.
 pub(crate) fn editada(r: &Registro) -> bool {
-    r.editada.is_some() || r.revisada || !r.res.is_empty() || !r.campos.is_empty() || !r.gestiones_correo.is_empty()
+    r.editada.is_some()
+        || r.revisada
+        || !r.res.is_empty()
+        || !r.campos.is_empty()
+        || !r.gestiones_correo.is_empty()
+        || !r.anulaciones.is_empty()
 }
 
 /// Filas del trabajo con su registro de paquete.
@@ -273,12 +278,17 @@ pub fn conciliar(nuevo: &mut Trabajo, previo: &Trabajo, respuestas: &Respuestas,
         r.res = anterior.res.clone();
         r.campos = anterior.campos.clone();
         r.gestiones_correo = anterior.gestiones_correo.clone();
+        r.anulaciones = anterior.anulaciones.clone();
         if mismos_bytes {
             r.sync_base = anterior.sync_base.clone();
             r.sync_local = anterior.sync_local.clone();
             r.id_excel = anterior.id_excel.clone();
             r.sync_correo = anterior.sync_correo.clone();
+            r.sync_anulaciones = anterior.sync_anulaciones.clone();
         }
+    }
+    if continuada && nuevo.registros.iter().any(|r| !r.anulaciones.is_empty()) {
+        nuevo.analizar(cfg);
     }
     if mismos_bytes {
         nuevo.copia = previo.copia.clone();

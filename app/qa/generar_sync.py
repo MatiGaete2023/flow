@@ -82,14 +82,28 @@ def editar_excel(obra, ediciones, quitar_id=False, quitar_filas=0, cambiar_ident
     libro.save(obra.output)
 
 
-def tecnico(obra, fila, mail):
-    """La celda `NURUS_DECISIONES` que dejaría Flow Python con esas gestiones de correo en la fila."""
+def tecnico(obra, fila, mail=None, overrides=None):
+    """La celda `NURUS_DECISIONES` que dejaría Flow Python con esas gestiones o anulaciones en la fila."""
     copia = deepcopy(obra.rows[fila])
-    copia.decisions = {**copia.decisions, 'mail': dict(mail), 'structured': True}
+    if mail is not None:
+        copia.decisions = {**copia.decisions, 'mail': dict(mail), 'structured': True}
+    if overrides is not None:
+        copia.overrides = dict(overrides)
     return encode(copia)
 
 
-def caso(nombre, locales=(), remotas=(), resoluciones=None, correos_locales=(), correos_remotos=(), celda_tecnica=None, **excel):
+def caso(
+    nombre,
+    locales=(),
+    remotas=(),
+    resoluciones=None,
+    correos_locales=(),
+    correos_remotos=(),
+    anulaciones_locales=(),
+    anulaciones_remotas=(),
+    celda_tecnica=None,
+    **excel,
+):
     with tempfile.TemporaryDirectory() as t:
         carpeta = Path(t)
         obra = trabajo(carpeta)
@@ -98,13 +112,23 @@ def caso(nombre, locales=(), remotas=(), resoluciones=None, correos_locales=(), 
             apply(obra, [obra.rows[fila].id], review={campo: valor})
         for fila, mail in correos_locales:
             apply(obra, [obra.rows[fila].id], decisions={'mail': dict(mail)})
-        remotas = list(remotas) + [(fila, 'NURUS_DECISIONES', tecnico(obra, fila, mail)) for fila, mail in correos_remotos]
+        for fila, overrides in anulaciones_locales:
+            apply(obra, [obra.rows[fila].id], overrides=dict(overrides))
+        por_fila = {}
+        for fila, mail in correos_remotos:
+            por_fila.setdefault(fila, {})['mail'] = mail
+        for fila, overrides in anulaciones_remotas:
+            por_fila.setdefault(fila, {})['overrides'] = overrides
+        remotas = list(remotas) + [
+            (fila, 'NURUS_DECISIONES', tecnico(obra, fila, **datos)) for fila, datos in sorted(por_fila.items())
+        ]
         if celda_tecnica is not None:
             remotas.append((0, 'NURUS_DECISIONES', celda_tecnica))
         editar_excel(obra, remotas, **excel)
         claves = {(obra.rows[i].id, c): v for (i, c), v in (resoluciones or {}).items()}
         salida = {'escenario': nombre, 'locales': [list(x) for x in locales], 'remotas': [list(x) for x in remotas],
                   'correos_locales': [[f, m] for f, m in correos_locales],
+                  'anulaciones_locales': [[f, o] for f, o in anulaciones_locales],
                   'excel': {k: v for k, v in excel.items()},
                   'resoluciones': [[i, c, v] for (i, c), v in (resoluciones or {}).items()]}
         try:
@@ -123,6 +147,7 @@ def caso(nombre, locales=(), remotas=(), resoluciones=None, correos_locales=(), 
         salida['propuestas'] = [fila.observation for fila in obra.rows]
         salida['reglas'] = [list(fila.rules) for fila in obra.rows]
         salida['correo'] = [dict(fila.decisions.get('mail', {})) for fila in obra.rows]
+        salida['anulaciones'] = [dict(fila.overrides) for fila in obra.rows]
         return salida
 
 
@@ -165,6 +190,13 @@ def main():
         caso('celda_tecnica_invalida', celda_tecnica='esto no es json'),
         caso('celda_tecnica_con_gestion_invalida',
              celda_tecnica=json.dumps({'version': 1, 'decisions': {'mail': {'medidas': 'siempre'}}, 'overrides': {}, 'word_overrides': {}, 'excluded': False})),
+        # E-A10 (F08): anulaciones de columnas de origen en `NURUS_DECISIONES` y combinación con columnas editadas.
+        caso('anulacion_local_y_revision_remota', anulaciones_locales=[(0, {'espera': '150'})], remotas=[(0, 'CC', 1)]),
+        caso('anulacion_local_y_origen_editado_en_excel', anulaciones_locales=[(0, {'espera': '150'})], remotas=[(0, 'T ESPERA', 5)]),
+        caso('anulacion_remota_y_origen_editado_en_excel', anulaciones_remotas=[(0, {'espera': '150'})], remotas=[(0, 'T ESPERA', 5)]),
+        caso('anulacion_conflicto', anulaciones_locales=[(0, {'espera': '150'})], anulaciones_remotas=[(0, {'espera': '5'})]),
+        caso('anulacion_igual_en_ambos', anulaciones_locales=[(0, {'espera': '150'})], anulaciones_remotas=[(0, {'espera': '150'})]),
+        caso('anulacion_y_correo_conflicto', correos_locales=[(0, {'medidas': 'omit'})], anulaciones_remotas=[(0, {'espera': '150'})]),
     ]
     # Bytes y no texto: en Windows `write_text` cambiaría los saltos de línea y la CI compara byte a byte.
     destino.write_bytes(json.dumps({
