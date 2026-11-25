@@ -75,6 +75,21 @@ fn lista(rutas: &[PathBuf]) -> String {
     rutas.iter().map(|r| r.display().to_string()).collect::<Vec<_>>().join("; ")
 }
 
+fn libro_conjunto(carpeta: &Path, datos: &Value) -> Result<Option<PathBuf>, String> {
+    let Some(nombre) = datos["archivo"].as_str().filter(|s| !s.is_empty()) else { return Ok(None) };
+    if Path::new(nombre).file_name().and_then(|n| n.to_str()) != Some(nombre) || nombre.contains('\\') {
+        return Err("El manifiesto contiene una ruta fuera del lote.".into());
+    }
+    let raiz = carpeta.canonicalize().map_err(|e| e.to_string())?;
+    let ruta = raiz.join(nombre).canonicalize().map_err(|e| e.to_string())?;
+    if ruta.parent() != Some(raiz.as_path()) { return Err("El manifiesto contiene una ruta fuera del lote.".into()); }
+    let bytes = std::fs::read(&ruta).map_err(|e| e.to_string())?;
+    if format!("{:x}", Sha256::digest(bytes)) != datos["sha256"].as_str().unwrap_or("") {
+        return Err("El resultado cambió; genera una copia nueva desde las fuentes.".into());
+    }
+    Ok(Some(ruta))
+}
+
 /// Lo que `load` hace en el hilo: el lote verificado y, por consulta, su aptitud para CSMP.
 fn detalles(lote: &Lote) -> Result<Vec<Detalle>, String> {
     let mut aptitudes: Vec<(String, Vec<String>)> = Vec::new();
@@ -402,21 +417,22 @@ impl Resultados {
                     if let Some(fases) = datos["fases"].as_object() {
                         for (nombre, fase) in fases {
                             if ui.button(format!("{} · {}", nombre, fase["estado"].as_str().unwrap_or(""))).clicked() {
-                                if let Some(fase_carpeta) = fase["carpeta"].as_str() {
-                                    if let Ok(rutas) = archivo_local::fases_conjunto(&carpeta, true) {
-                                        if let Some(ruta) = rutas.iter().find(|r| r.ends_with(fase_carpeta)) { crate::ui::abrir_en_sistema(ruta); }
+                                if fase["carpeta"].as_str().is_some_and(|s| !s.is_empty()) {
+                                    match archivo_local::ruta_fase(&carpeta, &fase["carpeta"]) {
+                                        Ok(ruta) => crate::ui::abrir_en_sistema(&ruta),
+                                        Err(error) => self.estado = Some(Err(error)),
                                     }
                                 }
                             }
                         }
                     }
-                    if let Some(nombre) = datos["archivo"].as_str().filter(|s| !s.is_empty()) {
+                    if datos["archivo"].as_str().is_some_and(|s| !s.is_empty()) {
                         if ui.button("Abrir libro para CSMP").clicked() {
-                            let ruta = carpeta.join(nombre);
-                            let seguro = Path::new(nombre).file_name().and_then(|n| n.to_str()) == Some(nombre) && !nombre.contains('\\');
-                            let bytes = if seguro { std::fs::read(&ruta).ok() } else { None };
-                            if bytes.as_ref().is_some_and(|b| format!("{:x}", Sha256::digest(b)) == datos["sha256"].as_str().unwrap_or("")) { crate::ui::abrir_en_sistema(&ruta); }
-                            else { self.estado = Some(Err("El resultado cambió; genera una copia nueva desde las fuentes.".into())); }
+                            match libro_conjunto(&carpeta, &datos) {
+                                Ok(Some(ruta)) => crate::ui::abrir_en_sistema(&ruta),
+                                Ok(None) => {},
+                                Err(error) => self.estado = Some(Err(error)),
+                            }
                         }
                     }
                     if ui.button("Abrir carpeta").clicked() { crate::ui::abrir_en_sistema(&carpeta); }

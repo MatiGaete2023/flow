@@ -140,7 +140,7 @@ fn resolver_tolerante(ruta: &Path) -> Result<PathBuf, String> {
     Ok(resuelta)
 }
 
-fn ruta_fase(raiz: &Path, nombre: &Value) -> Result<PathBuf, String> {
+pub fn ruta_fase(raiz: &Path, nombre: &Value) -> Result<PathBuf, String> {
     let Some(nombre) = nombre.as_str().filter(|s| !s.is_empty()) else {
         return Err(CARPETA_FASE_AUSENTE.into());
     };
@@ -238,6 +238,59 @@ mod pruebas {
     use super::*;
     use base64::Engine;
     use serde_json::{json, Map};
+
+    fn comparar_historial(caso: &Value) -> Result<(), String> {
+        let nombre = caso["caso"].as_str().unwrap();
+        let base = std::env::temp_dir().join(format!("flow-historial-{}-{}-{nombre}", std::process::id(), std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()));
+        std::fs::create_dir_all(&base).map_err(|e| e.to_string())?;
+        let base = std::fs::canonicalize(base).map_err(|e| e.to_string())?;
+        let resultado = (|| {
+            if caso.get("lotes").is_none() { return Ok(()); }
+            for (ruta, contenido) in caso["archivos"].as_object().unwrap() {
+                let destino = base.join(ruta);
+                std::fs::create_dir_all(destino.parent().unwrap()).map_err(|e| e.to_string())?;
+                std::fs::write(destino, contenido.as_str().unwrap()).map_err(|e| e.to_string())?;
+            }
+            let p = Preferencias {
+                historial_lotes: caso["lotes"].as_array().unwrap().iter().map(|v| base.join(v.as_str().unwrap()).to_string_lossy().into_owned()).collect(),
+                historial_bitacoras: caso["bitacoras"].as_array().unwrap().iter().map(|v| base.join(v.as_str().unwrap()).to_string_lossy().into_owned()).collect(),
+                ..Default::default()
+            };
+            let ruta = |p: &Path| p.strip_prefix(&base).unwrap().to_string_lossy().replace('\\', "/");
+            let ultimo = caso["ultimo"].as_str().map(|s| base.join(s));
+            let obtenido: Vec<_> = descubrir(&base.join(caso["base"].as_str().unwrap()), &p, ultimo.as_deref()).iter().map(|r| json!([ruta(&r.carpeta), r.tipo, r.estado, r.conteo])).collect();
+            if json!(obtenido) != caso["resultado"] { return Err(format!("{nombre}: {obtenido:?} != {}", caso["resultado"])); }
+            let excluidas: Vec<_> = caso["excluidas"].as_array().unwrap().iter().map(|v| base.join(v.as_str().unwrap())).collect();
+            let refs: Vec<_> = referencias_bitacoras(&p, &excluidas).iter().map(|p| ruta(p)).collect();
+            if json!(refs) != caso["referencias"] { return Err(format!("{nombre}: referencias {refs:?}")); }
+            Ok(())
+        })();
+        let _ = std::fs::remove_dir_all(base);
+        resultado
+    }
+
+    #[test]
+    fn historial_local_igual_a_python() {
+        let oracle: Value = serde_json::from_str(include_str!("../../tests/datos/historial_local.json")).unwrap();
+        let casos = oracle["casos"].as_array().unwrap();
+        assert_eq!(casos.len(), 14);
+        for caso in casos { comparar_historial(caso).unwrap(); }
+    }
+
+    #[test]
+    fn oraculo_de_historial_local_detecta_alteraciones() {
+        let oracle: Value = serde_json::from_str(include_str!("../../tests/datos/historial_local.json")).unwrap();
+        let casos = oracle["casos"].as_array().unwrap();
+        let original = casos.iter().find(|c| c["caso"] == "orden").unwrap();
+        for columna in [2, 3] {
+            let mut alterado = original.clone();
+            alterado["resultado"][0][columna] = json!("alterado");
+            assert!(comparar_historial(&alterado).is_err());
+        }
+        let mut alterado = original.clone();
+        alterado["resultado"].as_array_mut().unwrap().reverse();
+        assert!(comparar_historial(&alterado).is_err());
+    }
 
     fn reconstruir(destino: &Path, archivos: &Value) {
         for (ruta, contenido) in archivos.as_object().unwrap() {
