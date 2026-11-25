@@ -360,3 +360,10 @@ E-R3 · Meta 4: contraste ampliado (`92ab9c1`, CI Windows verde, run 45656558813
 
 - Manuales aparte (F28 pasa a «Sí»), registrador de observaciones RUS y extractores de estructura (`extraer_estructura_*.py`). `AGENTS.md` deja de citar `extraer_estructura_har.py` en la regla de datos; la regla (solo estructura anónima) no cambia. La referencia Python no se toca.
 - Cierre: E-Q10, E-S3 y E-I3 `HECHO` (CI de la rama principal verde con todos los oráculos regenerados, runs 45708615263 y 45708628960, sobre `60fe600`).
+
+## 2026-11-25 · E-A11 y E-T6 (agente A · Antigravity)
+
+- Cambió: `sincronizar.rs` y `trabajo.rs` (estado completo de `NURUS_DECISIONES`, como `record_edits` de Python), `generar_sync.py` y `sync.json` (31 → 38 casos), `outlook.rs` (borrador de prueba) y `ui.rs` (botón en Ajustes; búsqueda inicial de actualizaciones en un hilo).
+- CI: 45718105751 rojo (`check_contactos` por una dirección real de ejemplo en una prueba; corregido a `example.test` en `b6e0b70`), 45719672640 verde con todos los oráculos (`workflow_dispatch` lanzado por el agente).
+- Orquestador: `sync` idéntico en Linux; 92 + 110 + 1 pruebas; clippy, solo lectura, contactos, RUT, textos e inventario en verde; CC fijo por constante y sin `.Send(`.
+- Corrida de entrega 45708908715 (`60fe600`) verde: `.exe` final e instalador listos (no incluye E-A11 ni E-T6).
