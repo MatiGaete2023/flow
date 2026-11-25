@@ -215,13 +215,13 @@ mod pruebas {
     fn borrador_de_prueba_cumple_requisitos_y_solo_guarda() {
         let b = Borrador {
             titulo: "Borrador de prueba".into(),
-            para: "funcionario@pjud.cl".into(),
+            para: "funcionario@example.test".into(),
             cc: CC_OBLIGATORIO.into(),
             asunto: "Flow Rust · borrador de prueba".into(),
             cuerpo: "Cuerpo de prueba sin datos de causas".into(),
             ..Default::default()
         };
-        let d = datos(&b, "funcionario@pjud.cl", &[]);
+        let d = datos(&b, "funcionario@example.test", &[]);
         assert_eq!(d["subject"], "Flow Rust · borrador de prueba");
         assert!(d["cc"].as_str().unwrap().contains(CC_OBLIGATORIO));
         assert!(SCRIPT.contains(".Save()"));
