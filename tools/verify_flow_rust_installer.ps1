@@ -7,6 +7,22 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
+function Get-Sha256Hex {
+    param([Parameter(Mandatory = $true)][string]$Path)
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        $fs = [IO.File]::OpenRead($Path)
+        try {
+            $hashBytes = $sha.ComputeHash($fs)
+        } finally {
+            $fs.Dispose()
+        }
+    } finally {
+        $sha.Dispose()
+    }
+    return ([BitConverter]::ToString($hashBytes) -replace '-', '').ToLowerInvariant()
+}
+
 function Assert-FileEquals {
     param([string]$Path, [string]$Expected)
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
@@ -75,8 +91,8 @@ try {
         }
     }
 
-    $origHash = (Get-FileHash -LiteralPath $exeBundle -Algorithm SHA256).Hash.ToLowerInvariant()
-    $instHash = (Get-FileHash -LiteralPath $installedExe -Algorithm SHA256).Hash.ToLowerInvariant()
+    $origHash = Get-Sha256Hex -Path $exeBundle
+    $instHash = Get-Sha256Hex -Path $installedExe
     if ($origHash -ne $instHash) {
         throw 'La huella del ejecutable instalado difiere del origen.'
     }

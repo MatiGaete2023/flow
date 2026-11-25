@@ -40,7 +40,7 @@ fn contrato_instalador_por_usuario_y_actualizaciones() {
     );
 
     let instalar_checks = [
-        "Get-FileHash",
+        "SHA256]::Create()",
         "actualizaciones",
         "Flow.lnk",
         "Desinstalar_Flow.ps1",
@@ -118,6 +118,11 @@ fn instalador_instala_reinstala_y_desinstala_preservando_actualizaciones() {
     assert!(
         !salida_mala.status.success(),
         "debe rechazar SHA256.txt manipulado"
+    );
+    let err_mala = String::from_utf8_lossy(&salida_mala.stderr);
+    assert!(
+        err_mala.contains("no coincide"),
+        "el rechazo por SHA debe explicar la discrepancia, obtuvo: {err_mala}"
     );
     assert!(!destino.join("flow_rust.exe").exists());
 
