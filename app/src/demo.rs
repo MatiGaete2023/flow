@@ -83,7 +83,13 @@ pub fn libro(mode: crate::motor::Mode, hoy: NaiveDate) -> Result<std::path::Path
         }
         hojas.push(("Hoja2", h, cr));
     }
-    let path = std::env::temp_dir().join(format!("Ejemplo_ficticio_{}.xlsx", mode.label()));
+    // Carpeta propia por llamada: con una ruta fija, dos llamadas simultáneas (pruebas en paralelo)
+    // reescribían el mismo archivo y en Windows una leía un libro a medio escribir.
+    static SECUENCIA: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    let n = SECUENCIA.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let carpeta = std::env::temp_dir().join(format!("flow_ejemplo_{}_{}", std::process::id(), n));
+    std::fs::create_dir_all(&carpeta).map_err(|e| format!("No se pudo crear la carpeta del ejemplo: {e}"))?;
+    let path = carpeta.join(format!("Ejemplo_ficticio_{}.xlsx", mode.label()));
     let refs: Vec<(&str, Vec<String>, Vec<Vec<String>>)> = hojas.into_iter().collect();
     crate::productos::escribir_xlsx(&refs, &path)?;
     Ok(path)
