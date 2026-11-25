@@ -48,13 +48,15 @@ El perfil de las tareas: Rust y Python en un repositorio con muchas reglas, orá
 
 | Familia | Opción económica recomendada | Para qué | Escalar a |
 |---|---|---|---|
-| OpenAI | **GPT-5.4 mini** (entrada ~US$0,75 por millón de tokens; la salida no la pude confirmar) | Agente con más archivos y pasos (tipo A) | `gpt-5.3-codex` (US$1,75 / US$14) si se atasca |
+| OpenAI | **GPT-5.6 Luna** (entrada ~US$0,20 y salida ~US$1,20 por millón tras la rebaja de julio) | Agente con más archivos y pasos (tipo A) y cualquier tarea de código del día a día | **GPT-5.6 Terra** (~US$2 / US$12) si Luna se atasca; **Sol** (~US$4–5 / US$20–30; la promoción tenía fecha, ver abajo) solo para lo más difícil. Reemplaza a GPT-5.4 mini, que era mi recomendación inicial por no haber visto la familia 5.6 |
 | DeepSeek | **V4 Flash** (entrada ~US$0,14 y salida ~US$0,28 por millón; hay tarifa por hora punta y alzas reportadas) | Implementación guiada por especificación (tipo B); modo con razonamiento para lo difícil | V4 Pro solo si Flash falla (precio con cifras contradictorias) |
 | Google | **Gemini 3.5 Flash** (entrada US$0,75 y salida US$4,50 por millón, incluye razonamiento) | Lectura y análisis de muchos archivos con contexto largo (tipo C) | Gemini Pro; Flash-Lite (~US$0,25–0,30 de entrada) solo para inventarios de lectura |
 
+**Familia GPT-5.6 (Sol, Terra, Luna).** Los tres comparten contexto de ~1,05 millones de tokens. Un índice de terceros de agentes de código los ubica cerca (Sol ~80, Terra ~77, Luna ~75; las cifras varían entre fuentes) mientras Luna cuesta alrededor de una veinteava parte de Sol en entrada: para este repositorio, Luna es la mejor relación. El precio de Sol tenía una promoción hasta al menos el 21-nov y una publicación habla de volver al precio normal el 30-nov. La página de precios de OpenAI también lista variantes `gpt-6` que no verifiqué: comprobar cuál está disponible en el plan del usuario.
+
 Hechos (N1, de las páginas consultadas): los modelos y precios de arriba aparecen en resultados de las páginas de precios de cada proveedor y de terceros; los de DeepSeek y Gemini tienen cifras que se contradicen y promociones con fecha. Inferencias (N2): el reparto por tipo de tarea sale de lo que describe cada proveedor y de la matriz de roles del usuario (ChatGPT arquitecto, DeepSeek implementador de especificación, Gemini procesador de volumen); no probé a ninguno con este repositorio. Especulación (N3): que un modelo económico cumpla el protocolo de ramas, informes y CI sin supervisión. **Cómo acotar el riesgo:** el orquestador revisa cada rama con el procedimiento de arriba y no integra nada sin CI verde. Privacidad: a ningún agente se le dan archivos reales; DeepSeek se opera desde servidores del proveedor, así que conviene mantener lo que reciba solo en especificación técnica.
 
-Fuentes: [precios de OpenAI](https://developers.openai.com/api/docs/pricing), [precios de DeepSeek](https://api-docs.deepseek.com/quick_start/pricing), [precios de Gemini](https://ai.google.dev/gemini-api/docs/pricing). Revisarlas antes de contratar.
+Fuentes: [precios de OpenAI](https://developers.openai.com/api/docs/pricing), [rebaja de Terra y Luna](https://community.openai.com/t/announcing-a-major-price-drop-for-5-6-terra-and-luna-and-fast-mode-for-5-6-sol/1388484), [GPT-5.6](https://openai.com/index/gpt-5-6/), [precios de DeepSeek](https://api-docs.deepseek.com/quick_start/pricing), [precios de Gemini](https://ai.google.dev/gemini-api/docs/pricing). Revisarlas antes de contratar.
 
 ## Lecciones operativas
 
