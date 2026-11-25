@@ -324,3 +324,118 @@ ESTILO: español chileno, primera línea = la respuesta, sin cortesías, hechos 
 ### Prompt del Agente C · E-S2 con limpieza del clon
 
 Es el «Prompt del Agente C · Segundo encargo» con un paso 0 que primero respalda y descarta el E-P2 duplicado (`f7ff7c9`).
+
+## Prompt del Agente A · E-I3 actualizaciones desde OneDrive y ajustes de E-I1 (Antigravity)
+
+```
+Eres el Agente A · Antigravity. Trabajas en MatiGaete2023/flow, directamente en la rama estudio/paridad-python-rust-20261119, clon C:\Users\matia\Downloads\nuevo. Otros agentes: B · DeepSeek (rama estudio/agente-b-hoja-20261125: flujo_paquete.rs, descargador_ui.rs) y C · ChatGPT Luna (rama estudio/agente-c-historial-20261125: descargador_resultados_ui.rs, archivo_local.rs, preferencias.rs). No toques lo suyo.
+
+PASO 0 · CHECKOUT. git fetch origin; git checkout estudio/paridad-python-rust-20261119; git merge --ff-only origin/estudio/paridad-python-rust-20261119; comprueba que el último commit de origin sea ancestro de HEAD. Si hay cambios locales que no son tuyos, detente. Si ya existen commits de otra sesión que hagan E-I3, detente y avisa. Primera respuesta: ruta, rama y HEAD.
+
+Lee solo AGENTS.md, docs/migracion_python_rust/ESTADO.md (F26), PLAN.md (E-I1, E-I2, E-I3 y la decisión «Firma y alojamiento del instalador») y CONTINUACION.md.
+
+DECISIÓN DEL USUARIO (25-nov): sin firma; instalador y actualizaciones en OneDrive institucional; Flow se usa en dos equipos (trabajo y PC personal). Por las reglas del usuario, por OneDrive solo viajan el instalador, flow_rust.exe y SHA256.txt; nunca lotes, paquetes ni datos de causas.
+
+ENCARGO · E-I3 (F26).
+1. actualizacion.rs (actualizacion::buscar ya recibe la carpeta): agrega en la configuración de Flow (config.rs, solo un campo nuevo, opcional y con valor por omisión vacío) una «carpeta de actualizaciones adicional». Flow busca en la fija (%LOCALAPPDATA%\FlowRust\actualizaciones) y, si está configurada, en la adicional. Si encuentra en la adicional un flow_rust.exe distinto del que corre, primero lo copia a la fija (copia por temporal y renombrado, nunca sobrescribe a medias) y aplica desde ahí, con la misma verificación SHA-256 contra el SHA256.txt que lo acompaña.
+2. Archivos a medio sincronizar: no aplicar si (a) falta SHA256.txt o no coincide; (b) el tamaño o la fecha de modificación de flow_rust.exe cambió entre dos lecturas separadas por al menos 2 segundos; (c) el archivo no se puede abrir en lectura exclusiva o es un marcador de OneDrive sin contenido local (atributo de archivo «solo en la nube»: si no puedes detectarlo de forma fiable, basta con (a) y (b)). En esos casos el aviso dice: «La actualización de la carpeta adicional todavía se está sincronizando; vuelve a intentar en unos minutos.».
+3. ui.rs, solo la sección «Actualizaciones» de Ajustes: campo «Carpeta adicional (por ejemplo, OneDrive)» con «Elegir…» y «Quitar», el estado de la última búsqueda y el aviso del punto 2. No cambies el resto de ui.rs.
+4. Ajustes de E-I1 (revisión del coordinador): (a) installer/Instalar_Flow.ps1 exige SHA256.txt por omisión; agrega un switch explícito -SinHuella para el caso contrario y, en ese caso, el mensaje final dice «SHA-256 no verificado (instalación sin SHA256.txt)» en vez de «verificado»; (b) installer/Desinstalar_Flow.ps1 solo borra la carpeta si contiene flow_rust.exe o Desinstalar_Flow.ps1 (quita la aceptación por nombre «FlowRust»); (c) README corto installer/LEEME.txt: cómo instalar desde la carpeta de OneDrive (copiar a una carpeta local y ejecutar Instalar_Flow.cmd), cómo actualizar y qué no se debe sincronizar.
+5. Pruebas: en actualizacion.rs, la_actualizacion_de_la_carpeta_adicional_se_copia_y_aplica, una_actualizacion_a_medio_sincronizar_no_se_aplica (cambia el tamaño entre lecturas) y sin_sha256_en_la_carpeta_adicional_no_se_aplica; en app/tests/instalador.rs, que el instalador sin SHA256.txt falla por omisión y que el desinstalador rechaza una carpeta «FlowRust» sin flow_rust.exe. No hacen falta oráculos de Python (Python no tiene este actualizador).
+6. Si escribes a disco por una ruta nueva, ajusta tus líneas en tools/inventario_escrituras.py (actualizacion.rs, config.rs).
+
+Archivos tuyos: app/src/actualizacion.rs, el campo nuevo en app/src/config.rs, la sección «Actualizaciones» de app/src/ui.rs, installer/**, app/tests/instalador.rs, tools/verify_flow_rust_installer.ps1 y tus líneas del inventario.
+Prohibido: el workflow (no lo edites: si crees que hace falta, propónlo en el informe), descargador/**, descargador_ui.rs, descargador_resultados_ui.rs, productos.rs, trabajo.rs, Cargo.toml y Cargo.lock, Python de src/, descargador/ y tests/, y ESTADO, PLAN, REGISTRO, AGENTS y CONTINUACION.
+
+REGLAS: datos sintéticos; sin escritura en RUS/SATURNO; Outlook solo borradores con CC fijo; sin --force, sin merge a main, sin releases. El actualizador nunca se aplica sin el botón de la persona.
+
+CRITERIO DE PARADA: si algo exige una dependencia nueva o un archivo prohibido, BLOQUEADO con el motivo. Si la CI falla dos veces por la misma causa sin que la entiendas, detente y reporta el log.
+
+PRUEBAS: tools/probar_app.sh rapido actualizacion e instalador mientras trabajas; tools/probar_app.sh todo una vez antes de publicar; cargo clippy --manifest-path app/Cargo.toml --features eframe/x11 --lib -- -D warnings; inventario_escrituras.py.
+
+PUBLICACIÓN: commits en estudio/paridad-python-rust-20261119, cada uno terminado con la línea «Agente: A · Antigravity»; antes de cada push, git fetch y git merge --no-edit (nunca rebase ni --force). Cita solo runs que veas en GitHub (gh run list --branch estudio/paridad-python-rust-20261119) con su conclusión leída en ese momento; si un run no aparece, no existe.
+
+FIRMA (obligatoria): el informe empieza con un bloque «Firma»: Agente A; Antigravity (modelo exacto); identidad git nombre <correo>; ruta del clon; rama; lista de commits de esta sesión con SHA.
+
+INFORME: docs/migracion_python_rust/informes/AGENTE_A_EI3_20261125.md, en un commit aparte y el último: 1) firma; 2) resumen ≤10 líneas; 3) conteos antes → después copiados de «test result», con su commit; 4) run de CI con su conclusión; 5) hallazgos (hechos | inferencias | especulación); 6) texto propuesto para ESTADO, PLAN y registro (≤10 líneas); 7) riesgos y pendientes. Estado: ENTREGADO o BLOQUEADO.
+
+ESTILO: español chileno, primera línea = la respuesta, sin cortesías, código completo.
+```
+
+## Prompt del Agente B · E-Q10 paquete por hoja (DeepSeek)
+
+```
+Eres el Agente B · DeepSeek. Trabajas en MatiGaete2023/flow, en la rama nueva estudio/agente-b-hoja-20261125. Otros agentes: A · Antigravity (actualizacion.rs, config.rs, ui.rs Ajustes, installer/**) y C · ChatGPT Luna (rama estudio/agente-c-historial-20261125: descargador_resultados_ui.rs, archivo_local.rs, preferencias.rs). No toques lo suyo.
+
+PASO 0 · CHECKOUT. En tu clon (C:\Users\matia\OneDrive\Documentos\deepseek-harness\default-workspace\flow, origin = MatiGaete2023/flow): git fetch origin; git checkout -b estudio/agente-b-hoja-20261125 origin/estudio/paridad-python-rust-20261119 (ya trae E-Q9 integrado y cerrado como HECHO, run 45685219486). Comprueba git merge-base --is-ancestor e71d666 HEAD (debe terminar en 0). Si falla: BLOQUEADO con el error literal. Primera respuesta: ruta, rama y HEAD.
+
+EVALUACIÓN DE TU ENTREGA ANTERIOR (E-Q9, HECHO): bien la corrección, la firma y la lista honesta de runs (incluidos los rojos). A corregir: tu primer informe dio por verde un run que había fallado y dejó un marcador sin completar. Cita solo lo que leas en GitHub en ese momento.
+
+Lee solo AGENTS.md, docs/migracion_python_rust/ESTADO.md, PLAN.md (E-Q9 y E-Q10) y CONTINUACION.md.
+
+ENCARGO · E-Q10 · Paquete por hoja (run_por_hoja) (F22).
+Referencia Python (no la modifiques): descargador/flujo_paquete.py, run_por_hoja y lo que reutiliza de run; su uso en descargador/descargador.py y las pruebas de descargador/test_flujo_paquete.py.
+1. En app/src/descargador/flujo_paquete.rs, el equivalente de run_por_hoja: un paquete y un ZIP por hoja seleccionada, cada uno con su proceso.json y las mismas fases, opciones, textos y reglas de retomar que run. No cambies las firmas de lo que E-Q9 ya expone ni las de lote, bitacoras y paquete.
+2. Vista (app/src/descargador_ui.rs, solo la acción de E-Q9): una opción «Un paquete por hoja» junto a «Consultar y crear paquete», con el mismo avance y cancelación; al terminar, la lista de ZIP creados con «Abrir carpeta» y «Abrir en Trabajo» por cada uno.
+3. Oráculo: amplía app/qa/generar_flujo_paquete.py y app/tests/datos/flujo_paquete.json (ya está en el workflow) con al menos 4 casos: dos hojas completas; una hoja que falla y la otra completa; cancelación tras la primera hoja y retomar; una sola hoja (debe coincidir con run). Independiente del sistema, como ya lo dejaste: rutas con «/», historial sin hora, generar_lote importado, LF.
+4. Pruebas Rust: amplía flujo_paquete_igual_a_python con los nuevos conteos y oraculo_de_flujo_paquete_detecta_alteraciones con una alteración por hoja; agrega una prueba de vista de la opción por hoja.
+5. Si hay escrituras nuevas, ajusta tu línea de tools/inventario_escrituras.py.
+
+Archivos tuyos: app/src/descargador/flujo_paquete.rs, tu parte de app/src/descargador_ui.rs, app/qa/generar_flujo_paquete.py, app/tests/datos/flujo_paquete.json y tu línea del inventario.
+Prohibido: el workflow, paquete.rs, lote.rs, bitacoras.rs, lecturas.rs, sitfa_ficticio.rs, descargador_resultados_ui.rs, archivo_local.rs, preferencias.rs, productos.rs, ui.rs, actualizacion.rs, config.rs, installer/**, Cargo.toml y Cargo.lock, Python de descargador/, src/ y tests/, y ESTADO, PLAN, REGISTRO, AGENTS y CONTINUACION.
+
+REGLAS: datos sintéticos; sin escritura en RUS/SATURNO; sin --force, sin merge a main ni a la rama principal, sin releases. verificar_referencia_python.py y verificar_solo_lectura.py deben seguir en PASA.
+
+CRITERIO DE PARADA: si Python es ambiguo o parece tener un error, reprodúcelo, fíjalo en el oráculo y repórtalo. Si necesitas un archivo prohibido o cambiar una firma protegida: BLOQUEADO. Si la CI falla dos veces por la misma causa sin entenderla, detente y reporta el log.
+
+PRUEBAS: tools/probar_app.sh rapido flujo mientras trabajas; tools/probar_app.sh todo una vez antes de publicar; clippy de la biblioteca; inventario_escrituras.py y verificar_solo_lectura.py. Comprueba que el generador da bytes idénticos en dos corridas.
+
+PUBLICACIÓN: commits en tu rama terminados con «Agente: B · DeepSeek»; git push -u origin estudio/agente-b-hoja-20261125. CI: linux y validar en success y «Regenerar los oráculos» CORRIDO con flujo_paquete, terminando en «Oráculos regenerados sin diferencias.».
+
+FIRMA (obligatoria): bloque «Firma» al inicio del informe: Agente B; DeepSeek (modelo exacto); identidad git; ruta del clon; rama; commits de esta sesión con SHA.
+
+INFORME: docs/migracion_python_rust/informes/AGENTE_B_20261125c.md, en un commit aparte y el último, con la estructura de siempre (firma, resumen, conteos literales con commit, runs reales con conclusión y última línea de la regeneración, hallazgos clasificados, texto propuesto sin «HECHO», riesgos). Estado: ENTREGADO solo con CI verde; si no, BLOQUEADO.
+
+ESTILO: español chileno, primera línea = la respuesta, sin cortesías, código completo.
+```
+
+## Prompt del Agente C · E-S3 historial de referencias y descarga conjunta (ChatGPT Luna)
+
+```
+Eres el Agente C · ChatGPT Luna. Trabajas en MatiGaete2023/flow, en la rama nueva estudio/agente-c-historial-20261125. Otros agentes: A · Antigravity (actualizacion.rs, config.rs, ui.rs Ajustes, installer/**) y B · DeepSeek (rama estudio/agente-b-hoja-20261125: flujo_paquete.rs y su acción en descargador_ui.rs). No toques lo suyo.
+
+PASO 0 · CHECKOUT. En tu clon C:\Users\matia\Documents\flow-rust-a (origin = MatiGaete2023/flow): si hay cambios sin commit, detente. git fetch origin; git checkout -b estudio/agente-c-historial-20261125 origin/estudio/paridad-python-rust-20261119 (ya trae E-S2 integrado). Comprueba git merge-base --is-ancestor 0610040 HEAD (debe terminar en 0). Si falla: BLOQUEADO con el error literal. Primera respuesta: ruta, rama y HEAD.
+
+EVALUACIÓN DE TU ENTREGA ANTERIOR (E-S2, integrado): bien la firma, los trailers y el informe de runs. Al integrar, el coordinador corrigió el generador: el caso separadores_ambos dependía de que Python tratara «\» como separador (solo pasa en Windows); en Linux daba otro resultado y un error con ruta temporal. Regla: el oráculo debe regenerarse idéntico en Linux y Windows; si Python se comporta distinto según el sistema, emula la conducta de Windows en el generador y dilo.
+
+Lee solo AGENTS.md, docs/migracion_python_rust/ESTADO.md, PLAN.md (E-S2 y E-S3) y CONTINUACION.md.
+
+ENCARGO · E-S3 · Historial de referencias locales y «Ver descarga conjunta» (F22).
+Referencia Python (no la modifiques): descargador/archivo_local.py (remember, discover, diary_references), descargador/preferencias.py (historial_lotes, historial_bitacoras), descargador/ventana_resultados.py (reload, update_collection, review_missing_diaries, show_joint) y las pruebas descargador/test_reutilizacion_local.py, test_referencias_ausentes.py y test_retencion_lotes.py.
+1. En app/src/descargador/archivo_local.rs: recordar(preferencias, carpeta), descubrir(base, preferencias, ultimo) y referencias_bitacoras(preferencias, excluidas), como remember, discover y diary_references: misma clave por tipo (historial_lotes con la carpeta, historial_bitacoras con la ruta del bitacoras.json), mismo orden, mismo conteo (registros de bitácoras o consultas_completadas/fases) y mismos estados NO_DISPONIBLE y ERROR_CONTROL para referencias ausentes.
+2. En app/src/descargador/preferencias.rs: los dos campos de historial, con lectura compatible con preferencias antiguas (sin los campos) y escritura por temporal y renombrado como el resto del archivo.
+3. Resultados (app/src/descargador_resultados_ui.rs): lista de referencias recordadas (tipo, estado, conteo y carpeta), elegir una para abrirla, «Quitar del historial»; una referencia ausente se muestra NO_DISPONIBLE y no se puede abrir. «Ver descarga conjunta» abre los productos (consolidado, CSV, ICS, ZIP) de un conjunto completo uniendo sus fases, como show_joint; con un conjunto incompleto, el mensaje de Python.
+4. Oráculo nuevo app/qa/generar_historial_local.py y app/tests/datos/historial_local.json: al menos 10 casos (recordar lote, conjunto y bitácoras; no duplicar; descubrir con base, historial y último; orden; referencia ausente de lote y de bitácoras; bitacoras.json dañado → ERROR_CONTROL; excluidas; show_joint de un conjunto completo e incompleto). Determinista e idéntico en Linux y Windows: importa generar_lote, LF, rutas con «/» relativas a la raíz del caso, carpeta temporal con Path(tmp).resolve(), y emula Windows si Python depende del sistema.
+5. Pruebas Rust: historial_local_igual_a_python (afirma el número de casos) y oraculo_de_historial_local_detecta_alteraciones (altera un estado, un conteo y el orden); una prueba de vista: una referencia recordada aparece y una ausente sale NO_DISPONIBLE.
+6. Única excepción de workflow: agrega 'historial_local' al arreglo de oráculos del paso «Regenerar los oráculos con la referencia Python» y nada más en ese archivo.
+7. Ajusta tus líneas de tools/inventario_escrituras.py (preferencias.rs, archivo_local.rs).
+
+Fuera de alcance (pendiente): resume_joint, que requiere portar la descarga conjunta flujo_csmp.run.
+
+Archivos tuyos: app/src/descargador/archivo_local.rs, app/src/descargador/preferencias.rs (solo los campos de historial), app/src/descargador_resultados_ui.rs, app/qa/generar_historial_local.py, app/tests/datos/historial_local.json, la línea del workflow del punto 6 y tus líneas del inventario.
+Prohibido: descargador_ui.rs, flujo_paquete.rs, paquete.rs, lote.rs, bitacoras.rs, productos.rs, ui.rs, actualizacion.rs, config.rs, installer/**, Cargo.toml y Cargo.lock, Python de descargador/, src/ y tests/, y ESTADO, PLAN, REGISTRO, AGENTS y CONTINUACION.
+
+REGLAS: datos sintéticos; nunca archivos reales; sin escritura en RUS/SATURNO; sin --force, sin merge a main ni a la rama principal, sin releases. verificar_referencia_python.py en PASA.
+
+CRITERIO DE PARADA: si Python es ambiguo o parece tener un error, reprodúcelo, fíjalo en el oráculo y repórtalo. Si necesitas un archivo prohibido o una dependencia: BLOQUEADO. Si la CI falla dos veces por la misma causa sin entenderla, detente y reporta el log. Si encuentras commits de otra sesión que ya hacen E-S3, detente y avisa.
+
+PRUEBAS: tools/probar_app.sh rapido historial mientras trabajas; tools/probar_app.sh todo una vez antes de publicar; clippy de la biblioteca; inventario_escrituras.py. Comprueba bytes idénticos en dos corridas del generador.
+
+PUBLICACIÓN: commits en tu rama terminados con «Agente: C · ChatGPT Luna»; git push -u origin estudio/agente-c-historial-20261125. CI: linux y validar en success y «Regenerar los oráculos» CORRIDO con historial_local, terminando en «Oráculos regenerados sin diferencias.». Cita solo runs que veas en GitHub.
+
+FIRMA (obligatoria): bloque «Firma» al inicio del informe: Agente C; ChatGPT Luna (modelo exacto); identidad git; ruta del clon; rama; commits de esta sesión con SHA.
+
+INFORME: docs/migracion_python_rust/informes/AGENTE_C_20261125c.md, en un commit aparte y el último, con la estructura de siempre. Estado: ENTREGADO o BLOQUEADO.
+
+ESTILO: español chileno, primera línea = la respuesta, sin cortesías, código completo.
+```
