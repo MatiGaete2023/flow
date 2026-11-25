@@ -267,5 +267,4 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Cambió: `actualizacion.rs` nuevo, `ui.rs` (aviso al abrir y sección en Ajustes), `descargador/extension.rs` y `descargador_ui.rs` (carpeta fija, actualización en el lugar, mensajes por caso), `tools/inventario_escrituras.py` y la regla en `AGENTS.md`.
 - Acredita: tres pruebas nuevas (aplicar y volver atrás, rechazos y restauración, extensión en el lugar). `probar_app.sh todo`: 73 y 94 pruebas, 0 fallos; clippy de la biblioteca limpio; inventario de escrituras al día.
 - Corrige: la huella del ejecutable se calculaba en cada cuadro de Ajustes (la corrida de pruebas pasó de más de 10 minutos a 20 segundos al corregirlo).
-- Pendiente: CI de Windows verde; prueba del usuario con un `.exe` real (la primera actualización es manual).
-
+- CI: run 45644045890 verde (`linux` y `validar`; sin cambios de oráculos, la regeneración se omitió). Pendiente: prueba del usuario con un `.exe` real (la primera actualización es manual).

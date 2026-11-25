@@ -14,8 +14,9 @@ Cerrados con CI de Windows en verde (`HECHO`; «aceptado» solo lo da el usuario
 | E-A8 gestión de correo por fila y `NURUS_DECISIONES` | 45634055296 |
 | E-A9 recálculo en trabajos de paquete | 45639115067 |
 | Reversión de D-10 y D-11 por decisión del usuario | 45637998137 |
+| E-I2 actualización en el lugar y extensión de carpeta fija (`5f21612`) | 45644045890 |
 
-**En curso:** E-I2 (actualización en el lugar y extensión de carpeta fija), commit `5f21612`, run 45644045890. Pasar a `HECHO` solo si `linux` y `validar` quedan en verde.
+No queda ningún encargo en curso: el siguiente es E-A10.
 
 **Decisiones del usuario (25-nov):** «módulo» con tilde; D-10 y D-11 revertidas; D-12 diferida; D-13 conservar las hojas del crate de Meta 4; D-5 confirmada; Word por tribunal con índice y salto de página (E-P1); Meta 4 solo con lotes del Descargador; de F08 solo las anulaciones de origen (E-A10); instalador (E-I1); Anonimizador sin conteo por tipo; Word manual sin paginación; M6 y M7 descartados; acta con un mes real en paralelo con Python; el asistente decide y sigue, registrando lo delegado como revertible. Actualización sin reinstalar: carpeta local y botón (E-I2).
 
