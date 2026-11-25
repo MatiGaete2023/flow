@@ -886,7 +886,14 @@ fn diagnostico_cobertura(d: &Datos, estados: &Map<String, Value>) -> (Value, Opt
     let codigos: Vec<_> = totales.iter()
         .filter(|(codigo, _)| **codigo != "BITACORA_VENTANA_VERIFICADA")
         .map(|(codigo, n)| format!("{codigo} ({n})")).collect();
-    let aviso = (!codigos.is_empty()).then(|| format!("Paquete con cobertura incompleta · {}. Busca el diagnóstico anónimo en la carpeta del paquete.", codigos.join(", ")));
+    // Una advertencia del lector (p. ej. nombre visible distinto al listado) no quita datos: la bitácora se leyó y va en
+    // el paquete. Solo se habla de cobertura incompleta cuando hay un motivo que degrada una consulta.
+    let solo_advertencias = totales.keys().all(|c| matches!(*c, "BITACORA_VENTANA_VERIFICADA" | "BITACORA_ADVERTENCIA"));
+    let aviso = (!codigos.is_empty()).then(|| if solo_advertencias {
+        format!("Paquete completo, con advertencias de lectura · {}. Las bitácoras se leyeron y van en el paquete; revisa esas filas en «Revisión de bitácoras…» (filtro «Con advertencia de lectura»). El diagnóstico anónimo está en la carpeta del paquete.", codigos.join(", "))
+    } else {
+        format!("Paquete con cobertura incompleta · {}. Busca el diagnóstico anónimo en la carpeta del paquete.", codigos.join(", "))
+    });
     (json!({
         "tipo": "COBERTURA_DIAGNOSTICO_ANONIMO",
         "version": 1,
@@ -2190,6 +2197,30 @@ mod tests {
             }
         }
         salida
+    }
+
+    #[test]
+    fn advertencias_de_lectura_no_se_anuncian_como_cobertura_incompleta() {
+        // Forma del lote real del 25-nov (sin datos): 84 bitácoras leídas, 81 con ventana verificada y 3 con la
+        // advertencia «nombre visible distinto al listado».
+        let mut d = Datos { cid: "c".into(), tablas: Vec::new(), n: 0, motivos: BTreeMap::new() };
+        let seleccion = json!({"screen": "bitacoras"});
+        for i in 0..84 {
+            let qid = format!("q{i}");
+            d.consulta(&qid, &seleccion, "PARCIAL", "2099-11-25", "1".into(), 0, None, "");
+            d.motivo(&qid, if i < 3 { "BITACORA_ADVERTENCIA" } else { "BITACORA_VENTANA_VERIFICADA" });
+        }
+        let estados = json!({"consultas": "PARCIAL", "bitacoras": "PARCIAL"});
+        let (diagnostico, aviso) = diagnostico_cobertura(&d, estados.as_object().unwrap());
+        assert_eq!(diagnostico["motivos"], json!({"BITACORA_ADVERTENCIA": 3, "BITACORA_VENTANA_VERIFICADA": 81}));
+        let aviso = aviso.unwrap();
+        assert!(aviso.starts_with("Paquete completo, con advertencias de lectura · BITACORA_ADVERTENCIA (3)."), "{aviso}");
+        assert!(!aviso.contains("cobertura incompleta"));
+        // Un motivo que degrada una consulta vuelve al aviso de cobertura incompleta.
+        d.consulta("qf", &seleccion, "FALLIDA", "2099-11-25", "1".into(), 0, None, "");
+        d.motivo("qf", "BITACORA_FALLIDA");
+        let (_, aviso) = diagnostico_cobertura(&d, estados.as_object().unwrap());
+        assert!(aviso.unwrap().starts_with("Paquete con cobertura incompleta · BITACORA_ADVERTENCIA (3), BITACORA_FALLIDA (1)."));
     }
 
     #[test]

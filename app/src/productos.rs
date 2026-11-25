@@ -58,7 +58,9 @@ pub fn alcance_modalidades(keys: &[&str]) -> String {
 
 /// Carpeta temporal propia de una operación (se borra al terminar).
 pub(crate) fn nueva_ruta_temporal(prefijo: &str) -> PathBuf {
-    std::env::temp_dir().join(format!("{prefijo}_{}_{}", std::process::id(), chrono::Local::now().timestamp_millis()))
+    static CONTADOR: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+    let c = CONTADOR.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    std::env::temp_dir().join(format!("{prefijo}_{}_{}_{c}", std::process::id(), chrono::Local::now().timestamp_millis()))
 }
 
 /// Ruta nueva: añade « (2)», « (3)»… si el nombre ya existe.
@@ -747,11 +749,12 @@ pub(crate) const MATRICES: [(&str, &str, &[u8]); 6] = [
     matriz!("MULCHEN", "NOMENCL"),
 ];
 
-/// Paquete .docx del proyecto: plantilla propia del usuario si existe; si no, la matriz institucional.
-fn paquete_plantilla(trib: &str, tipo: &str) -> Option<Vec<u8>> {
-    let propia = config::data_dir().join("plantillas").join(format!("{trib}_{tipo}.docx"));
-    if let Ok(datos) = std::fs::read(propia) {
-        return Some(datos);
+fn paquete_plantilla_en(trib: &str, tipo: &str, dir_propia: Option<&Path>) -> Option<Vec<u8>> {
+    let base = dir_propia.map(PathBuf::from).unwrap_or_else(|| config::data_dir().join("plantillas"));
+    for cand in [base.join(format!("{trib}_{tipo}.docx")), base.join(trib).join(format!("{tipo}.docx"))] {
+        if let Ok(datos) = std::fs::read(cand) {
+            return Some(datos);
+        }
     }
     let familia = match trib {
         "LAJA" => "LAJA",
@@ -759,6 +762,11 @@ fn paquete_plantilla(trib: &str, tipo: &str) -> Option<Vec<u8>> {
         _ => return None,
     };
     MATRICES.iter().find(|(t, k, _)| *t == familia && *k == tipo).map(|(_, _, d)| d.to_vec())
+}
+
+/// Paquete .docx del proyecto: plantilla propia del usuario si existe; si no, la matriz institucional.
+fn paquete_plantilla(trib: &str, tipo: &str) -> Option<Vec<u8>> {
+    paquete_plantilla_en(trib, tipo, None)
 }
 
 fn texto_xml(p: &str) -> String {
@@ -842,7 +850,12 @@ fn documento_xml(xml: &str, p: &Proyecto) -> String {
         }
     }
     // Decisión del 16-nov-2026 en Flow Python: ningún texto de la resolución sale en cursiva.
-    regex::Regex::new(r#"<w:i(?:Cs)?(?:\s+w:val="(?:1|true|on)")?\s*/>"#).unwrap().replace_all(&doc, "").to_string()
+    quitar_cursivas_xml(&doc)
+}
+
+fn quitar_cursivas_xml(xml: &str) -> String {
+    static RE_I: OnceLock<Regex> = OnceLock::new();
+    RE_I.get_or_init(|| Regex::new(r#"<w:i(?:Cs)?(?:\s+w:val="(?:1|true|on)")?\s*/>"#).unwrap()).replace_all(xml, "").into_owned()
 }
 
 /// Copia el paquete de la plantilla con su `document.xml` completado.
@@ -858,6 +871,10 @@ fn docx_desde_plantilla(paquete: &[u8], p: &Proyecto) -> Result<Vec<u8>, String>
         if nombre == "word/document.xml" {
             let xml = String::from_utf8(datos).map_err(|_| "La plantilla Word no está en UTF-8.".to_string())?;
             datos = documento_xml(&xml, p).into_bytes();
+        } else if nombre == "word/styles.xml" || nombre.starts_with("word/header") || nombre.starts_with("word/footer") {
+            if let Ok(xml) = String::from_utf8(datos.clone()) {
+                datos = quitar_cursivas_xml(&xml).into_bytes();
+            }
         }
         salida.start_file(nombre, o).map_err(|e| e.to_string())?;
         salida.write_all(&datos).map_err(|e| e.to_string())?;
@@ -879,13 +896,37 @@ pub fn texto_proyecto(p: &Proyecto) -> Vec<String> {
     plantilla(&p.tribunal_clave, &p.tipo).iter().map(|t| redactar(t, &p.vars)).collect()
 }
 
-/// Documento mínimo para tribunales sin matriz institucional (formato anterior de Flow Rust).
-fn docx_generico(p: &Proyecto) -> Result<Vec<u8>, String> {
-    let mut body = String::new();
-    for t in plantilla(&p.tribunal_clave, &p.tipo) {
-        let txt = redactar(&t, &p.vars);
-        body.push_str(&parrafo(&txt, txt == "VISTO:" || txt.starts_with("RIT"), false));
+/// Formato al generar proyectos Word (decisión F14, E-P1).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize, serde::Deserialize, Default)]
+pub enum FormatoWord {
+    #[default]
+    PorProyecto,
+    PorTribunal,
+}
+
+/// Resultado de generar proyectos Word (carpeta creada y cada archivo con los índices de sus proyectos).
+#[derive(Clone, Debug)]
+pub struct ResultadoWord {
+    pub carpeta: PathBuf,
+    pub archivos: Vec<(PathBuf, Vec<usize>)>,
+}
+
+/// Etiqueta legible de tipo de proyecto (`kind_label` de Python).
+pub fn tipo_etiqueta(tipo: &str) -> &str {
+    TIPOS.iter().find(|(k, _)| *k == tipo).map(|(_, v)| *v).unwrap_or(tipo)
+}
+
+/// Líneas del índice al inicio de un documento por tribunal (título «Índice» + una línea por proyecto).
+pub fn lineas_indice(grupo: &[&Proyecto]) -> Vec<String> {
+    let mut out = Vec::with_capacity(1 + grupo.len());
+    out.push("Índice".to_string());
+    for (idx, p) in grupo.iter().enumerate() {
+        out.push(format!("{}. {} — {}", idx + 1, p.rit, tipo_etiqueta(&p.tipo)));
     }
+    out
+}
+
+fn docx_desde_cuerpo_generico(body: &str) -> Result<Vec<u8>, String> {
     let doc = format!(
         "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><w:document xmlns:w=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"><w:body>{body}<w:sectPr><w:pgSz w:w=\"12240\" w:h=\"18720\"/><w:pgMar w:top=\"1701\" w:right=\"1701\" w:bottom=\"1417\" w:left=\"1701\" w:header=\"708\" w:footer=\"708\" w:gutter=\"0\"/></w:sectPr></w:body></w:document>"
     );
@@ -900,9 +941,131 @@ fn docx_generico(p: &Proyecto) -> Result<Vec<u8>, String> {
     Ok(z.finish().map_err(|e| e.to_string())?.into_inner())
 }
 
-/// Un .docx por proyecto, con la matriz institucional exacta de su tribunal y tipo, en una carpeta nueva.
-pub fn generar_word(proyectos: &[Proyecto], dir: &Path, fecha: NaiveDate) -> Result<PathBuf, String> {
-    let sel: Vec<&Proyecto> = proyectos.iter().filter(|p| p.incluir).collect();
+fn cuerpo_generico(p: &Proyecto) -> String {
+    let mut body = String::new();
+    for t in plantilla(&p.tribunal_clave, &p.tipo) {
+        let txt = redactar(&t, &p.vars);
+        body.push_str(&parrafo(&txt, txt == "VISTO:" || txt.starts_with("RIT"), false));
+    }
+    body
+}
+
+/// Documento mínimo para tribunales sin matriz institucional (formato anterior de Flow Rust).
+fn docx_generico(p: &Proyecto) -> Result<Vec<u8>, String> {
+    docx_desde_cuerpo_generico(&cuerpo_generico(p))
+}
+
+fn extraer_cuerpo_body(doc_xml: &str) -> Result<String, String> {
+    let rb = regex::Regex::new(r"(?s)<w:body(?:\s[^>]*)?>(.*)</w:body>").unwrap();
+    let caps = rb.captures(doc_xml).ok_or_else(|| "La plantilla Word no tiene cuerpo <w:body>.".to_string())?;
+    let rs = regex::Regex::new(r"(?s)<w:sectPr(?:\s[^>]*)?(?:/>|>.*?</w:sectPr>)\s*$").unwrap();
+    Ok(rs.replace(&caps[1], "").into_owned())
+}
+
+fn reemplazar_cuerpo_body(doc_xml: &str, nuevo_cuerpo: &str) -> Result<String, String> {
+    let rb = regex::Regex::new(r"(?s)(<w:body(?:\s[^>]*)?>)(.*)(</w:body>)").unwrap();
+    let caps = rb.captures(doc_xml).ok_or_else(|| "La plantilla Word no tiene cuerpo <w:body>.".to_string())?;
+    let rs = regex::Regex::new(r"(?s)<w:sectPr(?:\s[^>]*)?(?:/>|>.*?</w:sectPr>)\s*$").unwrap();
+    let sect_pr = rs.find(&caps[2]).map(|m| m.as_str()).unwrap_or("");
+    let reemplazo = format!("{}{}{}{}", &caps[1], nuevo_cuerpo, sect_pr, &caps[3]);
+    Ok(format!("{}{}{}", &doc_xml[..caps.get(0).unwrap().start()], reemplazo, &doc_xml[caps.get(0).unwrap().end()..]))
+}
+
+fn combinar_estilos_xml(base: &str, extras: &[String]) -> String {
+    static RE_STYLE: OnceLock<Regex> = OnceLock::new();
+    let rs = RE_STYLE.get_or_init(|| Regex::new(r#"(?s)<w:style\b[^>]*w:styleId="([^"]+)"[^>]*>.*?</w:style>"#).unwrap());
+    let mut out = base.to_string();
+    for extra in extras {
+        for cap in rs.captures_iter(extra) {
+            let id = &cap[1];
+            if !out.contains(&format!("w:styleId=\"{id}\"")) {
+                if let Some(pos) = out.rfind("</w:styles>") {
+                    out.insert_str(pos, &cap[0]);
+                }
+            }
+        }
+    }
+    quitar_cursivas_xml(&out)
+}
+
+fn leer_xml_zip(paquete: &[u8], entrada: &str) -> Option<String> {
+    let mut z = zip::ZipArchive::new(std::io::Cursor::new(paquete)).ok()?;
+    let mut s = String::new();
+    std::io::Read::read_to_string(&mut z.by_name(entrada).ok()?, &mut s).ok()?;
+    Some(s)
+}
+
+fn cuerpo_proyecto(p: &Proyecto, dir_propia: Option<&Path>) -> Result<String, String> {
+    if let Some(paquete) = paquete_plantilla_en(&p.tribunal_clave, &p.tipo, dir_propia) {
+        let mut z = zip::ZipArchive::new(std::io::Cursor::new(paquete)).map_err(|_| "La plantilla Word no es un .docx válido.".to_string())?;
+        let mut s = String::new();
+        std::io::Read::read_to_string(&mut z.by_name("word/document.xml").map_err(|_| "La plantilla Word está dañada.".to_string())?, &mut s)
+            .map_err(|_| "La plantilla Word no está en UTF-8.".to_string())?;
+        let doc = documento_xml(&s, p);
+        return extraer_cuerpo_body(&doc);
+    }
+    Ok(cuerpo_generico(p))
+}
+
+fn indice_tribunal_xml(grupo: &[&Proyecto]) -> String {
+    let mut xml = String::new();
+    for (idx, linea) in lineas_indice(grupo).into_iter().enumerate() {
+        xml.push_str(&parrafo(&linea, idx == 0, false));
+    }
+    xml
+}
+
+/// Un .docx por tribunal con índice al inicio y salto de página entre proyectos.
+fn docx_por_tribunal(grupo: &[&Proyecto], dir_propia: Option<&Path>) -> Result<Vec<u8>, String> {
+    const SALTO_PAGINA: &str = "<w:p><w:r><w:br w:type=\"page\"/></w:r></w:p>";
+    let mut combinado = indice_tribunal_xml(grupo);
+    for p in grupo {
+        combinado.push_str(SALTO_PAGINA);
+        combinado.push_str(&cuerpo_proyecto(p, dir_propia)?);
+    }
+    let sin_cursiva = quitar_cursivas_xml(&combinado);
+    let paquetes: Vec<Vec<u8>> = grupo
+        .iter()
+        .filter_map(|p| paquete_plantilla_en(&p.tribunal_clave, &p.tipo, dir_propia))
+        .collect();
+    if let Some(base) = paquetes.first() {
+        let estilos_extra: Vec<String> = paquetes[1..].iter().filter_map(|pk| leer_xml_zip(pk, "word/styles.xml")).collect();
+        let mut entrada = zip::ZipArchive::new(std::io::Cursor::new(base)).map_err(|_| "La plantilla Word no es un .docx válido.".to_string())?;
+        let mut salida = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+        let o = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
+        for i in 0..entrada.len() {
+            let mut archivo = entrada.by_index(i).map_err(|_| "La plantilla Word está dañada.".to_string())?;
+            let nombre = archivo.name().to_string();
+            let mut datos = Vec::new();
+            std::io::Read::read_to_end(&mut archivo, &mut datos).map_err(|_| "La plantilla Word está dañada.".to_string())?;
+            if nombre == "word/document.xml" {
+                let xml = String::from_utf8(datos).map_err(|_| "La plantilla Word no está en UTF-8.".to_string())?;
+                datos = reemplazar_cuerpo_body(&xml, &sin_cursiva)?.into_bytes();
+            } else if nombre == "word/styles.xml" {
+                if let Ok(xml) = String::from_utf8(datos.clone()) {
+                    datos = combinar_estilos_xml(&xml, &estilos_extra).into_bytes();
+                }
+            } else if nombre.starts_with("word/header") || nombre.starts_with("word/footer") {
+                if let Ok(xml) = String::from_utf8(datos.clone()) {
+                    datos = quitar_cursivas_xml(&xml).into_bytes();
+                }
+            }
+            salida.start_file(nombre, o).map_err(|e| e.to_string())?;
+            salida.write_all(&datos).map_err(|e| e.to_string())?;
+        }
+        return Ok(salida.finish().map_err(|e| e.to_string())?.into_inner());
+    }
+    docx_desde_cuerpo_generico(&sin_cursiva)
+}
+
+fn generar_word_interno(
+    proyectos: &[Proyecto],
+    dir: &Path,
+    fecha: NaiveDate,
+    formato: FormatoWord,
+    dir_propia: Option<&Path>,
+) -> Result<ResultadoWord, String> {
+    let sel: Vec<(usize, &Proyecto)> = proyectos.iter().enumerate().filter(|(_, p)| p.incluir).collect();
     if sel.is_empty() {
         return Err("No hay proyectos marcados para generar.".into());
     }
@@ -913,166 +1076,52 @@ pub fn generar_word(proyectos: &[Proyecto], dir: &Path, fecha: NaiveDate) -> Res
         n += 1;
     }
     std::fs::create_dir_all(&carpeta).map_err(|e| format!("No se pudo crear la carpeta de resoluciones: {e}"))?;
-    for p in sel {
-        let datos = match paquete_plantilla(&p.tribunal_clave, &p.tipo) {
-            Some(paquete) => docx_desde_plantilla(&paquete, p)?,
-            None => docx_generico(p)?,
-        };
-        let base = safe_filename(&format!("{} {} {}", p.tipo, p.rit, p.tribunal_clave));
+    let mut salidas: Vec<(String, Vec<usize>, Vec<u8>)> = Vec::new();
+    match formato {
+        FormatoWord::PorProyecto => {
+            for (idx, p) in sel {
+                let datos = match paquete_plantilla_en(&p.tribunal_clave, &p.tipo, dir_propia) {
+                    Some(paquete) => docx_desde_plantilla(&paquete, p)?,
+                    None => docx_generico(p)?,
+                };
+                salidas.push((format!("{} {} {}", p.tipo, p.rit, p.tribunal_clave), vec![idx], datos));
+            }
+        }
+        FormatoWord::PorTribunal => {
+            let mut por_tribunal: BTreeMap<&str, Vec<(usize, &Proyecto)>> = BTreeMap::new();
+            for (idx, p) in sel {
+                por_tribunal.entry(p.tribunal_clave.as_str()).or_default().push((idx, p));
+            }
+            for (trib, grupo) in por_tribunal {
+                let proys: Vec<&Proyecto> = grupo.iter().map(|(_, p)| *p).collect();
+                let indices: Vec<usize> = grupo.iter().map(|(i, _)| *i).collect();
+                salidas.push((format!("Resoluciones {trib}"), indices, docx_por_tribunal(&proys, dir_propia)?));
+            }
+        }
+    }
+    let mut archivos = Vec::with_capacity(salidas.len());
+    for (nombre, indices, datos) in salidas {
+        let base = safe_filename(&nombre);
         let ruta = nueva_ruta(&carpeta, &base, "docx");
         std::fs::write(&ruta, datos).map_err(|e| format!("No se pudo guardar {}: {e}", ruta.display()))?;
+        archivos.push((ruta, indices));
     }
-    Ok(carpeta)
+    Ok(ResultadoWord { carpeta, archivos })
 }
 
-fn etiqueta_tipo(tipo: &str) -> &str {
-    TIPOS.iter().find(|(clave, _)| *clave == tipo).map(|(_, etiqueta)| *etiqueta).unwrap_or(tipo)
+/// Genera un .docx por tribunal con índice al inicio y salto de página entre proyectos (E-P1).
+pub fn generar_word_por_tribunal(proyectos: &[Proyecto], dir: &Path, fecha: NaiveDate) -> Result<ResultadoWord, String> {
+    generar_word_interno(proyectos, dir, fecha, FormatoWord::PorTribunal, None)
 }
 
-fn cuerpo_documento(xml: &str) -> Result<(String, String), String> {
-    let cuerpo = regex::Regex::new(r"(?s)<w:body>(.*?)</w:body>").unwrap();
-    let capturado = cuerpo.captures(xml).ok_or("La matriz Word no contiene cuerpo.")?;
-    let contenido = capturado[1].to_string();
-    let seccion = regex::Regex::new(r"(?s)<w:sectPr(?:\s[^>]*)?>.*?</w:sectPr>").unwrap();
-    let (contenido, pie) = if let Some(m) = seccion.find(&contenido) {
-        (format!("{}{}", &contenido[..m.start()], &contenido[m.end()..]), m.as_str().to_string())
-    } else { (contenido, String::new()) };
-    Ok((contenido, pie))
+/// Genera proyectos Word según el formato elegido: uno por proyecto o uno por tribunal.
+pub fn generar_word_formato(proyectos: &[Proyecto], dir: &Path, fecha: NaiveDate, formato: FormatoWord) -> Result<ResultadoWord, String> {
+    generar_word_interno(proyectos, dir, fecha, formato, None)
 }
 
-fn combinar_estilos(estilos_base: &mut String, cuerpo: &mut String, estilos_origen: &str, sufijo: &str) {
-    let rx_estilo = regex::Regex::new(r"(?s)<w:style\b.*?</w:style>").unwrap();
-    let rx_id = regex::Regex::new(r#"w:styleId="([^"]+)""#).unwrap();
-    let rx_ref = regex::Regex::new(r#"<w:(?:pStyle|rStyle|tblStyle)\b[^>]*w:val="([^"]+)"[^>]*/>"#).unwrap();
-    let origen: BTreeMap<String, String> = rx_estilo.captures_iter(estilos_origen).filter_map(|c| {
-        let id = rx_id.captures(&c[0])?.get(1)?.as_str().to_string();
-        Some((id, c[0].to_string()))
-    }).collect();
-    let mut base: BTreeMap<String, String> = rx_estilo.captures_iter(estilos_base).filter_map(|c| {
-        let id = rx_id.captures(&c[0])?.get(1)?.as_str().to_string();
-        Some((id, c[0].to_string()))
-    }).collect();
-    let mut ids: Vec<String> = rx_ref.captures_iter(cuerpo).map(|c| c[1].to_string()).collect();
-    let mut mapa = BTreeMap::new();
-    let mut copiados = Vec::new();
-    while let Some(id) = ids.pop() {
-        if mapa.contains_key(&id) { continue; }
-        let Some(style) = origen.get(&id) else { continue };
-        let nuevo = match base.get(&id) {
-            Some(actual) if actual != style => format!("{id}Flow{sufijo}"),
-            _ => id.clone(),
-        };
-        mapa.insert(id.clone(), nuevo.clone());
-        if !base.contains_key(&nuevo) {
-            let style_nuevo = rx_id.replace(style, format!("w:styleId=\"{nuevo}\"")).into_owned();
-            let rx_based = regex::Regex::new(r#"<w:(?:basedOn|next|link)\b[^>]*w:val="([^"]+)"[^>]*/>"#).unwrap();
-            for c in rx_based.captures_iter(style) { ids.push(c[1].to_string()); }
-            copiados.push(style_nuevo.clone());
-            base.insert(nuevo, style_nuevo);
-        }
-    }
-    for (id, nuevo) in &mapa {
-        let rx = regex::Regex::new(&format!(r#"(w:(?:pStyle|rStyle|tblStyle)\b[^>]*w:val="){id}(\")"#)).unwrap();
-        *cuerpo = rx.replace_all(cuerpo, format!("${{1}}{nuevo}${{2}}")).into_owned();
-    }
-    let rx_based = regex::Regex::new(r#"(<w:(?:basedOn|next|link)\b[^>]*w:val=")([^"]+)(\"[^>]*/>)"#).unwrap();
-    for style in copiados {
-        let style = rx_based.replace_all(&style, |c: &regex::Captures| {
-            let id = &c[2];
-            mapa.get(id).map(|mapped| format!("{}{mapped}{}", &c[1], &c[3])).unwrap_or_else(|| c[0].to_string())
-        }).into_owned();
-        if let Some(pos) = estilos_base.rfind("</w:styles>") { estilos_base.insert_str(pos, &style); }
-    }
-}
-
-/// Un .docx por tribunal: índice fijo y proyectos completos separados por salto de página.
-pub fn generar_word_tribunal(proyectos: &[Proyecto], dir: &Path, fecha: NaiveDate) -> Result<(PathBuf, Vec<(String, PathBuf)>), String> {
-    let sel: Vec<&Proyecto> = proyectos.iter().filter(|p| p.incluir).collect();
-    if sel.is_empty() { return Err("No hay proyectos marcados para generar.".into()); }
-    let mut carpeta = dir.join(format!("Resoluciones_{}", fecha.format("%Y-%m-%d")));
-    let mut n = 2;
-    while carpeta.exists() { carpeta = dir.join(format!("Resoluciones_{} ({n})", fecha.format("%Y-%m-%d"))); n += 1; }
-    std::fs::create_dir_all(&carpeta).map_err(|e| format!("No se pudo crear la carpeta de resoluciones: {e}"))?;
-    let mut grupos: Vec<(&str, Vec<&Proyecto>)> = Vec::new();
-    for p in sel {
-        if let Some((_, grupo)) = grupos.iter_mut().find(|(trib, _)| *trib == p.tribunal_clave) { grupo.push(p); }
-        else { grupos.push((&p.tribunal_clave, vec![p])); }
-    }
-    let mut rutas = Vec::new();
-    for (tribunal, grupo) in grupos {
-        let primero = grupo[0];
-        let paquete = paquete_plantilla(tribunal, &primero.tipo);
-        let (base, mut contenido, sect) = if let Some(bytes) = paquete {
-            let rendered = docx_desde_plantilla(&bytes, primero)?;
-            let mut zip = zip::ZipArchive::new(std::io::Cursor::new(rendered)).map_err(|e| e.to_string())?;
-            let mut xml = String::new();
-            std::io::Read::read_to_string(&mut zip.by_name("word/document.xml").map_err(|e| e.to_string())?, &mut xml).map_err(|e| e.to_string())?;
-            let (body, sect) = cuerpo_documento(&xml)?;
-            (bytes, body, sect)
-        } else {
-            let bytes = docx_generico(primero)?;
-            let rendered = docx_desde_plantilla(&bytes, primero)?;
-            let mut zip = zip::ZipArchive::new(std::io::Cursor::new(rendered)).map_err(|e| e.to_string())?;
-            let mut xml = String::new();
-            std::io::Read::read_to_string(&mut zip.by_name("word/document.xml").map_err(|e| e.to_string())?, &mut xml).map_err(|e| e.to_string())?;
-            let (body, sect) = cuerpo_documento(&xml)?;
-            (bytes, body, sect)
-        };
-        let mut indice = parrafo("Índice", true, true);
-        for (i, p) in grupo.iter().enumerate() {
-            indice.push_str(&parrafo(&format!("{}. {} — {}", i + 1, p.rit, etiqueta_tipo(&p.tipo)), false, false));
-        }
-        let mut estilos_xml = {
-            let mut z = zip::ZipArchive::new(std::io::Cursor::new(&base)).map_err(|e| e.to_string())?;
-            let mut styles = String::new();
-            if let Ok(mut f) = z.by_name("word/styles.xml") { std::io::Read::read_to_string(&mut f, &mut styles).map_err(|e| e.to_string())?; }
-            styles
-        };
-        // El índice precede el primer proyecto; el primer cuerpo ya viene renderizado.
-        contenido = format!("{indice}<w:p><w:r><w:br w:type=\"page\"/></w:r></w:p>{contenido}");
-        for p in grupo.iter().skip(1) {
-            contenido.push_str("<w:p><w:r><w:br w:type=\"page\"/></w:r></w:p>");
-            let paquete = paquete_plantilla(tribunal, &p.tipo);
-            let datos = match paquete { Some(ref b) => docx_desde_plantilla(b, p)?, None => docx_generico(p)? };
-            let mut z = zip::ZipArchive::new(std::io::Cursor::new(datos)).map_err(|e| e.to_string())?;
-            let mut xml = String::new();
-            std::io::Read::read_to_string(&mut z.by_name("word/document.xml").map_err(|e| e.to_string())?, &mut xml).map_err(|e| e.to_string())?;
-            let mut fragmento = cuerpo_documento(&xml)?.0;
-            if let Ok(mut src_styles) = z.by_name("word/styles.xml") {
-                let mut styles = String::new();
-                std::io::Read::read_to_string(&mut src_styles, &mut styles).map_err(|e| e.to_string())?;
-                combinar_estilos(&mut estilos_xml, &mut fragmento, &styles, &format!("{}", grupo.iter().position(|q| std::ptr::eq(*q, *p)).unwrap_or(0)));
-            }
-            contenido.push_str(&fragmento);
-        }
-        let mut z = zip::ZipArchive::new(std::io::Cursor::new(base)).map_err(|e| e.to_string())?;
-        let mut entradas = Vec::new();
-        for i in 0..z.len() {
-            let mut f = z.by_index(i).map_err(|e| e.to_string())?;
-            let nombre = f.name().to_string();
-            let mut bytes = Vec::new();
-            std::io::Read::read_to_end(&mut f, &mut bytes).map_err(|e| e.to_string())?;
-            if nombre == "word/document.xml" {
-                let xml = String::from_utf8(bytes).map_err(|e| e.to_string())?;
-                let cuerpo = regex::Regex::new(r"(?s)<w:body>.*?</w:body>").unwrap();
-                let replacement = format!("<w:body>{contenido}{sect}</w:body>");
-                bytes = cuerpo.replace(&xml, replacement.as_str()).into_owned().into_bytes();
-                let mut doc = String::from_utf8(bytes).map_err(|e| e.to_string())?;
-                doc = regex::Regex::new(r#"<w:i(?:Cs)?(?:\s+w:val="(?:1|true|on)")?\s*/>"#).unwrap().replace_all(&doc, "").to_string();
-                bytes = doc.into_bytes();
-            } else if nombre == "word/styles.xml" && !estilos_xml.is_empty() {
-                bytes = estilos_xml.as_bytes().to_vec();
-            }
-            entradas.push((nombre, bytes));
-        }
-        let mut salida = zip::ZipWriter::new(std::io::Cursor::new(Vec::new()));
-        let opts = zip::write::SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
-        for (nombre, bytes) in entradas { salida.start_file(nombre, opts).map_err(|e| e.to_string())?; salida.write_all(&bytes).map_err(|e| e.to_string())?; }
-        let ruta = nueva_ruta(&carpeta, &safe_filename(&format!("Resoluciones {tribunal}")), "docx");
-        std::fs::write(&ruta, salida.finish().map_err(|e| e.to_string())?.into_inner()).map_err(|e| format!("No se pudo guardar {}: {e}", ruta.display()))?;
-        rutas.push((tribunal.to_string(), ruta));
-    }
-    Ok((carpeta, rutas))
+/// Un .docx por proyecto, con la matriz institucional exacta de su tribunal y tipo, en una carpeta nueva.
+pub fn generar_word(proyectos: &[Proyecto], dir: &Path, fecha: NaiveDate) -> Result<PathBuf, String> {
+    generar_word_interno(proyectos, dir, fecha, FormatoWord::PorProyecto, None).map(|r| r.carpeta)
 }
 
 /// Reporte de proyectos (planilla para el correo «Reporte de proyectos»).
@@ -1103,7 +1152,7 @@ mod pruebas_word {
             ("NOMBRE", if plural { "Persona Ficticia Uno y Persona Ficticia Dos" } else { "Persona Ficticia Uno" }),
             ("RUT", if plural { "ID-FICTICIO-1 y ID-FICTICIO-2" } else { "ID-FICTICIO-1" }),
             ("PROGRAMA", if plural { "PRM Ficticio y PIE Ficticio" } else { "PRM Ficticio" }),
-            ("FECHA", "veinticinco de noviembre de dos mil veintiséis"),
+            ("FECHA", "veinte de noviembre de dos mil veintiséis"),
             ("FECHA_RESOLUCION", "catorce de septiembre de dos mil veintiséis"),
             ("DURACION", "12 meses"),
             ("NOMENCLATURA", "Nomenclatura ficticia"),
@@ -1148,106 +1197,203 @@ mod pruebas_word {
         assert!(texto.contains("Personas comprendidas: "));
     }
 
-    fn comparar_word(expected: &serde_json::Value, xml: &str) -> Vec<String> {
-        let mut fallas = Vec::new();
+    fn extraer_secuencia_docx(datos: &[u8], exige_estilos: bool) -> (Vec<(String, bool)>, bool) {
+        let mut z = zip::ZipArchive::new(std::io::Cursor::new(datos)).unwrap();
+        let mut xml = String::new();
+        std::io::Read::read_to_string(&mut z.by_name("word/document.xml").unwrap(), &mut xml).unwrap();
+        if exige_estilos {
+            assert!(z.by_name("word/styles.xml").is_ok(), "la matriz conserva sus estilos");
+        }
+        let re_italic = regex::Regex::new(r#"<w:i(?:Cs)?(?:\s+w:val="(?:1|true|on)")?\s*/>"#).unwrap();
+        let mut cursivas = re_italic.is_match(&xml);
+        for i in 0..z.len() {
+            let mut f = z.by_index(i).unwrap();
+            let n = f.name().to_string();
+            if n == "word/styles.xml" || n.starts_with("word/header") || n.starts_with("word/footer") {
+                let mut s = String::new();
+                if std::io::Read::read_to_string(&mut f, &mut s).is_ok() && re_italic.is_match(&s) {
+                    cursivas = true;
+                }
+            }
+        }
+        let body = extraer_cuerpo_body(&xml).unwrap();
         let rp = regex::Regex::new(r"(?s)<w:p[ >].*?</w:p>").unwrap();
-        let mut actual = Vec::new();
-        let mut salto_pendiente = false;
-        for m in rp.find_iter(xml) {
-            let p = m.as_str();
-            let texto = texto_xml(p);
-            let salto = p.contains("<w:br") && p.contains("w:type=\"page\"");
-            if texto.trim().is_empty() { salto_pendiente |= salto; }
-            else { actual.push((texto, salto_pendiente)); salto_pendiente = false; }
+        let mut out = Vec::new();
+        let mut pendiente_salto = false;
+        for m in rp.find_iter(&body) {
+            let p_xml = m.as_str();
+            if p_xml.contains("w:type=\"page\"") || p_xml.contains("<w:pageBreakBefore") {
+                pendiente_salto = true;
+            }
+            let txt = texto_xml(p_xml);
+            if !txt.trim().is_empty() {
+                out.push((txt, pendiente_salto));
+                pendiente_salto = false;
+            }
         }
-        let indice = expected["indice"].as_array().unwrap();
-        let indice_real: Vec<String> = actual.iter().take(indice.len()).map(|(t, _)| t.clone()).collect();
-        let indice_esperado: Vec<String> = indice.iter().map(|v| v.as_str().unwrap().to_string()).collect();
-        if indice_real != indice_esperado { fallas.push(format!("índice esperado {indice_esperado:?}, recibido {indice_real:?}")); }
-        let mut body = actual[indice.len().min(actual.len())..].to_vec();
-        if let Some(first) = body.first_mut() {
-            if first.1 != expected["salto_tras_indice"].as_bool().unwrap_or(false) { fallas.push("el primer proyecto no parte en página nueva después del índice".into()); }
-            first.1 = false;
-        }
-        let previsto = expected["parrafos"].as_array().unwrap();
-        let observado: Vec<serde_json::Value> = body.iter().map(|(texto, salto)| serde_json::json!({"texto":texto,"salto_previo":salto})).collect();
-        if observado != *previsto { fallas.push(format!("párrafos o saltos difieren: esperado {previsto:?}, recibido {observado:?}")); }
-        let cursiva = regex::Regex::new(r#"<w:i(?:Cs)?(?:\s+w:val="(?:1|true|on)")?\s*/>"#).unwrap().is_match(xml);
-        if cursiva != expected["quedan_cursivas"].as_bool().unwrap() { fallas.push("estado de cursivas difiere".into()); }
-        fallas
+        (out, cursivas)
     }
 
-    fn proyectos_caso(caso: &serde_json::Value) -> Vec<Proyecto> {
-        caso["proyectos"].as_array().unwrap().iter().map(|s| {
-            let trib = s["tribunal"].as_str().unwrap();
-            let tipo = s["tipo"].as_str().unwrap();
-            let mut p = proyecto(trib, tipo, false);
-            p.rit = s["rit"].as_str().unwrap().to_string();
-            p.vars.insert("RIT".into(), p.rit.clone());
-            if s["editado"].as_bool().unwrap_or(false) { p.vars.insert("PROGRAMA".into(), "PRM revisado ficticio".into()); }
-            p
-        }).collect()
+    fn comparar_word_tribunal(datos: &serde_json::Value, caso: &serde_json::Value) -> Vec<String> {
+        use crate::motor::Mode;
+        let mut diffs = Vec::new();
+        let cfg = Config::default();
+        let mut libro = Workbook::new();
+        let hoja = libro.add_worksheet();
+        let modo_str = caso["modo"].as_str().unwrap();
+        hoja.set_name(modo_str).unwrap();
+        for (c, h) in caso["encabezados"].as_array().unwrap().iter().enumerate() {
+            hoja.write_string(2, c as u16, h.as_str().unwrap()).unwrap();
+        }
+        for (i, fila) in caso["filas"].as_array().unwrap().iter().enumerate() {
+            for (c, v) in fila.as_array().unwrap().iter().enumerate() {
+                match v.as_f64() {
+                    Some(n) => hoja.write_number(3 + i as u32, c as u16, n).unwrap(),
+                    None => hoja.write_string(3 + i as u32, c as u16, v.as_str().unwrap()).unwrap(),
+                };
+            }
+        }
+        let modo = match modo_str {
+            "ESPERA" => Mode::Espera,
+            "INFORMES" => Mode::Informes,
+            _ => Mode::Cumplimiento,
+        };
+        let corte: NaiveDate = datos["corte"].as_str().unwrap().parse().unwrap();
+        let mut w = Trabajo::abrir(PathBuf::from("origen.xlsx"), libro.save_to_buffer().unwrap(), Some(modo), corte, &cfg).unwrap();
+        for (i, val) in caso["res"].as_array().into_iter().flatten().enumerate() {
+            if let Some(s) = val.as_str().filter(|s| !s.is_empty()) {
+                w.registros[i].res = s.to_string();
+            }
+        }
+        for (i, val) in caso["editadas"].as_array().into_iter().flatten().enumerate() {
+            if let Some(s) = val.as_str().filter(|s| !s.is_empty()) {
+                w.registros[i].editada = Some(s.to_string());
+            }
+        }
+        let ps = preparar_proyectos(&w, &cfg, false);
+
+        let tmp = nueva_ruta_temporal("word_trib_oraculo");
+        let dir_plantillas = tmp.join("plantillas");
+        let dir_trib = tmp.join("trib");
+        std::fs::create_dir_all(&dir_plantillas).unwrap();
+        std::fs::create_dir_all(&dir_trib).unwrap();
+
+        if let Some(propias) = caso["plantillas_propias"].as_object() {
+            for (rel, b64) in propias {
+                let bytes = base64::engine::general_purpose::STANDARD.decode(b64.as_str().unwrap()).unwrap();
+                let dest = dir_plantillas.join(rel);
+                std::fs::create_dir_all(dest.parent().unwrap()).unwrap();
+                std::fs::write(&dest, bytes).unwrap();
+            }
+        }
+
+        let res = generar_word_interno(&ps, &dir_trib, corte, FormatoWord::PorTribunal, Some(&dir_plantillas)).unwrap();
+        let por_trib_esp = caso["por_tribunal"].as_object().unwrap();
+        if res.archivos.len() != por_trib_esp.len() {
+            diffs.push(format!("cantidad archivos: esp {} obt {}", por_trib_esp.len(), res.archivos.len()));
+        }
+        for (trib, esp_comb) in por_trib_esp {
+            let ruta = res.carpeta.join(format!("{}.docx", safe_filename(&format!("Resoluciones {trib}"))));
+            if !ruta.exists() {
+                diffs.push(format!("falta archivo tribunal {trib}"));
+                continue;
+            }
+            let raw_bytes = std::fs::read(&ruta).unwrap();
+            let (items, cursivas) = extraer_secuencia_docx(&raw_bytes, true);
+            if caso["nombre"] == "matriz_propia_del_usuario" {
+                let styles = leer_xml_zip(&raw_bytes, "word/styles.xml").unwrap();
+                assert!(styles.contains("EstiloPropio"), "la matriz propia conserva su estilo personalizado");
+            }
+            let cursivas_esp = esp_comb["cursivas"].as_bool().unwrap();
+            if cursivas != cursivas_esp {
+                diffs.push(format!("{trib}: cursivas esp {cursivas_esp} obt {cursivas}"));
+            }
+            let ind_esp: Vec<String> = esp_comb["indice"].as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_string()).collect();
+            if items.len() <= ind_esp.len() {
+                diffs.push(format!("{trib}: faltan párrafos tras el índice ({})", items.len()));
+                continue;
+            }
+            for (i, linea_esp) in ind_esp.iter().enumerate() {
+                if items[i].0 != *linea_esp || items[i].1 {
+                    diffs.push(format!("{trib} índice[{i}]: esp ({linea_esp:?}, false) obt {:?}", items[i]));
+                }
+            }
+            let mut cuerpo = items[ind_esp.len()..].to_vec();
+            if !cuerpo[0].1 {
+                diffs.push(format!("{trib}: el primer proyecto no empieza tras salto de página"));
+            }
+            cuerpo[0].1 = false;
+            let esp_parrafos: Vec<(String, bool)> = esp_comb["parrafos"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|v| (v["texto"].as_str().unwrap().to_string(), v["salto"].as_bool().unwrap()))
+                .collect();
+            if cuerpo != esp_parrafos {
+                diffs.push(format!("{trib} cuerpo distinto a Python:\n  esp: {esp_parrafos:?}\n  obt: {cuerpo:?}"));
+            }
+        }
+        let _ = std::fs::remove_dir_all(&tmp);
+        diffs
     }
 
     #[test]
     fn word_por_tribunal_igual_a_python() {
         let datos: serde_json::Value = serde_json::from_str(include_str!("../tests/datos/word_tribunal.json")).unwrap();
-        let dir = std::env::temp_dir().join(format!("flow-word-tribunal-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
-        // Simula una matriz propia de TOME; se restaura cualquier archivo previo al salir.
-        let propia = crate::config::data_dir().join("plantillas/TOME_PC_INFO.docx");
-        std::fs::create_dir_all(propia.parent().unwrap()).unwrap();
-        let respaldo = std::fs::read(&propia).ok();
-        let fuente_propia = MATRICES.iter().find(|(t, k, _)| *t == "MULCHEN" && *k == "PC_INFO").unwrap().2;
-        std::fs::write(&propia, fuente_propia).unwrap();
+        let hoy: NaiveDate = datos["hoy"].as_str().unwrap().parse().unwrap();
+        crate::util::HOY_FIJO.with(|c| c.set(Some(hoy)));
+        let casos = datos["casos"].as_array().unwrap();
         let mut total_archivos = 0;
-        for caso in datos["casos"].as_array().unwrap() {
-            let proyectos = proyectos_caso(caso);
-            let (carpeta, rutas) = generar_word_tribunal(&proyectos, &dir, NaiveDate::from_ymd_opt(2026, 11, 25).unwrap()).unwrap();
-            total_archivos += rutas.len();
-            assert_eq!(rutas.len(), caso["archivos"].as_object().unwrap().len());
-            for (trib, ruta) in rutas {
-                let mut z = zip::ZipArchive::new(std::io::Cursor::new(std::fs::read(&ruta).unwrap())).unwrap();
-                let mut xml = String::new();
-                std::io::Read::read_to_string(&mut z.by_name("word/document.xml").unwrap(), &mut xml).unwrap();
-                let mut estilos = String::new();
-                if let Ok(mut f) = z.by_name("word/styles.xml") { std::io::Read::read_to_string(&mut f, &mut estilos).unwrap(); }
-                let ids: std::collections::BTreeSet<String> = regex::Regex::new(r#"w:styleId="([^"]+)""#).unwrap().captures_iter(&estilos).map(|c| c[1].to_string()).collect();
-                for c in regex::Regex::new(r#"<w:(?:pStyle|rStyle|tblStyle)\b[^>]*w:val="([^"]+)"[^>]*/>"#).unwrap().captures_iter(&xml) {
-                    assert!(ids.contains(&c[1]), "referencia de estilo {} sin definición en {trib}", &c[1]);
-                }
-                let diferencias = comparar_word(&caso["archivos"][&trib], &xml);
-                assert!(diferencias.is_empty(), "{} / {trib}: {diferencias:?}", caso["nombre"]);
-            }
-            std::fs::remove_dir_all(carpeta).unwrap();
+        for caso in casos {
+            let d = comparar_word_tribunal(&datos, caso);
+            assert!(d.is_empty(), "{}: {:?}", caso["nombre"], d);
+            total_archivos += caso["por_tribunal"].as_object().unwrap().len();
         }
-        assert_eq!(datos["casos"].as_array().unwrap().len(), 6);
+        println!("WORD_TRIBUNAL: {}/{}, archivos {total_archivos}", casos.len(), casos.len());
+        assert_eq!(casos.len(), 6);
         assert_eq!(total_archivos, 7);
-        if let Some(bytes) = respaldo { std::fs::write(&propia, bytes).unwrap(); } else { let _ = std::fs::remove_file(&propia); }
-        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn por_tribunal_soporta_tribunal_generico_y_excluidos() {
+        let mut p1 = proyecto("OTRO", "PC_IE", false);
+        p1.rit = "P-10-2099".into();
+        let mut p2 = proyecto("OTRO", "PC_INFO", false);
+        p2.rit = "P-11-2099".into();
+        let mut p3 = proyecto("LAJA", "PC_IE", false);
+        p3.incluir = false;
+        let dir = nueva_ruta_temporal("word_gen");
+        std::fs::create_dir_all(&dir).unwrap();
+        let res = generar_word_por_tribunal(&[p1, p2, p3], &dir, "2026-11-20".parse().unwrap()).unwrap();
+        assert_eq!(res.archivos.len(), 1);
+        let (items, cursivas) = extraer_secuencia_docx(&std::fs::read(&res.archivos[0].0).unwrap(), false);
+        assert!(!cursivas);
+        assert_eq!(items[0].0, "Índice");
+        assert!(items[1].0.contains("P-10-2099"));
+        assert!(items[2].0.contains("P-11-2099"));
+        assert!(items[3].1, "primer proyecto inicia tras salto");
+        assert_eq!(items.iter().filter(|x| x.1).count(), 2);
+        let _ = std::fs::remove_dir_all(&dir);
     }
 
     #[test]
     fn oraculo_de_word_tribunal_detecta_alteraciones() {
         let datos: serde_json::Value = serde_json::from_str(include_str!("../tests/datos/word_tribunal.json")).unwrap();
-        let esperado = &datos["casos"][1]["archivos"]["LAJA"];
-        let proyectos = proyectos_caso(&datos["casos"][1]);
-        let dir = std::env::temp_dir().join(format!("flow-word-mutacion-{}", std::process::id()));
-        let (carpeta, rutas) = generar_word_tribunal(&proyectos, &dir, NaiveDate::from_ymd_opt(2026, 11, 25).unwrap()).unwrap();
-        let mut z = zip::ZipArchive::new(std::io::Cursor::new(std::fs::read(&rutas[0].1).unwrap())).unwrap();
-        let mut xml = String::new();
-        std::io::Read::read_to_string(&mut z.by_name("word/document.xml").unwrap(), &mut xml).unwrap();
-        assert!(comparar_word(esperado, &xml).is_empty());
-        for mutate in ["parrafo", "salto", "indice"] {
-            let mut alterado = esperado.clone();
-            match mutate {
-                "parrafo" => alterado["parrafos"][0]["texto"] = serde_json::json!("texto alterado"),
-                "salto" => alterado["parrafos"][1]["salto_previo"] = serde_json::json!(true),
-                _ => alterado["indice"][1] = serde_json::json!("línea alterada"),
-            }
-            assert!(!comparar_word(&alterado, &xml).is_empty(), "no detectó alteración de {mutate}");
-        }
-        std::fs::remove_dir_all(carpeta).unwrap();
+        let hoy: NaiveDate = datos["hoy"].as_str().unwrap().parse().unwrap();
+        crate::util::HOY_FIJO.with(|c| c.set(Some(hoy)));
+        // 1. Alterar un párrafo.
+        let mut c1 = datos["casos"][1].clone();
+        assert!(comparar_word_tribunal(&datos, &c1).is_empty());
+        c1["por_tribunal"]["LAJA"]["parrafos"][0]["texto"] = serde_json::json!("Párrafo alterado");
+        assert!(!comparar_word_tribunal(&datos, &c1).is_empty(), "un párrafo alterado no se detecta");
+        // 2. Alterar un salto de página entre proyectos.
+        let mut c2 = datos["casos"][1].clone();
+        c2["por_tribunal"]["LAJA"]["parrafos"][10]["salto"] = serde_json::json!(false);
+        assert!(!comparar_word_tribunal(&datos, &c2).is_empty(), "un salto alterado no se detecta");
+        // 3. Alterar una línea del índice.
+        let mut c3 = datos["casos"][1].clone();
+        c3["por_tribunal"]["LAJA"]["indice"][1] = serde_json::json!("1. RIT-ALTERADO");
+        assert!(!comparar_word_tribunal(&datos, &c3).is_empty(), "una línea del índice alterada no se detecta");
     }
 }
 

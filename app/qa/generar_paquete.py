@@ -73,7 +73,8 @@ class PuenteContexto(gl.ConVinculos):
                 datos, eco = calendar_page(a[0], a[2], a[10]).encode(), {'args': a}
             elif command == 'history_open':
                 p = payload['params']
-                datos = VENTANA.replace(b'C-99999-2099', p['rit'].encode()).replace(
+                # El checkout de Windows deja la ventana con CRLF: se fija en LF para que su huella sea la de Linux.
+                datos = VENTANA.replace(b'\r\n', b'\n').replace(b'C-99999-2099', p['rit'].encode()).replace(
                     b'Juzgado Canario de Prueba', CATALOG['tribunales'][p['tribunal']].encode('cp1252'))
                 # Antes de la última fila (la incompleta de 4 celdas, que SITFA solo entrega al final).
                 fin = datos.rindex(b'<tr', 0, datos.index(b'</tbody>', datos.index(b'<th>Folio</th>')))
@@ -91,7 +92,10 @@ class PuenteContexto(gl.ConVinculos):
 
 
 def carpeta_json(carpeta):
-    return {str(p.relative_to(carpeta)): base64.b64encode(p.read_bytes()).decode()
+    # Los JSON del lote los escribe Python en modo texto (CRLF en Windows): se fijan en LF para que el oráculo sea el
+    # mismo en cualquier sistema. Los HTML, XLS y PDF van tal cual porque sus huellas están en los manifiestos.
+    return {p.relative_to(carpeta).as_posix(): base64.b64encode(
+                p.read_bytes().replace(b'\r\n', b'\n') if p.suffix == '.json' else p.read_bytes()).decode()
             for p in sorted(carpeta.rglob('*')) if p.is_file()}
 
 
@@ -162,6 +166,7 @@ def xlsx_fijo(datos):
             if info.filename == 'docProps/core.xml':
                 contenido = re.sub(rb'(<dcterms:(?:created|modified)[^>]*>)[^<]*', rb'\g<1>2026-10-08T00:00:00Z', contenido)
             nuevo = zipfile.ZipInfo(info.filename, date_time=(2026, 10, 8, 0, 0, 0))
+            nuevo.create_system = 3  # en Windows vale 0 por omisión y cambia los bytes del XLS y su huella
             nuevo.compress_type = zipfile.ZIP_DEFLATED
             z.writestr(nuevo, contenido)
     return final.getvalue()

@@ -210,7 +210,8 @@ def main():
     paquete = escenarios_paquete()
     datos = {'bitacoras': [], 'historias': [], 'libros': []}
     with tempfile.TemporaryDirectory() as tmp:
-        base = Path(tmp)
+        # En Windows `tmp` puede venir con el nombre corto (RUNNER~1) y Python resuelve las rutas al largo: se usa el resuelto.
+        base = Path(tmp).resolve()
         contexto = paquete['contexto']
         carpeta = base / 'bitacoras' / contexto['bitacoras']['carpeta']
         reconstruir(carpeta, contexto['bitacoras']['archivos'])

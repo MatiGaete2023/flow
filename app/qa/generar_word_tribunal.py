@@ -1,139 +1,301 @@
-"""Oráculo del agregado Word por tribunal (E-P1). Datos ficticios, sin red."""
+"""E-P1 · Oráculo de proyectos Word por tribunal (`resolutions.prepare_projects` y `generate_projects`):
+arma casos ficticios con Laja y Mulchén, genera con Python el `.docx` de cada tribunal
+y graba la secuencia de párrafos (`texto`, `salto`) y si quedan cursivas activas.
 
+Uso (desde la raíz): python app/qa/generar_word_tribunal.py [salida.json]
+(por omisión app/tests/datos/word_tribunal.json)
+"""
+
+import base64
+import io
 import json
 import sys
 import tempfile
+import xml.etree.ElementTree as ET
 import zipfile
+from datetime import date
 from pathlib import Path
-from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
 sys.stdout.reconfigure(encoding='utf-8')
 RAIZ = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(RAIZ / 'src'))
+sys.path[:0] = [str(RAIZ / 'src')]
+for _m in ('tkinter', 'tkinter.ttk', 'tkinter.filedialog', 'tkinter.messagebox', 'tkinter.simpledialog'):
+    sys.modules.setdefault(_m, MagicMock())
 
-from docx import Document  # noqa: E402
-from nurus.personal import resolutions  # noqa: E402
+from openpyxl import Workbook  # noqa: E402
+from nurus.personal.config import defaults  # noqa: E402
+import nurus.personal.outputs as outputs  # noqa: E402
+from nurus.personal.resolutions import kind_label, preparacion_desde_interfaz, generate_projects  # noqa: E402
+from nurus.personal.work import Work  # noqa: E402
 
-MATRICES = RAIZ / 'src/nurus/personal/plantillas_word'
-FECHA = (2026, 11, 25, 0, 0, 0)
-
-
-def casos():
-    return [
-        {'nombre': 'un_proyecto', 'proyectos': [p('LAJA', 'PC_IE', 'P-1-2026')]},
-        {'nombre': 'tres_proyectos_mismo_tribunal', 'proyectos': [p('LAJA', k, f'P-{i}-2026') for i, k in enumerate(('PC_IE', 'PC_INFO', 'NOMENCL'), 1)]},
-        {'nombre': 'dos_tribunales', 'proyectos': [p('LAJA', 'PC_IE', 'P-4-2026'), p('MULCHEN', 'PC_INFO', 'P-5-2026')]},
-        {'nombre': 'texto_editado_en_revision', 'proyectos': [p('MULCHEN', 'PC_IE', 'P-6-2026', editado=True)]},
-        {'nombre': 'matriz_propia_usuario', 'proyectos': [p('TOME', 'PC_INFO', 'P-7-2026', propia=True)]},
-        {'nombre': 'matriz_con_cursivas', 'proyectos': [p('MULCHEN', 'NOMENCL', 'P-8-2026', cursiva=True)]},
-    ]
+CORTE = date(2026, 11, 20)
+HOY = date(2099, 1, 1)
+W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
 
 
-def p(tribunal, tipo, rit, editado=False, propia=False, cursiva=False):
-    return {'tribunal': tribunal, 'tipo': tipo, 'rit': rit, 'editado': editado, 'propia': propia, 'cursiva': cursiva}
+class _FijaMeta(type(date)):
+    def __instancecheck__(cls, obj):
+        return isinstance(obj, date)
 
 
-def plantillas(proyecto, temporal):
-    familia = 'MULCHEN' if proyecto['tribunal'] == 'TOME' else proyecto['tribunal']
-    ruta = MATRICES / familia / f"{proyecto['tipo']}.docx"
-    doc = Document(ruta)
-    if proyecto['cursiva']:
-        doc.paragraphs[0].runs[0].italic = True
-    salida = Path(temporal) / f"{proyecto['tribunal']}_{proyecto['tipo']}_{proyecto['rit']}.docx"
-    doc.save(salida)
-    return salida
+class _Fija(date, metaclass=_FijaMeta):
+    @classmethod
+    def today(cls):
+        return HOY
 
 
-def render_falso(project, target):
-    doc = Document(project.template)
-    lines = project.text.split('\n')
-    for i, paragraph in enumerate(doc.paragraphs):
-        if i < len(lines):
-            # Conserva las matrices, estilos de párrafo y formato del primer run.
-            runs = paragraph.runs
-            if runs:
-                runs[0].text = lines[i]
-                for run in runs[1:]:
-                    run.text = ''
-            else:
-                paragraph.add_run(lines[i])
-    for line in lines[len(doc.paragraphs):]:
-        doc.add_paragraph(line)
-    doc.save(target)
-    return doc
+outputs.date = _Fija
+PLANTILLAS = RAIZ / 'src' / 'nurus' / 'personal' / 'plantillas_word'
 
 
-def normalizar_zip(ruta):
-    temporal = ruta.with_suffix('.normalizado.docx')
-    with zipfile.ZipFile(ruta, 'r') as entrada, zipfile.ZipFile(temporal, 'w', zipfile.ZIP_DEFLATED) as salida:
-        for nombre in entrada.namelist():
-            info = zipfile.ZipInfo(nombre, FECHA)
-            info.create_system = 3
-            info.compress_type = zipfile.ZIP_DEFLATED
-            salida.writestr(info, entrada.read(nombre))
-    temporal.replace(ruta)
+def _crear_docx_propio(*, con_cursivas: bool, etiqueta: str) -> str:
+    """Construye un .docx determinista en memoria (ZipInfo.create_system = 3) para probar matriz propia y cursivas."""
+    estilo_italic = '<w:i/>' if con_cursivas else ''
+    rpr_italic = '<w:i/><w:i w:val="1"/><w:iCs/>' if con_cursivas else ''
+    doc_xml = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" '
+        'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">'
+        '<w:body>'
+        f'<w:p><w:pPr><w:pStyle w:val="EstiloPropio"/></w:pPr><w:r><w:rPr>{rpr_italic}</w:rPr>'
+        f'<w:t xml:space="preserve">{etiqueta} · {{{{FECHA}}}}</w:t></w:r></w:p>'
+        f'<w:p><w:r><w:rPr>{rpr_italic}</w:rPr>'
+        '<w:t xml:space="preserve">Causa {{RIT}} de {{NOMBRE}}, programa {{PROGRAMA}}.</w:t></w:r></w:p>'
+        '<w:sectPr><w:pgSz w:w="12240" w:h="15840"/>'
+        '<w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="720" w:footer="720" w:gutter="0"/></w:sectPr>'
+        '</w:body></w:document>'
+    )
+    styles_xml = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'
+        '<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>'
+        f'<w:style w:type="paragraph" w:styleId="EstiloPropio"><w:name w:val="EstiloPropio"/><w:rPr>{estilo_italic}</w:rPr></w:style>'
+        '</w:styles>'
+    )
+    ct_xml = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+        '<Default Extension="xml" ContentType="application/xml"/>'
+        '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
+        '<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>'
+        '</Types>'
+    )
+    rels_xml = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>'
+        '</Relationships>'
+    )
+    doc_rels_xml = (
+        '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
+        '</Relationships>'
+    )
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, 'w', compression=zipfile.ZIP_STORED) as z:
+        for nombre, cuerpo in (
+            ('[Content_Types].xml', ct_xml),
+            ('_rels/.rels', rels_xml),
+            ('word/document.xml', doc_xml),
+            ('word/_rels/document.xml.rels', doc_rels_xml),
+            ('word/styles.xml', styles_xml),
+        ):
+            zi = zipfile.ZipInfo(nombre, date_time=(2026, 11, 20, 0, 0, 0))
+            zi.create_system = 3
+            zi.external_attr = 0o644 << 16
+            zi.compress_type = zipfile.ZIP_STORED
+            z.writestr(zi, cuerpo.encode('utf-8'))
+    return base64.b64encode(buf.getvalue()).decode('ascii')
 
 
-def extraer(ruta):
-    doc = Document(ruta)
+PLANTILLA_PROPIA_LAJA = _crear_docx_propio(con_cursivas=False, etiqueta='Matriz propia Laja')
+PLANTILLA_CURSIVAS_MULCHEN = _crear_docx_propio(con_cursivas=True, etiqueta='Matriz cursivas Mulchén')
+
+CASOS = [
+    {
+        'nombre': 'un_proyecto',
+        'modo': 'ESPERA',
+        'encabezados': ['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'DERIVACION', 'T ESPERA', 'FEC. RESOLUCION', 'DURACION'],
+        'filas': [
+            ['X-10-2026', 'Jgdo. L. y G. de Laja', 'Persona Uno', '11111111-1', 'AFT Ficticio', 90, '15/10/2026', '6 meses'],
+        ],
+    },
+    {
+        'nombre': 'tres_proyectos_un_tribunal',
+        'modo': 'ESPERA',
+        'encabezados': ['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'DERIVACION', 'T ESPERA', 'FEC. RESOLUCION', 'DURACION'],
+        'filas': [
+            ['X-10-2026', 'Jgdo. L. y G. de Laja', 'Persona Uno', '11111111-1', 'AFT Ficticio', 90, '15/10/2026', '6 meses'],
+            ['X-11-2026', 'Jgdo. L. y G. de Laja', 'Persona Dos', '22222222-2', 'AFT Ficticio', 95, '20/10/2026', '12 meses'],
+            ['X-11-2026', 'Jgdo. L. y G. de Laja', 'Persona Tres', '33333333-3', 'AFT Ficticio', 95, '20/10/2026', '12 meses'],
+            ['X-12-2026', 'Jgdo. L. y G. de Laja', 'Persona Cuatro', '44444444-4', 'AFT Ficticio', 100, '12/09/2026', '6 meses'],
+            ['X-12-2026', 'Jgdo. L. y G. de Laja', 'Persona Cinco', '55555555-5', 'PRM Ficticio', 100, '12/09/2026', '6 meses'],
+        ],
+    },
+    {
+        'nombre': 'dos_tribunales',
+        'modo': 'ESPERA',
+        'encabezados': ['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'DERIVACION', 'T ESPERA', 'FEC. RESOLUCION', 'DURACION'],
+        'filas': [
+            ['X-50-2026', 'Jgdo. L. y G. de Laja', 'Persona Alfa', '13131313-1', 'AFT Ficticio', 90, '10/10/2026', '6 meses'],
+            ['X-51-2026', 'Jgdo. L. y G. de Laja', 'Persona Beta', '14141414-2', 'AFT Ficticio', 10, '11/10/2026', '6 meses'],
+            ['X-60-2026', 'Jgdo. L. y G. de Mulchen', 'Persona Gamma', '15151515-3', 'AFT Ficticio', 95, '12/10/2026', '6 meses'],
+            ['X-61-2026', 'Jgdo. L. y G. de Mulchen', 'Persona Delta', '16161616-4', 'AFT Ficticio', 12, '13/10/2026', '6 meses'],
+        ],
+        'res': ['PC_IE', 'NOMENCL', 'PC_IE', 'NOMENCL'],
+    },
+    {
+        'nombre': 'texto_editado_en_revision',
+        'modo': 'ESPERA',
+        'encabezados': ['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'DERIVACION', 'T ESPERA', 'FEC. RESOLUCION', 'DURACION'],
+        'filas': [
+            ['X-70-2026', 'Jgdo. L. y G. de Mulchen', 'Persona Editada', '17171717-5', 'AFT Ficticio', 15, '01/10/2026', '6 meses'],
+        ],
+        'res': ['NOMENCL'],
+        'editadas': ['Aplicar nomenclatura «Ingreso informe de diagnóstico».'],
+    },
+    {
+        'nombre': 'matriz_propia_del_usuario',
+        'modo': 'ESPERA',
+        'encabezados': ['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'DERIVACION', 'T ESPERA', 'FEC. RESOLUCION', 'DURACION'],
+        'filas': [
+            ['X-80-2026', 'Jgdo. L. y G. de Laja', 'Persona Propia', '18181818-6', 'AFT Ficticio', 90, '02/10/2026', '6 meses'],
+            ['X-81-2026', 'Jgdo. L. y G. de Laja', 'Persona Estandar', '19191919-7', 'AFT Ficticio', 10, '03/10/2026', '6 meses'],
+        ],
+        'res': ['PC_IE', 'NOMENCL'],
+        'plantillas_propias': {'LAJA/PC_IE.docx': PLANTILLA_PROPIA_LAJA},
+    },
+    {
+        'nombre': 'matriz_con_cursivas',
+        'modo': 'ESPERA',
+        'encabezados': ['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'DERIVACION', 'T ESPERA', 'FEC. RESOLUCION', 'DURACION'],
+        'filas': [
+            ['X-90-2026', 'Jgdo. L. y G. de Mulchen', 'Persona Cursiva', '20202020-8', 'AFT Ficticio', 95, '04/10/2026', '6 meses'],
+        ],
+        'plantillas_propias': {'MULCHEN/PC_IE.docx': PLANTILLA_CURSIVAS_MULCHEN},
+    },
+]
+
+
+def crear_excel(ruta: Path, modo: str, encabezados: list, filas: list):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = modo
+    for c, h in enumerate(encabezados, 1):
+        ws.cell(3, c, h)
+    for r_idx, fila in enumerate(filas, 4):
+        for c_idx, val in enumerate(fila, 1):
+            ws.cell(r_idx, c_idx, val)
+    wb.save(ruta)
+
+
+def _tiene_cursivas_activas(xml_bytes: bytes) -> bool:
+    root = ET.fromstring(xml_bytes)
+    for tag in (f'{{{W_NS}}}i', f'{{{W_NS}}}iCs'):
+        for elem in root.iter(tag):
+            val = elem.get(f'{{{W_NS}}}val')
+            if val is None or val.lower() in ('1', 'true', 'on'):
+                return True
+    return False
+
+
+def _extraer_secuencia_docx(docx_path: Path):
+    with zipfile.ZipFile(docx_path) as z:
+        doc_xml = z.read('word/document.xml')
+        otros = [z.read(n) for n in z.namelist() if n.startswith('word/header') or n.startswith('word/footer')]
+    root = ET.fromstring(doc_xml)
+    body = root.find(f'{{{W_NS}}}body')
     parrafos = []
-    salto_pendiente = False
-    for p in doc.element.body:
-        tag = p.tag.rsplit('}', 1)[-1]
-        texto = ''.join(t.text or '' for t in p.iter() if t.tag.rsplit('}', 1)[-1] == 't')
-        salto = any(n.tag.rsplit('}', 1)[-1] == 'br' and n.get('{http://schemas.openxmlformats.org/wordprocessingml/2006/main}type') == 'page' for n in p.iter())
-        if texto.strip():
-            parrafos.append({'texto': texto, 'salto_previo': salto_pendiente})
-            salto_pendiente = False
-        elif salto:
-            salto_pendiente = True
-    cursivas = any(n.tag.rsplit('}', 1)[-1] in ('i', 'iCs') and n.get('{http://schemas.openxmlformats.org/wordprocessingml/2006/main}val') not in ('0', 'false', 'off') for n in doc.element.body.iter())
+    pendiente_salto = False
+    for p in body.findall(f'{{{W_NS}}}p'):
+        tiene_br = any(br.get(f'{{{W_NS}}}type') == 'page' for br in p.findall(f'.//{{{W_NS}}}br'))
+        tiene_pbb = p.find(f'.//{{{W_NS}}}pageBreakBefore') is not None
+        if tiene_br or tiene_pbb:
+            pendiente_salto = True
+        txt = ''.join(p.itertext())
+        if txt.strip():
+            parrafos.append({'texto': txt, 'salto': pendiente_salto})
+            pendiente_salto = False
+    cursivas = _tiene_cursivas_activas(doc_xml) or any(_tiene_cursivas_activas(x) for x in otros)
     return parrafos, cursivas
 
 
-def generar(caso):
-    with tempfile.TemporaryDirectory() as temporal:
-        projects = []
-        for i, spec in enumerate(caso['proyectos']):
-            template = plantillas(spec, temporal)
-            doc = Document(template)
-            text = '\n'.join(p.text for p in doc.paragraphs)
-            variables = {
-                'RIT': spec['rit'], 'NOMBRE': 'Persona Ficticia Uno', 'RUT': 'ID-FICTICIO-1',
-                'PROGRAMA': 'PRM revisado ficticio' if spec['editado'] else 'PRM Ficticio',
-                'FECHA': 'veinticinco de noviembre de dos mil veintiséis',
-                'FECHA_RESOLUCION': 'catorce de septiembre de dos mil veintiséis',
-                'DURACION': '12 meses', 'NOMENCLATURA': 'Nomenclatura ficticia',
-            }
-            for key, value in variables.items():
-                text = text.replace('{{' + key + '}}', value)
-            projects.append(resolutions.Project(key=f"caso{i}", court=spec['tribunal'], rit=spec['rit'], kind=spec['tipo'], record_ids=[i], template=str(template), values={}, text=text, original_text=text))
-        work = SimpleNamespace(receipts={})
-        por_tribunal = {}
-        for tribunal in dict.fromkeys(x['tribunal'] for x in caso['proyectos']):
-            # Un archivo por tribunal: el generador de referencia recibe solo sus proyectos.
-            subset = [x for x in projects if x.court == tribunal]
-            tmp = Path(temporal) / f'{tribunal}.docx'
-            with patch.object(resolutions, '_validate_project_template', lambda project: None), \
-                 patch.object(resolutions, 'render_project', render_falso), \
-                 patch('nurus.personal.product_state.require_fresh', lambda work, project: None), \
-                 patch('nurus.personal.word_quality.require_complete', lambda *a, **k: None), \
-                 patch('nurus.personal.word_quality.improve_pagination', lambda doc: None):
-                resolutions.generate_projects(work, subset, tmp)
-            normalizar_zip(tmp)
-            parrafos, cursivas = extraer(tmp)
-            por_tribunal[tribunal] = {'parrafos': parrafos, 'quedan_cursivas': cursivas, 'salto_tras_indice': True,
-                                      'indice': ['Índice'] + [f"{i}. {x.rit} — {resolutions.kind_label(x.kind)}" for i, x in enumerate(subset, 1)]}
-        return {'nombre': caso['nombre'], 'proyectos': caso['proyectos'], 'archivos': por_tribunal}
+def construir():
+    cfg = defaults()
+    salida_casos = []
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        for caso in CASOS:
+            xlsx = tmp_path / f'{caso["nombre"]}.xlsx'
+            crear_excel(xlsx, caso['modo'], caso['encabezados'], caso['filas'])
+            work = Work(cfg).analyze(xlsx, caso['modo'], as_of=CORTE)
+            for r_idx, res_val in enumerate(caso.get('res', [])):
+                if res_val:
+                    work.rows[r_idx].review['RES'] = res_val
+                    work.rows[r_idx].decisions['resolution'] = 'review'
+            for r_idx, obs_val in enumerate(caso.get('editadas', [])):
+                if obs_val:
+                    work.rows[r_idx].review['OBSERVACION'] = obs_val
+
+            tdir = tmp_path / f'plantillas_{caso["nombre"]}'
+            for rel, b64 in caso.get('plantillas_propias', {}).items():
+                dest = tdir / rel
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_bytes(base64.b64decode(b64))
+            # Copiar matrices institucionales restantes que el caso necesite.
+            for src in PLANTILLAS.rglob('*.docx'):
+                rel = src.relative_to(PLANTILLAS).as_posix()
+                dest = tdir / rel
+                if not dest.exists():
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    dest.write_bytes(src.read_bytes())
+
+            _, preparar = preparacion_desde_interfaz(work, [], None)
+            proyectos, errores = preparar(tdir)
+            assert not errores, f'Errores inesperados en {caso["nombre"]}: {errores}'
+
+            por_tribunal = {}
+            for p in proyectos:
+                por_tribunal.setdefault(p.court, []).append(p)
+
+            combinados = {}
+            for trib, grupo in por_tribunal.items():
+                docx_out = tmp_path / f'{caso["nombre"]}_{trib}.docx'
+                generate_projects(work, grupo, docx_out)
+                parrafos, cursivas = _extraer_secuencia_docx(docx_out)
+                indice_esperado = ['Índice'] + [
+                    f'{i + 1}. {p.rit} — {kind_label(p.kind)}' for i, p in enumerate(grupo)
+                ]
+                combinados[trib] = {
+                    'cantidad': len(grupo),
+                    'cursivas': cursivas,
+                    'indice': indice_esperado,
+                    'parrafos': parrafos,
+                }
+
+            salida_casos.append({
+                'nombre': caso['nombre'],
+                'modo': caso['modo'],
+                'encabezados': caso['encabezados'],
+                'filas': caso['filas'],
+                'res': caso.get('res', []),
+                'editadas': caso.get('editadas', []),
+                'plantillas_propias': caso.get('plantillas_propias', {}),
+                'por_tribunal': combinados,
+            })
+    return {'corte': CORTE.isoformat(), 'hoy': HOY.isoformat(), 'casos': salida_casos}
 
 
 def main():
-    destino = Path(sys.argv[1]) if len(sys.argv) > 1 else RAIZ / 'app/tests/datos/word_tribunal.json'
-    datos = {'oraculo': 'word_tribunal', 'fecha': '2026-11-25', 'casos': [generar(c) for c in casos()]}
+    destino = Path(sys.argv[1]) if len(sys.argv) > 1 else RAIZ / 'app' / 'tests' / 'datos' / 'word_tribunal.json'
+    datos = construir()
     destino.parent.mkdir(parents=True, exist_ok=True)
     destino.write_bytes((json.dumps(datos, ensure_ascii=False, indent=2) + '\n').encode('utf-8'))
-    print(f"WORD_TRIBUNAL: {len(datos['casos'])} casos, {sum(len(c['archivos']) for c in datos['casos'])} archivos")
+    total_archivos = sum(len(c['por_tribunal']) for c in datos['casos'])
+    print(f'{len(datos["casos"])} casos ({total_archivos} archivos por tribunal) en {destino}')
 
 
 if __name__ == '__main__':

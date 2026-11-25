@@ -3,7 +3,7 @@
 use crate::anon;
 use crate::config::{self, Config, CC_OBLIGATORIO, UMBRALES};
 use crate::motor::Mode;
-use crate::productos::{self, Borrador, Proyecto, MODALIDADES, TIPOS};
+use crate::productos::{self, Borrador, FormatoWord, Proyecto, MODALIDADES, TIPOS};
 use crate::theme::{self, Pal};
 use crate::trabajo::{Estado, Trabajo};
 use crate::util::*;
@@ -94,7 +94,7 @@ pub struct App {
     proyectos: Vec<Proyecto>,
     psel: Option<usize>,
     solo_sel_res: bool,
-    word_por_tribunal: bool,
+    formato_word: FormatoWord,
     // resultados
     productos: Vec<Producto>,
     // contactos
@@ -177,7 +177,7 @@ impl App {
             proyectos: vec![],
             psel: None,
             solo_sel_res: false,
-            word_por_tribunal: false,
+            formato_word: FormatoWord::PorProyecto,
             productos: vec![],
             nuevo_prog: String::new(),
             nuevo_alias: String::new(),
@@ -2265,12 +2265,6 @@ impl App {
         theme::card(p).show(ui, |ui| {
             ui.set_width(ui.available_width());
             ui.horizontal(|ui| {
-                egui::ComboBox::from_id_salt("formato_word_resoluciones")
-                    .selected_text(if self.word_por_tribunal { "Un .docx por tribunal" } else { "Un .docx por proyecto" })
-                    .show_ui(ui, |ui| {
-                        ui.selectable_value(&mut self.word_por_tribunal, false, "Un .docx por proyecto");
-                        ui.selectable_value(&mut self.word_por_tribunal, true, "Un .docx por tribunal");
-                    });
                 let hay = self.work.is_some();
                 if ui.add_enabled(hay, egui::Button::new(RichText::new("⚖  Preparar proyectos").color(Color32::WHITE).strong()).fill(p.accent)).clicked() {
                     preparar = true;
@@ -2284,6 +2278,11 @@ impl App {
                         ui.label(RichText::new(format!("{} de {} marcados", self.proyectos.iter().filter(|x| x.incluir).count(), self.proyectos.len())).color(p.muted));
                     });
                 }
+            });
+            ui.horizontal(|ui| {
+                ui.label(RichText::new("Formato:").color(p.muted));
+                ui.radio_value(&mut self.formato_word, FormatoWord::PorProyecto, "Un .docx por proyecto");
+                ui.radio_value(&mut self.formato_word, FormatoWord::PorTribunal, "Un .docx por tribunal");
             });
             ui.label(
                 RichText::new("Plantillas propias: deja TRIBUNAL_TIPO.docx (por ejemplo TOME_PC_IE.docx) en la carpeta de plantillas (Ajustes), con {{RIT}}, {{NOMBRE}}, {{RUT}}, {{PROGRAMA}}, {{FECHA}}, {{FECHA_RESOLUCION}}, {{DURACION}} y {{NOMENCLATURA}}.")
@@ -2308,31 +2307,30 @@ impl App {
             if !desactualizados.is_empty() {
                 self.aviso(format!("{} Proyectos: {}.", crate::preparados::OBSOLETO, desactualizados.join(", ")), true);
             } else if let Some(dir) = self.carpeta_productos() {
-                let resultado = if self.word_por_tribunal {
-                    productos::generar_word_tribunal(&self.proyectos, &dir, self.corte()).map(|(carpeta, rutas)| (carpeta, rutas, true))
-                } else {
-                    productos::generar_word(&self.proyectos, &dir, self.corte()).map(|carpeta| {
-                        let rutas = self.proyectos.iter().filter(|p| p.incluir).filter_map(|p| {
-                            let base = safe_filename(&format!("{} {} {}", p.tipo, p.rit, p.tribunal_clave));
-                            std::fs::read_dir(&carpeta).ok()?.filter_map(std::result::Result::ok).find(|e| e.path().file_stem().is_some_and(|s| s.to_string_lossy() == base)).map(|e| (p.tribunal_clave.clone(), e.path()))
-                        }).collect();
-                        (carpeta, rutas, false)
-                    })
-                };
-                match resultado {
-                    Ok((pth, rutas, por_tribunal)) => {
-                        let archivos = if por_tribunal { rutas.len() } else { self.proyectos.iter().filter(|p| p.incluir).count() };
-                        let total = self.proyectos.iter().filter(|p| p.incluir).count();
-                        self.aviso(format!("{archivos} archivos y {total} proyectos generados en {}", pth.display()), false);
+                match productos::generar_word_formato(&self.proyectos, &dir, self.corte(), self.formato_word) {
+                    Ok(res) => {
+                        let n_archivos = res.archivos.len();
+                        let n_proyectos: usize = res.archivos.iter().map(|(_, idxs)| idxs.len()).sum();
+                        let desc = match self.formato_word {
+                            FormatoWord::PorProyecto => "un .docx por proyecto",
+                            FormatoWord::PorTribunal => "un .docx por tribunal",
+                        };
+                        self.aviso(
+                            format!("Proyectos generados ({desc}): {n_archivos} archivo(s) y {n_proyectos} proyecto(s) en {}", res.carpeta.display()),
+                            false,
+                        );
                         if let Some(w) = self.work.as_mut() {
-                            for proyecto in self.proyectos.iter().filter(|p| p.incluir) {
-                                let registro_ids = crate::preparados::ids_registros(w, &proyecto.registros);
-                                let archivo = rutas.iter().find(|(trib, _)| trib == &proyecto.tribunal_clave).map(|(_, ruta)| ruta.display().to_string()).unwrap_or_else(|| pth.display().to_string());
-                                w.preparados.anotar("word", "creado", registro_ids, "", &archivo);
+                            for (ruta_archivo, indices) in &res.archivos {
+                                for &idx in indices {
+                                    if let Some(pr) = self.proyectos.get(idx) {
+                                        let ids = crate::preparados::ids_registros(w, &pr.registros);
+                                        w.preparados.anotar("word", "creado", ids, &pr.dependencia, &ruta_archivo.display().to_string());
+                                    }
+                                }
                             }
                         }
                         self.marcar_sucio();
-                        self.registrar(pth, "Proyectos de resolución (Word)");
+                        self.registrar(res.carpeta, "Proyectos de resolución (Word)");
                     }
                     Err(e) => self.aviso(e, true),
                 }
