@@ -180,6 +180,8 @@ PUBLICACIÓN: commits en estudio/paridad-python-rust-20261119 con las líneas de
 
 INFORME: docs/migracion_python_rust/informes/AGENTE_A_20261125.md, en un commit aparte y el último: 1) resumen ≤10 líneas; 2) ruta del clon, commits y archivos; 3) pruebas y conteos antes → después; 4) run de CI, con la conclusión y el log del paso «Regenerar los oráculos» (debe nombrar word_tribunal); 5) hallazgos (hechos | inferencias | especulación); 6) texto propuesto para ESTADO, PLAN y registro (≤10 líneas); 7) riesgos y pendientes. Estado del encargo en el informe: ENTREGADO o BLOQUEADO.
 
+FIRMA (obligatoria): el informe empieza con un bloque «Firma» con: agente y letra; herramienta y modelo; identidad git `nombre <correo>` usada en tus commits; ruta del clon; rama; y la lista de commits hechos por esta sesión, uno por línea con su SHA. Termina cada mensaje de commit con la línea `Agente: C · ChatGPT Luna`. No listes commits de otras sesiones como tuyos; si encuentras commits de otra sesión en tus archivos, nómbralos aparte. Un informe sin firma no se integra.
+
 ESTILO: español chileno, primera línea = la respuesta, sin cortesías, código completo.
 ```
 
@@ -234,13 +236,15 @@ PUBLICACIÓN: commits en tu rama con las líneas de atribución del sistema; git
 
 INFORME: docs/migracion_python_rust/informes/AGENTE_B_20261125b.md, en un commit aparte y el último: 1) resumen ≤10 líneas; 2) ruta del clon, commits y archivos; 3) pruebas y conteos antes → después; 4) run de CI con la conclusión y la última línea del paso de regeneración; 5) hallazgos (hechos | inferencias | especulación); 6) texto propuesto para ESTADO, PLAN y registro (≤10 líneas); 7) riesgos y pendientes (incluido run_por_hoja). Estado: ENTREGADO o BLOQUEADO; el HECHO lo pone el coordinador.
 
+FIRMA (obligatoria): el informe empieza con un bloque «Firma» con: agente y letra; herramienta y modelo; identidad git `nombre <correo>` usada en tus commits; ruta del clon; rama; y la lista de commits hechos por esta sesión, uno por línea con su SHA. Termina cada mensaje de commit con la línea `Agente: B · DeepSeek`. No listes commits de otras sesiones como tuyos; si encuentras commits de otra sesión en tus archivos, nómbralos aparte. Un informe sin firma no se integra.
+
 ESTILO: español chileno, primera línea = la respuesta, sin cortesías, código completo.
 ```
 
 ## Prompt del Agente A · E-P2 Word por tribunal con imágenes, numeración y relaciones (GPT-5.6 Luna)
 
 ```
-Eres el Agente A (ejecutor único: si hay otra sesión de A abierta, detente y avisa al usuario). Trabajas en MatiGaete2023/flow, directamente en la rama estudio/paridad-python-rust-20261119. Otros agentes: B (rama estudio/agente-b-flujo-20261125: flujo_paquete.rs, descargador_ui.rs) y C (rama estudio/agente-c-conjuntos-20261125: descargador_resultados_ui.rs, archivo_local.rs). No toques lo suyo.
+Eres el Agente A para este encargo (E-P2), ejecutado por ChatGPT Luna por excepción: desde el próximo encargo A es Antigravity y tú eres C. Ejecutor único: si hay otra sesión trabajando E-P2, detente y avisa al usuario. Trabajas en MatiGaete2023/flow, directamente en la rama estudio/paridad-python-rust-20261119. Otros agentes: B (rama estudio/agente-b-flujo-20261125: flujo_paquete.rs, descargador_ui.rs) y C (rama estudio/agente-c-conjuntos-20261125: descargador_resultados_ui.rs, archivo_local.rs). No toques lo suyo.
 
 EVALUACIÓN DE TU ENTREGA ANTERIOR (E-P1, cerrada como HECHO por el coordinador en el run 45665516823):
 - Bien: respetaste los archivos y los documentos de estado, pusiste ENTREGADO con la salida literal del paso de regeneración y resolviste el determinismo con ZIP_STORED.
@@ -278,6 +282,8 @@ PRUEBAS: tools/probar_app.sh rapido word mientras trabajas; tools/probar_app.sh 
 PUBLICACIÓN: commits en estudio/paridad-python-rust-20261119 con las líneas de atribución del sistema; antes de cada push, git fetch y git merge --no-edit (nunca rebase de commits ajenos, nunca --force). Revisa la CI de tu push con las herramientas de GitHub sin sondear en bucle: «Regenerar los oráculos» debe CORRER y terminar en «Oráculos regenerados sin diferencias.» nombrando word_tribunal.
 
 INFORME: docs/migracion_python_rust/informes/AGENTE_A_20261125b.md, en un commit aparte y el último: 1) resumen ≤10 líneas; 2) ruta del clon, commits y archivos; 3) conteos antes → después copiados de la línea literal «test result», con su commit; 4) run de tu push con la conclusión y la última línea del paso de regeneración; 5) hallazgos (hechos | inferencias | especulación); 6) texto propuesto para ESTADO, PLAN y registro (≤10 líneas); 7) riesgos y pendientes. Estado: ENTREGADO o BLOQUEADO.
+
+FIRMA (obligatoria): el informe empieza con un bloque «Firma» con: agente y letra; herramienta y modelo; identidad git `nombre <correo>` usada en tus commits; ruta del clon; rama; y la lista de commits hechos por esta sesión, uno por línea con su SHA. Termina cada mensaje de commit con la línea `Agente: A (encargo E-P2) · ChatGPT Luna`. No listes commits de otras sesiones como tuyos; si encuentras commits de otra sesión en tus archivos, nómbralos aparte. Un informe sin firma no se integra.
 
 ESTILO: español chileno, primera línea = la respuesta, sin cortesías, código completo.
 ```
