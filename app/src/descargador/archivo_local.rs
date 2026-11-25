@@ -56,7 +56,10 @@ pub fn descubrir(base: &Path, preferencias: &Preferencias, ultimo: Option<&Path>
     carpetas.into_iter().filter_map(|carpeta| {
         let control = tipo(&carpeta).ok().and_then(|t| {
             let archivo = match t { Tipo::Bitacoras => "bitacoras.json", Tipo::Conjunto => "flujo.json", Tipo::Descarga => "resumen.json" };
-            let data: Value = serde_json::from_slice(&std::fs::read(carpeta.join(archivo)).ok()?).ok()?;
+            let ruta = carpeta.join(archivo);
+            if std::fs::metadata(&ruta).ok()?.len() > 4 * 1024 * 1024 { return None; }
+            let data: Value = serde_json::from_slice(&std::fs::read(ruta).ok()?).ok()?;
+            if !data.is_object() { return None; }
             let conteo = if t == Tipo::Bitacoras { data["registros"].as_array().map_or(0, Vec::len).to_string() }
                 else { data.get("consultas_completadas").map(Value::to_string).unwrap_or_else(|| data["fases"].as_object().map_or(0, |v| v.len()).to_string()) };
             Some(Referencia { carpeta: carpeta.clone(), tipo: t.etiqueta().into(), estado: data["estado"].as_str().unwrap_or("DESCONOCIDO").into(), conteo })
@@ -287,6 +290,12 @@ mod pruebas {
         }
         assert_eq!((p.historial_lotes.len(), p.historial_bitacoras.len()), (2, 1));
         assert!(p.historial_bitacoras[0].ends_with("bitacoras.json"));
+        let diario = base.join("diario").join("bitacoras.json");
+        for contenido in ["[]".to_owned(), " ".repeat(4 * 1024 * 1024 + 1)] {
+            std::fs::write(&diario, contenido).unwrap();
+            let referencias = descubrir(&base.join("sin-base"), &p, None);
+            assert_eq!(referencias.iter().find(|r| r.tipo == "Bitácoras").unwrap().estado, "ERROR_CONTROL");
+        }
         let _ = std::fs::remove_dir_all(base);
     }
 
