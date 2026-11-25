@@ -232,3 +232,10 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Corrige: `correos_iguales_a_python` fallaba al cambiar el día (el oráculo guardaba la fecha de generación).
 - CI: run 45609310864 verde (`linux` y `validar`, con el contraste E3 con el ZIP de Python y `correos.json` regenerado en Windows).
 
+## 2026-11-25 · E-A7 · Recálculo al editar columnas de origen en la copia
+
+- Cambió: `sincronizar.rs` (`actualizar` con `Config`, `Resumen.recalculadas`), `ui.rs` (aviso de filas recalculadas), `generar_sync.py` y `sync.json` (17 casos, con propuesta y reglas de Python).
+- Acredita: `actualizar_desde_excel_igual_a_python` (17 casos: reglas iguales y propuesta igual salvo R6) y `oraculo_de_sync_detecta_alteraciones`. `probar_app.sh todo`: 72 y 90 pruebas, 0 fallos; clippy limpio.
+- Diferencias: solo archivos de RUS (un paquete avisa); se reanalizan todas las filas; `NURUS_DECISIONES` no se combina (sin F08 no hay estado que combinar).
+- Pendiente: CI de Windows verde.
+

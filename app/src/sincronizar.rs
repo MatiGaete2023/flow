@@ -2,6 +2,7 @@
 //! Excel. Las filas se asocian por identidad, nunca por posición; una edición hecha aquí y otra en Excel sobre el mismo
 //! campo es un conflicto que la persona resuelve, y nada se aplica hasta que no hay conflictos.
 
+use crate::config::Config;
 use crate::copia_excel::identificadores;
 use crate::lectura;
 use crate::producto_excel;
@@ -41,6 +42,9 @@ impl Error {
     }
 }
 
+/// Lo que `Trabajo::analizar` no conserva de una fila: campos de Excel, identificador de copia y línea base.
+type Extras = (BTreeMap<String, String>, String, Option<BTreeMap<String, String>>, Option<BTreeMap<String, String>>);
+
 /// Fila de Trabajo, valores a aplicar y revisión que ve Excel.
 type Cambio = (usize, BTreeMap<&'static str, String>, BTreeMap<String, String>);
 
@@ -50,6 +54,8 @@ pub type Resoluciones = BTreeMap<(usize, String), String>;
 #[derive(Debug, Default, PartialEq, Eq)]
 pub struct Resumen {
     pub filas_cambiadas: usize,
+    /// Filas con datos de origen distintos en Excel, cuya propuesta y reglas se recalcularon.
+    pub recalculadas: usize,
     pub avisos: Vec<String>,
 }
 
@@ -176,7 +182,12 @@ fn combinar(
 }
 
 /// `sync.refresh`: combina la revisión de la copia con la de Trabajo. Todo o nada.
-pub fn actualizar(w: &mut Trabajo, headers: &[String], filas: &[Vec<Cell>], resoluciones: &Resoluciones) -> Result<Resumen, Error> {
+///
+/// F10: si una columna de origen cambió en la copia, se toma el valor de Excel y se recalculan la propuesta y las reglas
+/// (`record_edits.recalculate`); la revisión de la persona se conserva. Solo en trabajos de un archivo de RUS: en un
+/// paquete el origen es la captura y solo se avisa. Diferencia con Python: se vuelven a analizar todas las filas, no solo
+/// las editadas, así que también se actualiza una fila cuya duplicidad depende de la editada.
+pub fn actualizar(w: &mut Trabajo, cfg: &Config, headers: &[String], filas: &[Vec<Cell>], resoluciones: &Resoluciones) -> Result<Resumen, Error> {
     let asociadas = asociar(w, headers, filas)?;
     let cols = columnas(headers);
     let mut conflictos = Vec::new();
@@ -213,6 +224,7 @@ pub fn actualizar(w: &mut Trabajo, headers: &[String], filas: &[Vec<Cell>], reso
     }
     let mut resumen = Resumen::default();
     let mut origen_editado = 0;
+    let mut nuevos_valores: Vec<(usize, Vec<(usize, Cell)>)> = Vec::new();
     for ((i, fusion, excel), fila) in cambios.into_iter().zip(filas) {
         let r = &mut w.registros[i];
         let antes = (r.editada.clone(), r.res.clone(), r.campos.clone());
@@ -235,22 +247,55 @@ pub fn actualizar(w: &mut Trabajo, headers: &[String], filas: &[Vec<Cell>], reso
         }
         r.sync_base = Some(excel.clone());
         r.sync_local = Some(excel);
-        // Las columnas de origen no se recalculan al importar: solo se avisa si cambiaron.
+        // Columnas de origen que cambiaron en la copia (sin las de identidad, que `asociar` ya validó).
         let mapa = lectura::map_columns(headers, w.mode());
         let w_ref: &Trabajo = w;
-        let cambio = w_ref.cols.iter().filter(|(k, _)| !IDENTIDAD.contains(k)).any(|(k, &c)| {
-            let en_trabajo = w_ref.registros[i].values.get(c).map(Cell::display).unwrap_or_default();
-            let en_excel = mapa.get(k).and_then(|&j| fila.get(j)).map(Cell::display).unwrap_or_default();
-            normalizar(en_trabajo.trim()) != normalizar(en_excel.trim())
-        });
-        if cambio {
+        let editadas: Vec<(usize, usize)> = w_ref
+            .cols
+            .iter()
+            .filter(|(k, _)| !IDENTIDAD.contains(k))
+            .filter_map(|(k, &c)| {
+                let j = *mapa.get(k)?;
+                let en_trabajo = w_ref.registros[i].values.get(c).map(Cell::display).unwrap_or_default();
+                let en_excel = fila.get(j).map(Cell::display).unwrap_or_default();
+                (normalizar(en_trabajo.trim()) != normalizar(en_excel.trim())).then_some((c, j))
+            })
+            .collect();
+        if !editadas.is_empty() {
             origen_editado += 1;
+            nuevos_valores.push((i, editadas.into_iter().map(|(c, j)| (c, fila.get(j).cloned().unwrap_or(Cell::Empty))).collect()));
         }
     }
-    if origen_editado > 0 {
+    if origen_editado > 0 && w.paquete.is_some() {
         resumen.avisos.push(format!(
-            "{origen_editado} fila(s) tienen datos de origen distintos en Excel. Esta versión no los recalcula; abre de nuevo el archivo de origen para analizarlos."
+            "{origen_editado} fila(s) tienen datos de origen distintos en Excel. En un paquete el origen es la captura: esta versión no los recalcula; descarga y abre el paquete de nuevo."
         ));
+    } else if origen_editado > 0 {
+        // `analizar` conserva la observación editada, la revisión y RES, pero no los campos de Excel ni la línea base.
+        let extras: HashMap<usize, Extras> = w
+            .registros
+            .iter()
+            .map(|r| (r.fila_excel, (r.campos.clone(), r.id_excel.clone(), r.sync_base.clone(), r.sync_local.clone())))
+            .collect();
+        let hoja = w.sheet;
+        for (i, valores) in nuevos_valores {
+            let fila_hoja = w.registros[i].fila_excel - 1;
+            for (c, v) in valores {
+                if let Some(celda) = w.sheets[hoja].rows[fila_hoja].get_mut(c) {
+                    *celda = v;
+                }
+            }
+        }
+        w.analizar(cfg);
+        for r in &mut w.registros {
+            if let Some((campos, id, base, local)) = extras.get(&r.fila_excel) {
+                r.campos = campos.clone();
+                r.id_excel = id.clone();
+                r.sync_base = base.clone();
+                r.sync_local = local.clone();
+            }
+        }
+        resumen.recalculadas = origen_editado;
     }
     Ok(resumen)
 }
@@ -337,7 +382,7 @@ mod pruebas {
         for e in caso["remotas"].as_array().unwrap() {
             let (i, campo, v) = (e[0].as_u64().unwrap() as usize, e[1].as_str().unwrap(), texto(&e[2]));
             let c = pos(&headers, campo).unwrap();
-            filas[i][c] = Cell::Text(v);
+            filas[i][c] = if e[2].is_number() { Cell::Number(e[2].as_f64().unwrap()) } else { Cell::Text(v) };
         }
         let excel = &caso["excel"];
         if let Some(i) = excel.get("cambiar_identidad").and_then(Value::as_u64) {
@@ -360,7 +405,7 @@ mod pruebas {
             .iter()
             .map(|r| ((r[0].as_u64().unwrap() as usize, r[1].as_str().unwrap().to_string()), texto(&r[2])))
             .collect();
-        let resultado = actualizar(&mut w, &headers, &filas, &resoluciones);
+        let resultado = actualizar(&mut w, &Config::default(), &headers, &filas, &resoluciones);
         let mut d = Vec::new();
         match (&resultado, caso.get("error"), caso.get("conflictos")) {
             (Err(Error::Rechazo(m)), Some(e), _) if *m == texto(e) => {}
@@ -381,6 +426,19 @@ mod pruebas {
             }
             (Ok(_), None, None) => {}
             (otro, e, c) => d.push(format!("resultado Rust {otro:?} · Python error {e:?} conflictos {c:?}")),
+        }
+        // F10: lo que Python recalcula al cambiar una columna de origen (y lo que deja igual en las demás filas).
+        for (i, propuesta) in caso["propuestas"].as_array().unwrap().iter().enumerate() {
+            let r = &w.registros[i];
+            let reglas: Vec<String> = caso["reglas"][i].as_array().unwrap().iter().map(texto).collect();
+            if r.eventos != reglas {
+                d.push(format!("fila {i} reglas: Rust {:?} · Python {reglas:?}", r.eventos));
+            }
+            // R6 (decisión del 20-nov): el nombre del programa en tipo título («Dos», no «DOS»).
+            let esperada = texto(propuesta).replace("AFT Ejemplo DOS", "AFT Ejemplo Dos");
+            if r.propuesta != esperada {
+                d.push(format!("fila {i} propuesta: Rust {:?} · Python {esperada:?}", r.propuesta));
+            }
         }
         for (i, esperada) in caso["revision"].as_array().unwrap().iter().enumerate() {
             let r = &w.registros[i];
@@ -419,7 +477,7 @@ mod pruebas {
             println!("FALLA {f}");
         }
         println!("SYNC: {iguales}/{}, fallos {}", casos.len(), fallos.len());
-        assert_eq!(casos.len(), 12, "el oráculo debe traer 12 casos");
+        assert_eq!(casos.len(), 17, "el oráculo debe traer 17 casos");
         assert!(fallos.is_empty());
     }
 
@@ -431,6 +489,11 @@ mod pruebas {
         assert!(comparar(&datos, &caso).is_empty());
         caso["revision"][0]["CC"] = Value::String("0".into());
         assert!(!comparar(&datos, &caso).is_empty(), "un valor esperado alterado no se detecta");
+        // También la propuesta que Python recalculó al editar una columna de origen.
+        let mut recalculo = datos["casos"].as_array().unwrap().iter().find(|c| c["escenario"] == "origen_editado").unwrap().clone();
+        assert!(comparar(&datos, &recalculo).is_empty());
+        recalculo["reglas"][1] = serde_json::json!(["ESPERA.E05_PROYECTO_Y_CORREO"]);
+        assert!(!comparar(&datos, &recalculo).is_empty(), "una regla recalculada alterada no se detecta");
     }
 
     /// El archivo que guarda Flow Rust se puede volver a leer y a importar sin cambios ni conflictos.
@@ -443,7 +506,7 @@ mod pruebas {
         let ruta = producto_excel::exportar(&w, &perfil.join("sync"), None).unwrap();
         let (headers, filas) = leer_copia(&w, &std::fs::read(&ruta).unwrap()).unwrap();
         assert_eq!(filas.len(), 3);
-        let resumen = actualizar(&mut w, &headers, &filas, &Resoluciones::new()).unwrap();
+        let resumen = actualizar(&mut w, &Config::default(), &headers, &filas, &Resoluciones::new()).unwrap();
         assert_eq!(resumen.filas_cambiadas, 0, "{resumen:?}");
         assert!(resumen.avisos.is_empty(), "{:?}", resumen.avisos);
     }

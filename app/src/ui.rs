@@ -600,9 +600,12 @@ impl App {
                 }
             }
         };
-        match crate::sincronizar::actualizar(w, &headers, &filas, &resoluciones) {
+        match crate::sincronizar::actualizar(w, &self.cfg, &headers, &filas, &resoluciones) {
             Ok(resumen) => {
                 let mut texto = format!("Copia de Excel incorporada: {} filas cambiaron.", resumen.filas_cambiadas);
+                if resumen.recalculadas > 0 {
+                    texto.push_str(&format!(" {} con datos de origen editados se recalcularon.", resumen.recalculadas));
+                }
                 for a in &resumen.avisos {
                     texto.push_str(&format!(" {a}"));
                 }

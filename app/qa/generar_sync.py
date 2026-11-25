@@ -103,6 +103,9 @@ def caso(nombre, locales=(), remotas=(), resoluciones=None, **excel):
         except ValueError as e:
             salida['error'] = str(e)
         salida['revision'] = [revision(fila) for fila in obra.rows]
+        # Lo que recalcula Python al cambiar una columna de origen en la copia: la propuesta y las reglas de cada fila.
+        salida['propuestas'] = [fila.observation for fila in obra.rows]
+        salida['reglas'] = [list(fila.rules) for fila in obra.rows]
         return salida
 
 
@@ -126,6 +129,13 @@ def main():
         caso('sin_columna_tecnica', remotas=[(0, 'OBSERVACION', 'Sin columna técnica'), (0, 'CC', 1)], quitar_id=True),
         caso('identidad_cambiada', cambiar_identidad=0, remotas=[(0, 'CC', 1)]),
         caso('faltan_registros', quitar_filas=1),
+        # E-A7 (F10): columnas de origen editadas en la copia; Python recalcula la propuesta y las reglas de esas filas.
+        caso('origen_editado', remotas=[(0, 'T ESPERA', 150), (1, 'T ESPERA', 5)]),
+        caso('origen_editado_y_revision_remota', remotas=[(2, 'T ESPERA', 100), (2, 'CC', 1), (2, 'OBSERVACION', 'Texto de Excel')]),
+        caso('origen_editado_y_observacion_local', locales=[(0, 'OBSERVACION', 'Versión local')], remotas=[(0, 'T ESPERA', 150)]),
+        caso('origen_editado_con_conflicto', locales=[(1, 'OBSERVACION', 'Versión local')],
+             remotas=[(1, 'T ESPERA', 120), (1, 'OBSERVACION', 'Versión de Excel')]),
+        caso('origen_con_el_mismo_valor', remotas=[(0, 'T ESPERA', 30)]),
     ]
     # Bytes y no texto: en Windows `write_text` cambiaría los saltos de línea y la CI compara byte a byte.
     destino.write_bytes(json.dumps({
