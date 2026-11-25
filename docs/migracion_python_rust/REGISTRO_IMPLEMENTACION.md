@@ -285,3 +285,11 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Verificadores: 98 pruebas pasan en local; `verificar_textos_umbrales`, `check_real_ids` e `inventario_escrituras` en PASA (0 discrepancias).
 - Diferencias declaradas: F08 completado para anulaciones; variables Word y exclusión manual siguen fuera.
 - CI: pendiente.
+
+## 2026-11-25 · Orquestador · CI de E-A10 e integración del Agente C (E-Q8)
+
+- CI de E-A10 (`faee8ea`, run 45651312385): `validar` falló en `la_edicion_masiva_cambia_solo_lo_pedido_y_se_deshace` («Cannot detect file format»); `linux` pasó. Causa: `demo::libro` escribía siempre `Ejemplo_ficticio_<modo>.xlsx` en la misma ruta temporal y la prueba nueva `las_anulaciones_sobreviven_a_la_sesion_y_conciliacion` la reescribía en paralelo; en Windows una leía el libro a medio escribir. Corrección `8f49ce1`: carpeta propia `flow_ejemplo_<pid>_<n>` por llamada (mismo nombre de archivo) y su línea en `inventario_escrituras.py`.
+- E-A10: el agente A editó el workflow (lista de regeneración con `anulaciones`) y marcó `HECHO` sin CI. Se acepta el cambio del workflow; el estado pasa a «implementado» hasta la CI verde.
+- Agente C (E-Q8): revisado `050574c..190ca49` (solo sus archivos, `paquete.rs` con las firmas protegidas intactas y su línea del inventario); CI de su rama verde (run 45650217541, «Regenerar los oráculos» corrido). Integrado con `git merge --no-ff` (`3689c92`) sin conflictos con E-U2 ni E-A10.
+- Acredita en local tras integrar: `tools/probar_app.sh todo` 77 y 97 pruebas, 0 fallos; clippy de la biblioteca limpio; `check_real_ids`, `check_contactos`, `verificar_textos_umbrales`, `inventario_escrituras`, `verificar_solo_lectura` (con autoprueba) y `verificar_referencia_python` en PASA.
+- Siguiente: CI de Windows de la rama principal para cerrar E-A10 y E-Q8 como `HECHO`; encargo E-S2 al Agente C.

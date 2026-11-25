@@ -77,3 +77,40 @@ Prohibido: ui.rs, trabajo.rs, sincronizar.rs, conciliar.rs, productos.rs, descar
 2. Integrar de a una a la rama principal (`git merge --no-ff`), resolver conflictos si los hubiera, correr `tools/probar_app.sh todo`, clippy y verificadores, y pasar el texto propuesto a ESTADO, PLAN y registro.
 3. Publicar y esperar la CI de Windows en la rama principal: recién ahí el encargo queda `HECHO`.
 4. Decidir en la integración lo que cada agente marcó como ambiguo, y preguntar al usuario solo lo que cambie reglas judiciales.
+
+## Prompt del Agente C · Segundo encargo · E-S2 conjuntos de Flow Python en Resultados
+
+Pensado para GPT-5.6 Luna: pasos numerados, archivos cerrados y criterio de parada explícito.
+
+```
+Eres el Agente C. Trabajas en MatiGaete2023/flow. Crea la rama estudio/agente-c-conjuntos-20261125 desde el último commit de origin/estudio/paridad-python-rust-20261119 (ya trae integrado tu encargo anterior, E-Q8). Otros agentes: A (Asistente, Word, instalador) y B (Meta 4). No toques lo suyo.
+
+Lee solo AGENTS.md (incluida «Trabajo en paralelo»), docs/migracion_python_rust/ESTADO.md, PLAN.md (entrada E-S2) y CONTINUACION.md.
+
+ENCARGO · E-S2 · Resultados abre conjuntos de Flow Python (F22).
+Hechos: el usuario abrió en «Resultados del lote» una carpeta antigua de Flow Python y Rust respondió «falta resumen.json». Python acepta tres tipos de carpeta (descargador/archivo_local.py, kind): bitacoras.json → «Bitácoras», flujo.json → «Conjunto», resumen.json → «Descarga», en ese orden de prioridad; sin ninguno: «La carpeta debe conservar resumen.json, flujo.json o bitacoras.json y sus originales.». Python resuelve un conjunto a las carpetas de sus fases (archivo_local.load_sources + flujo_csmp.source_folder y FLOW_DONE). Rust (descargador/paquete.rs, cargar_lote) hoy solo reconoce el tipo y pide elegir una subcarpeta.
+
+Referencia Python (léela antes de escribir código; no la modifiques): descargador/archivo_local.py (kind, load_sources), descargador/flujo_csmp.py (FLOW_DONE, source_folder), descargador/resultados.py (load_lot, read_json), descargador/ventana_resultados.py (choose, load: mensajes de Conjunto y Bitácoras; el export de crear paquete) y las pruebas descargador/test_reutilizacion_local.py y test_referencias_ausentes.py.
+
+Tareas, en orden:
+1. Nuevo app/src/descargador/archivo_local.rs con:
+   - tipo(carpeta) → Bitacoras | Conjunto | Descarga, misma prioridad y mismo mensaje de error que kind.
+   - fases_conjunto(carpeta, parcial) → carpetas de las fases: acepta estado PREPARADO_SIN_CONSULTA_FIRMAS, VALIDADA o COMPLETA; otro estado sin parcial da exactamente «El conjunto está incompleto. Permite resultados incompletos para conservar su alcance explícito.»; omite fases sin «carpeta»; rechaza con los textos de source_folder una carpeta vacía o no texto, igual a la raíz o fuera del conjunto (incluye «..» y rutas absolutas). Normaliza rutas antes de comparar (lección de Windows: nombres cortos RUNNER~1 y enlaces; usa la misma normalización que ya usa el Descargador).
+   - cargar_fuentes(carpetas, parcial) → Vec<Lote>: como load_sources; ignora Bitácoras, expande conjuntos, deduplica por carpeta normalizada conservando el primer orden, carga cada una con paquete::cargar_lote_con(carpeta, parcial) y, si no queda ninguna, da «Añade al menos una descarga de hojas RUS para crear el paquete del Asistente.».
+   - Declara el módulo con una línea en app/src/descargador.rs.
+2. Resultados (app/src/descargador_resultados_ui.rs): al elegir una carpeta de conjunto, muestra sus fases (nombre de carpeta y estado de cada resumen.json) y el mensaje «Conjunto disponible. Crear paquete reúne sus fases…» adaptado a los botones que existen en Rust; los productos por lote (consolidado, CSV, ICS, ZIP, comparar) se ofrecen por fase. Crear paquete desde un conjunto usa cargar_fuentes y el exportador existente del paquete. Una carpeta de Bitácoras muestra qué hacer con ella en Rust (sin inventar una función nueva). Una carpeta incompleta respeta la casilla de resultados incompletos que ya existe.
+3. En paquete.rs solo puedes cambiar el texto del error de cargar_lote para flujo.json, para que remita a Resultados. No cambies las firmas de leer_registro, cargar_lote, cargar_lote_con, rutas_bitacoras, tablas_lote, mapeo, leer_json ni los tipos Lote, Fuente y Clave (los usa B).
+4. Oráculo nuevo: app/qa/generar_archivo_local.py y app/tests/datos/archivo_local.json. Construye carpetas ficticias con los ayudantes existentes (generar_lote.py, generar_excel.reconstruir) y graba lo que hace Python. Mínimo 12 casos: prioridad de los tres tipos; carpeta sin control; flujo.json con JSON inválido; los tres estados aceptados; estado incompleto con y sin parcial; fase sin carpeta; carpeta vacía, igual a la raíz, con «..» y absoluta; la misma fase en dos conjuntos y un conjunto más su propia fase (deduplicación y orden); solo carpetas de Bitácoras (lista vacía); y 2 casos que además crean el paquete desde un conjunto y comparan sus tablas con export_capture de Python sobre load_sources. Compara tipo, carpetas resueltas (rutas relativas a la raíz del caso, con «/»), mensajes de error exactos y tablas del paquete. El generador debe ser determinista y sin dependencias del sistema (bytes, fechas fijas, ZipInfo.create_system = 3, propiedades fijas de openpyxl).
+5. Pruebas Rust: conjuntos_iguales_a_python (afirma el número de casos) y oraculo_de_conjuntos_detecta_alteraciones (altera una carpeta resuelta, un mensaje y una tabla y exige que el comparador falle). Una prueba de vista: abrir un conjunto ficticio en Resultados muestra sus fases y crea el paquete.
+6. Única excepción al bloque común sobre el workflow: agrega 'archivo_local' al arreglo de oráculos del paso «Regenerar los oráculos con la referencia Python» de .github/workflows/flow-rust-local.yml y nada más en ese archivo. Infórmalo.
+7. Si archivo_local.rs o la vista escriben a disco, agrega o ajusta su línea en tools/inventario_escrituras.py.
+
+Fuera de alcance (infórmalo como pendiente, no lo implementes): historial de referencias en preferencias (remember, discover), «Ver descarga conjunta» (show_joint) y la recuperación de un flujo a medias (resume_joint).
+
+Archivos tuyos: app/src/descargador/archivo_local.rs (nuevo), una línea en app/src/descargador.rs, app/src/descargador_resultados_ui.rs, el texto citado de paquete.rs, app/src/descargador/resultados.rs solo si hace falta para exportar por fase, app/qa/generar_archivo_local.py, app/tests/datos/archivo_local.json, la línea del workflow del punto 6 y tu línea de tools/inventario_escrituras.py.
+Prohibido: ui.rs, trabajo.rs, sincronizar.rs, conciliar.rs, productos.rs, producto_excel.rs, copia_excel.rs, descargador/meta4.rs, meta4_ui.rs, cualquier archivo Python de descargador/, src/ o tests/, y lo del bloque común.
+
+CRITERIO DE PARADA: si una conducta de Python es ambigua o parece un error, no la «corrijas» en Rust: reprodúcela, fíjala en el oráculo y repórtala como hallazgo. Si algo exige cambiar una firma protegida, otro archivo prohibido o una dependencia, detente y repórtalo como BLOQUEADO. Si la CI falla dos veces por la misma causa sin que la entiendas, detente y reporta el log.
+
+[Pega aquí el BLOQUE COMÚN con <letra> = C; el informe va en docs/migracion_python_rust/informes/AGENTE_C_20261125b.md]
+```

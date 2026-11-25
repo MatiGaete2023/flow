@@ -10,11 +10,11 @@ Claude es el **orquestador y coordinador**: decide, integra y valida. Tres agent
 |---|---|---|---|
 | A | `estudio/paridad-python-rust-20261119` | E-A10 (anulaciones de columnas de origen por fila), luego E-P1 (Word por tribunal con índice) y E-I1 (instalador) | `trabajo.rs`, `ui.rs`, `sincronizar.rs`, `conciliar.rs`, `productos.rs`, `producto_excel.rs`, `copia_excel.rs`, `personalizar.rs`, instalador |
 | B | `estudio/agente-b-meta4-20261125` | Meta 4: ampliar el contraste con Python (Espera, FAE, otros tribunales, regeneración, plantilla) | `descargador/meta4.rs`, `meta4_ui.rs`, `generar_meta4.py`, `meta4.json` |
-| C | `estudio/agente-c-parciales-20261125` | Descargador: causas de los paquetes parciales y diagnóstico anónimo | `descargador/{lecturas,bitacoras,vinculos,historico,historia,sitfa_ficticio}.rs`, `descargador_ui.rs` (solo el aviso), generadores y JSON de lecturas, bitácoras y vínculos |
+| C | `estudio/agente-c-parciales-20261125` → `estudio/agente-c-conjuntos-20261125` | E-Q8 (entregado e integrado); E-S2: conjuntos `flujo.json` de Flow Python en Resultados | E-S2: `descargador/archivo_local.rs` (nuevo), `descargador_resultados_ui.rs`, `generar_archivo_local.py` y `archivo_local.json`, la línea `archivo_local` del workflow y su línea del inventario |
 
 Los prompts completos están en [informes/PROMPTS_AGENTES_20261125.md](informes/PROMPTS_AGENTES_20261125.md). Cada agente entrega un informe en `informes/AGENTE_<letra>_<fecha>.md` y no edita `ESTADO`, `PLAN`, `REGISTRO`, `AGENTS`, `CONTINUACION` ni el workflow.
 
-**Estado a las 16:00 UTC del 25-nov:** C publicó su primer commit (`6b7eb4c`, diagnóstico de cobertura incompleta); A y B aún no publican. Hay una revisión agendada a las 16:26 UTC para integrar lo que tenga informe.
+**Estado a las 16:40 UTC del 25-nov:** C entregó E-Q8 (informe `AGENTE_C_20261125.md`) y quedó integrado (`3689c92`); su siguiente encargo es E-S2 (abrir conjuntos `flujo.json` de Flow Python en Resultados, prompt en `informes/PROMPTS_AGENTES_20261125.md`), en una rama nueva desde la principal. A publicó E-A10 (`faee8ea`) con la CI de Windows en rojo por una carrera entre pruebas; el orquestador la corrigió (`8f49ce1`). B aún no publica.
 
 ## Procedimiento de revisión e integración
 
