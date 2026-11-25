@@ -94,6 +94,7 @@ pub struct App {
     proyectos: Vec<Proyecto>,
     psel: Option<usize>,
     solo_sel_res: bool,
+    word_por_tribunal: bool,
     // resultados
     productos: Vec<Producto>,
     // contactos
@@ -176,6 +177,7 @@ impl App {
             proyectos: vec![],
             psel: None,
             solo_sel_res: false,
+            word_por_tribunal: false,
             productos: vec![],
             nuevo_prog: String::new(),
             nuevo_alias: String::new(),
@@ -2263,6 +2265,12 @@ impl App {
         theme::card(p).show(ui, |ui| {
             ui.set_width(ui.available_width());
             ui.horizontal(|ui| {
+                egui::ComboBox::from_id_salt("formato_word_resoluciones")
+                    .selected_text(if self.word_por_tribunal { "Un .docx por tribunal" } else { "Un .docx por proyecto" })
+                    .show_ui(ui, |ui| {
+                        ui.selectable_value(&mut self.word_por_tribunal, false, "Un .docx por proyecto");
+                        ui.selectable_value(&mut self.word_por_tribunal, true, "Un .docx por tribunal");
+                    });
                 let hay = self.work.is_some();
                 if ui.add_enabled(hay, egui::Button::new(RichText::new("⚖  Preparar proyectos").color(Color32::WHITE).strong()).fill(p.accent)).clicked() {
                     preparar = true;
@@ -2300,13 +2308,28 @@ impl App {
             if !desactualizados.is_empty() {
                 self.aviso(format!("{} Proyectos: {}.", crate::preparados::OBSOLETO, desactualizados.join(", ")), true);
             } else if let Some(dir) = self.carpeta_productos() {
-                match productos::generar_word(&self.proyectos, &dir, self.corte()) {
-                    Ok(pth) => {
-                        self.aviso(format!("Proyectos generados con la matriz de cada tribunal (un Word por proyecto) en {}", pth.display()), false);
+                let resultado = if self.word_por_tribunal {
+                    productos::generar_word_tribunal(&self.proyectos, &dir, self.corte()).map(|(carpeta, rutas)| (carpeta, rutas, true))
+                } else {
+                    productos::generar_word(&self.proyectos, &dir, self.corte()).map(|carpeta| {
+                        let rutas = self.proyectos.iter().filter(|p| p.incluir).filter_map(|p| {
+                            let base = safe_filename(&format!("{} {} {}", p.tipo, p.rit, p.tribunal_clave));
+                            std::fs::read_dir(&carpeta).ok()?.filter_map(std::result::Result::ok).find(|e| e.path().file_stem().is_some_and(|s| s.to_string_lossy() == base)).map(|e| (p.tribunal_clave.clone(), e.path()))
+                        }).collect();
+                        (carpeta, rutas, false)
+                    })
+                };
+                match resultado {
+                    Ok((pth, rutas, por_tribunal)) => {
+                        let archivos = if por_tribunal { rutas.len() } else { self.proyectos.iter().filter(|p| p.incluir).count() };
+                        let total = self.proyectos.iter().filter(|p| p.incluir).count();
+                        self.aviso(format!("{archivos} archivos y {total} proyectos generados en {}", pth.display()), false);
                         if let Some(w) = self.work.as_mut() {
-                            let registros: Vec<usize> = self.proyectos.iter().filter(|p| p.incluir).flat_map(|p| p.registros.clone()).collect();
-                            let ids = crate::preparados::ids_registros(w, &registros);
-                            w.preparados.anotar("word", "creado", ids, "", &pth.display().to_string());
+                            for proyecto in self.proyectos.iter().filter(|p| p.incluir) {
+                                let registro_ids = crate::preparados::ids_registros(w, &proyecto.registros);
+                                let archivo = rutas.iter().find(|(trib, _)| trib == &proyecto.tribunal_clave).map(|(_, ruta)| ruta.display().to_string()).unwrap_or_else(|| pth.display().to_string());
+                                w.preparados.anotar("word", "creado", registro_ids, "", &archivo);
+                            }
                         }
                         self.marcar_sucio();
                         self.registrar(pth, "Proyectos de resolución (Word)");
