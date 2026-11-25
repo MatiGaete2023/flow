@@ -466,7 +466,7 @@ fn correr(
     let anterior: BTreeMap<String, PathBuf> = if retomando {
         estado["carpetas"]
             .as_object()
-            .map(|m| m.iter().filter_map(|(k, v)| Some((k.clone(), raiz.join(v.as_str()?)))).collect())
+            .map(|m| m.iter().filter_map(|(k, v)| Some((k.clone(), raiz.join(relativa(v.as_str()?))))).collect())
             .unwrap_or_default()
     } else {
         BTreeMap::new()
@@ -1391,6 +1391,43 @@ pub(crate) mod pruebas {
         let mut caso = datos["casos"][0].clone();
         caso["zip"]["tablas"]["bitacoras"] = json!(99);
         assert!(comparar_caso(&caso).iter().any(|d| d.contains(".zip")), "tabla alterada no detectada");
+    }
+
+    /// Retomar un paquete cuyo `proceso.json` trae `respaldo/<fecha>` o `respaldo\\<fecha>` debe resolver la carpeta y
+    /// reutilizar las consultas validadas en cualquier sistema (Linux incluido), como `_consultas_validadas` de Python.
+    #[test]
+    fn retomar_resuelve_separadores_y_reutiliza_consultas() {
+        let datos = datos();
+        let caso = datos["casos"].as_array().unwrap().iter().find(|c| c["caso"] == "retomado").unwrap().clone();
+        for (nombre, separador) in [("barra", "/"), ("inversa", "\\")] {
+            let base = carpeta(&format!("retomar-{nombre}"));
+            let entrada = base.join("entrada");
+            reconstruir(&entrada, &caso["entrada"]);
+            let paquete = std::fs::read_dir(&entrada).unwrap().flatten().map(|e| e.path())
+                .find(|p| p.file_name().is_some_and(|n| n.to_string_lossy().starts_with(PREFIJO)))
+                .unwrap();
+            let control = paquete.join("respaldo").join(PROCESO);
+            let mut proceso: Value = serde_json::from_slice(&std::fs::read(&control).unwrap()).unwrap();
+            for (_, valor) in proceso["carpetas"].as_object_mut().unwrap().iter_mut() {
+                *valor = json!(valor.as_str().unwrap_or("").replace('/', separador));
+            }
+            std::fs::write(&control, serde_json::to_vec_pretty(&proceso).unwrap()).unwrap();
+            let doble = Doble::nuevo();
+            let catalogo: Catalogo = serde_json::from_value(catalogo_json("seguimiento")).unwrap();
+            let (mut eventos, cancelar) = (Vec::new(), AtomicBool::new(false));
+            let resultado = retomar(
+                &doble, &catalogo, Edicion::Integral, &paquete, &Opciones { pausa: Duration::ZERO, ..Default::default() },
+                &cancelar, &mut |e| eventos.push(e),
+            );
+            assert!(resultado.is_ok(), "{separador}: {:?}", resultado.err());
+            let volcado = volcado_proceso(&paquete);
+            let historial = volcado["historial"].as_array().cloned().unwrap_or_default();
+            assert!(
+                historial.iter().any(|h| h.as_str().unwrap_or("").contains("consultas reutilizadas del intento anterior")),
+                "{separador}: {historial:?}"
+            );
+            let _ = std::fs::remove_dir_all(&base);
+        }
     }
 }
 

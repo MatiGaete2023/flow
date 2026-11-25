@@ -33,6 +33,7 @@ from csmp_shared import parser  # noqa: E402
 
 parser()
 
+import generar_lote  # noqa: E402,F401  (reloj fijo y Path.write_text en LF)
 import motor  # noqa: E402
 
 AHORA = datetime(2026, 10, 8, 13, 0, 0, 123456, tzinfo=ZoneInfo('America/Santiago'))
@@ -45,7 +46,7 @@ def ahora():
     return AHORA + timedelta(seconds=_RELOJ['n'])
 
 
-motor.now = ahora
+motor.now = ahora  # por encima del reloj fijo de generar_lote: las carpetas de cada fase no chocan
 
 import flujo_paquete  # noqa: E402
 from lotes import Batch  # noqa: E402
@@ -343,13 +344,31 @@ def caso(nombre, *, opciones=None, batch=None, resume=None, fallar_bitacora=None
     return registro
 
 
+def rutas_normalizadas(valor):
+    """`proceso.json` guarda `respaldo\\<fecha>` en Windows: las rutas relativas van con `/` en cualquier sistema."""
+    if isinstance(valor, str):
+        if '\\' in valor and ('respaldo\\' in valor or valor.startswith('Paquete CSMP ')):
+            return valor.replace('\\', '/')
+        return valor
+    if isinstance(valor, list):
+        return [rutas_normalizadas(v) for v in valor]
+    if isinstance(valor, dict):
+        return {k: rutas_normalizadas(v) for k, v in valor.items()}
+    return valor
+
+
 def archivos(carpeta):
+    """Archivos de la carpeta del paquete como base64: JSON normalizado (LF y rutas con `/`), sin el ZIP."""
     salida = {}
     for ruta in sorted(Path(carpeta).rglob('*')):
-        if ruta.is_file() and ruta.suffix in ('.json', '.xls', '.zip'):
-            datos = ruta.read_bytes()
+        if ruta.is_file() and ruta.suffix in ('.json', '.xls'):
             if ruta.suffix == '.json':
-                datos = datos.replace(b'\r\n', b'\n')
+                try:
+                    datos = json.dumps(rutas_normalizadas(json.loads(ruta.read_text(encoding='utf-8'))), ensure_ascii=False, indent=2).replace('\r\n', '\n').encode('utf-8')
+                except ValueError:
+                    datos = ruta.read_bytes().replace(b'\r\n', b'\n')
+            else:
+                datos = ruta.read_bytes()
             salida[ruta.relative_to(Path(carpeta).parent).as_posix()] = base64.b64encode(datos).decode()
     return salida
 
@@ -386,7 +405,13 @@ class Paquete:
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_bytes(base64.b64decode(b64))
         self.ruta = next(self.carpeta.glob('Paquete CSMP *'))
+        for zip_viejo in self.ruta.glob('*.zip'):
+            zip_viejo.unlink()
         control = self.ruta / 'respaldo' / 'proceso.json'
+        if control.is_file():
+            control.write_bytes(
+                json.dumps(rutas_normalizadas(json.loads(control.read_text(encoding='utf-8'))), ensure_ascii=False, indent=2).encode('utf-8')
+            )
         if danado:
             control.write_bytes(b'{ esto no es JSON')
         elif sin_alcance:
