@@ -58,9 +58,9 @@ Continúa la migración Python → Flow Rust en MatiGaete2023/flow, rama estudio
 
 Reglas: datos sintéticos; sin HAR/HTML/PDF/Excel/capturas reales; sin escritura en RUS/SATURNO; Outlook solo borradores con CC fijo; sin --force ni merge a main ni releases. Al cerrar un encargo: actualizar ESTADO.md y agregar ≤10 líneas a REGISTRO_IMPLEMENTACION.md en el mismo commit, publicar en la rama y esperar la CI de Windows en verde (HECHO = commit + CI verde, con «Regenerar los oráculos» corrido; ACEPTADO solo lo da el usuario). Commit con las líneas de atribución del sistema.
 
-Primero: revisa el run 45644045890 (commit 5f21612, E-I2) con las herramientas MCP de GitHub. Si linux y validar están en verde, pasa E-I2 a HECHO en ESTADO.md, PLAN.md y REGISTRO y publica. Si falla, lee el log y corrige.
+Primero: con las herramientas MCP de GitHub, comprueba que el último commit de la rama tenga la CI de Windows en verde. E-I2 ya está HECHO (run 45644045890).
 
-Luego sigue el orden decidido: E-A10 (anulaciones de columnas de origen por fila, F08; antes de escribir código lee _prepass_peers y apply(overrides=…) en src/nurus/personal/record_edits.py, con oráculo contra Python y su prueba permanente que altera lo esperado), después E-P1 (Word por tribunal con índice y salto de página) y E-I1 (instalador, que respeta la carpeta de actualizaciones de E-I2).
+Sigue el orden decidido: E-A10 (anulaciones de columnas de origen por fila, F08; antes de escribir código lee _prepass_peers y apply(overrides=…) en src/nurus/personal/record_edits.py, con oráculo contra Python y su prueba permanente que altera lo esperado), después E-P1 (Word por tribunal con índice y salto de página) y E-I1 (instalador, que respeta la carpeta de actualizaciones de E-I2).
 
 Proceso: decide y sigue; registra las decisiones delegadas como revertibles en PLAN.md; pregunta al usuario en tandas de opción múltiple (máximo 4 preguntas por tanda). Estilo: español chileno, primera línea = la respuesta, sin cortesías, hechos | inferencias | especulación separados, código completo.
 
