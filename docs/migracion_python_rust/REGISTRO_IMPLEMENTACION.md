@@ -276,5 +276,4 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Acredita: `una_carpeta_sin_resumen_dice_que_es_y_que_elegir`. `probar_app.sh todo`: 74 y 94 pruebas, 0 fallos; clippy limpio. El desplazamiento solo lo valida el usuario.
 - Sin resolver: abrir conjuntos `flujo.json` en Resultados; hace falta la lista de nombres de archivos del lote antiguo para confirmar su tipo.
 - Coordinación: toca `descargador_ui.rs` y `paquete.rs`, que usa el Agente C; integrar con cuidado.
-- Pendiente: CI de Windows verde.
-
+- CI: run 45648680625 verde (`linux` y `validar`). Pendiente: confirmación del usuario con el `.exe` nuevo.
