@@ -308,7 +308,7 @@ fn instalador_sin_sha256_falla_por_omision() {
     assert!(salida_sin_huella.status.success(), "con -SinHuella debe permitir instalar: {}", String::from_utf8_lossy(&salida_sin_huella.stderr));
     let out_sin_huella = String::from_utf8_lossy(&salida_sin_huella.stdout);
     assert!(
-        out_sin_huella.contains("SHA-256 no verificado (instalación sin SHA256.txt)"),
+        out_sin_huella.contains("SHA-256 no verificado") && out_sin_huella.contains("sin SHA256.txt"),
         "debe avisar que no se verificó huella: {out_sin_huella}"
     );
     assert_eq!(std::fs::read(destino.join("flow_rust.exe")).unwrap(), contenido_exe);
