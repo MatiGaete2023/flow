@@ -83,12 +83,12 @@ Prohibido: ui.rs, trabajo.rs, sincronizar.rs, conciliar.rs, productos.rs, descar
 Pensado para GPT-5.6 Luna: pasos numerados, archivos cerrados y criterio de parada explícito.
 
 ```
-Eres el Agente C. Trabajas en MatiGaete2023/flow. Crea la rama estudio/agente-c-conjuntos-20261125 desde el último commit de origin/estudio/paridad-python-rust-20261119 (ya trae integrado tu encargo anterior, E-Q8). Otros agentes: A (Asistente, Word, instalador) y B (Meta 4). No toques lo suyo.
+Eres el Agente C. Trabajas en MatiGaete2023/flow. Crea la rama estudio/agente-c-conjuntos-20261125 desde el último commit de origin/estudio/paridad-python-rust-20261119 (ya trae integrado tu encargo anterior, E-Q8). Otros agentes: A (Word: productos.rs; instalador) y B (E-Q9, rama estudio/agente-b-flujo-20261125: flujo_paquete.rs y la acción «Consultar y crear paquete» en descargador_ui.rs). No toques lo suyo.
 
 PASO 0 · CHECKOUT (antes de leer o escribir nada).
 1. Busca un clon válido: una carpeta donde `git remote get-url origin` termine en MatiGaete2023/flow(.git). Una carpeta con otro origen, en `master` o sin `.git` NO sirve, aunque se llame «flow».
 2. Si no existe: git clone https://github.com/MatiGaete2023/flow.git flow-rust-c (en una carpeta nueva y vacía, fuera de carpetas de archivos pegados).
-3. En el clon: git fetch origin estudio/paridad-python-rust-20261119 y luego git checkout -b estudio/agente-c-conjuntos-20261125 origin/estudio/paridad-python-rust-20261119 (si la rama ya existe en origin, git checkout -B estudio/agente-c-conjuntos-20261125 origin/estudio/agente-c-conjuntos-20261125). Comprueba git merge-base --is-ancestor 622a56b HEAD (debe terminar en 0).
+3. En el clon: git fetch origin estudio/paridad-python-rust-20261119 y luego git checkout -b estudio/agente-c-conjuntos-20261125 origin/estudio/paridad-python-rust-20261119 (si la rama ya existe en origin, git checkout -B estudio/agente-c-conjuntos-20261125 origin/estudio/agente-c-conjuntos-20261125). Comprueba git merge-base --is-ancestor a983449 HEAD (debe terminar en 0).
 4. Si el clon o el fetch fallan, responde BLOQUEADO con el error literal y esta línea para el usuario: «Abre el agente en la carpeta de tu clon local de MatiGaete2023/flow, o conecta el repositorio al entorno del agente, y vuelve a pegar este prompt».
 5. Informa en tu primera respuesta la ruta del clon, la rama y el commit de HEAD.
 
@@ -113,7 +113,7 @@ Tareas, en orden:
    - Declara el módulo con una línea en app/src/descargador.rs.
 2. Resultados (app/src/descargador_resultados_ui.rs): al elegir una carpeta de conjunto, muestra sus fases (nombre de carpeta y estado de cada resumen.json) y el mensaje «Conjunto disponible. Crear paquete reúne sus fases…» adaptado a los botones que existen en Rust; los productos por lote (consolidado, CSV, ICS, ZIP, comparar) se ofrecen por fase. Crear paquete desde un conjunto usa cargar_fuentes y el exportador existente del paquete. Una carpeta de Bitácoras muestra qué hacer con ella en Rust (sin inventar una función nueva). Una carpeta incompleta respeta la casilla de resultados incompletos que ya existe.
 3. En paquete.rs solo puedes cambiar el texto del error de cargar_lote para flujo.json, para que remita a Resultados. No cambies las firmas de leer_registro, cargar_lote, cargar_lote_con, rutas_bitacoras, tablas_lote, mapeo, leer_json ni los tipos Lote, Fuente y Clave (los usa B).
-4. Oráculo nuevo: app/qa/generar_archivo_local.py y app/tests/datos/archivo_local.json. Construye carpetas ficticias con los ayudantes existentes (generar_lote.py, generar_excel.reconstruir) y graba lo que hace Python. Mínimo 12 casos: prioridad de los tres tipos; carpeta sin control; flujo.json con JSON inválido; los tres estados aceptados; estado incompleto con y sin parcial; fase sin carpeta; carpeta vacía, igual a la raíz, con «..» y absoluta; la misma fase en dos conjuntos y un conjunto más su propia fase (deduplicación y orden); solo carpetas de Bitácoras (lista vacía); y 2 casos que además crean el paquete desde un conjunto y comparan sus tablas con export_capture de Python sobre load_sources. Compara tipo, carpetas resueltas (rutas relativas a la raíz del caso, con «/»), mensajes de error exactos y tablas del paquete. El generador debe ser determinista y sin dependencias del sistema (bytes, fechas fijas, ZipInfo.create_system = 3, propiedades fijas de openpyxl).
+4. Oráculo nuevo: app/qa/generar_archivo_local.py y app/tests/datos/archivo_local.json. Construye carpetas ficticias con los ayudantes existentes (generar_lote.py, generar_excel.reconstruir) y graba lo que hace Python. Mínimo 12 casos: prioridad de los tres tipos; carpeta sin control; flujo.json con JSON inválido; los tres estados aceptados; estado incompleto con y sin parcial; fase sin carpeta; carpeta vacía, igual a la raíz, con «..» y absoluta; la misma fase en dos conjuntos y un conjunto más su propia fase (deduplicación y orden); solo carpetas de Bitácoras (lista vacía); y 2 casos que además crean el paquete desde un conjunto y comparan sus tablas con export_capture de Python sobre load_sources. Compara tipo, carpetas resueltas (rutas relativas a la raíz del caso, con «/»), mensajes de error exactos y tablas del paquete. El generador debe ser determinista y sin dependencias del sistema: escribir bytes; fechas fijas; ZipInfo.create_system = 3; propiedades fijas de openpyxl; importar generar_lote (fija el reloj y hace que Path.write_text escriba LF); normalizar a LF los JSON y fixtures de texto antes de pasarlos a base64; tomar la carpeta temporal con Path(tmp).resolve() (en Windows llega como RUNNER~1) y escribir rutas con as_posix().
 5. Pruebas Rust: conjuntos_iguales_a_python (afirma el número de casos) y oraculo_de_conjuntos_detecta_alteraciones (altera una carpeta resuelta, un mensaje y una tabla y exige que el comparador falle). Una prueba de vista: abrir un conjunto ficticio en Resultados muestra sus fases y crea el paquete.
 6. Única excepción al bloque común sobre el workflow: agrega 'archivo_local' al arreglo de oráculos del paso «Regenerar los oráculos con la referencia Python» de .github/workflows/flow-rust-local.yml y nada más en ese archivo. Infórmalo.
 7. Si archivo_local.rs o la vista escriben a disco, agrega o ajusta su línea en tools/inventario_escrituras.py.
@@ -180,6 +180,8 @@ PUBLICACIÓN: commits en estudio/paridad-python-rust-20261119 con las líneas de
 
 INFORME: docs/migracion_python_rust/informes/AGENTE_A_20261125.md, en un commit aparte y el último: 1) resumen ≤10 líneas; 2) ruta del clon, commits y archivos; 3) pruebas y conteos antes → después; 4) run de CI, con la conclusión y el log del paso «Regenerar los oráculos» (debe nombrar word_tribunal); 5) hallazgos (hechos | inferencias | especulación); 6) texto propuesto para ESTADO, PLAN y registro (≤10 líneas); 7) riesgos y pendientes. Estado del encargo en el informe: ENTREGADO o BLOQUEADO.
 
+FIRMA (obligatoria): el informe empieza con un bloque «Firma» con: agente y letra; herramienta y modelo; identidad git `nombre <correo>` usada en tus commits; ruta del clon; rama; y la lista de commits hechos por esta sesión, uno por línea con su SHA. Termina cada mensaje de commit con la línea `Agente: C · ChatGPT Luna`. No listes commits de otras sesiones como tuyos; si encuentras commits de otra sesión en tus archivos, nómbralos aparte. Un informe sin firma no se integra.
+
 ESTILO: español chileno, primera línea = la respuesta, sin cortesías, código completo.
 ```
 
@@ -234,5 +236,81 @@ PUBLICACIÓN: commits en tu rama con las líneas de atribución del sistema; git
 
 INFORME: docs/migracion_python_rust/informes/AGENTE_B_20261125b.md, en un commit aparte y el último: 1) resumen ≤10 líneas; 2) ruta del clon, commits y archivos; 3) pruebas y conteos antes → después; 4) run de CI con la conclusión y la última línea del paso de regeneración; 5) hallazgos (hechos | inferencias | especulación); 6) texto propuesto para ESTADO, PLAN y registro (≤10 líneas); 7) riesgos y pendientes (incluido run_por_hoja). Estado: ENTREGADO o BLOQUEADO; el HECHO lo pone el coordinador.
 
+FIRMA (obligatoria): el informe empieza con un bloque «Firma» con: agente y letra; herramienta y modelo; identidad git `nombre <correo>` usada en tus commits; ruta del clon; rama; y la lista de commits hechos por esta sesión, uno por línea con su SHA. Termina cada mensaje de commit con la línea `Agente: B · DeepSeek`. No listes commits de otras sesiones como tuyos; si encuentras commits de otra sesión en tus archivos, nómbralos aparte. Un informe sin firma no se integra.
+
 ESTILO: español chileno, primera línea = la respuesta, sin cortesías, código completo.
+```
+
+## Prompt del Agente A · E-P2 Word por tribunal con imágenes, numeración y relaciones (GPT-5.6 Luna)
+
+```
+Eres el Agente A para este encargo (E-P2), ejecutado por ChatGPT Luna por excepción: desde el próximo encargo A es Antigravity y tú eres C. Ejecutor único: si hay otra sesión trabajando E-P2, detente y avisa al usuario. Trabajas en MatiGaete2023/flow, directamente en la rama estudio/paridad-python-rust-20261119. Otros agentes: B (rama estudio/agente-b-flujo-20261125: flujo_paquete.rs, descargador_ui.rs) y C (rama estudio/agente-c-conjuntos-20261125: descargador_resultados_ui.rs, archivo_local.rs). No toques lo suyo.
+
+EVALUACIÓN DE TU ENTREGA ANTERIOR (E-P1, cerrada como HECHO por el coordinador en el run 45665516823):
+- Bien: respetaste los archivos y los documentos de estado, pusiste ENTREGADO con la salida literal del paso de regeneración y resolviste el determinismo con ZIP_STORED.
+- Corrige:
+  1. Trabajo duplicado: 4966b6d reimplementó E-P1 desde una base vieja cuando 9aac149 ya estaba publicado. Antes de escribir código, haz git fetch y revisa git log origin/estudio/paridad-python-rust-20261119 -- <tus archivos>. Si el encargo ya tiene commits publicados, continúa sobre ellos; no lo empieces de nuevo.
+  2. Conteos inconsistentes: el resumen dice 81 + 101 y la tabla 76 + 101; el coordinador obtuvo 82 + 100. Copia los conteos de la línea literal «test result» de la corrida que citas, con su commit.
+  3. Un run lanzado por el coordinador (workflow_dispatch) no es evidencia tuya: cítalo como «revalidación del coordinador».
+  4. E-I1 (instalador) quedó ENTREGADO por otra sesión de A (af0224d, 65077ad, informe ee84ffb; CI verde en 45668678717) sin prompt del coordinador y con cambios al workflow. No lo toques, no lo amplíes ni lo reviertas: lo revisa el coordinador y la firma y el alojamiento los decide el usuario. Si eres esa misma sesión, dilo en tu primera respuesta.
+  5. No edites el workflow salvo que tu prompt lo autorice por escrito (en E-I1 se agregaron unas 27 líneas sin autorización).
+
+PASO 0 · CHECKOUT. Usa un solo clon con `git remote get-url origin` = MatiGaete2023/flow. git fetch origin estudio/paridad-python-rust-20261119; git checkout estudio/paridad-python-rust-20261119; git merge --ff-only origin/estudio/paridad-python-rust-20261119; comprueba git merge-base --is-ancestor a983449 HEAD (debe terminar en 0). Si el clon tiene cambios locales que no son tuyos, detente. Si falla el fetch: BLOQUEADO con el error literal. Primera respuesta: ruta del clon, commit de HEAD y, si corresponde, la respuesta del punto 4.
+
+Lee solo AGENTS.md, docs/migracion_python_rust/ESTADO.md (F14), PLAN.md (E-P2 y E-I1) y CONTINUACION.md.
+
+ENCARGO · E-P2 · Word por tribunal con plantillas que traen imágenes, numeración o relaciones (F14).
+Hecho: al unir matrices en un .docx por tribunal, productos.rs no combina word/_rels/document.xml.rels, word/media/*, word/numbering.xml ni [Content_Types].xml. Con una plantilla propia que trae una imagen (p. ej. un logo en el cuerpo o en el encabezado), viñetas o numeración, el archivo resultante puede quedar con referencias rId rotas, viñetas perdidas o un documento que Word repara al abrir. Python une con docxcompose (Composer(docs[0], preserve_styles=True).append(doc)), que renumera las relaciones, copia los medios, fusiona la numeración y actualiza los tipos de contenido.
+
+Tareas, en orden:
+1. Lee src/nurus/personal/resolutions.py (generate_projects) y el código instalado de docxcompose (composer.py: append, add_referenced_parts, add_numberings, add_styles, restart_numbering) para fijar la conducta exacta que vas a igualar. No modifiques Python.
+2. En productos.rs, al unir cada proyecto: renumera sus rId para que no choquen con los ya presentes; copia sus partes referenciadas (imágenes, encabezados y pies con sus propias relaciones) con nombres únicos; fusiona numbering.xml (abstractNum y num con ids nuevos y las referencias numId del cuerpo actualizadas) y agrega a [Content_Types].xml las extensiones y partes nuevas. No cambies la firma de generar_word, generar_word_por_tribunal ni generar_word_formato.
+3. Si docxcompose reinicia o continúa la numeración entre proyectos, haz lo mismo y fíjalo en el oráculo; no elijas otra conducta.
+4. Oráculo: amplía app/qa/generar_word_tribunal.py y app/tests/datos/word_tribunal.json (ya está en el workflow; no lo toques) con al menos 5 casos sintéticos: plantilla propia con una imagen PNG pequeña generada en el script; dos proyectos del mismo tribunal con la misma imagen; plantilla con lista con viñetas; plantilla con lista numerada en dos proyectos seguidos; encabezado con imagen. Por archivo graba: secuencia de párrafos (texto, salto previo, numId e ilvl resueltos a su formato), lista de partes del ZIP con su tipo de contenido, huella SHA-256 de cada medio y que toda referencia r:embed y r:id del cuerpo y encabezados resuelve a una relación existente. Determinista: ZIP_STORED, create_system = 3, external_attr fijo, fechas fijas.
+5. Pruebas Rust: amplía word_por_tribunal_igual_a_python con los nuevos conteos y oraculo_de_word_tribunal_detecta_alteraciones con una alteración de relación (rId que no resuelve) y una de numeración; agrega una prueba que abre cada .docx generado y verifica que todas las relaciones resuelven y que [Content_Types].xml cubre todas las partes.
+6. Si hay escrituras nuevas a disco, ajusta solo la línea de productos.rs en tools/inventario_escrituras.py.
+
+Archivos tuyos: app/src/productos.rs, app/qa/generar_word_tribunal.py, app/tests/datos/word_tribunal.json y la línea de productos.rs del inventario.
+Prohibido: ui.rs (no hace falta en este encargo), installer/**, el workflow, descargador/**, descargador_ui.rs, descargador_resultados_ui.rs, meta4_ui.rs, Cargo.toml y Cargo.lock (sin dependencias nuevas), archivos Python de src/, descargador/ y tests/, y ESTADO.md, PLAN.md, REGISTRO_IMPLEMENTACION.md, AGENTS.md y CONTINUACION.md. Las matrices institucionales y sus textos no se tocan.
+
+REGLAS: datos sintéticos (la imagen se genera en el script; nada real); sin escritura en RUS/SATURNO; Outlook solo borradores con CC fijo; sin --force, sin merge a main, sin releases.
+
+CRITERIO DE PARADA: si docxcompose hace algo ambiguo o que parece un error, reprodúcelo, fíjalo en el oráculo y repórtalo. Si necesitas una dependencia o un archivo prohibido: BLOQUEADO con el motivo. Si la CI falla dos veces por la misma causa sin que la entiendas, detente y reporta el log.
+
+PRUEBAS: tools/probar_app.sh rapido word mientras trabajas; tools/probar_app.sh todo una vez antes de publicar; cargo clippy --manifest-path app/Cargo.toml --features eframe/x11 --lib -- -D warnings; verificar_textos_umbrales.py e inventario_escrituras.py.
+
+PUBLICACIÓN: commits en estudio/paridad-python-rust-20261119 con las líneas de atribución del sistema; antes de cada push, git fetch y git merge --no-edit (nunca rebase de commits ajenos, nunca --force). Revisa la CI de tu push con las herramientas de GitHub sin sondear en bucle: «Regenerar los oráculos» debe CORRER y terminar en «Oráculos regenerados sin diferencias.» nombrando word_tribunal.
+
+INFORME: docs/migracion_python_rust/informes/AGENTE_A_20261125b.md, en un commit aparte y el último: 1) resumen ≤10 líneas; 2) ruta del clon, commits y archivos; 3) conteos antes → después copiados de la línea literal «test result», con su commit; 4) run de tu push con la conclusión y la última línea del paso de regeneración; 5) hallazgos (hechos | inferencias | especulación); 6) texto propuesto para ESTADO, PLAN y registro (≤10 líneas); 7) riesgos y pendientes. Estado: ENTREGADO o BLOQUEADO.
+
+FIRMA (obligatoria): el informe empieza con un bloque «Firma» con: agente y letra; herramienta y modelo; identidad git `nombre <correo>` usada en tus commits; ruta del clon; rama; y la lista de commits hechos por esta sesión, uno por línea con su SHA. Termina cada mensaje de commit con la línea `Agente: A (encargo E-P2) · ChatGPT Luna`. No listes commits de otras sesiones como tuyos; si encuentras commits de otra sesión en tus archivos, nómbralos aparte. Un informe sin firma no se integra.
+
+ESTILO: español chileno, primera línea = la respuesta, sin cortesías, código completo.
+```
+
+## Prompt del Agente B · Corrección de E-Q9 (DeepSeek)
+
+```
+Eres el Agente B (DeepSeek). Sigues en MatiGaete2023/flow, rama estudio/agente-b-flujo-20261125, mismo clon. E-Q9 vuelve a ti: el coordinador no lo integra.
+
+POR QUÉ SE DEVUELVE (hechos verificados por el coordinador):
+1. CI roja. El run 45671145795 (7b051b4) falló y en el 45672730810 (9952dab) el job linux falló en descargador::flujo_paquete::pruebas::flujo_paquete_igual_a_python. Tu informe proponía «CI Windows verde, run 45671145795» y dejó el paso de regeneración como «REGENERACION_CI» sin completar. Nunca escribas un run como verde sin haber leído su conclusión.
+2. Diferencia exacta en Linux (casos retomado y bitacora_retomada): el historial de Python trae «consultas reutilizadas del intento anterior» entre «fase consultas» y «fase bitacoras», y el de Rust no. Rust no reutiliza las consultas al retomar.
+3. El oráculo depende del sistema: flujo_paquete.json se generó en Windows y su respaldo/proceso.json guarda «respaldo\\<fecha>»; generado en Linux sale «respaldo/<fecha>», y también cambia el ZIP de «Paquete CSMP 2026-10-08 13-02-17-123456». En el repositorio todos los oráculos deben regenerarse idénticos en Windows y Linux.
+4. El informe no trae el bloque «Firma» (regla nueva en AGENTS.md, «Trabajo en paralelo»).
+
+TAREAS, en orden:
+1. git fetch origin; git merge --no-edit origin/estudio/paridad-python-rust-20261119 en tu rama (sin rebase ni --force). Si hay conflicto en la línea de oráculos del workflow, deja las dos entradas: ... 'anulaciones', 'word_tribunal', 'flujo_paquete'.
+2. Generador (app/qa/generar_flujo_paquete.py): todo texto escrito por Python que vaya al oráculo debe quedar igual en cualquier sistema. Antes del base64, en proceso.json y en cualquier JSON o CSV del paquete, reemplaza los separadores «\\» de rutas relativas por «/» (solo en rutas, no en texto libre); importa app/qa/generar_lote.py como hacen generar_paquete.py y generar_excel.py (fija el reloj y hace que Path.write_text escriba LF). Comprueba en Linux que dos corridas dan bytes idénticos y que el resultado no depende de os.sep: corre el generador también con la carpeta de trabajo bajo una ruta con espacios.
+3. Rust (descargador/flujo_paquete.rs): al retomar, resuelve las carpetas guardadas en proceso.json aceptando «/» y «\\» en cualquier sistema, y reutiliza las consultas validadas igual que Python (_consultas_validadas), con la línea «consultas reutilizadas del intento anterior» en el historial. Agrega una prueba que retoma un proceso.json con separadores «\\» en Linux y otra con «/», y que ambas reutilizan.
+4. Regenera app/tests/datos/flujo_paquete.json en Linux con el generador corregido y verifica: tools/probar_app.sh todo sin fallos, clippy, inventario_escrituras.py y verificar_solo_lectura.py.
+5. Publica y espera la CI: linux y validar en success, y «Regenerar los oráculos» CORRIDO terminando en «Oráculos regenerados sin diferencias.» con flujo_paquete listado. Si falla, lee el log y corrige; si falla dos veces por la misma causa sin entenderla, BLOQUEADO con el log.
+
+Archivos: los mismos de E-Q9 (flujo_paquete.rs, la línea de descargador.rs, tu parte de descargador_ui.rs, generar_flujo_paquete.py, flujo_paquete.json, tu línea del workflow y del inventario). Sigue prohibido: paquete.rs, lote.rs, bitacoras.rs, lecturas.rs, sitfa_ficticio.rs, descargador_resultados_ui.rs, archivo_local.rs, productos.rs, ui.rs, Cargo.toml/Cargo.lock, Python de descargador/, src/ y tests/, y ESTADO, PLAN, REGISTRO, AGENTS y CONTINUACION. Las dos diferencias del escritor de paquetes que declaraste (escritos/historico_proteccion NO_SOLICITADA y CONSOLIDADO_OMITIDO) quedan anotadas: no las corrijas aquí.
+
+FIRMA (obligatoria): el informe empieza con un bloque «Firma» con: agente y letra (B); herramienta y modelo (DeepSeek, versión exacta); identidad git `nombre <correo>` usada en tus commits; ruta del clon; rama; y la lista de commits hechos por esta sesión, uno por línea con su SHA (incluye 7b051b4, 9952dab y c4dffd9 si son tuyos). Termina cada mensaje de commit con la línea `Agente: B · DeepSeek`. Un informe sin firma no se integra.
+
+INFORME: actualiza docs/migracion_python_rust/informes/AGENTE_B_20261125b.md en un commit aparte y el último: corrige el punto 4 (CI) con los runs reales, su conclusión y la última línea literal del paso de regeneración; agrega en hallazgos la causa de la falla y cómo la corregiste; ajusta el texto propuesto (sin «HECHO»: el coordinador lo pone). Estado: ENTREGADO solo con CI verde en ambos trabajos; si no, BLOQUEADO.
+
+ESTILO: español chileno, primera línea = la respuesta, sin cortesías, hechos | inferencias | especulación separados, código completo.
 ```

@@ -1,0 +1,691 @@
+{
+  "corte": "2026-11-20",
+  "hoy": "2099-01-01",
+  "casos": [
+    {
+      "nombre": "un_proyecto",
+      "modo": "ESPERA",
+      "encabezados": [
+        "RIT",
+        "TRIBUNAL",
+        "NOMBRE",
+        "RUT",
+        "DERIVACION",
+        "T ESPERA",
+        "FEC. RESOLUCION",
+        "DURACION"
+      ],
+      "filas": [
+        [
+          "X-10-2026",
+          "Jgdo. L. y G. de Laja",
+          "Persona Uno",
+          "11111111-1",
+          "AFT Ficticio",
+          90,
+          "15/10/2026",
+          "6 meses"
+        ]
+      ],
+      "res": [],
+      "editadas": [],
+      "plantillas_propias": {},
+      "por_tribunal": {
+        "LAJA": {
+          "cantidad": 1,
+          "cursivas": false,
+          "indice": [
+            "Índice",
+            "1. X-10-2026 — PC_IE — Pide cuenta ingreso efectivo"
+          ],
+          "parrafos": [
+            {
+              "texto": "Laja, la fecha de la resolución es la que se indica en el pie de firma.",
+              "salto": false
+            },
+            {
+              "texto": "VISTO:",
+              "salto": false
+            },
+            {
+              "texto": "Atendido al mérito de los antecedentes que obran en autos y de conformidad a lo dispuesto en los artículos 13 y 16 de la Ley N° 19.968 que crea Los Tribunales de Familia, se resuelve:",
+              "salto": false
+            },
+            {
+              "texto": "Ofíciese a programa AFT Ficticio a fin de pedir cuenta del ingreso efectivo de Persona Uno, cédula de identidad N° 11111111-1.",
+              "salto": false
+            },
+            {
+              "texto": "-Notifíquese vía correo al programa interventor y curador.",
+              "salto": false
+            },
+            {
+              "texto": "-Notifíquese a los restantes intervinientes por el estado diario.",
+              "salto": false
+            },
+            {
+              "texto": "Sirva la presente resolución de suficiente y atento oficio remisor.",
+              "salto": false
+            },
+            {
+              "texto": "RIT: X-10-2026",
+              "salto": false
+            },
+            {
+              "texto": "Proveyó, Juez del juzgado de Letras y Garantía de Laja, quien suscribe con firma electrónica avanzada.",
+              "salto": false
+            },
+            {
+              "texto": "En Laja, con esta fecha, notifique por el estado diario la resolución que antecede.",
+              "salto": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "nombre": "tres_proyectos_un_tribunal",
+      "modo": "ESPERA",
+      "encabezados": [
+        "RIT",
+        "TRIBUNAL",
+        "NOMBRE",
+        "RUT",
+        "DERIVACION",
+        "T ESPERA",
+        "FEC. RESOLUCION",
+        "DURACION"
+      ],
+      "filas": [
+        [
+          "X-10-2026",
+          "Jgdo. L. y G. de Laja",
+          "Persona Uno",
+          "11111111-1",
+          "AFT Ficticio",
+          90,
+          "15/10/2026",
+          "6 meses"
+        ],
+        [
+          "X-11-2026",
+          "Jgdo. L. y G. de Laja",
+          "Persona Dos",
+          "22222222-2",
+          "AFT Ficticio",
+          95,
+          "20/10/2026",
+          "12 meses"
+        ],
+        [
+          "X-11-2026",
+          "Jgdo. L. y G. de Laja",
+          "Persona Tres",
+          "33333333-3",
+          "AFT Ficticio",
+          95,
+          "20/10/2026",
+          "12 meses"
+        ],
+        [
+          "X-12-2026",
+          "Jgdo. L. y G. de Laja",
+          "Persona Cuatro",
+          "44444444-4",
+          "AFT Ficticio",
+          100,
+          "12/09/2026",
+          "6 meses"
+        ],
+        [
+          "X-12-2026",
+          "Jgdo. L. y G. de Laja",
+          "Persona Cinco",
+          "55555555-5",
+          "PRM Ficticio",
+          100,
+          "12/09/2026",
+          "6 meses"
+        ]
+      ],
+      "res": [],
+      "editadas": [],
+      "plantillas_propias": {},
+      "por_tribunal": {
+        "LAJA": {
+          "cantidad": 3,
+          "cursivas": false,
+          "indice": [
+            "Índice",
+            "1. X-10-2026 — PC_IE — Pide cuenta ingreso efectivo",
+            "2. X-11-2026 — PC_IE — Pide cuenta ingreso efectivo",
+            "3. X-12-2026 — PC_IE — Pide cuenta ingreso efectivo"
+          ],
+          "parrafos": [
+            {
+              "texto": "Laja, la fecha de la resolución es la que se indica en el pie de firma.",
+              "salto": false
+            },
+            {
+              "texto": "VISTO:",
+              "salto": false
+            },
+            {
+              "texto": "Atendido al mérito de los antecedentes que obran en autos y de conformidad a lo dispuesto en los artículos 13 y 16 de la Ley N° 19.968 que crea Los Tribunales de Familia, se resuelve:",
+              "salto": false
+            },
+            {
+              "texto": "Ofíciese a programa AFT Ficticio a fin de pedir cuenta del ingreso efectivo de Persona Uno, cédula de identidad N° 11111111-1.",
+              "salto": false
+            },
+            {
+              "texto": "-Notifíquese vía correo al programa interventor y curador.",
+              "salto": false
+            },
+            {
+              "texto": "-Notifíquese a los restantes intervinientes por el estado diario.",
+              "salto": false
+            },
+            {
+              "texto": "Sirva la presente resolución de suficiente y atento oficio remisor.",
+              "salto": false
+            },
+            {
+              "texto": "RIT: X-10-2026",
+              "salto": false
+            },
+            {
+              "texto": "Proveyó, Juez del juzgado de Letras y Garantía de Laja, quien suscribe con firma electrónica avanzada.",
+              "salto": false
+            },
+            {
+              "texto": "En Laja, con esta fecha, notifique por el estado diario la resolución que antecede.",
+              "salto": false
+            },
+            {
+              "texto": "Laja, la fecha de la resolución es la que se indica en el pie de firma.",
+              "salto": true
+            },
+            {
+              "texto": "VISTO:",
+              "salto": false
+            },
+            {
+              "texto": "Atendido al mérito de los antecedentes que obran en autos y de conformidad a lo dispuesto en los artículos 13 y 16 de la Ley N° 19.968 que crea Los Tribunales de Familia, se resuelve:",
+              "salto": false
+            },
+            {
+              "texto": "Ofíciese a programa AFT Ficticio a fin de pedir cuenta del ingreso efectivo de Persona Dos, cédula de identidad N° 22222222-2 y Persona Tres, cédula de identidad N° 33333333-3.",
+              "salto": false
+            },
+            {
+              "texto": "-Notifíquese vía correo al programa interventor y curador.",
+              "salto": false
+            },
+            {
+              "texto": "-Notifíquese a los restantes intervinientes por el estado diario.",
+              "salto": false
+            },
+            {
+              "texto": "Sirva la presente resolución de suficiente y atento oficio remisor.",
+              "salto": false
+            },
+            {
+              "texto": "RIT: X-11-2026",
+              "salto": false
+            },
+            {
+              "texto": "Proveyó, Juez del juzgado de Letras y Garantía de Laja, quien suscribe con firma electrónica avanzada.",
+              "salto": false
+            },
+            {
+              "texto": "En Laja, con esta fecha, notifique por el estado diario la resolución que antecede.",
+              "salto": false
+            },
+            {
+              "texto": "Laja, la fecha de la resolución es la que se indica en el pie de firma.",
+              "salto": true
+            },
+            {
+              "texto": "VISTO:",
+              "salto": false
+            },
+            {
+              "texto": "Atendido al mérito de los antecedentes que obran en autos y de conformidad a lo dispuesto en los artículos 13 y 16 de la Ley N° 19.968 que crea Los Tribunales de Familia, se resuelve:",
+              "salto": false
+            },
+            {
+              "texto": "Ofíciese a programa AFT Ficticio y PRM Ficticio a fin de pedir cuenta del ingreso efectivo de Persona Cuatro, cédula de identidad N° 44444444-4 y Persona Cinco, cédula de identidad N° 55555555-5.",
+              "salto": false
+            },
+            {
+              "texto": "-Notifíquese vía correo a los programas intervinientes y curador.",
+              "salto": false
+            },
+            {
+              "texto": "-Notifíquese a los restantes intervinientes por el estado diario.",
+              "salto": false
+            },
+            {
+              "texto": "Sirva la presente resolución de suficiente y atento oficio remisor.",
+              "salto": false
+            },
+            {
+              "texto": "Personas comprendidas: Persona Cuatro, cédula de identidad N° 44444444-4, programa AFT Ficticio; Persona Cinco, cédula de identidad N° 55555555-5, programa PRM Ficticio.",
+              "salto": false
+            },
+            {
+              "texto": "RIT: X-12-2026",
+              "salto": false
+            },
+            {
+              "texto": "Proveyó, Juez del juzgado de Letras y Garantía de Laja, quien suscribe con firma electrónica avanzada.",
+              "salto": false
+            },
+            {
+              "texto": "En Laja, con esta fecha, notifique por el estado diario la resolución que antecede.",
+              "salto": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "nombre": "dos_tribunales",
+      "modo": "ESPERA",
+      "encabezados": [
+        "RIT",
+        "TRIBUNAL",
+        "NOMBRE",
+        "RUT",
+        "DERIVACION",
+        "T ESPERA",
+        "FEC. RESOLUCION",
+        "DURACION"
+      ],
+      "filas": [
+        [
+          "X-50-2026",
+          "Jgdo. L. y G. de Laja",
+          "Persona Alfa",
+          "13131313-1",
+          "AFT Ficticio",
+          90,
+          "10/10/2026",
+          "6 meses"
+        ],
+        [
+          "X-51-2026",
+          "Jgdo. L. y G. de Laja",
+          "Persona Beta",
+          "14141414-2",
+          "AFT Ficticio",
+          10,
+          "11/10/2026",
+          "6 meses"
+        ],
+        [
+          "X-60-2026",
+          "Jgdo. L. y G. de Mulchen",
+          "Persona Gamma",
+          "15151515-3",
+          "AFT Ficticio",
+          95,
+          "12/10/2026",
+          "6 meses"
+        ],
+        [
+          "X-61-2026",
+          "Jgdo. L. y G. de Mulchen",
+          "Persona Delta",
+          "16161616-4",
+          "AFT Ficticio",
+          12,
+          "13/10/2026",
+          "6 meses"
+        ]
+      ],
+      "res": [
+        "PC_IE",
+        "NOMENCL",
+        "PC_IE",
+        "NOMENCL"
+      ],
+      "editadas": [],
+      "plantillas_propias": {},
+      "por_tribunal": {
+        "LAJA": {
+          "cantidad": 2,
+          "cursivas": false,
+          "indice": [
+            "Índice",
+            "1. X-50-2026 — PC_IE — Pide cuenta ingreso efectivo",
+            "2. X-51-2026 — NOMENCL — Nomenclatura"
+          ],
+          "parrafos": [
+            {
+              "texto": "Laja, la fecha de la resolución es la que se indica en el pie de firma.",
+              "salto": false
+            },
+            {
+              "texto": "VISTO:",
+              "salto": false
+            },
+            {
+              "texto": "Atendido al mérito de los antecedentes que obran en autos y de conformidad a lo dispuesto en los artículos 13 y 16 de la Ley N° 19.968 que crea Los Tribunales de Familia, se resuelve:",
+              "salto": false
+            },
+            {
+              "texto": "Ofíciese a programa AFT Ficticio a fin de pedir cuenta del ingreso efectivo de Persona Alfa, cédula de identidad N° 13131313-1.",
+              "salto": false
+            },
+            {
+              "texto": "-Notifíquese vía correo al programa interventor y curador.",
+              "salto": false
+            },
+            {
+              "texto": "-Notifíquese a los restantes intervinientes por el estado diario.",
+              "salto": false
+            },
+            {
+              "texto": "Sirva la presente resolución de suficiente y atento oficio remisor.",
+              "salto": false
+            },
+            {
+              "texto": "RIT: X-50-2026",
+              "salto": false
+            },
+            {
+              "texto": "Proveyó, Juez del juzgado de Letras y Garantía de Laja, quien suscribe con firma electrónica avanzada.",
+              "salto": false
+            },
+            {
+              "texto": "En Laja, con esta fecha, notifique por el estado diario la resolución que antecede.",
+              "salto": false
+            },
+            {
+              "texto": "Laja, la fecha de la resolución es la que se indica en el pie de firma.",
+              "salto": true
+            },
+            {
+              "texto": "Advirtiendo el Tribunal que se omitió la incorporación de la nomenclatura \"[COMPLETAR NOMENCLATURA]\", aplíquese a la presente resolución, para efectos de regularizar el correcto registro en el sistema de seguimiento de tramitación de causas.",
+              "salto": false
+            },
+            {
+              "texto": "RIT: X-51-2026",
+              "salto": false
+            },
+            {
+              "texto": "Proveyó, Juez del juzgado de Letras y Garantía de Laja, quien suscribe con firma electrónica avanzada.",
+              "salto": false
+            },
+            {
+              "texto": "En Laja, con esta fecha, notifique por el estado diario la resolución que antecede.",
+              "salto": false
+            }
+          ]
+        },
+        "MULCHEN": {
+          "cantidad": 2,
+          "cursivas": false,
+          "indice": [
+            "Índice",
+            "1. X-60-2026 — PC_IE — Pide cuenta ingreso efectivo",
+            "2. X-61-2026 — NOMENCL — Nomenclatura"
+          ],
+          "parrafos": [
+            {
+              "texto": "Mulchén, uno de enero de dos mil noventa y nueve.",
+              "salto": false
+            },
+            {
+              "texto": "Advirtiendo el Tribunal que con fecha doce de octubre de dos mil veintiséis se ordenó el ingreso de Persona Gamma, cédula de identidad N° 15151515-3 a AFT Ficticio por el plazo de 6 meses, no constando en la carpeta digital el ingreso efectivo de la persona aludida a la institución, pídase cuenta al programa para que informe con carácter de urgente, en el plazo de 5 días, bajo apercibimiento del artículo 238 del Código de Procedimiento Civil, si se efectuó el ingreso del niño sujeto de protección y, en la afirmativa, su fecha.",
+              "salto": false
+            },
+            {
+              "texto": "Notifíquese al programa interventor por correo electrónico.",
+              "salto": false
+            },
+            {
+              "texto": "Sirva la presente resolución como suficiente y atento oficio remisor.",
+              "salto": false
+            },
+            {
+              "texto": "RIT: X-60-2026",
+              "salto": false
+            },
+            {
+              "texto": "Se proveyó y firmó mediante firma electrónica avanzada, según lo dispuesto en la ley 20.886 y acta 71-2016 de la Excelentísima Corte Suprema.",
+              "salto": false
+            },
+            {
+              "texto": "En Mulchén, uno de enero de dos mil noventa y nueve, notifiqué por el estado diario la resolución precedente.",
+              "salto": false
+            },
+            {
+              "texto": "Mulchén, uno de enero de dos mil noventa y nueve.",
+              "salto": true
+            },
+            {
+              "texto": "Advirtiendo el Tribunal que se omitió la incorporación de la nomenclatura \"[COMPLETAR NOMENCLATURA]\", aplíquese a la presente resolución para efectos de regularizar el correcto registro en el sistema de tramitación de causas.",
+              "salto": false
+            },
+            {
+              "texto": "RIT: X-61-2026",
+              "salto": false
+            },
+            {
+              "texto": "Se proveyó y firmó mediante firma electrónica avanzada, según lo dispuesto en la ley 20.886 y acta 71-2016 de la Excelentísima Corte Suprema.",
+              "salto": false
+            },
+            {
+              "texto": "En Mulchén, uno de enero de dos mil noventa y nueve, notifiqué por el estado diario la resolución precedente.",
+              "salto": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "nombre": "texto_editado_en_revision",
+      "modo": "ESPERA",
+      "encabezados": [
+        "RIT",
+        "TRIBUNAL",
+        "NOMBRE",
+        "RUT",
+        "DERIVACION",
+        "T ESPERA",
+        "FEC. RESOLUCION",
+        "DURACION"
+      ],
+      "filas": [
+        [
+          "X-70-2026",
+          "Jgdo. L. y G. de Mulchen",
+          "Persona Editada",
+          "17171717-5",
+          "AFT Ficticio",
+          15,
+          "01/10/2026",
+          "6 meses"
+        ]
+      ],
+      "res": [
+        "NOMENCL"
+      ],
+      "editadas": [
+        "Aplicar nomenclatura «Ingreso informe de diagnóstico»."
+      ],
+      "plantillas_propias": {},
+      "por_tribunal": {
+        "MULCHEN": {
+          "cantidad": 1,
+          "cursivas": false,
+          "indice": [
+            "Índice",
+            "1. X-70-2026 — NOMENCL — Nomenclatura"
+          ],
+          "parrafos": [
+            {
+              "texto": "Mulchén, uno de enero de dos mil noventa y nueve.",
+              "salto": false
+            },
+            {
+              "texto": "Advirtiendo el Tribunal que se omitió la incorporación de la nomenclatura \"Ingreso informe de diagnóstico\", aplíquese a la presente resolución para efectos de regularizar el correcto registro en el sistema de tramitación de causas.",
+              "salto": false
+            },
+            {
+              "texto": "RIT: X-70-2026",
+              "salto": false
+            },
+            {
+              "texto": "Se proveyó y firmó mediante firma electrónica avanzada, según lo dispuesto en la ley 20.886 y acta 71-2016 de la Excelentísima Corte Suprema.",
+              "salto": false
+            },
+            {
+              "texto": "En Mulchén, uno de enero de dos mil noventa y nueve, notifiqué por el estado diario la resolución precedente.",
+              "salto": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "nombre": "matriz_propia_del_usuario",
+      "modo": "ESPERA",
+      "encabezados": [
+        "RIT",
+        "TRIBUNAL",
+        "NOMBRE",
+        "RUT",
+        "DERIVACION",
+        "T ESPERA",
+        "FEC. RESOLUCION",
+        "DURACION"
+      ],
+      "filas": [
+        [
+          "X-80-2026",
+          "Jgdo. L. y G. de Laja",
+          "Persona Propia",
+          "18181818-6",
+          "AFT Ficticio",
+          90,
+          "02/10/2026",
+          "6 meses"
+        ],
+        [
+          "X-81-2026",
+          "Jgdo. L. y G. de Laja",
+          "Persona Estandar",
+          "19191919-7",
+          "AFT Ficticio",
+          10,
+          "03/10/2026",
+          "6 meses"
+        ]
+      ],
+      "res": [
+        "PC_IE",
+        "NOMENCL"
+      ],
+      "editadas": [],
+      "plantillas_propias": {
+        "LAJA/PC_IE.docx": "UEsDBBQAAAAAAAAAdF3wSsJ/LAIAACwCAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48VHlwZXMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvY29udGVudC10eXBlcyI+PERlZmF1bHQgRXh0ZW5zaW9uPSJyZWxzIiBDb250ZW50VHlwZT0iYXBwbGljYXRpb24vdm5kLm9wZW54bWxmb3JtYXRzLXBhY2thZ2UucmVsYXRpb25zaGlwcyt4bWwiLz48RGVmYXVsdCBFeHRlbnNpb249InhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3htbCIvPjxPdmVycmlkZSBQYXJ0TmFtZT0iL3dvcmQvZG9jdW1lbnQueG1sIiBDb250ZW50VHlwZT0iYXBwbGljYXRpb24vdm5kLm9wZW54bWxmb3JtYXRzLW9mZmljZWRvY3VtZW50LndvcmRwcm9jZXNzaW5nbWwuZG9jdW1lbnQubWFpbit4bWwiLz48T3ZlcnJpZGUgUGFydE5hbWU9Ii93b3JkL3N0eWxlcy54bWwiIENvbnRlbnRUeXBlPSJhcHBsaWNhdGlvbi92bmQub3BlbnhtbGZvcm1hdHMtb2ZmaWNlZG9jdW1lbnQud29yZHByb2Nlc3NpbmdtbC5zdHlsZXMreG1sIi8+PC9UeXBlcz5QSwMEFAAAAAAAAAB0XZv9N+opAQAAKQEAAAsAAABfcmVscy8ucmVsczw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48UmVsYXRpb25zaGlwcyB4bWxucz0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL3BhY2thZ2UvMjAwNi9yZWxhdGlvbnNoaXBzIj48UmVsYXRpb25zaGlwIElkPSJySWQxIiBUeXBlPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvb2ZmaWNlRG9jdW1lbnQvMjAwNi9yZWxhdGlvbnNoaXBzL29mZmljZURvY3VtZW50IiBUYXJnZXQ9IndvcmQvZG9jdW1lbnQueG1sIi8+PC9SZWxhdGlvbnNoaXBzPlBLAwQUAAAAAAAAAHRd19RCeqYCAACmAgAAEQAAAHdvcmQvZG9jdW1lbnQueG1sPD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/Pjx3OmRvY3VtZW50IHhtbG5zOnc9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy93b3JkcHJvY2Vzc2luZ21sLzIwMDYvbWFpbiIgeG1sbnM6cj0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL29mZmljZURvY3VtZW50LzIwMDYvcmVsYXRpb25zaGlwcyI+PHc6Ym9keT48dzpwPjx3OnBQcj48dzpwU3R5bGUgdzp2YWw9IkVzdGlsb1Byb3BpbyIvPjwvdzpwUHI+PHc6cj48dzpyUHI+PC93OnJQcj48dzp0IHhtbDpzcGFjZT0icHJlc2VydmUiPk1hdHJpeiBwcm9waWEgTGFqYSDCtyB7e0ZFQ0hBfX08L3c6dD48L3c6cj48L3c6cD48dzpwPjx3OnI+PHc6clByPjwvdzpyUHI+PHc6dCB4bWw6c3BhY2U9InByZXNlcnZlIj5DYXVzYSB7e1JJVH19IGRlIHt7Tk9NQlJFfX0sIHByb2dyYW1hIHt7UFJPR1JBTUF9fS48L3c6dD48L3c6cj48L3c6cD48dzpzZWN0UHI+PHc6cGdTeiB3Onc9IjEyMjQwIiB3Omg9IjE1ODQwIi8+PHc6cGdNYXIgdzp0b3A9IjE0NDAiIHc6cmlnaHQ9IjE0NDAiIHc6Ym90dG9tPSIxNDQwIiB3OmxlZnQ9IjE0NDAiIHc6aGVhZGVyPSI3MjAiIHc6Zm9vdGVyPSI3MjAiIHc6Z3V0dGVyPSIwIi8+PC93OnNlY3RQcj48L3c6Ym9keT48L3c6ZG9jdW1lbnQ+UEsDBBQAAAAAAAAAdF2UvSZWGgEAABoBAAAcAAAAd29yZC9fcmVscy9kb2N1bWVudC54bWwucmVsczw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48UmVsYXRpb25zaGlwcyB4bWxucz0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL3BhY2thZ2UvMjAwNi9yZWxhdGlvbnNoaXBzIj48UmVsYXRpb25zaGlwIElkPSJySWQxIiBUeXBlPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvb2ZmaWNlRG9jdW1lbnQvMjAwNi9yZWxhdGlvbnNoaXBzL3N0eWxlcyIgVGFyZ2V0PSJzdHlsZXMueG1sIi8+PC9SZWxhdGlvbnNoaXBzPlBLAwQUAAAAAAAAAHRdG1OOS14BAABeAQAADwAAAHdvcmQvc3R5bGVzLnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48dzpzdHlsZXMgeG1sbnM6dz0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL3dvcmRwcm9jZXNzaW5nbWwvMjAwNi9tYWluIj48dzpzdHlsZSB3OnR5cGU9InBhcmFncmFwaCIgdzpkZWZhdWx0PSIxIiB3OnN0eWxlSWQ9Ik5vcm1hbCI+PHc6bmFtZSB3OnZhbD0iTm9ybWFsIi8+PC93OnN0eWxlPjx3OnN0eWxlIHc6dHlwZT0icGFyYWdyYXBoIiB3OnN0eWxlSWQ9IkVzdGlsb1Byb3BpbyI+PHc6bmFtZSB3OnZhbD0iRXN0aWxvUHJvcGlvIi8+PHc6clByPjwvdzpyUHI+PC93OnN0eWxlPjwvdzpzdHlsZXM+UEsBAhQDFAAAAAAAAAB0XfBKwn8sAgAALAIAABMAAAAAAAAAAAAAAKQBAAAAAFtDb250ZW50X1R5cGVzXS54bWxQSwECFAMUAAAAAAAAAHRdm/036ikBAAApAQAACwAAAAAAAAAAAAAApAFdAgAAX3JlbHMvLnJlbHNQSwECFAMUAAAAAAAAAHRd19RCeqYCAACmAgAAEQAAAAAAAAAAAAAApAGvAwAAd29yZC9kb2N1bWVudC54bWxQSwECFAMUAAAAAAAAAHRdlL0mVhoBAAAaAQAAHAAAAAAAAAAAAAAApAGEBgAAd29yZC9fcmVscy9kb2N1bWVudC54bWwucmVsc1BLAQIUAxQAAAAAAAAAdF0bU45LXgEAAF4BAAAPAAAAAAAAAAAAAACkAdgHAAB3b3JkL3N0eWxlcy54bWxQSwUGAAAAAAUABQBAAQAAYwkAAAAA"
+      },
+      "por_tribunal": {
+        "LAJA": {
+          "cantidad": 2,
+          "cursivas": false,
+          "indice": [
+            "Índice",
+            "1. X-80-2026 — PC_IE — Pide cuenta ingreso efectivo",
+            "2. X-81-2026 — NOMENCL — Nomenclatura"
+          ],
+          "parrafos": [
+            {
+              "texto": "Matriz propia Laja · uno de enero de dos mil noventa y nueve",
+              "salto": false
+            },
+            {
+              "texto": "Causa X-80-2026 de Persona Propia, programa AFT Ficticio.",
+              "salto": false
+            },
+            {
+              "texto": "Laja, la fecha de la resolución es la que se indica en el pie de firma.",
+              "salto": true
+            },
+            {
+              "texto": "Advirtiendo el Tribunal que se omitió la incorporación de la nomenclatura \"[COMPLETAR NOMENCLATURA]\", aplíquese a la presente resolución, para efectos de regularizar el correcto registro en el sistema de seguimiento de tramitación de causas.",
+              "salto": false
+            },
+            {
+              "texto": "RIT: X-81-2026",
+              "salto": false
+            },
+            {
+              "texto": "Proveyó, Juez del juzgado de Letras y Garantía de Laja, quien suscribe con firma electrónica avanzada.",
+              "salto": false
+            },
+            {
+              "texto": "En Laja, con esta fecha, notifique por el estado diario la resolución que antecede.",
+              "salto": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "nombre": "matriz_con_cursivas",
+      "modo": "ESPERA",
+      "encabezados": [
+        "RIT",
+        "TRIBUNAL",
+        "NOMBRE",
+        "RUT",
+        "DERIVACION",
+        "T ESPERA",
+        "FEC. RESOLUCION",
+        "DURACION"
+      ],
+      "filas": [
+        [
+          "X-90-2026",
+          "Jgdo. L. y G. de Mulchen",
+          "Persona Cursiva",
+          "20202020-8",
+          "AFT Ficticio",
+          95,
+          "04/10/2026",
+          "6 meses"
+        ]
+      ],
+      "res": [],
+      "editadas": [],
+      "plantillas_propias": {
+        "MULCHEN/PC_IE.docx": "UEsDBBQAAAAAAAAAdF3wSsJ/LAIAACwCAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48VHlwZXMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvY29udGVudC10eXBlcyI+PERlZmF1bHQgRXh0ZW5zaW9uPSJyZWxzIiBDb250ZW50VHlwZT0iYXBwbGljYXRpb24vdm5kLm9wZW54bWxmb3JtYXRzLXBhY2thZ2UucmVsYXRpb25zaGlwcyt4bWwiLz48RGVmYXVsdCBFeHRlbnNpb249InhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3htbCIvPjxPdmVycmlkZSBQYXJ0TmFtZT0iL3dvcmQvZG9jdW1lbnQueG1sIiBDb250ZW50VHlwZT0iYXBwbGljYXRpb24vdm5kLm9wZW54bWxmb3JtYXRzLW9mZmljZWRvY3VtZW50LndvcmRwcm9jZXNzaW5nbWwuZG9jdW1lbnQubWFpbit4bWwiLz48T3ZlcnJpZGUgUGFydE5hbWU9Ii93b3JkL3N0eWxlcy54bWwiIENvbnRlbnRUeXBlPSJhcHBsaWNhdGlvbi92bmQub3BlbnhtbGZvcm1hdHMtb2ZmaWNlZG9jdW1lbnQud29yZHByb2Nlc3NpbmdtbC5zdHlsZXMreG1sIi8+PC9UeXBlcz5QSwMEFAAAAAAAAAB0XZv9N+opAQAAKQEAAAsAAABfcmVscy8ucmVsczw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48UmVsYXRpb25zaGlwcyB4bWxucz0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL3BhY2thZ2UvMjAwNi9yZWxhdGlvbnNoaXBzIj48UmVsYXRpb25zaGlwIElkPSJySWQxIiBUeXBlPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvb2ZmaWNlRG9jdW1lbnQvMjAwNi9yZWxhdGlvbnNoaXBzL29mZmljZURvY3VtZW50IiBUYXJnZXQ9IndvcmQvZG9jdW1lbnQueG1sIi8+PC9SZWxhdGlvbnNoaXBzPlBLAwQUAAAAAAAAAHRd3ZmMOegCAADoAgAAEQAAAHdvcmQvZG9jdW1lbnQueG1sPD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/Pjx3OmRvY3VtZW50IHhtbG5zOnc9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy93b3JkcHJvY2Vzc2luZ21sLzIwMDYvbWFpbiIgeG1sbnM6cj0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL29mZmljZURvY3VtZW50LzIwMDYvcmVsYXRpb25zaGlwcyI+PHc6Ym9keT48dzpwPjx3OnBQcj48dzpwU3R5bGUgdzp2YWw9IkVzdGlsb1Byb3BpbyIvPjwvdzpwUHI+PHc6cj48dzpyUHI+PHc6aS8+PHc6aSB3OnZhbD0iMSIvPjx3OmlDcy8+PC93OnJQcj48dzp0IHhtbDpzcGFjZT0icHJlc2VydmUiPk1hdHJpeiBjdXJzaXZhcyBNdWxjaMOpbiDCtyB7e0ZFQ0hBfX08L3c6dD48L3c6cj48L3c6cD48dzpwPjx3OnI+PHc6clByPjx3OmkvPjx3Omkgdzp2YWw9IjEiLz48dzppQ3MvPjwvdzpyUHI+PHc6dCB4bWw6c3BhY2U9InByZXNlcnZlIj5DYXVzYSB7e1JJVH19IGRlIHt7Tk9NQlJFfX0sIHByb2dyYW1hIHt7UFJPR1JBTUF9fS48L3c6dD48L3c6cj48L3c6cD48dzpzZWN0UHI+PHc6cGdTeiB3Onc9IjEyMjQwIiB3Omg9IjE1ODQwIi8+PHc6cGdNYXIgdzp0b3A9IjE0NDAiIHc6cmlnaHQ9IjE0NDAiIHc6Ym90dG9tPSIxNDQwIiB3OmxlZnQ9IjE0NDAiIHc6aGVhZGVyPSI3MjAiIHc6Zm9vdGVyPSI3MjAiIHc6Z3V0dGVyPSIwIi8+PC93OnNlY3RQcj48L3c6Ym9keT48L3c6ZG9jdW1lbnQ+UEsDBBQAAAAAAAAAdF2UvSZWGgEAABoBAAAcAAAAd29yZC9fcmVscy9kb2N1bWVudC54bWwucmVsczw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48UmVsYXRpb25zaGlwcyB4bWxucz0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL3BhY2thZ2UvMjAwNi9yZWxhdGlvbnNoaXBzIj48UmVsYXRpb25zaGlwIElkPSJySWQxIiBUeXBlPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvb2ZmaWNlRG9jdW1lbnQvMjAwNi9yZWxhdGlvbnNoaXBzL3N0eWxlcyIgVGFyZ2V0PSJzdHlsZXMueG1sIi8+PC9SZWxhdGlvbnNoaXBzPlBLAwQUAAAAAAAAAHRdar13i2QBAABkAQAADwAAAHdvcmQvc3R5bGVzLnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48dzpzdHlsZXMgeG1sbnM6dz0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL3dvcmRwcm9jZXNzaW5nbWwvMjAwNi9tYWluIj48dzpzdHlsZSB3OnR5cGU9InBhcmFncmFwaCIgdzpkZWZhdWx0PSIxIiB3OnN0eWxlSWQ9Ik5vcm1hbCI+PHc6bmFtZSB3OnZhbD0iTm9ybWFsIi8+PC93OnN0eWxlPjx3OnN0eWxlIHc6dHlwZT0icGFyYWdyYXBoIiB3OnN0eWxlSWQ9IkVzdGlsb1Byb3BpbyI+PHc6bmFtZSB3OnZhbD0iRXN0aWxvUHJvcGlvIi8+PHc6clByPjx3OmkvPjwvdzpyUHI+PC93OnN0eWxlPjwvdzpzdHlsZXM+UEsBAhQDFAAAAAAAAAB0XfBKwn8sAgAALAIAABMAAAAAAAAAAAAAAKQBAAAAAFtDb250ZW50X1R5cGVzXS54bWxQSwECFAMUAAAAAAAAAHRdm/036ikBAAApAQAACwAAAAAAAAAAAAAApAFdAgAAX3JlbHMvLnJlbHNQSwECFAMUAAAAAAAAAHRd3ZmMOegCAADoAgAAEQAAAAAAAAAAAAAApAGvAwAAd29yZC9kb2N1bWVudC54bWxQSwECFAMUAAAAAAAAAHRdlL0mVhoBAAAaAQAAHAAAAAAAAAAAAAAApAHGBgAAd29yZC9fcmVscy9kb2N1bWVudC54bWwucmVsc1BLAQIUAxQAAAAAAAAAdF1qvXeLZAEAAGQBAAAPAAAAAAAAAAAAAACkARoIAAB3b3JkL3N0eWxlcy54bWxQSwUGAAAAAAUABQBAAQAAqwkAAAAA"
+      },
+      "por_tribunal": {
+        "MULCHEN": {
+          "cantidad": 1,
+          "cursivas": false,
+          "indice": [
+            "Índice",
+            "1. X-90-2026 — PC_IE — Pide cuenta ingreso efectivo"
+          ],
+          "parrafos": [
+            {
+              "texto": "Matriz cursivas Mulchén · uno de enero de dos mil noventa y nueve",
+              "salto": false
+            },
+            {
+              "texto": "Causa X-90-2026 de Persona Cursiva, programa AFT Ficticio.",
+              "salto": false
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

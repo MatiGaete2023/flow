@@ -4,7 +4,7 @@ on:
   push:
     # Las ramas de agentes en paralelo (`estudio/agente-*`) también validan; el coordinador las integra a la rama principal.
     branches: [estudio/paridad-python-rust-20261119, 'estudio/agente-**']
-    paths: [app/**, tools/**, descargador/**, src/**, tests/**, .github/workflows/flow-rust-local.yml]
+    paths: [app/**, installer/**, tools/**, descargador/**, src/**, tests/**, .github/workflows/flow-rust-local.yml]
   workflow_dispatch:
     inputs:
       entrega:
@@ -140,6 +140,31 @@ jobs:
           Copy-Item app/target/debug/flow_rust.exe $salida
           $huella = (Get-FileHash -LiteralPath (Join-Path $salida 'flow_rust.exe') -Algorithm SHA256).Hash.ToLowerInvariant()
           "$huella  flow_rust.exe (debug)`ncommit $env:GITHUB_SHA" | Set-Content -Encoding utf8 (Join-Path $salida 'SHA256.txt')
+      - name: Preparar instalador por usuario (E-I1)
+        shell: pwsh
+        run: |
+          Copy-Item installer/Instalar_Flow.cmd, installer/Instalar_Flow.ps1, installer/Desinstalar_Flow.ps1 -Destination app/target/entrega -Force
+          $innoInstaller = ''
+          if ('${{ inputs.entrega }}' -eq 'true') {
+            $compiler = Get-ChildItem "${env:ProgramFiles(x86)}\Inno Setup*\ISCC.exe" -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+            if (-not $compiler) {
+              choco install innosetup --yes --no-progress --execution-timeout=180
+              if ($LASTEXITCODE -ne 0) { throw 'Falló la instalación de Inno Setup' }
+              $compiler = Get-ChildItem "${env:ProgramFiles(x86)}\Inno Setup*\ISCC.exe" | Select-Object -First 1 -ExpandProperty FullName
+            }
+            if (-not $compiler) { throw 'No se encuentra Inno Setup' }
+            $cargo = Get-Content app/Cargo.toml -Raw
+            $ver = if ($cargo -match '(?m)^version\s*=\s*"([^"]+)"') { $Matches[1] } else { '1.0.0' }
+            & $compiler "/DAppVersion=$ver" '/DSourceDir=..\app\target\entrega' '/DOutputDir=..\app\target\entrega' installer/FlowRust.iss
+            if ($LASTEXITCODE -ne 0) { throw 'Falló la compilación del instalador FlowRust.iss' }
+            $innoInstaller = (Get-ChildItem app/target/entrega/Instalar_Flow_Rust_*_Windows.exe | Select-Object -First 1 -ExpandProperty FullName)
+          }
+          if ($innoInstaller) {
+            ./tools/verify_flow_rust_installer.ps1 -BundleDir app/target/entrega -InnoInstaller $innoInstaller
+          } else {
+            ./tools/verify_flow_rust_installer.ps1 -BundleDir app/target/entrega
+          }
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - uses: actions/upload-artifact@v4
         with:
           name: Flow_Rust_Windows_exe
@@ -180,7 +205,7 @@ jobs:
           $lista = '${{ steps.cambios.outputs.lista }}'
           # Se recorren todos los oráculos y se falla al final con la lista completa de los que no coinciden.
           $fallas = @()
-          foreach ($o in @('a78', 'lecturas', 'vinculos', 'bitacoras', 'lote', 'paquete', 'excel', 'resultados', 'sync', 'conciliacion', 'personalizacion', 'estadisticas', 'correos', 'ordenes', 'meta4', 'catastro', 'sync_paquete', 'anulaciones', 'flujo_paquete')) {
+          foreach ($o in @('a78', 'lecturas', 'vinculos', 'bitacoras', 'lote', 'paquete', 'excel', 'resultados', 'sync', 'conciliacion', 'personalizacion', 'estadisticas', 'correos', 'ordenes', 'meta4', 'catastro', 'sync_paquete', 'anulaciones', 'word_tribunal', 'flujo_paquete')) {
             if ($lista -ne 'todos' -and (($lista -split ',') -notcontains $o)) { continue }
             # a78 lleva ZIP en base64 que cambia byte a byte entre ejecutores: solo se contrasta cuando se pide por nombre.
             if ($o -eq 'a78' -and $lista -eq 'todos') { continue }
