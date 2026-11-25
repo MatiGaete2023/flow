@@ -292,7 +292,7 @@ pub fn cargar_lote_con(carpeta: &Path, parcial: bool) -> Result<Lote, String> {
     let carpeta = carpeta.canonicalize().map_err(|e| format!("No se pudo abrir el lote: {e}"))?;
     if !carpeta.join("resumen.json").is_file() {
         return Err(if carpeta.join("flujo.json").is_file() {
-            "Esta carpeta es un conjunto de Flow Python (tiene flujo.json). Elige una de sus subcarpetas de descarga: la que contiene resumen.json."
+            "Esta carpeta es un conjunto de Flow Python (tiene flujo.json). Ábrelo desde Resultados para mostrar sus fases, incluidas las carpetas con resumen.json."
         } else if carpeta.join("bitacoras.json").is_file() {
             "Esta carpeta es un lote de bitácoras (tiene bitacoras.json), no de registros. Elige la carpeta de la descarga de registros: la que contiene resumen.json."
         } else {

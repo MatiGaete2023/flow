@@ -5,6 +5,7 @@
 
 use crate::theme::{self, Pal};
 use egui::{RichText, Ui};
+use flow_rust::descargador::archivo_local::{self, Tipo};
 use flow_rust::descargador::paquete::{self, Lote};
 use flow_rust::descargador::resultados;
 use serde_json::Value;
@@ -12,7 +13,7 @@ use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::{self, Receiver, TryRecvError};
 
-pub const SIN_LOTE: &str = "Selecciona la carpeta de un lote descargado.";
+pub const SIN_LOTE: &str = "Selecciona la carpeta de un lote descargado o conjunto.";
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Producto {
@@ -33,6 +34,14 @@ pub struct Detalle {
 pub struct Carga {
     pub nombre: String,
     pub parcial: bool,
+    pub conjunto: bool,
+    pub fases: Vec<Fase>,
+}
+
+pub struct Fase {
+    pub carpeta: PathBuf,
+    pub estado: String,
+    pub parcial: bool,
     pub filas: Vec<Detalle>,
 }
 
@@ -47,6 +56,9 @@ pub struct Resultados {
     pub parcial: bool,
     pub cargado: Option<Carga>,
     pub estado: Option<Result<String, String>>,
+    pub carpetas_paquete: Vec<PathBuf>,
+    pub bitacoras_paquete: Vec<PathBuf>,
+    fase_activa: usize,
     ocupado: bool,
     recepcion: Option<Receiver<Mensaje>>,
     ofrecida: Option<PathBuf>,
@@ -61,8 +73,7 @@ fn lista(rutas: &[PathBuf]) -> String {
 }
 
 /// Lo que `load` hace en el hilo: el lote verificado y, por consulta, su aptitud para CSMP.
-fn leer(carpeta: &Path, parcial: bool) -> Result<Carga, String> {
-    let lote = paquete::cargar_lote_con(carpeta, parcial)?;
+fn detalles(lote: &Lote) -> Result<Vec<Detalle>, String> {
     let mut aptitudes: Vec<(String, Vec<String>)> = Vec::new();
     for t in resultados::tablas(&lote)? {
         let r = resultados::compatibilidad(&t.cabecera, &t.seleccion, &t.filas)?;
@@ -78,7 +89,7 @@ fn leer(carpeta: &Path, parcial: bool) -> Result<Carga, String> {
             None => aptitudes.push((consulta, vec![texto])),
         }
     }
-    let filas = lote
+    Ok(lote
         .consultas
         .iter()
         .map(|(q, manifiesto)| {
@@ -96,11 +107,32 @@ fn leer(carpeta: &Path, parcial: bool) -> Result<Carga, String> {
                 aptitud,
             }
         })
-        .collect();
+        .collect())
+}
+
+fn leer(carpeta: &Path, parcial: bool) -> Result<Carga, String> {
+    if !carpeta.is_dir() {
+        return Err(format!("No se pudo abrir el lote: {}", std::fs::metadata(carpeta).unwrap_err()));
+    }
+    let tipo = archivo_local::tipo(carpeta)?;
+    if tipo == Tipo::Bitacoras {
+        return Err("Esta carpeta contiene bitacoras.json. Añade el control con «Añadir bitácoras…» para incluirlo en un paquete.".into());
+    }
+    let lotes = archivo_local::cargar_fuentes(&[carpeta.to_path_buf()], parcial)?;
+    let nombre = carpeta.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+    let fases = lotes.into_iter().map(|lote| {
+        Ok(Fase {
+            carpeta: lote.carpeta.clone(),
+            estado: lote.resumen["estado"].as_str().unwrap_or("DESCONOCIDO").to_string(),
+            parcial: lote.parcial,
+            filas: detalles(&lote)?,
+        })
+    }).collect::<Result<Vec<_>, String>>()?;
     Ok(Carga {
-        nombre: lote.carpeta.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default(),
-        parcial: lote.parcial,
-        filas,
+        nombre,
+        parcial: fases.iter().any(|fase| fase.parcial),
+        conjunto: tipo == Tipo::Conjunto,
+        fases,
     })
 }
 
@@ -164,26 +196,77 @@ impl Resultados {
 
     pub fn cargar(&mut self, ctx: &egui::Context) {
         self.cargado = None;
+        self.fase_activa = 0;
         if self.carpeta.trim().is_empty() {
             self.estado = Some(Err(SIN_LOTE.into()));
             return;
         }
         self.estado = Some(Ok("Comprobando archivos y procesando resultados localmente…".into()));
+        let carpeta = self.ruta();
+        if let Ok(tipo) = archivo_local::tipo(&carpeta) {
+            if tipo != Tipo::Bitacoras {
+                let carpeta = carpeta.canonicalize().unwrap_or(carpeta);
+                if !self.carpetas_paquete.contains(&carpeta) { self.carpetas_paquete.push(carpeta); }
+            }
+        }
         let (carpeta, parcial) = (self.ruta(), self.parcial);
         self.en_hilo(ctx, move || Mensaje::Cargado(leer(&carpeta, parcial)));
     }
 
     fn producir(&mut self, ctx: &egui::Context, cual: Producto) {
-        let (carpeta, parcial) = (self.ruta(), self.parcial);
+        let Some(fase) = self.cargado.as_ref().and_then(|c| c.fases.get(self.fase_activa)) else { return };
+        let (carpeta, parcial) = (fase.carpeta.clone(), fase.parcial);
         self.estado = Some(Ok("Comprobando archivos y procesando resultados localmente…".into()));
         self.en_hilo(ctx, move || Mensaje::Producto(paquete::cargar_lote_con(&carpeta, parcial).and_then(|l| producto(&l, cual))));
     }
 
     fn con_otro(&mut self, ctx: &egui::Context, titulo: &str, accion: fn(Lote, &Path) -> Result<String, String>) {
         let Some(otro) = rfd::FileDialog::new().set_title(titulo).pick_folder() else { return };
-        let (carpeta, parcial) = (self.ruta(), self.parcial);
+        let Some(fase) = self.cargado.as_ref().and_then(|c| c.fases.get(self.fase_activa)) else { return };
+        let (carpeta, parcial) = (fase.carpeta.clone(), fase.parcial);
         self.estado = Some(Ok("Comprobando archivos y procesando resultados localmente…".into()));
         self.en_hilo(ctx, move || Mensaje::Producto(paquete::cargar_lote_con(&carpeta, parcial).and_then(|l| accion(l, &otro))));
+    }
+
+    fn anadir_carpeta_paquete(&mut self) {
+        let Some(carpeta) = rfd::FileDialog::new().set_title("Carpeta de una descarga o conjunto").pick_folder() else { return };
+        match archivo_local::tipo(&carpeta) {
+            Ok(Tipo::Bitacoras) => self.estado = Some(Err("La carpeta es de bitácoras. Elige «Añadir bitácoras…» y selecciona bitacoras.json.".into())),
+            Ok(_) => {
+                let carpeta = carpeta.canonicalize().unwrap_or(carpeta);
+                if !self.carpetas_paquete.contains(&carpeta) { self.carpetas_paquete.push(carpeta); }
+                self.estado = Some(Ok("Carpeta añadida al paquete.".into()));
+            }
+            Err(error) => self.estado = Some(Err(error)),
+        }
+    }
+
+    fn anadir_bitacoras_paquete(&mut self) {
+        let paths = rfd::FileDialog::new().set_title("Selecciona controles bitacoras.json")
+            .add_filter("Control bitacoras.json", &["json"]).pick_files();
+        if let Some(paths) = paths {
+            for path in paths {
+                if path.file_name().is_some_and(|name| name == "bitacoras.json") {
+                    let path = path.canonicalize().unwrap_or(path);
+                    if !self.bitacoras_paquete.contains(&path) { self.bitacoras_paquete.push(path); }
+                }
+            }
+            self.estado = Some(Ok("Controles de bitácoras añadidos; sus originales se comprobarán al crear el paquete.".into()));
+        }
+    }
+
+    fn crear_paquete(&mut self, ctx: &egui::Context, destino: PathBuf) {
+        if self.carpetas_paquete.is_empty() {
+            self.estado = Some(Err("Añade al menos una descarga de hojas RUS para crear el paquete del Asistente.".into()));
+            return;
+        }
+        if let Some(path) = self.bitacoras_paquete.iter().find(|path| !path.is_file()) {
+            self.estado = Some(Err(format!("NO_DISPONIBLE · {} · localiza o quita esa referencia para crear el paquete.", path.display())));
+            return;
+        }
+        let (carpetas, bitacoras, parcial) = (self.carpetas_paquete.clone(), self.bitacoras_paquete.clone(), self.parcial);
+        self.estado = Some(Ok("Verificando las carpetas seleccionadas y creando el paquete…".into()));
+        self.en_hilo(ctx, move || Mensaje::Producto(crear_paquete(&carpetas, &bitacoras, parcial, &destino)));
     }
 
     pub fn recibir(&mut self) {
@@ -202,11 +285,12 @@ impl Resultados {
         self.recepcion = None;
         match mensaje {
             Mensaje::Cargado(Ok(c)) => {
+                self.fase_activa = 0;
                 self.estado = Some(Ok(format!(
-                    "{}{} · {} consultas. Cada producto se escribe en esta carpeta sin tocar los originales.",
+                    "{}{} · {} fase(s). Cada producto por lote se ofrece por fase.",
                     if c.parcial { "INCOMPLETO · " } else { "" },
                     c.nombre,
-                    c.filas.len()
+                    c.fases.len()
                 )));
                 self.cargado = Some(c);
             }
@@ -220,7 +304,7 @@ impl Resultados {
         ui.add_space(8.0);
         theme::seccion(ui, p, "Resultados del lote");
         ui.horizontal_wrapped(|ui| {
-            ui.label("Carpeta del lote");
+            ui.label("Carpeta del lote o conjunto");
             ui.add_enabled(!self.ocupado, egui::TextEdit::singleline(&mut self.carpeta).desired_width(360.0));
             if ui.add_enabled(!self.ocupado, egui::Button::new("Elegir…")).clicked() {
                 if let Some(c) = rfd::FileDialog::new().set_title("Carpeta de un lote descargado").pick_folder() {
@@ -238,13 +322,33 @@ impl Resultados {
             }
         });
         if let Some(c) = &self.cargado {
+            if c.conjunto {
+                ui.label(RichText::new("Conjunto disponible. Crear paquete reúne sus fases; los productos por lote se ofrecen por fase.").color(p.green));
+                for (i, fase) in c.fases.iter().enumerate() {
+                    ui.horizontal(|ui| {
+                        let label = format!("{} · {}", fase.carpeta.file_name().unwrap_or_default().to_string_lossy(), fase.estado);
+                        if ui.selectable_label(self.fase_activa == i, label).clicked() { self.fase_activa = i; }
+                    });
+                }
+            }
+            if !c.conjunto && c.fases.len() > 1 {
+                egui::ComboBox::from_label("Fase para productos por lote")
+                    .selected_text(c.fases.get(self.fase_activa).map(|fase| format!("{} · {}", fase.carpeta.file_name().unwrap_or_default().to_string_lossy(), fase.estado)).unwrap_or_default())
+                    .show_ui(ui, |ui| {
+                        for (i, fase) in c.fases.iter().enumerate() {
+                            let label = format!("{} · {}", fase.carpeta.file_name().unwrap_or_default().to_string_lossy(), fase.estado);
+                            ui.selectable_value(&mut self.fase_activa, i, label);
+                        }
+                    });
+            }
+            if let Some(fase) = c.fases.get(self.fase_activa) {
             egui::ScrollArea::vertical().id_salt("consultas del lote").max_height(200.0).show(ui, |ui| {
                 egui::Grid::new("detalle del lote").num_columns(4).striped(true).spacing([14.0, 4.0]).show(ui, |ui| {
                     for t in ["Consulta", "Resultado", "Registros", "Compatibilidad CSMP"] {
                         ui.label(RichText::new(t).strong());
                     }
                     ui.end_row();
-                    for f in &c.filas {
+                    for f in &fase.filas {
                         ui.label(&f.consulta);
                         ui.label(&f.estado);
                         ui.label(f.registros.to_string());
@@ -253,6 +357,7 @@ impl Resultados {
                     }
                 });
             });
+            }
         }
         let listo = self.cargado.is_some() && !self.ocupado;
         let ctx = ui.ctx().clone();
@@ -306,7 +411,70 @@ impl Resultados {
                 }
             }
         }
+        ui.separator();
+        ui.horizontal_wrapped(|ui| {
+            ui.label(RichText::new("Crear paquete para el Asistente").strong());
+            if ui.add_enabled(!self.ocupado, egui::Button::new("Añadir carpeta…")).clicked() { self.anadir_carpeta_paquete(); }
+            if ui.add_enabled(!self.ocupado, egui::Button::new("Añadir bitácoras…")).clicked() { self.anadir_bitacoras_paquete(); }
+        });
+        for (i, carpeta) in self.carpetas_paquete.clone().iter().enumerate() {
+            ui.horizontal(|ui| {
+                ui.label(format!("{} · {}", carpeta.file_name().unwrap_or_default().to_string_lossy(), carpeta.display()));
+                if ui.add_enabled(!self.ocupado, egui::Button::new("Quitar##carpeta".to_string() + &i.to_string())).clicked() {
+                    self.carpetas_paquete.remove(i);
+                }
+            });
+        }
+        for (i, diario) in self.bitacoras_paquete.clone().iter().enumerate() {
+            ui.horizontal(|ui| {
+                ui.label(format!("{} · {}", if diario.is_file() { "Bitácoras" } else { "NO_DISPONIBLE" }, diario.display()));
+                if ui.add_enabled(!self.ocupado, egui::Button::new("Quitar##bitacora".to_string() + &i.to_string())).clicked() {
+                    self.bitacoras_paquete.remove(i);
+                }
+            });
+        }
+        let faltan = self.bitacoras_paquete.iter().any(|path| !path.is_file());
+        if ui.add_enabled(!self.ocupado && !self.carpetas_paquete.is_empty() && !faltan, egui::Button::new("Crear paquete" )).clicked() {
+            if let Some(destino) = rfd::FileDialog::new().set_title("Guardar paquete del Asistente").set_file_name("Captura_CSMP.zip").save_file() {
+                self.crear_paquete(&ctx, destino);
+            }
+        }
     }
+}
+
+fn crear_paquete(carpetas: &[PathBuf], bitacoras: &[PathBuf], parcial: bool, destino: &Path) -> Result<String, String> {
+    let lotes = archivo_local::cargar_fuentes(carpetas, parcial)?;
+    let rutas: Vec<PathBuf> = lotes.iter().map(|lote| lote.carpeta.clone()).collect();
+    let exportado = paquete::exportar_con(&rutas, destino, &paquete::Opciones {
+        bitacoras: bitacoras.to_vec(), emparejar: true, ..Default::default()
+    })?;
+    let mut notas = Vec::new();
+    if let Some(nota) = exportado.reutilizacion { notas.push(format!("BITACORAS_REUTILIZADAS: {nota}")); }
+    if !exportado.nota.trim().is_empty() { notas.push(exportado.nota.trim().to_string()); }
+    if let Some(aviso) = exportado.aviso_cobertura { notas.push(aviso); }
+    if !bitacoras.is_empty() {
+        if let Ok(archivo) = std::fs::File::open(&exportado.ruta) {
+            if let Ok(mut zip) = zip::ZipArchive::new(archivo) {
+                if let Ok(mut csv) = zip.by_name("data/incidencias.csv") {
+                    let mut texto = String::new();
+                    use std::io::Read;
+                    if csv.read_to_string(&mut texto).is_ok() {
+                        let mut lector = csv::Reader::from_reader(texto.as_bytes());
+                        let cabecera = lector.headers().ok().map(|h| h.iter().position(|c| c == "code"));
+                        let mensaje = lector.headers().ok().and_then(|h| h.iter().position(|c| c == "message"));
+                        if let (Some(Some(code_i)), Some(message_i)) = (cabecera, mensaje) {
+                            for fila in lector.records().flatten() {
+                                if fila.get(code_i) == Some("BITACORAS_SIN_COINCIDENCIA") {
+                                    if let Some(mensaje) = fila.get(message_i) { notas.push(format!("BITACORAS_SIN_COINCIDENCIA: {mensaje}")); }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    Ok(format!("Creado: {}{}", exportado.ruta.display(), if notas.is_empty() { String::new() } else { format!(" · {}", notas.join(" · ")) }))
 }
 
 #[cfg(test)]
@@ -327,6 +495,7 @@ mod pruebas {
     struct Fuente {
         paquete: Value,
         resultados: Value,
+        archivo_local: Value,
         base: PathBuf,
     }
 
@@ -337,6 +506,7 @@ mod pruebas {
             Fuente {
                 paquete: serde_json::from_str(include_str!("../tests/datos/paquete.json")).unwrap(),
                 resultados: serde_json::from_str(include_str!("../tests/datos/resultados.json")).unwrap(),
+                archivo_local: serde_json::from_str(include_str!("../tests/datos/archivo_local.json")).unwrap(),
                 base,
             }
         }
@@ -349,6 +519,13 @@ mod pruebas {
                 reconstruir(&c, &l[i]["archivos"]);
             }
             c
+        }
+
+        fn conjunto(&self, nombre: &str) -> PathBuf {
+            let caso = self.archivo_local["casos"].as_array().unwrap().iter().find(|c| c["caso"] == nombre).unwrap();
+            let root = self.base.join(nombre);
+            reconstruir(&root, &caso["archivos"]);
+            root.join("fuente")
         }
     }
 
@@ -392,10 +569,10 @@ mod pruebas {
         h.state_mut().cargar(&ctx);
         esperar(&mut h);
         let c = h.state().cargado.as_ref().expect("lote cargado");
-        assert_eq!(c.filas.len(), 4);
-        assert!(c.filas.iter().all(|f| f.estado == "VALIDADA" && f.registros == 2));
-        let espera = c.filas.iter().filter(|f| f.aptitud == "Sin datos suficientes · faltan espera").count();
-        let cumpl = c.filas.iter().filter(|f| f.aptitud == "Sin datos suficientes · faltan dias_cumpl, dias_egresar").count();
+        assert_eq!(c.fases[0].filas.len(), 4);
+        assert!(c.fases[0].filas.iter().all(|f| f.estado == "VALIDADA" && f.registros == 2));
+        let espera = c.fases[0].filas.iter().filter(|f| f.aptitud == "Sin datos suficientes · faltan espera").count();
+        let cumpl = c.fases[0].filas.iter().filter(|f| f.aptitud == "Sin datos suficientes · faltan dias_cumpl, dias_egresar").count();
         assert_eq!((espera, cumpl), (2, 2));
         assert_eq!(h.query_all_by_label("Sin datos suficientes · faltan espera").count(), 2, "las filas se ven en la vista");
         // Un lote sin las columnas de CSMP no genera el Libro CSMP: el rechazo de Python llega a la vista.
@@ -409,7 +586,7 @@ mod pruebas {
         h.state_mut().carpeta = f.lote("carga", 1).display().to_string();
         h.state_mut().cargar(&ctx);
         esperar(&mut h);
-        assert_eq!(h.state().cargado.as_ref().unwrap().filas.len(), 1);
+        assert_eq!(h.state().cargado.as_ref().unwrap().fases[0].filas.len(), 1);
         h.get_by_label("CSV").click();
         esperar(&mut h);
         let rutas = creado(&h);
@@ -474,7 +651,7 @@ mod pruebas {
         let terminado = f.lote("listados_dos_pestanas", 0);
         h.state_mut().ofrecer(&ctx, Some(terminado.clone()));
         esperar(&mut h);
-        assert_eq!(h.state().cargado.as_ref().map(|c| c.filas.len()), Some(4));
+        assert_eq!(h.state().cargado.as_ref().map(|c| c.fases[0].filas.len()), Some(4));
         h.state_mut().carpeta = "otra".into();
         h.state_mut().ofrecer(&ctx, Some(terminado));
         assert!(!h.state().ocupado && h.state().carpeta == "otra", "el mismo lote no se vuelve a ofrecer");
@@ -484,6 +661,47 @@ mod pruebas {
         esperar(&mut h);
         assert!(h.state().cargado.is_none());
         assert!(matches!(&h.state().estado, Some(Err(e)) if e.starts_with("No se pudo abrir el lote")), "{:?}", h.state().estado);
+        let _ = std::fs::remove_dir_all(&f.base);
+    }
+
+    #[test]
+    fn ui_resultados_abre_un_conjunto_muestra_sus_fases_y_crea_el_paquete() {
+        let (_candado, perfil) = crate::prueba_entorno::perfil_aislado();
+        let f = Fuente::nueva("es2-ui", &perfil);
+        let conjunto = f.conjunto("paquete_coincidencia_total");
+        let mut h = vista();
+        let ctx = h.ctx.clone();
+        h.state_mut().carpeta = conjunto.display().to_string();
+        h.state_mut().cargar(&ctx);
+        esperar(&mut h);
+        let c = h.state().cargado.as_ref().expect("conjunto cargado");
+        assert!(c.conjunto);
+        assert_eq!(c.fases.len(), 1);
+        assert_eq!(c.fases[0].carpeta.file_name().unwrap(), "fase");
+        assert_eq!(c.fases[0].estado, "VALIDADA");
+        assert!(h.query_by_label("Conjunto disponible. Crear paquete reúne sus fases; los productos por lote se ofrecen por fase.").is_some());
+        assert!(h.query_by_label("fase · VALIDADA").is_some(), "nombre de fase y estado del resumen visibles");
+        h.state_mut().bitacoras_paquete.push(conjunto.parent().unwrap().join("controles/bitacoras.json"));
+        let destino = perfil.join("paquete-conjunto.zip");
+        h.state_mut().crear_paquete(&ctx, destino.clone());
+        esperar(&mut h);
+        assert!(destino.is_file());
+        match &h.state().estado {
+            Some(Ok(mensaje)) => assert!(mensaje.contains("BITACORAS_REUTILIZADAS"), "{mensaje}"),
+            otro => panic!("estado {otro:?}"),
+        }
+        assert_eq!(h.state().carpetas_paquete, vec![conjunto.canonicalize().unwrap()]);
+        let sin_coincidencia = f.conjunto("paquete_sin_coincidencia");
+        h.state_mut().carpetas_paquete = vec![sin_coincidencia.clone()];
+        h.state_mut().bitacoras_paquete = vec![sin_coincidencia.parent().unwrap().join("controles/bitacoras.json")];
+        let otro_destino = perfil.join("paquete-sin-coincidencia.zip");
+        h.state_mut().crear_paquete(&ctx, otro_destino.clone());
+        esperar(&mut h);
+        assert!(otro_destino.is_file());
+        match &h.state().estado {
+            Some(Ok(mensaje)) => assert!(mensaje.contains("BITACORAS_SIN_COINCIDENCIA"), "{mensaje}"),
+            otro => panic!("estado {otro:?}"),
+        }
         let _ = std::fs::remove_dir_all(&f.base);
     }
 }
