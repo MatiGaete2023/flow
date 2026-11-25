@@ -64,6 +64,7 @@ def run(destino):
             resultado = None if archivo is None else digest_file(inside(conjunto, archivo)) == esperado
             casos.append({'caso': nombre, 'archivo': archivo, 'sha256': esperado, 'resultado': resultado})
         Path(destino).write_text(json.dumps({'version': 1, 'casos': casos}, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+        print(f'historial_local: {len(casos)} casos')
 
 
 if __name__ == '__main__':

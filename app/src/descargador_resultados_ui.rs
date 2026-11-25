@@ -371,10 +371,12 @@ impl Resultados {
             if self.parcial != antes && !self.carpeta.trim().is_empty() {
                 self.cargar(ui.ctx());
             }
+            if ui.add_enabled(!self.ocupado && archivo_local::tipo(&self.ruta()) == Ok(Tipo::Conjunto), egui::Button::new("Ver descarga conjunta")).clicked() {
+                self.conjunta = true;
+            }
         });
         if let Some(c) = &self.cargado {
             if c.conjunto {
-                if ui.button("Ver descarga conjunta").clicked() { self.conjunta = true; }
                 ui.label(RichText::new("Conjunto disponible. Crear paquete reúne sus fases; los productos por lote se ofrecen por fase.").color(p.green));
                 for (i, fase) in c.fases.iter().enumerate() {
                     ui.horizontal(|ui| {
