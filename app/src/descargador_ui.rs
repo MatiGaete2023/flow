@@ -868,19 +868,43 @@ impl Descargador {
     /// `Descargador.setup` de Flow Python: carpeta propia, ruta al portapapeles, Chrome en chrome://extensions.
     fn instalar_extension(&self, ctx: &egui::Context) -> Result<String, String> {
         use flow_rust::descargador::extension;
-        let carpeta = extension::instalar(self.edicion, &extension::carpeta_base())?;
-        ctx.copy_text(carpeta.display().to_string());
-        let chrome = if extension::abrir_extensiones_chrome() {
-            "Se abrió chrome://extensions."
-        } else {
-            "Abre Chrome y escribe chrome://extensions en la barra de dirección."
-        };
-        Ok(format!(
-            "Extensión {} {} lista en {} (ruta copiada al portapapeles). {chrome} Activa «Modo de desarrollador», pulsa «Cargar extensión sin empaquetar» y elige esa carpeta. Después entra a Seguimiento en SITFA, pulsa el icono de la extensión y pega el código de «Conexión con Chrome».",
-            if self.edicion == Edicion::Lite { "Lite" } else { "Integral" },
-            extension::version(self.edicion),
-            carpeta.display()
-        ))
+        let instalacion = extension::instalar_en_el_lugar(self.edicion, &extension::carpeta_base())?;
+        let carpeta = &instalacion.carpeta;
+        let edicion = if self.edicion == Edicion::Lite { "Lite" } else { "Integral" };
+        let version = extension::version(self.edicion);
+        match instalacion.cambio {
+            // Nada cambió: no hay que tocar Chrome.
+            extension::Cambio::SinCambios => Ok(format!(
+                "La extensión {edicion} ya estaba al día (versión {version}) en {}. No hace falta hacer nada en Chrome.",
+                carpeta.display()
+            )),
+            // La misma carpeta con archivos nuevos: Chrome solo necesita recargarla.
+            extension::Cambio::Actualizada { de, a } => {
+                // Abrir la página evita buscarla; el aviso explica qué pulsar.
+                let _ = extension::abrir_extensiones_chrome();
+                Ok(format!(
+                    "La extensión {edicion} se actualizó de {de} a {a} en la misma carpeta ({}). No hace falta cargarla de nuevo: en chrome://extensions pulsa «Recargar» (↻) en su tarjeta y vuelve a pegar el código de «Conexión con Chrome».",
+                    carpeta.display()
+                ))
+            }
+            extension::Cambio::Nueva => {
+                ctx.copy_text(carpeta.display().to_string());
+                let chrome = if extension::abrir_extensiones_chrome() {
+                    "Se abrió chrome://extensions."
+                } else {
+                    "Abre Chrome y escribe chrome://extensions en la barra de dirección."
+                };
+                let anteriores = if instalacion.anteriores.is_empty() {
+                    String::new()
+                } else {
+                    " Las carpetas anteriores con la versión en el nombre siguen funcionando, pero ya no se actualizan: carga esta una sola vez y quita la antigua.".to_string()
+                };
+                Ok(format!(
+                    "Extensión {edicion} {version} lista en {} (ruta copiada al portapapeles; es fija, las correcciones se aplican en ella). {chrome} Activa «Modo de desarrollador», pulsa «Cargar extensión sin empaquetar» y elige esa carpeta. Después entra a Seguimiento en SITFA, pulsa el icono de la extensión y pega el código de «Conexión con Chrome».{anteriores}",
+                    carpeta.display()
+                ))
+            }
+        }
     }
 
     pub fn cargar(&mut self, ruta: &Path) {

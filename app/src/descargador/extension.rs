@@ -59,13 +59,59 @@ pub fn carpeta_base() -> PathBuf {
         .join("FlowRust")
 }
 
-/// Escribe la extensión de la edición en `base/extension-<edición>-<versión>` y comprueba lo escrito.
-pub fn instalar(edicion: Edicion, base: &Path) -> Result<PathBuf, String> {
-    let nombre = match edicion {
+/// Qué hizo la instalación con la carpeta de la extensión.
+#[derive(Debug, PartialEq, Eq)]
+pub enum Cambio {
+    /// La carpeta no existía: hay que cargarla una vez en Chrome.
+    Nueva,
+    /// Cambió su código: la carpeta es la misma y en Chrome basta «Recargar», sin volver a cargarla.
+    Actualizada { de: String, a: String },
+    /// Ya estaba al día: no se escribió nada y no hay nada que hacer en Chrome.
+    SinCambios,
+}
+
+#[derive(Debug)]
+pub struct Instalacion {
+    pub carpeta: PathBuf,
+    pub cambio: Cambio,
+    /// Carpetas de instalaciones anteriores con la versión en el nombre (`extension-integral-2.9.0`): siguen sirviendo.
+    pub anteriores: Vec<PathBuf>,
+}
+
+fn nombre(edicion: Edicion) -> &'static str {
+    match edicion {
         Edicion::Lite => "lite",
         Edicion::Integral => "integral",
-    };
-    let carpeta = base.join(format!("extension-{nombre}-{}", version(edicion)));
+    }
+}
+
+fn archivos_de(carpeta: &Path) -> Vec<PathBuf> {
+    let mut salida = Vec::new();
+    let mut pendientes = vec![carpeta.to_path_buf()];
+    while let Some(c) = pendientes.pop() {
+        for e in std::fs::read_dir(&c).into_iter().flatten().flatten() {
+            let ruta = e.path();
+            if ruta.is_dir() {
+                pendientes.push(ruta);
+            } else {
+                salida.push(ruta);
+            }
+        }
+    }
+    salida
+}
+
+/// Escribe la extensión de la edición en `base/extension-<edición>`, una carpeta fija que se actualiza en el lugar:
+/// solo se reescriben los archivos que cambiaron y se quitan los que dejaron de existir. Comprueba lo escrito.
+pub fn instalar_en_el_lugar(edicion: Edicion, base: &Path) -> Result<Instalacion, String> {
+    let carpeta = base.join(format!("extension-{}", nombre(edicion)));
+    let existia = carpeta.join("manifest.json").is_file();
+    let version_previa = std::fs::read(carpeta.join("manifest.json"))
+        .ok()
+        .and_then(|b| serde_json::from_slice::<serde_json::Value>(&b).ok())
+        .and_then(|m| m["version"].as_str().map(str::to_string))
+        .unwrap_or_default();
+    let mut escribio = false;
     for (ruta, datos) in archivos(edicion) {
         let destino = carpeta.join(ruta);
         if std::fs::read(&destino).is_ok_and(|actual| actual == *datos) {
@@ -77,13 +123,39 @@ pub fn instalar(edicion: Edicion, base: &Path) -> Result<PathBuf, String> {
         }
         std::fs::write(&destino, datos)
             .map_err(|e| format!("No se pudo escribir la extensión en {}: {e}", carpeta.display()))?;
+        escribio = true;
+    }
+    // Un archivo que ya no forma parte de la extensión se quita para que Chrome no cargue restos de otra versión.
+    let vigentes: Vec<PathBuf> = archivos(edicion).iter().map(|(r, _)| carpeta.join(r)).collect();
+    for sobrante in archivos_de(&carpeta).into_iter().filter(|a| !vigentes.contains(a)) {
+        std::fs::remove_file(&sobrante).map_err(|e| format!("No se pudo quitar {}: {e}", sobrante.display()))?;
+        escribio = true;
     }
     for (ruta, datos) in archivos(edicion) {
         if std::fs::read(carpeta.join(ruta)).ok().as_deref() != Some(*datos) {
             return Err("La copia de la extensión no coincide con la incluida en Flow. Revisa permisos o antivirus.".into());
         }
     }
-    Ok(carpeta)
+    let cambio = match (existia, escribio) {
+        (false, _) => Cambio::Nueva,
+        (true, false) => Cambio::SinCambios,
+        (true, true) => Cambio::Actualizada { de: version_previa, a: version(edicion) },
+    };
+    let prefijo = format!("extension-{}-", nombre(edicion));
+    let mut anteriores: Vec<PathBuf> = std::fs::read_dir(base)
+        .into_iter()
+        .flatten()
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| p.is_dir() && p.file_name().is_some_and(|n| n.to_string_lossy().starts_with(&prefijo)))
+        .collect();
+    anteriores.sort();
+    Ok(Instalacion { carpeta, cambio, anteriores })
+}
+
+/// `instalar_en_el_lugar` sin el detalle de qué cambió.
+pub fn instalar(edicion: Edicion, base: &Path) -> Result<PathBuf, String> {
+    instalar_en_el_lugar(edicion, base).map(|i| i.carpeta)
 }
 
 /// Abre `chrome://extensions/` con Chrome (`open_chrome` de Flow Python). Devuelve `false` si no se encontró Chrome.
@@ -105,18 +177,46 @@ mod tests {
 
     #[test]
     fn instala_las_dos_ediciones_con_sus_versiones_y_es_idempotente() {
-        let mut sal = [0u8; 8];
-        getrandom::fill(&mut sal).unwrap();
-        let base = std::env::temp_dir().join(format!("flow-ext-{}", sal.iter().map(|b| format!("{b:02x}")).collect::<String>()));
+        let base = carpeta_temporal();
         assert_eq!(version(Edicion::Lite), "1.1.0");
         assert_eq!(version(Edicion::Integral), "2.9.0");
         let lite = instalar(Edicion::Lite, &base).unwrap();
-        assert!(lite.ends_with("extension-lite-1.1.0"));
+        assert!(lite.ends_with("extension-lite"), "la carpeta es fija: no lleva la versión");
         assert!(lite.join("icons/icono128.png").is_file());
         assert_eq!(instalar(Edicion::Lite, &base).unwrap(), lite);
         let integral = instalar(Edicion::Integral, &base).unwrap();
         assert!(integral.join("manifest.json").is_file());
         assert!(!lite.to_string_lossy().contains("_internal"));
+        let _ = std::fs::remove_dir_all(&base);
+    }
+
+    fn carpeta_temporal() -> PathBuf {
+        let mut sal = [0u8; 8];
+        getrandom::fill(&mut sal).unwrap();
+        std::env::temp_dir().join(format!("flow-ext-{}", sal.iter().map(|b| format!("{b:02x}")).collect::<String>()))
+    }
+
+    /// Una corrección de la extensión no obliga a cargarla de nuevo: la carpeta es la misma, solo cambian los archivos que
+    /// cambiaron, se quitan los sobrantes, y sin cambios no se escribe nada.
+    #[test]
+    fn la_extension_se_actualiza_en_el_lugar_sin_cambiar_de_carpeta() {
+        let base = carpeta_temporal();
+        std::fs::create_dir_all(base.join("extension-integral-2.9.0")).unwrap();
+        let primera = instalar_en_el_lugar(Edicion::Integral, &base).unwrap();
+        assert_eq!(primera.cambio, Cambio::Nueva);
+        assert_eq!(primera.anteriores, [base.join("extension-integral-2.9.0")], "se avisa de la carpeta con versión en el nombre");
+        assert_eq!(instalar_en_el_lugar(Edicion::Integral, &base).unwrap().cambio, Cambio::SinCambios);
+        // Una copia vieja: otro manifest, un archivo alterado y uno que ya no existe.
+        std::fs::write(primera.carpeta.join("background.js"), "codigo viejo").unwrap();
+        std::fs::write(primera.carpeta.join("restos.js"), "ya no va").unwrap();
+        let mut manifest: serde_json::Value = serde_json::from_slice(&std::fs::read(primera.carpeta.join("manifest.json")).unwrap()).unwrap();
+        manifest["version"] = "2.8.0".into();
+        std::fs::write(primera.carpeta.join("manifest.json"), manifest.to_string()).unwrap();
+        let segunda = instalar_en_el_lugar(Edicion::Integral, &base).unwrap();
+        assert_eq!(segunda.carpeta, primera.carpeta, "la carpeta no cambia");
+        assert_eq!(segunda.cambio, Cambio::Actualizada { de: "2.8.0".into(), a: "2.9.0".into() });
+        assert!(!segunda.carpeta.join("restos.js").exists());
+        assert_eq!(instalar_en_el_lugar(Edicion::Integral, &base).unwrap().cambio, Cambio::SinCambios);
         let _ = std::fs::remove_dir_all(&base);
     }
 }

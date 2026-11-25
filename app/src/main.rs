@@ -3,6 +3,7 @@
 
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod actualizacion;
 mod anon;
 mod autodiagnostico;
 mod ayuda;

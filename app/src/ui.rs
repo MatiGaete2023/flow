@@ -124,6 +124,12 @@ pub struct App {
     anon_opts: anon::Opciones,
     anon_inf: Option<anon::Informe>,
     autodiagnostico: Option<crate::autodiagnostico::Informe>,
+    /// Versión nueva dejada en la carpeta de actualizaciones, el error de la última búsqueda y si el aviso se ocultó.
+    actualizacion: Option<crate::actualizacion::Pendiente>,
+    actualizacion_error: Option<String>,
+    actualizacion_oculta: bool,
+    /// Huella del programa en uso, calculada una sola vez (leer el ejecutable en cada cuadro congelaría la ventana).
+    huella_programa: Option<String>,
     descargador: crate::descargador_ui::Descargador,
     meta4: crate::meta4_ui::Meta4Vista,
     // ajustes
@@ -189,6 +195,10 @@ impl App {
             anon_out: String::new(),
             anon_opts: anon::Opciones::default(),
             autodiagnostico: None,
+            actualizacion: None,
+            actualizacion_error: None,
+            actualizacion_oculta: false,
+            huella_programa: None,
             anon_inf: None,
             descargador: Default::default(),
             meta4: Default::default(),
@@ -211,12 +221,41 @@ impl App {
             app.cargar_ejemplo(Mode::Espera);
             app.avisos.clear();
             app.sel = Some(1);
+        } else {
+            app.revisar_actualizacion();
         }
         app
     }
 
     fn p(&self) -> Pal {
         theme::pal(self.cfg.tema_oscuro)
+    }
+
+    /// Busca una versión nueva en la carpeta de actualizaciones; solo avisa, no cambia nada.
+    fn revisar_actualizacion(&mut self) {
+        self.actualizacion_error = None;
+        self.actualizacion = None;
+        let Ok(actual) = std::env::current_exe() else { return };
+        match crate::actualizacion::buscar(&crate::actualizacion::carpeta(), &actual) {
+            Ok(p) => {
+                self.actualizacion_oculta = false;
+                self.actualizacion = p;
+            }
+            Err(e) => self.actualizacion_error = Some(e),
+        }
+    }
+
+    /// Guarda la sesión, reemplaza el programa por la versión nueva y lo reinicia.
+    fn aplicar_actualizacion(&mut self, ctx: &egui::Context) {
+        let Some(p) = self.actualizacion.clone() else { return };
+        if let Err(e) = self.guardar_sesion_actual() {
+            return self.aviso(format!("No se aplicó la actualización: no se pudo guardar la sesión ({e})."), true);
+        }
+        let Ok(actual) = std::env::current_exe() else { return self.aviso("No se pudo ubicar el programa en uso.", true) };
+        match crate::actualizacion::aplicar(&p, &actual).and_then(|_| crate::actualizacion::reiniciar(&actual)) {
+            Ok(()) => ctx.send_viewport_cmd(egui::ViewportCommand::Close),
+            Err(e) => self.aviso(e, true),
+        }
     }
 
     fn aviso(&mut self, t: impl Into<String>, error: bool) {
@@ -700,6 +739,7 @@ impl App {
             }
         }
         let p = self.p();
+        self.aviso_actualizacion(ctx, &p);
         self.nav(ctx, &p);
         if !matches!(self.vista, Vista::Descargador | Vista::Meta4) {
             self.barra(ctx, &p);
@@ -725,6 +765,33 @@ impl App {
         }
         if self.confirmar_reinicio {
             self.dialogo_reinicio(ctx, &p);
+        }
+    }
+
+    /// «Hay una versión nueva»: se aplica solo con el botón, y la persona puede dejarlo para después.
+    fn aviso_actualizacion(&mut self, ctx: &egui::Context, p: &Pal) {
+        let Some(nueva) = self.actualizacion.clone().filter(|_| !self.actualizacion_oculta) else { return };
+        let (mut aplicar, mut despues) = (false, false);
+        egui::TopBottomPanel::top("actualizacion")
+            .frame(egui::Frame::new().fill(p.panel).inner_margin(egui::Margin::symmetric(18, 8)).stroke(egui::Stroke::new(1.0_f32, p.border)))
+            .show(ctx, |ui| {
+                ui.horizontal_wrapped(|ui| {
+                    let commit = if nueva.commit.is_empty() { String::new() } else { format!(" (commit {})", &nueva.commit[..nueva.commit.len().min(7)]) };
+                    ui.label(RichText::new(format!("Hay una versión nueva de Flow{commit}.")).strong());
+                    ui.label(RichText::new("Se guarda la sesión y Flow se reinicia; la extensión de Chrome y tus datos no cambian.").color(p.muted));
+                    if theme::primary(ui, p, "Actualizar ahora").clicked() {
+                        aplicar = true;
+                    }
+                    if ui.button("Más tarde").clicked() {
+                        despues = true;
+                    }
+                });
+            });
+        if aplicar {
+            self.aplicar_actualizacion(ctx);
+        }
+        if despues {
+            self.actualizacion_oculta = true;
         }
     }
 
@@ -3014,6 +3081,50 @@ impl App {
                     });
                     ui.add_space(6.0);
                     self.editor_plantillas(ui, p);
+                    ui.add_space(10.0);
+                    theme::seccion(ui, p, "Actualizaciones");
+                    let carpeta_act = crate::actualizacion::carpeta();
+                    let actual_exe = std::env::current_exe().ok();
+                    ui.label(RichText::new(format!(
+                        "Para actualizar sin reinstalar, deja el flow_rust.exe nuevo (y su SHA256.txt) en {}. Flow lo detecta y se actualiza con un botón; la extensión de Chrome solo cambia si cambia su código.",
+                        carpeta_act.display()
+                    )).color(p.muted));
+                    if ui.button("Mostrar la huella del programa en uso").on_hover_text("Lee el ejecutable una vez para calcular su SHA-256; sirve para comparar con SHA256.txt de la entrega.").clicked() {
+                        self.huella_programa = actual_exe.as_deref().and_then(|e| crate::actualizacion::huella(e).ok());
+                    }
+                    if let Some(huella) = &self.huella_programa {
+                        ui.label(RichText::new(format!("Programa en uso: huella {}", &huella[..huella.len().min(16)])).color(p.muted).size(12.5));
+                    }
+                    ui.label(RichText::new(format!(
+                        "Extensiones incluidas: integral {} · lite {}.",
+                        flow_rust::descargador::extension::version(flow_rust::descargador::Edicion::Integral),
+                        flow_rust::descargador::extension::version(flow_rust::descargador::Edicion::Lite)
+                    )).color(p.muted).size(12.5));
+                    ui.horizontal(|ui| {
+                        if ui.button("Buscar actualización").clicked() {
+                            self.revisar_actualizacion();
+                            match (&self.actualizacion, &self.actualizacion_error) {
+                                (Some(_), _) => self.aviso("Hay una versión nueva lista para aplicar.", false),
+                                (None, Some(e)) => self.aviso(e.clone(), true),
+                                (None, None) => self.aviso("No hay una versión nueva en la carpeta de actualizaciones.", false),
+                            }
+                        }
+                        if ui.button("Abrir la carpeta de actualizaciones").clicked() {
+                            let _ = std::fs::create_dir_all(&carpeta_act);
+                            abrir_en_sistema(&carpeta_act);
+                        }
+                        if actual_exe.as_deref().and_then(crate::actualizacion::anterior).is_some()
+                            && ui.button("Volver a la versión anterior").on_hover_text("Intercambia este programa con la copia anterior y se reinicia.").clicked()
+                        {
+                            let ctx = ui.ctx().clone();
+                            let r = actual_exe.as_deref().map(|e| crate::actualizacion::volver(e).and_then(|_| crate::actualizacion::reiniciar(e)));
+                            match r {
+                                Some(Ok(())) => ctx.send_viewport_cmd(egui::ViewportCommand::Close),
+                                Some(Err(e)) => self.aviso(e, true),
+                                None => {}
+                            }
+                        }
+                    });
                     ui.add_space(10.0);
                     theme::seccion(ui, p, "Ayuda y autodiagnóstico");
                     for (nombre, texto) in crate::ayuda::SECCIONES {

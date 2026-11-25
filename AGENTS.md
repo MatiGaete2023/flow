@@ -13,6 +13,12 @@
 - Un `HECHO` exige una prueba en el repositorio que afirme sus conteos y que falle si faltan sus datos. No citar pruebas, funciones ni archivos que no estén en el commit publicado.
 - Si un criterio no se puede cumplir, se informa como `BLOQUEADO` con el motivo.
 
+## Entrega y actualización
+
+- Toda corrección se entrega de modo que se aplique **sin reinstalar**: el ejecutable se reemplaza desde `%LOCALAPPDATA%\FlowRust\actualizaciones` (aviso y botón en Flow, con verificación de SHA-256) y nada que no haya cambiado se vuelve a instalar.
+- La extensión de Chrome vive en una carpeta fija (`extension-integral`, `extension-lite`) y solo se toca si cambia su propio código; entonces se actualiza en el lugar y en Chrome basta «Recargar».
+- La CI entrega el `.exe` con su `SHA256.txt` (huella y commit) listo para dejar en esa carpeta.
+
 ## Presupuesto de pruebas
 
 - Mientras se trabaja: `tools/probar_app.sh rapido <filtro>` sobre el módulo tocado. Antes de publicar: `tools/probar_app.sh todo`, una vez. La CI hace el resto; no repetir en local lo que la CI ya corre.

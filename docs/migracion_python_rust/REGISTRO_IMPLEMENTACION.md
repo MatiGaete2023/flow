@@ -260,3 +260,12 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Decisiones del usuario registradas el mismo día: D-5 confirmada, formato de proyectos Word a elección (E-P1 abierto), M7 no por ahora.
 - Entorno: el generador necesita `tkinter` (como los demás de paquetes); la CI de Windows lo trae.
 - CI: run 45639115067 verde (`linux` y `validar`, `sync_paquete.json` regenerado igual en Windows).
+
+## 2026-11-25 · E-I2 · Actualización en el lugar y extensión de carpeta fija
+
+- Pedido: corregir sin reinstalar todo (ni la extensión de Chrome). Decididos por el usuario: carpeta local de actualizaciones y aviso con botón.
+- Cambió: `actualizacion.rs` nuevo, `ui.rs` (aviso al abrir y sección en Ajustes), `descargador/extension.rs` y `descargador_ui.rs` (carpeta fija, actualización en el lugar, mensajes por caso), `tools/inventario_escrituras.py` y la regla en `AGENTS.md`.
+- Acredita: tres pruebas nuevas (aplicar y volver atrás, rechazos y restauración, extensión en el lugar). `probar_app.sh todo`: 73 y 94 pruebas, 0 fallos; clippy de la biblioteca limpio; inventario de escrituras al día.
+- Corrige: la huella del ejecutable se calculaba en cada cuadro de Ajustes (la corrida de pruebas pasó de más de 10 minutos a 20 segundos al corregirlo).
+- Pendiente: CI de Windows verde; prueba del usuario con un `.exe` real (la primera actualización es manual).
+
