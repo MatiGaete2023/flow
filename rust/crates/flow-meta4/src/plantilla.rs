@@ -21,7 +21,9 @@ const LIMITE_XML: u64 = 8 * 1024 * 1024;
 struct Muestra {
     estilo: [[usize; 8]; 7],
     altura: [Option<String>; 7],
-    columnas: String,
+    /// Bloque `<cols>` de la plantilla; None si el libro no define anchos (un XLSX guardado sin personalizarlos
+    /// sigue siendo una plantilla válida, como en `validar_plantilla` de Python).
+    columnas: Option<String>,
 }
 
 fn attr(e: &BytesStart<'_>, clave: &[u8]) -> Option<String> {
@@ -84,11 +86,10 @@ fn sheet_names<R: Read + std::io::Seek>(archivo: &mut ZipArchive<R>) -> Result<B
     }
     Ok(hojas)
 }
-fn columnas(xml: &str) -> Result<String, String> {
-    let desde = xml.find("<cols>").or_else(|| xml.find("<cols "))
-        .ok_or("La plantilla no define los anchos de columna.")?;
+fn columnas(xml: &str) -> Result<Option<String>, String> {
+    let Some(desde) = xml.find("<cols>").or_else(|| xml.find("<cols ")) else { return Ok(None) };
     let fin = xml[desde..].find("</cols>").ok_or("Bloque de columnas incompleto.")? + desde + "</cols>".len();
-    Ok(xml[desde..fin].to_string())
+    Ok(Some(xml[desde..fin].to_string()))
 }
 fn columna_numero(ref_celda: &str) -> Option<usize> {
     let letras = ref_celda.bytes().take_while(|b| b.is_ascii_alphabetic());
@@ -201,8 +202,8 @@ fn reestilizar(xml: &str, hoja: &Hoja, muestra: Option<&Muestra>, fecha_ids: &BT
     loop {
         let evento = lector.read_event().map_err(|e| e.to_string())?;
         match evento {
-            Event::Start(ref e) if nombre(e) == "cols" && muestra.is_some() => {
-                escritor.get_mut().extend_from_slice(muestra.unwrap().columnas.as_bytes());
+            Event::Start(ref e) if nombre(e) == "cols" && muestra.is_some_and(|m| m.columnas.is_some()) => {
+                escritor.get_mut().extend_from_slice(muestra.and_then(|m| m.columnas.as_ref()).unwrap().as_bytes());
                 saltar_columnas = true;
             }
             Event::End(ref e) if e.local_name().as_ref() == b"cols" && saltar_columnas => {
