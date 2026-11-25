@@ -341,3 +341,4 @@ E-R3 · Meta 4: contraste ampliado (`92ab9c1`, CI Windows verde, run 45656558813
 - Acredita: `conjuntos_iguales_a_python` (22 casos) y su prueba de alteración, y la prueba de vista. Orquestador tras integrar: 88 + 103 + 1 pruebas; inventario 108 en 24.
 - CI de la rama: 45685311235 rojo (bytes del XLSX), 45687407129 rojo solo en `linux` (destino de diagnóstico repetido; regeneración de `archivo_local` sin diferencias), 45688144080 verde. Firma completa (modelo declarado: «GPT-6, ejecución Codex»).
 - Al integrar: el generador dependía de cómo Python resuelve «\\» en Linux (caso `separadores_ambos`, con ruta temporal en el error); se reproduce la conducta de Windows y regenera idéntico en Linux.
+- Cierre: `HECHO` con el run 45690521141 de la rama principal (`0610040`; `linux` y `validar` verdes, regeneración corrida).
