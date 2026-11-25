@@ -105,3 +105,20 @@ fn escribir_json(ruta: &Path, valor: &Value) -> Result<(), String> {
     datos.push(b'\n');
     lote::guardar_exclusivo(ruta, &datos)
 }
+
+#[cfg(test)]
+mod pruebas {
+    use super::*;
+
+    #[test]
+    fn flujo_csmp_planifica_fases_y_valida_alcance() {
+        let fecha = NaiveDate::from_ymd_opt(2026, 12, 31).unwrap();
+        let tribunales = vec!["113".to_string()];
+        let modalidades = vec!["2".to_string()];
+        let fases = plan(&tribunales, &modalidades, "Espera", fecha, 60).unwrap();
+        assert_eq!(fases.iter().map(|f| f.clave.as_str()).collect::<Vec<_>>(), ["principal", "informes-2026-12", "informes-2027-1"]);
+        assert_eq!(plan(&tribunales, &modalidades, "Carga", fecha, 60).unwrap_err(), "El flujo conjunto admite Espera o Cumplimiento.");
+        assert_eq!(plan(&tribunales, &modalidades, "Espera", fecha, 59).unwrap_err(), "Metadato legado de firmas fuera de rango (60–730).");
+        assert_eq!(plan(&[], &modalidades, "Espera", fecha, 60).unwrap_err(), "Selecciona tribunales y modalidades.");
+    }
+}
