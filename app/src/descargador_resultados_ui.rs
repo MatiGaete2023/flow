@@ -565,6 +565,44 @@ mod pruebas {
     use egui_kittest::kittest::Queryable;
     use egui_kittest::Harness;
 
+    #[test]
+    fn libro_conjunto_igual_al_oraculo() {
+        let (_candado, perfil) = crate::prueba_entorno::perfil_aislado();
+        let carpeta = perfil.join("libro-conjunto");
+        std::fs::create_dir_all(&carpeta).unwrap();
+        std::fs::write(carpeta.join("libro.xlsx"), b"libro sintetico\n").unwrap();
+        let oracle: Value = serde_json::from_str(include_str!("../tests/datos/historial_local.json")).unwrap();
+        let casos: Vec<_> = oracle["casos"].as_array().unwrap().iter().filter(|c| c.get("archivo").is_some()).collect();
+        assert_eq!(casos.len(), 3);
+        for caso in casos {
+            let r = libro_conjunto(&carpeta, caso);
+            match caso["resultado"].as_bool() {
+                Some(true) => assert!(r.unwrap().is_some()),
+                Some(false) => assert_eq!(r.unwrap_err(), "El resultado cambió; genera una copia nueva desde las fuentes."),
+                None => assert!(r.unwrap().is_none()),
+            }
+        }
+    }
+
+    #[test]
+    fn ui_historial_muestra_referencia_y_ausente() {
+        let (_candado, perfil) = crate::prueba_entorno::perfil_aislado();
+        let fuente = Fuente::nueva("historial-ui", &perfil);
+        let lote = fuente.lote("listados_dos_pestanas", 0);
+        let mut p = Preferencias::default();
+        archivo_local::recordar(&mut p, &lote).unwrap();
+        p.historial_lotes.push(perfil.join("ausente").to_string_lossy().into_owned());
+        p.guardar(&Preferencias::ruta()).unwrap();
+        let mut h = vista();
+        h.run();
+        let referencias = archivo_local::descubrir(Path::new(&p.destino), &p, None);
+        assert_eq!(referencias.len(), 2);
+        for referencia in referencias {
+            let label = format!("{} · {} · {} · {}", referencia.tipo, referencia.estado, referencia.conteo, referencia.carpeta.display());
+            assert!(h.query_by_label(&label).is_some(), "{label}");
+        }
+    }
+
     fn reconstruir(destino: &Path, archivos: &Value) {
         for (ruta, b64) in archivos.as_object().unwrap() {
             let ruta = destino.join(ruta);
