@@ -14,7 +14,7 @@ Claude es el **orquestador y coordinador**: decide, integra y valida. Tres agent
 
 Los prompts completos están en [informes/PROMPTS_AGENTES_20261125.md](informes/PROMPTS_AGENTES_20261125.md). Cada agente entrega un informe en `informes/AGENTE_<letra>_<fecha>.md` y no edita `ESTADO`, `PLAN`, `REGISTRO`, `AGENTS`, `CONTINUACION` ni el workflow.
 
-**Estado a las 16:45 UTC del 25-nov:** E-Q8 `HECHO` (run 45652560712). E-A10 espera la corrida manual que regenera todos los oráculos. **Antes:** C entregó E-Q8 (informe `AGENTE_C_20261125.md`) y quedó integrado (`3689c92`); su siguiente encargo es E-S2 (abrir conjuntos `flujo.json` de Flow Python en Resultados, prompt en `informes/PROMPTS_AGENTES_20261125.md`), en una rama nueva desde la principal. A publicó E-A10 (`faee8ea`) con la CI de Windows en rojo por una carrera entre pruebas; A y el orquestador la corrigieron en paralelo; quedó la de A (`886d222`). B aún no publica.
+**Estado a las 17:45 UTC del 25-nov:** `HECHO` con todos los oráculos regenerados en Windows (run 45665516823): E-A10, E-P1 (A), E-Q8 (C, con el aviso corregido), E-R3 (B). En curso: E-S2 (C, `estudio/agente-c-conjuntos-20261125`) y E-Q9 (B, `estudio/agente-b-flujo-20261125`); siguiente de A: E-I1 (requiere decidir firma y alojamiento). Hubo dos ejecutores de A (Matias Gaete y OpenAI Codex): usar uno solo por agente. Otra sesión de orquestador publicó en paralelo; hacer fetch y merge antes de editar.
 
 ## Procedimiento de revisión e integración
 
@@ -64,6 +64,7 @@ Fuentes: [precios de OpenAI](https://developers.openai.com/api/docs/pricing), [r
 
 - Los oráculos se regeneran en Windows y se comparan con lo versionado: deben ser **deterministas y sin depender del sistema**. Escribir bytes (no `write_text`), fijar fechas (`date.today()` fijo en `generar_correos.py`), `ZipInfo.create_system = 3` y fecha de modificación fija en los `.xlsx` de openpyxl.
 - Tras publicar, confirmar que el paso «Regenerar los oráculos» **corrió** (no «skipped») además de ver el run en verde. Un commit que solo toca código Rust lo omite: si el encargo trae oráculos nuevos y su run de regeneración no corrió, lanzar la CI a mano (`workflow_dispatch` regenera todos). Pasó con E-A10. La primera corrida «todos» destapó que `generar_lote.py` volcaba JSON con CRLF en Windows: todo archivo de texto escrito por Python que se pase a base64 se normaliza a LF. Y la carpeta temporal se toma con `Path(tmp).resolve()`: en Windows llega como `RUNNER~1`. El venv local también necesita `icalendar`.
+- Un solo ejecutor por agente y un solo orquestador activo: con dos, se duplica el trabajo y chocan `ESTADO`, `PLAN` y `REGISTRO`.
 - Un agente sin checkout válido no arranca: cada prompt empieza con el «paso 0» (clon con `origin` MatiGaete2023/flow, rama y commit verificados, o BLOQUEADO).
 - Un `canonicalize()` distinto del nombre elegido (nombre corto `RUNNER~1`, enlaces) rompía la verificación de bitácoras solo en Windows: normalizar las rutas de entrada.
 - No hacer trabajo pesado por cuadro en la interfaz (la huella del ejecutable en Ajustes congeló las pruebas).
