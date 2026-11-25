@@ -355,3 +355,7 @@ E-R3 · Meta 4: contraste ampliado (`92ab9c1`, CI Windows verde, run 45656558813
 - E-S3 (C): `archivo_local` (recordar, descubrir, referencias) e historial en preferencias; Resultados con referencias y «Ver descarga conjunta» con libro verificado por huella; oráculo `historial_local` (14 casos). Ejecutado por Luna y continuado por Terra (los commits dicen Luna). Al integrar: el generador recorría `rglob` sin ordenar y el orden de archivos cambiaba entre Windows y Linux; se ordenó.
 - E-I3 (A · Antigravity): carpeta adicional de actualizaciones (OneDrive) con control de sincronización y ajustes del instalador. CI 45703688750 verde (la primera, 45702997351, falló). Sin cambios al workflow; commits firmados.
 - Orquestador tras integrar B y C: 92 + 109 + 1 pruebas; `flujo_paquete` e `historial_local` idénticos en Linux; clippy y verificadores en verde.
+
+## 2026-11-25 · Decisión del usuario: fuera del proyecto
+
+- Manuales aparte (F28 pasa a «Sí»), registrador de observaciones RUS y extractores de estructura (`extraer_estructura_*.py`). `AGENTS.md` deja de citar `extraer_estructura_har.py` en la regla de datos; la regla (solo estructura anónima) no cambia. La referencia Python no se toca.

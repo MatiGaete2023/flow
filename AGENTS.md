@@ -43,7 +43,7 @@
 - Outlook solo borradores (`mail.Save()`); nunca `.Send(`. CC fijo `ucc_concepcion@pjud.cl`.
 - Sin credenciales, cookies ni tokens en código, logs, fixtures o conversaciones.
 - **Sin HAR, HTML, PDF, Excel ni capturas reales; solo estructura anónima** generada
-  localmente (`descargador/extraer_estructura_har.py`, `diagnostico_bitacoras.json`,
+  localmente (los diagnósticos anónimos de Flow Rust, `diagnostico_bitacoras.json`,
   `tools/anonimizar_excel.py`). Si alguien ofrece un archivo real, pedir el extracto anónimo.
 - Reglas, umbrales y textos tradicionales intactos (`src/nurus/personal/motor/`,
   `textos_base.json`) salvo decisión expresa del usuario y paridad golden.
