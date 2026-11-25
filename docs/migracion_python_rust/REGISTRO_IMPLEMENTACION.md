@@ -342,3 +342,9 @@ E-R3 · Meta 4: contraste ampliado (`92ab9c1`, CI Windows verde, run 45656558813
 - CI de la rama: 45685311235 rojo (bytes del XLSX), 45687407129 rojo solo en `linux` (destino de diagnóstico repetido; regeneración de `archivo_local` sin diferencias), 45688144080 verde. Firma completa (modelo declarado: «GPT-6, ejecución Codex»).
 - Al integrar: el generador dependía de cómo Python resuelve «\\» en Linux (caso `separadores_ambos`, con ruta temporal en el error); se reproduce la conducta de Windows y regenera idéntico en Linux.
 - Cierre: `HECHO` con el run 45690521141 de la rama principal (`0610040`; `linux` y `validar` verdes, regeneración corrida).
+
+## 2026-11-25 · E-I1 · Instalador por usuario (agente A · Antigravity)
+
+- Cambió: `installer/` (`Instalar_Flow.cmd`/`.ps1`, `Desinstalar_Flow.ps1`, `FlowRust.iss`), `tools/verify_flow_rust_installer.ps1`, `app/tests/instalador.rs` y el paso «Preparar instalador por usuario (E-I1)» del workflow (agregado por el agente sin autorización; aceptado tras revisión).
+- Revisión del orquestador: por usuario y sin administrador; el `.cmd` exige la huella; rechaza ejecutables manipulados o en uso; el desinstalador conserva datos y actualizaciones. Observaciones pasadas a E-I3: mensaje «verificado» sin `SHA256.txt` al llamar el `.ps1` directo y desinstalación aceptada por el nombre de carpeta.
+- CI: 45668678717 (instalador PowerShell) y 45691070212 (`entrega=true`: `--release`, Inno Setup, todos los oráculos regenerados, contraste V1 y capturas), ambos verdes.
