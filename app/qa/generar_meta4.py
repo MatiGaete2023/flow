@@ -7,8 +7,17 @@ ese lote de una manera (identidad visible, observación en el mes, archivo alter
 ambigüedad, lote duplicado, filtros…) y registra qué entrega `meta4_bitacoras.generar` con `_escribir` capturado: las filas
 ya enriquecidas (`enriquecer`), las lecturas de bitácora, los filtros y avisos de lectura, o el mensaje del error.
 
-La prueba Rust (`descargador::meta4::tests`) reconstruye los mismos archivos, calcula con `meta4::calcular` y compara fila
-a fila. Archivos en base64 con separadores `/`; sin rutas ni horas de la máquina.
+Los casos compuestos arman lotes propios con las consultas del Descargador que el SITFA ficticio no produce: listas de
+Espera, FAE y Residencia en el mismo lote, otros tribunales (Laja, Mulchén) y más de un lote que no se solapa.
+
+Dos secciones más contrastan lo que no depende del cálculo: `regeneraciones` genera Meta 4, edita las celdas de revisión
+de un `Registros.xlsx` y lo regenera con `meta4_bitacoras.regenerar` (con y sin `Bitacoras_del_mes.xlsx` y con plantilla
+propia), y `plantillas` guarda cinco plantillas sintéticas con lo que acepta `validar_plantilla`.
+
+La prueba Rust (`descargador::meta4::tests` y `descargador::meta4::pruebas_oraculo`) reconstruye los mismos archivos,
+calcula con `meta4::calcular`, regenera con `flow_meta4::regenerar` y compara valores (no diseño). Archivos en base64
+con separadores `/`; sin rutas, horas de la máquina ni fechas de openpyxl (los XLSX se guardan sin comprimir y con
+`docProps/core.xml` fijo).
 
 Uso (desde la raíz): python app/qa/generar_meta4.py [salida.json]   (por omisión app/tests/datos/meta4.json)
 """
@@ -622,6 +631,7 @@ def regeneraciones(escenario):
 
 CASOS = [
     # nombre, variante, corte, tribunales, lotes extra (copias del lote), con carpeta de bitácoras
+    # (un séptimo elemento, opcional, arma los lotes desde cero: recibe (base, escenario) y devuelve (lotes, bitácoras))
     ('identidad_visible_distinta', None, CORTE, [], 0, True),
     ('observacion_en_el_mes', coincide_identidad, CORTE, [], 0, True),
     ('observacion_fuera_del_mes', coincide_identidad, date(2026, 10, 8), [], 0, True),
