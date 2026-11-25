@@ -314,3 +314,13 @@ INFORME: actualiza docs/migracion_python_rust/informes/AGENTE_B_20261125b.md en 
 
 ESTILO: español chileno, primera línea = la respuesta, sin cortesías, hechos | inferencias | especulación separados, código completo.
 ```
+
+## Mensajes por agente tras ordenar ejecutores (25-nov, 18:50 UTC)
+
+- **A · Antigravity:** en pausa; sin encargo nuevo hasta la revisión de E-I1 y la decisión de firma y alojamiento.
+- **B · DeepSeek:** usar «Prompt del Agente B · Corrección de E-Q9».
+- **C · ChatGPT Luna:** «Prompt del Agente C · E-S2 con limpieza del clon» (abajo), en una sesión nueva.
+
+### Prompt del Agente C · E-S2 con limpieza del clon
+
+Es el «Prompt del Agente C · Segundo encargo» con un paso 0 que primero respalda y descarta el E-P2 duplicado (`f7ff7c9`).

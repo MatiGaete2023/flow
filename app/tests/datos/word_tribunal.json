@@ -34,6 +34,74 @@
         "LAJA": {
           "cantidad": 1,
           "cursivas": false,
+          "relaciones_validas": true,
+          "medios": [],
+          "partes": [
+            {
+              "ruta": "_rels/.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "customXml/_rels/item1.xml.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "customXml/item1.xml",
+              "tipo": "application/xml"
+            },
+            {
+              "ruta": "customXml/itemProps1.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.customXmlProperties+xml"
+            },
+            {
+              "ruta": "docProps/app.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.extended-properties+xml"
+            },
+            {
+              "ruta": "docProps/core.xml",
+              "tipo": "application/vnd.openxmlformats-package.core-properties+xml"
+            },
+            {
+              "ruta": "docProps/thumbnail.jpeg",
+              "tipo": "image/jpeg"
+            },
+            {
+              "ruta": "word/_rels/document.xml.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/document.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+            },
+            {
+              "ruta": "word/fontTable.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.fontTable+xml"
+            },
+            {
+              "ruta": "word/numbering.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"
+            },
+            {
+              "ruta": "word/settings.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"
+            },
+            {
+              "ruta": "word/styles.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"
+            },
+            {
+              "ruta": "word/stylesWithEffects.xml",
+              "tipo": "application/vnd.ms-word.stylesWithEffects+xml"
+            },
+            {
+              "ruta": "word/theme/theme1.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.theme+xml"
+            },
+            {
+              "ruta": "word/webSettings.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.webSettings+xml"
+            }
+          ],
           "indice": [
             "Índice",
             "1. X-10-2026 — PC_IE — Pide cuenta ingreso efectivo"
@@ -41,43 +109,83 @@
           "parrafos": [
             {
               "texto": "Laja, la fecha de la resolución es la que se indica en el pie de firma.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "VISTO:",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Atendido al mérito de los antecedentes que obran en autos y de conformidad a lo dispuesto en los artículos 13 y 16 de la Ley N° 19.968 que crea Los Tribunales de Familia, se resuelve:",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Ofíciese a programa AFT Ficticio a fin de pedir cuenta del ingreso efectivo de Persona Uno, cédula de identidad N° 11111111-1.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "-Notifíquese vía correo al programa interventor y curador.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "-Notifíquese a los restantes intervinientes por el estado diario.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Sirva la presente resolución de suficiente y atento oficio remisor.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "RIT: X-10-2026",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Proveyó, Juez del juzgado de Letras y Garantía de Laja, quien suscribe con firma electrónica avanzada.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "En Laja, con esta fecha, notifique por el estado diario la resolución que antecede.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             }
           ]
         }
@@ -155,6 +263,74 @@
         "LAJA": {
           "cantidad": 3,
           "cursivas": false,
+          "relaciones_validas": true,
+          "medios": [],
+          "partes": [
+            {
+              "ruta": "_rels/.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "customXml/_rels/item1.xml.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "customXml/item1.xml",
+              "tipo": "application/xml"
+            },
+            {
+              "ruta": "customXml/itemProps1.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.customXmlProperties+xml"
+            },
+            {
+              "ruta": "docProps/app.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.extended-properties+xml"
+            },
+            {
+              "ruta": "docProps/core.xml",
+              "tipo": "application/vnd.openxmlformats-package.core-properties+xml"
+            },
+            {
+              "ruta": "docProps/thumbnail.jpeg",
+              "tipo": "image/jpeg"
+            },
+            {
+              "ruta": "word/_rels/document.xml.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/document.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+            },
+            {
+              "ruta": "word/fontTable.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.fontTable+xml"
+            },
+            {
+              "ruta": "word/numbering.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"
+            },
+            {
+              "ruta": "word/settings.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"
+            },
+            {
+              "ruta": "word/styles.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"
+            },
+            {
+              "ruta": "word/stylesWithEffects.xml",
+              "tipo": "application/vnd.ms-word.stylesWithEffects+xml"
+            },
+            {
+              "ruta": "word/theme/theme1.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.theme+xml"
+            },
+            {
+              "ruta": "word/webSettings.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.webSettings+xml"
+            }
+          ],
           "indice": [
             "Índice",
             "1. X-10-2026 — PC_IE — Pide cuenta ingreso efectivo",
@@ -164,127 +340,251 @@
           "parrafos": [
             {
               "texto": "Laja, la fecha de la resolución es la que se indica en el pie de firma.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "VISTO:",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Atendido al mérito de los antecedentes que obran en autos y de conformidad a lo dispuesto en los artículos 13 y 16 de la Ley N° 19.968 que crea Los Tribunales de Familia, se resuelve:",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Ofíciese a programa AFT Ficticio a fin de pedir cuenta del ingreso efectivo de Persona Uno, cédula de identidad N° 11111111-1.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "-Notifíquese vía correo al programa interventor y curador.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "-Notifíquese a los restantes intervinientes por el estado diario.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Sirva la presente resolución de suficiente y atento oficio remisor.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "RIT: X-10-2026",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Proveyó, Juez del juzgado de Letras y Garantía de Laja, quien suscribe con firma electrónica avanzada.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "En Laja, con esta fecha, notifique por el estado diario la resolución que antecede.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Laja, la fecha de la resolución es la que se indica en el pie de firma.",
-              "salto": true
+              "salto": true,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "VISTO:",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Atendido al mérito de los antecedentes que obran en autos y de conformidad a lo dispuesto en los artículos 13 y 16 de la Ley N° 19.968 que crea Los Tribunales de Familia, se resuelve:",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Ofíciese a programa AFT Ficticio a fin de pedir cuenta del ingreso efectivo de Persona Dos, cédula de identidad N° 22222222-2 y Persona Tres, cédula de identidad N° 33333333-3.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "-Notifíquese vía correo al programa interventor y curador.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "-Notifíquese a los restantes intervinientes por el estado diario.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Sirva la presente resolución de suficiente y atento oficio remisor.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "RIT: X-11-2026",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Proveyó, Juez del juzgado de Letras y Garantía de Laja, quien suscribe con firma electrónica avanzada.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "En Laja, con esta fecha, notifique por el estado diario la resolución que antecede.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Laja, la fecha de la resolución es la que se indica en el pie de firma.",
-              "salto": true
+              "salto": true,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "VISTO:",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Atendido al mérito de los antecedentes que obran en autos y de conformidad a lo dispuesto en los artículos 13 y 16 de la Ley N° 19.968 que crea Los Tribunales de Familia, se resuelve:",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Ofíciese a programa AFT Ficticio y PRM Ficticio a fin de pedir cuenta del ingreso efectivo de Persona Cuatro, cédula de identidad N° 44444444-4 y Persona Cinco, cédula de identidad N° 55555555-5.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "-Notifíquese vía correo a los programas intervinientes y curador.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "-Notifíquese a los restantes intervinientes por el estado diario.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Sirva la presente resolución de suficiente y atento oficio remisor.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Personas comprendidas: Persona Cuatro, cédula de identidad N° 44444444-4, programa AFT Ficticio; Persona Cinco, cédula de identidad N° 55555555-5, programa PRM Ficticio.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "RIT: X-12-2026",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Proveyó, Juez del juzgado de Letras y Garantía de Laja, quien suscribe con firma electrónica avanzada.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "En Laja, con esta fecha, notifique por el estado diario la resolución que antecede.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             }
           ]
         }
@@ -357,6 +657,74 @@
         "LAJA": {
           "cantidad": 2,
           "cursivas": false,
+          "relaciones_validas": true,
+          "medios": [],
+          "partes": [
+            {
+              "ruta": "_rels/.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "customXml/_rels/item1.xml.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "customXml/item1.xml",
+              "tipo": "application/xml"
+            },
+            {
+              "ruta": "customXml/itemProps1.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.customXmlProperties+xml"
+            },
+            {
+              "ruta": "docProps/app.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.extended-properties+xml"
+            },
+            {
+              "ruta": "docProps/core.xml",
+              "tipo": "application/vnd.openxmlformats-package.core-properties+xml"
+            },
+            {
+              "ruta": "docProps/thumbnail.jpeg",
+              "tipo": "image/jpeg"
+            },
+            {
+              "ruta": "word/_rels/document.xml.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/document.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+            },
+            {
+              "ruta": "word/fontTable.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.fontTable+xml"
+            },
+            {
+              "ruta": "word/numbering.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"
+            },
+            {
+              "ruta": "word/settings.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"
+            },
+            {
+              "ruta": "word/styles.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"
+            },
+            {
+              "ruta": "word/stylesWithEffects.xml",
+              "tipo": "application/vnd.ms-word.stylesWithEffects+xml"
+            },
+            {
+              "ruta": "word/theme/theme1.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.theme+xml"
+            },
+            {
+              "ruta": "word/webSettings.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.webSettings+xml"
+            }
+          ],
           "indice": [
             "Índice",
             "1. X-50-2026 — PC_IE — Pide cuenta ingreso efectivo",
@@ -365,69 +733,197 @@
           "parrafos": [
             {
               "texto": "Laja, la fecha de la resolución es la que se indica en el pie de firma.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "VISTO:",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Atendido al mérito de los antecedentes que obran en autos y de conformidad a lo dispuesto en los artículos 13 y 16 de la Ley N° 19.968 que crea Los Tribunales de Familia, se resuelve:",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Ofíciese a programa AFT Ficticio a fin de pedir cuenta del ingreso efectivo de Persona Alfa, cédula de identidad N° 13131313-1.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "-Notifíquese vía correo al programa interventor y curador.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "-Notifíquese a los restantes intervinientes por el estado diario.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Sirva la presente resolución de suficiente y atento oficio remisor.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "RIT: X-50-2026",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Proveyó, Juez del juzgado de Letras y Garantía de Laja, quien suscribe con firma electrónica avanzada.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "En Laja, con esta fecha, notifique por el estado diario la resolución que antecede.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Laja, la fecha de la resolución es la que se indica en el pie de firma.",
-              "salto": true
+              "salto": true,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Advirtiendo el Tribunal que se omitió la incorporación de la nomenclatura \"[COMPLETAR NOMENCLATURA]\", aplíquese a la presente resolución, para efectos de regularizar el correcto registro en el sistema de seguimiento de tramitación de causas.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "RIT: X-51-2026",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Proveyó, Juez del juzgado de Letras y Garantía de Laja, quien suscribe con firma electrónica avanzada.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "En Laja, con esta fecha, notifique por el estado diario la resolución que antecede.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             }
           ]
         },
         "MULCHEN": {
           "cantidad": 2,
           "cursivas": false,
+          "relaciones_validas": true,
+          "medios": [],
+          "partes": [
+            {
+              "ruta": "_rels/.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "customXml/_rels/item1.xml.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "customXml/item1.xml",
+              "tipo": "application/xml"
+            },
+            {
+              "ruta": "customXml/itemProps1.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.customXmlProperties+xml"
+            },
+            {
+              "ruta": "docProps/app.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.extended-properties+xml"
+            },
+            {
+              "ruta": "docProps/core.xml",
+              "tipo": "application/vnd.openxmlformats-package.core-properties+xml"
+            },
+            {
+              "ruta": "docProps/thumbnail.jpeg",
+              "tipo": "image/jpeg"
+            },
+            {
+              "ruta": "word/_rels/document.xml.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/document.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+            },
+            {
+              "ruta": "word/fontTable.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.fontTable+xml"
+            },
+            {
+              "ruta": "word/numbering.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"
+            },
+            {
+              "ruta": "word/settings.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"
+            },
+            {
+              "ruta": "word/styles.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"
+            },
+            {
+              "ruta": "word/stylesWithEffects.xml",
+              "tipo": "application/vnd.ms-word.stylesWithEffects+xml"
+            },
+            {
+              "ruta": "word/theme/theme1.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.theme+xml"
+            },
+            {
+              "ruta": "word/webSettings.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.webSettings+xml"
+            }
+          ],
           "indice": [
             "Índice",
             "1. X-60-2026 — PC_IE — Pide cuenta ingreso efectivo",
@@ -436,51 +932,99 @@
           "parrafos": [
             {
               "texto": "Mulchén, uno de enero de dos mil noventa y nueve.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Advirtiendo el Tribunal que con fecha doce de octubre de dos mil veintiséis se ordenó el ingreso de Persona Gamma, cédula de identidad N° 15151515-3 a AFT Ficticio por el plazo de 6 meses, no constando en la carpeta digital el ingreso efectivo de la persona aludida a la institución, pídase cuenta al programa para que informe con carácter de urgente, en el plazo de 5 días, bajo apercibimiento del artículo 238 del Código de Procedimiento Civil, si se efectuó el ingreso del niño sujeto de protección y, en la afirmativa, su fecha.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Notifíquese al programa interventor por correo electrónico.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Sirva la presente resolución como suficiente y atento oficio remisor.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "RIT: X-60-2026",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Se proveyó y firmó mediante firma electrónica avanzada, según lo dispuesto en la ley 20.886 y acta 71-2016 de la Excelentísima Corte Suprema.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "En Mulchén, uno de enero de dos mil noventa y nueve, notifiqué por el estado diario la resolución precedente.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Mulchén, uno de enero de dos mil noventa y nueve.",
-              "salto": true
+              "salto": true,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Advirtiendo el Tribunal que se omitió la incorporación de la nomenclatura \"[COMPLETAR NOMENCLATURA]\", aplíquese a la presente resolución para efectos de regularizar el correcto registro en el sistema de tramitación de causas.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "RIT: X-61-2026",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Se proveyó y firmó mediante firma electrónica avanzada, según lo dispuesto en la ley 20.886 y acta 71-2016 de la Excelentísima Corte Suprema.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "En Mulchén, uno de enero de dos mil noventa y nueve, notifiqué por el estado diario la resolución precedente.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             }
           ]
         }
@@ -522,6 +1066,74 @@
         "MULCHEN": {
           "cantidad": 1,
           "cursivas": false,
+          "relaciones_validas": true,
+          "medios": [],
+          "partes": [
+            {
+              "ruta": "_rels/.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "customXml/_rels/item1.xml.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "customXml/item1.xml",
+              "tipo": "application/xml"
+            },
+            {
+              "ruta": "customXml/itemProps1.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.customXmlProperties+xml"
+            },
+            {
+              "ruta": "docProps/app.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.extended-properties+xml"
+            },
+            {
+              "ruta": "docProps/core.xml",
+              "tipo": "application/vnd.openxmlformats-package.core-properties+xml"
+            },
+            {
+              "ruta": "docProps/thumbnail.jpeg",
+              "tipo": "image/jpeg"
+            },
+            {
+              "ruta": "word/_rels/document.xml.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/document.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+            },
+            {
+              "ruta": "word/fontTable.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.fontTable+xml"
+            },
+            {
+              "ruta": "word/numbering.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"
+            },
+            {
+              "ruta": "word/settings.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"
+            },
+            {
+              "ruta": "word/styles.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"
+            },
+            {
+              "ruta": "word/stylesWithEffects.xml",
+              "tipo": "application/vnd.ms-word.stylesWithEffects+xml"
+            },
+            {
+              "ruta": "word/theme/theme1.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.theme+xml"
+            },
+            {
+              "ruta": "word/webSettings.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.webSettings+xml"
+            }
+          ],
           "indice": [
             "Índice",
             "1. X-70-2026 — NOMENCL — Nomenclatura"
@@ -529,23 +1141,43 @@
           "parrafos": [
             {
               "texto": "Mulchén, uno de enero de dos mil noventa y nueve.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Advirtiendo el Tribunal que se omitió la incorporación de la nomenclatura \"Ingreso informe de diagnóstico\", aplíquese a la presente resolución para efectos de regularizar el correcto registro en el sistema de tramitación de causas.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "RIT: X-70-2026",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Se proveyó y firmó mediante firma electrónica avanzada, según lo dispuesto en la ley 20.886 y acta 71-2016 de la Excelentísima Corte Suprema.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "En Mulchén, uno de enero de dos mil noventa y nueve, notifiqué por el estado diario la resolución precedente.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             }
           ]
         }
@@ -598,6 +1230,26 @@
         "LAJA": {
           "cantidad": 2,
           "cursivas": false,
+          "relaciones_validas": true,
+          "medios": [],
+          "partes": [
+            {
+              "ruta": "_rels/.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/_rels/document.xml.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/document.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+            },
+            {
+              "ruta": "word/styles.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"
+            }
+          ],
           "indice": [
             "Índice",
             "1. X-80-2026 — PC_IE — Pide cuenta ingreso efectivo",
@@ -606,31 +1258,59 @@
           "parrafos": [
             {
               "texto": "Matriz propia Laja · uno de enero de dos mil noventa y nueve",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Causa X-80-2026 de Persona Propia, programa AFT Ficticio.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Laja, la fecha de la resolución es la que se indica en el pie de firma.",
-              "salto": true
+              "salto": true,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Advirtiendo el Tribunal que se omitió la incorporación de la nomenclatura \"[COMPLETAR NOMENCLATURA]\", aplíquese a la presente resolución, para efectos de regularizar el correcto registro en el sistema de seguimiento de tramitación de causas.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "RIT: X-81-2026",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Proveyó, Juez del juzgado de Letras y Garantía de Laja, quien suscribe con firma electrónica avanzada.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "En Laja, con esta fecha, notifique por el estado diario la resolución que antecede.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             }
           ]
         }
@@ -670,6 +1350,26 @@
         "MULCHEN": {
           "cantidad": 1,
           "cursivas": false,
+          "relaciones_validas": true,
+          "medios": [],
+          "partes": [
+            {
+              "ruta": "_rels/.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/_rels/document.xml.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/document.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+            },
+            {
+              "ruta": "word/styles.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"
+            }
+          ],
           "indice": [
             "Índice",
             "1. X-90-2026 — PC_IE — Pide cuenta ingreso efectivo"
@@ -677,11 +1377,858 @@
           "parrafos": [
             {
               "texto": "Matriz cursivas Mulchén · uno de enero de dos mil noventa y nueve",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             },
             {
               "texto": "Causa X-90-2026 de Persona Cursiva, programa AFT Ficticio.",
-              "salto": false
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "nombre": "plantilla_propia_con_imagen",
+      "modo": "ESPERA",
+      "encabezados": [
+        "RIT",
+        "TRIBUNAL",
+        "NOMBRE",
+        "RUT",
+        "DERIVACION",
+        "T ESPERA",
+        "FEC. RESOLUCION",
+        "DURACION"
+      ],
+      "filas": [
+        [
+          "X-91-2026",
+          "Jgdo. L. y G. de Laja",
+          "Persona Imagen Uno",
+          "21212121-1",
+          "AFT Ficticio",
+          90,
+          "05/10/2026",
+          "6 meses"
+        ]
+      ],
+      "res": [],
+      "editadas": [],
+      "plantillas_propias": {
+        "LAJA/PC_IE.docx": "UEsDBBQAAAAAAAAAdF2W8tyoXgIAAF4CAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48VHlwZXMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvY29udGVudC10eXBlcyI+PERlZmF1bHQgRXh0ZW5zaW9uPSJyZWxzIiBDb250ZW50VHlwZT0iYXBwbGljYXRpb24vdm5kLm9wZW54bWxmb3JtYXRzLXBhY2thZ2UucmVsYXRpb25zaGlwcyt4bWwiLz48RGVmYXVsdCBFeHRlbnNpb249InhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3htbCIvPjxEZWZhdWx0IEV4dGVuc2lvbj0icG5nIiBDb250ZW50VHlwZT0iaW1hZ2UvcG5nIi8+PE92ZXJyaWRlIFBhcnROYW1lPSIvd29yZC9kb2N1bWVudC54bWwiIENvbnRlbnRUeXBlPSJhcHBsaWNhdGlvbi92bmQub3BlbnhtbGZvcm1hdHMtb2ZmaWNlZG9jdW1lbnQud29yZHByb2Nlc3NpbmdtbC5kb2N1bWVudC5tYWluK3htbCIvPjxPdmVycmlkZSBQYXJ0TmFtZT0iL3dvcmQvc3R5bGVzLnhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3ZuZC5vcGVueG1sZm9ybWF0cy1vZmZpY2Vkb2N1bWVudC53b3JkcHJvY2Vzc2luZ21sLnN0eWxlcyt4bWwiLz48L1R5cGVzPlBLAwQUAAAAAAAAAHRdm/036ikBAAApAQAACwAAAF9yZWxzLy5yZWxzPD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/PjxSZWxhdGlvbnNoaXBzIHhtbG5zPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvcGFja2FnZS8yMDA2L3JlbGF0aW9uc2hpcHMiPjxSZWxhdGlvbnNoaXAgSWQ9InJJZDEiIFR5cGU9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9vZmZpY2VEb2N1bWVudC8yMDA2L3JlbGF0aW9uc2hpcHMvb2ZmaWNlRG9jdW1lbnQiIFRhcmdldD0id29yZC9kb2N1bWVudC54bWwiLz48L1JlbGF0aW9uc2hpcHM+UEsDBBQAAAAAAAAAdF1eVRWElgUAAJYFAAARAAAAd29yZC9kb2N1bWVudC54bWw8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PHc6ZG9jdW1lbnQgeG1sbnM6dz0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL3dvcmRwcm9jZXNzaW5nbWwvMjAwNi9tYWluIiB4bWxuczpyPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvb2ZmaWNlRG9jdW1lbnQvMjAwNi9yZWxhdGlvbnNoaXBzIj48dzpib2R5Pjx3OnA+PHc6cFByPjx3OnBTdHlsZSB3OnZhbD0iRXN0aWxvUHJvcGlvIi8+PC93OnBQcj48dzpyPjx3OnJQcj48L3c6clByPjx3OnQgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+TWF0cml6IGltYWdlbiBMYWphIMK3IHt7RkVDSEF9fTwvdzp0PjwvdzpyPjwvdzpwPjx3OnA+PHc6cj48dzpyUHI+PC93OnJQcj48dzp0IHhtbDpzcGFjZT0icHJlc2VydmUiPkNhdXNhIHt7UklUfX0gZGUge3tOT01CUkV9fSwgcHJvZ3JhbWEge3tQUk9HUkFNQX19Ljwvdzp0PjwvdzpyPjwvdzpwPjx3OnA+PHc6cj48dzpkcmF3aW5nPjx3cDppbmxpbmUgeG1sbnM6d3A9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9kcmF3aW5nbWwvMjAwNi93b3JkcHJvY2Vzc2luZ0RyYXdpbmciPjx3cDpleHRlbnQgY3g9Ijk1MjUiIGN5PSI5NTI1Ii8+PHdwOmRvY1ByIGlkPSIxIiBuYW1lPSJMb2dvQ3VlcnBvIi8+PGE6Z3JhcGhpYyB4bWxuczphPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvZHJhd2luZ21sLzIwMDYvbWFpbiI+PGE6Z3JhcGhpY0RhdGEgdXJpPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvZHJhd2luZ21sLzIwMDYvcGljdHVyZSI+PHBpYzpwaWMgeG1sbnM6cGljPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvZHJhd2luZ21sLzIwMDYvcGljdHVyZSI+PHBpYzpudlBpY1ByPjxwaWM6Y052UHIgaWQ9IjEiIG5hbWU9IkxvZ29DdWVycG8iLz48cGljOmNOdlBpY1ByLz48L3BpYzpudlBpY1ByPjxwaWM6YmxpcEZpbGw+PGE6YmxpcCByOmVtYmVkPSJySWQyIi8+PC9waWM6YmxpcEZpbGw+PHBpYzpzcFByPjxhOnhmcm0+PGE6b2ZmIHg9IjAiIHk9IjAiLz48YTpleHQgY3g9Ijk1MjUiIGN5PSI5NTI1Ii8+PC9hOnhmcm0+PGE6cHJzdEdlb20gcHJzdD0icmVjdCI+PGE6YXZMc3QvPjwvYTpwcnN0R2VvbT48L3BpYzpzcFByPjwvcGljOnBpYz48L2E6Z3JhcGhpY0RhdGE+PC9hOmdyYXBoaWM+PC93cDppbmxpbmU+PC93OmRyYXdpbmc+PC93OnI+PC93OnA+PHc6c2VjdFByPjx3OnBnU3ogdzp3PSIxMjI0MCIgdzpoPSIxNTg0MCIvPjx3OnBnTWFyIHc6dG9wPSIxNDQwIiB3OnJpZ2h0PSIxNDQwIiB3OmJvdHRvbT0iMTQ0MCIgdzpsZWZ0PSIxNDQwIiB3OmhlYWRlcj0iNzIwIiB3OmZvb3Rlcj0iNzIwIiB3Omd1dHRlcj0iMCIvPjwvdzpzZWN0UHI+PC93OmJvZHk+PC93OmRvY3VtZW50PlBLAwQUAAAAAAAAAHRdmd0iQp4BAACeAQAAHAAAAHdvcmQvX3JlbHMvZG9jdW1lbnQueG1sLnJlbHM8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PFJlbGF0aW9uc2hpcHMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvcmVsYXRpb25zaGlwcyI+PFJlbGF0aW9uc2hpcCBJZD0icklkMSIgVHlwZT0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL29mZmljZURvY3VtZW50LzIwMDYvcmVsYXRpb25zaGlwcy9zdHlsZXMiIFRhcmdldD0ic3R5bGVzLnhtbCIvPjxSZWxhdGlvbnNoaXAgSWQ9InJJZDIiIFR5cGU9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9vZmZpY2VEb2N1bWVudC8yMDA2L3JlbGF0aW9uc2hpcHMvaW1hZ2UiIFRhcmdldD0ibWVkaWEvaW1hZ2UxLnBuZyIvPjwvUmVsYXRpb25zaGlwcz5QSwMEFAAAAAAAAAB0XRtTjkteAQAAXgEAAA8AAAB3b3JkL3N0eWxlcy54bWw8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PHc6c3R5bGVzIHhtbG5zOnc9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy93b3JkcHJvY2Vzc2luZ21sLzIwMDYvbWFpbiI+PHc6c3R5bGUgdzp0eXBlPSJwYXJhZ3JhcGgiIHc6ZGVmYXVsdD0iMSIgdzpzdHlsZUlkPSJOb3JtYWwiPjx3Om5hbWUgdzp2YWw9Ik5vcm1hbCIvPjwvdzpzdHlsZT48dzpzdHlsZSB3OnR5cGU9InBhcmFncmFwaCIgdzpzdHlsZUlkPSJFc3RpbG9Qcm9waW8iPjx3Om5hbWUgdzp2YWw9IkVzdGlsb1Byb3BpbyIvPjx3OnJQcj48L3c6clByPjwvdzpzdHlsZT48L3c6c3R5bGVzPlBLAwQUAAAAAAAAAHRdTDeWJUkAAABJAAAAFQAAAHdvcmQvbWVkaWEvaW1hZ2UxLnBuZ4lQTkcNChoKAAAADUlIRFIAAAACAAAAAggCAAAA/dSacwAAABBJREFUeNpj4HFpAiIGCAUAFS4DSbeAlc0AAAAASUVORK5CYIJQSwECFAMUAAAAAAAAAHRdlvLcqF4CAABeAgAAEwAAAAAAAAAAAAAApAEAAAAAW0NvbnRlbnRfVHlwZXNdLnhtbFBLAQIUAxQAAAAAAAAAdF2b/TfqKQEAACkBAAALAAAAAAAAAAAAAACkAY8CAABfcmVscy8ucmVsc1BLAQIUAxQAAAAAAAAAdF1eVRWElgUAAJYFAAARAAAAAAAAAAAAAACkAeEDAAB3b3JkL2RvY3VtZW50LnhtbFBLAQIUAxQAAAAAAAAAdF2Z3SJCngEAAJ4BAAAcAAAAAAAAAAAAAACkAaYJAAB3b3JkL19yZWxzL2RvY3VtZW50LnhtbC5yZWxzUEsBAhQDFAAAAAAAAAB0XRtTjkteAQAAXgEAAA8AAAAAAAAAAAAAAKQBfgsAAHdvcmQvc3R5bGVzLnhtbFBLAQIUAxQAAAAAAAAAdF1MN5YlSQAAAEkAAAAVAAAAAAAAAAAAAACkAQkNAAB3b3JkL21lZGlhL2ltYWdlMS5wbmdQSwUGAAAAAAYABgCDAQAAhQ0AAAAA"
+      },
+      "por_tribunal": {
+        "LAJA": {
+          "cantidad": 1,
+          "cursivas": false,
+          "relaciones_validas": true,
+          "medios": [
+            {
+              "ruta": "word/media/image1.png",
+              "sha256": "799c41148823fcc25f924f428b4c78974b086c30f72c40f67e26e58b8cc32bed"
+            }
+          ],
+          "partes": [
+            {
+              "ruta": "_rels/.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/_rels/document.xml.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/document.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+            },
+            {
+              "ruta": "word/media/image1.png",
+              "tipo": "image/png"
+            },
+            {
+              "ruta": "word/styles.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"
+            }
+          ],
+          "indice": [
+            "Índice",
+            "1. X-91-2026 — PC_IE — Pide cuenta ingreso efectivo"
+          ],
+          "parrafos": [
+            {
+              "texto": "Matriz imagen Laja · uno de enero de dos mil noventa y nueve",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "Causa X-91-2026 de Persona Imagen Uno, programa AFT Ficticio.",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "nombre": "dos_proyectos_misma_imagen",
+      "modo": "ESPERA",
+      "encabezados": [
+        "RIT",
+        "TRIBUNAL",
+        "NOMBRE",
+        "RUT",
+        "DERIVACION",
+        "T ESPERA",
+        "FEC. RESOLUCION",
+        "DURACION"
+      ],
+      "filas": [
+        [
+          "X-92-2026",
+          "Jgdo. L. y G. de Laja",
+          "Persona Img A",
+          "22222222-4",
+          "AFT Ficticio",
+          90,
+          "06/10/2026",
+          "6 meses"
+        ],
+        [
+          "X-93-2026",
+          "Jgdo. L. y G. de Laja",
+          "Persona Img B",
+          "23232323-5",
+          "AFT Ficticio",
+          10,
+          "07/10/2026",
+          "6 meses"
+        ]
+      ],
+      "res": [
+        "PC_IE",
+        "NOMENCL"
+      ],
+      "editadas": [],
+      "plantillas_propias": {
+        "LAJA/PC_IE.docx": "UEsDBBQAAAAAAAAAdF2W8tyoXgIAAF4CAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48VHlwZXMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvY29udGVudC10eXBlcyI+PERlZmF1bHQgRXh0ZW5zaW9uPSJyZWxzIiBDb250ZW50VHlwZT0iYXBwbGljYXRpb24vdm5kLm9wZW54bWxmb3JtYXRzLXBhY2thZ2UucmVsYXRpb25zaGlwcyt4bWwiLz48RGVmYXVsdCBFeHRlbnNpb249InhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3htbCIvPjxEZWZhdWx0IEV4dGVuc2lvbj0icG5nIiBDb250ZW50VHlwZT0iaW1hZ2UvcG5nIi8+PE92ZXJyaWRlIFBhcnROYW1lPSIvd29yZC9kb2N1bWVudC54bWwiIENvbnRlbnRUeXBlPSJhcHBsaWNhdGlvbi92bmQub3BlbnhtbGZvcm1hdHMtb2ZmaWNlZG9jdW1lbnQud29yZHByb2Nlc3NpbmdtbC5kb2N1bWVudC5tYWluK3htbCIvPjxPdmVycmlkZSBQYXJ0TmFtZT0iL3dvcmQvc3R5bGVzLnhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3ZuZC5vcGVueG1sZm9ybWF0cy1vZmZpY2Vkb2N1bWVudC53b3JkcHJvY2Vzc2luZ21sLnN0eWxlcyt4bWwiLz48L1R5cGVzPlBLAwQUAAAAAAAAAHRdm/036ikBAAApAQAACwAAAF9yZWxzLy5yZWxzPD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/PjxSZWxhdGlvbnNoaXBzIHhtbG5zPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvcGFja2FnZS8yMDA2L3JlbGF0aW9uc2hpcHMiPjxSZWxhdGlvbnNoaXAgSWQ9InJJZDEiIFR5cGU9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9vZmZpY2VEb2N1bWVudC8yMDA2L3JlbGF0aW9uc2hpcHMvb2ZmaWNlRG9jdW1lbnQiIFRhcmdldD0id29yZC9kb2N1bWVudC54bWwiLz48L1JlbGF0aW9uc2hpcHM+UEsDBBQAAAAAAAAAdF1eVRWElgUAAJYFAAARAAAAd29yZC9kb2N1bWVudC54bWw8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PHc6ZG9jdW1lbnQgeG1sbnM6dz0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL3dvcmRwcm9jZXNzaW5nbWwvMjAwNi9tYWluIiB4bWxuczpyPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvb2ZmaWNlRG9jdW1lbnQvMjAwNi9yZWxhdGlvbnNoaXBzIj48dzpib2R5Pjx3OnA+PHc6cFByPjx3OnBTdHlsZSB3OnZhbD0iRXN0aWxvUHJvcGlvIi8+PC93OnBQcj48dzpyPjx3OnJQcj48L3c6clByPjx3OnQgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+TWF0cml6IGltYWdlbiBMYWphIMK3IHt7RkVDSEF9fTwvdzp0PjwvdzpyPjwvdzpwPjx3OnA+PHc6cj48dzpyUHI+PC93OnJQcj48dzp0IHhtbDpzcGFjZT0icHJlc2VydmUiPkNhdXNhIHt7UklUfX0gZGUge3tOT01CUkV9fSwgcHJvZ3JhbWEge3tQUk9HUkFNQX19Ljwvdzp0PjwvdzpyPjwvdzpwPjx3OnA+PHc6cj48dzpkcmF3aW5nPjx3cDppbmxpbmUgeG1sbnM6d3A9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9kcmF3aW5nbWwvMjAwNi93b3JkcHJvY2Vzc2luZ0RyYXdpbmciPjx3cDpleHRlbnQgY3g9Ijk1MjUiIGN5PSI5NTI1Ii8+PHdwOmRvY1ByIGlkPSIxIiBuYW1lPSJMb2dvQ3VlcnBvIi8+PGE6Z3JhcGhpYyB4bWxuczphPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvZHJhd2luZ21sLzIwMDYvbWFpbiI+PGE6Z3JhcGhpY0RhdGEgdXJpPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvZHJhd2luZ21sLzIwMDYvcGljdHVyZSI+PHBpYzpwaWMgeG1sbnM6cGljPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvZHJhd2luZ21sLzIwMDYvcGljdHVyZSI+PHBpYzpudlBpY1ByPjxwaWM6Y052UHIgaWQ9IjEiIG5hbWU9IkxvZ29DdWVycG8iLz48cGljOmNOdlBpY1ByLz48L3BpYzpudlBpY1ByPjxwaWM6YmxpcEZpbGw+PGE6YmxpcCByOmVtYmVkPSJySWQyIi8+PC9waWM6YmxpcEZpbGw+PHBpYzpzcFByPjxhOnhmcm0+PGE6b2ZmIHg9IjAiIHk9IjAiLz48YTpleHQgY3g9Ijk1MjUiIGN5PSI5NTI1Ii8+PC9hOnhmcm0+PGE6cHJzdEdlb20gcHJzdD0icmVjdCI+PGE6YXZMc3QvPjwvYTpwcnN0R2VvbT48L3BpYzpzcFByPjwvcGljOnBpYz48L2E6Z3JhcGhpY0RhdGE+PC9hOmdyYXBoaWM+PC93cDppbmxpbmU+PC93OmRyYXdpbmc+PC93OnI+PC93OnA+PHc6c2VjdFByPjx3OnBnU3ogdzp3PSIxMjI0MCIgdzpoPSIxNTg0MCIvPjx3OnBnTWFyIHc6dG9wPSIxNDQwIiB3OnJpZ2h0PSIxNDQwIiB3OmJvdHRvbT0iMTQ0MCIgdzpsZWZ0PSIxNDQwIiB3OmhlYWRlcj0iNzIwIiB3OmZvb3Rlcj0iNzIwIiB3Omd1dHRlcj0iMCIvPjwvdzpzZWN0UHI+PC93OmJvZHk+PC93OmRvY3VtZW50PlBLAwQUAAAAAAAAAHRdmd0iQp4BAACeAQAAHAAAAHdvcmQvX3JlbHMvZG9jdW1lbnQueG1sLnJlbHM8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PFJlbGF0aW9uc2hpcHMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvcmVsYXRpb25zaGlwcyI+PFJlbGF0aW9uc2hpcCBJZD0icklkMSIgVHlwZT0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL29mZmljZURvY3VtZW50LzIwMDYvcmVsYXRpb25zaGlwcy9zdHlsZXMiIFRhcmdldD0ic3R5bGVzLnhtbCIvPjxSZWxhdGlvbnNoaXAgSWQ9InJJZDIiIFR5cGU9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9vZmZpY2VEb2N1bWVudC8yMDA2L3JlbGF0aW9uc2hpcHMvaW1hZ2UiIFRhcmdldD0ibWVkaWEvaW1hZ2UxLnBuZyIvPjwvUmVsYXRpb25zaGlwcz5QSwMEFAAAAAAAAAB0XRtTjkteAQAAXgEAAA8AAAB3b3JkL3N0eWxlcy54bWw8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PHc6c3R5bGVzIHhtbG5zOnc9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy93b3JkcHJvY2Vzc2luZ21sLzIwMDYvbWFpbiI+PHc6c3R5bGUgdzp0eXBlPSJwYXJhZ3JhcGgiIHc6ZGVmYXVsdD0iMSIgdzpzdHlsZUlkPSJOb3JtYWwiPjx3Om5hbWUgdzp2YWw9Ik5vcm1hbCIvPjwvdzpzdHlsZT48dzpzdHlsZSB3OnR5cGU9InBhcmFncmFwaCIgdzpzdHlsZUlkPSJFc3RpbG9Qcm9waW8iPjx3Om5hbWUgdzp2YWw9IkVzdGlsb1Byb3BpbyIvPjx3OnJQcj48L3c6clByPjwvdzpzdHlsZT48L3c6c3R5bGVzPlBLAwQUAAAAAAAAAHRdTDeWJUkAAABJAAAAFQAAAHdvcmQvbWVkaWEvaW1hZ2UxLnBuZ4lQTkcNChoKAAAADUlIRFIAAAACAAAAAggCAAAA/dSacwAAABBJREFUeNpj4HFpAiIGCAUAFS4DSbeAlc0AAAAASUVORK5CYIJQSwECFAMUAAAAAAAAAHRdlvLcqF4CAABeAgAAEwAAAAAAAAAAAAAApAEAAAAAW0NvbnRlbnRfVHlwZXNdLnhtbFBLAQIUAxQAAAAAAAAAdF2b/TfqKQEAACkBAAALAAAAAAAAAAAAAACkAY8CAABfcmVscy8ucmVsc1BLAQIUAxQAAAAAAAAAdF1eVRWElgUAAJYFAAARAAAAAAAAAAAAAACkAeEDAAB3b3JkL2RvY3VtZW50LnhtbFBLAQIUAxQAAAAAAAAAdF2Z3SJCngEAAJ4BAAAcAAAAAAAAAAAAAACkAaYJAAB3b3JkL19yZWxzL2RvY3VtZW50LnhtbC5yZWxzUEsBAhQDFAAAAAAAAAB0XRtTjkteAQAAXgEAAA8AAAAAAAAAAAAAAKQBfgsAAHdvcmQvc3R5bGVzLnhtbFBLAQIUAxQAAAAAAAAAdF1MN5YlSQAAAEkAAAAVAAAAAAAAAAAAAACkAQkNAAB3b3JkL21lZGlhL2ltYWdlMS5wbmdQSwUGAAAAAAYABgCDAQAAhQ0AAAAA",
+        "LAJA/NOMENCL.docx": "UEsDBBQAAAAAAAAAdF2W8tyoXgIAAF4CAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48VHlwZXMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvY29udGVudC10eXBlcyI+PERlZmF1bHQgRXh0ZW5zaW9uPSJyZWxzIiBDb250ZW50VHlwZT0iYXBwbGljYXRpb24vdm5kLm9wZW54bWxmb3JtYXRzLXBhY2thZ2UucmVsYXRpb25zaGlwcyt4bWwiLz48RGVmYXVsdCBFeHRlbnNpb249InhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3htbCIvPjxEZWZhdWx0IEV4dGVuc2lvbj0icG5nIiBDb250ZW50VHlwZT0iaW1hZ2UvcG5nIi8+PE92ZXJyaWRlIFBhcnROYW1lPSIvd29yZC9kb2N1bWVudC54bWwiIENvbnRlbnRUeXBlPSJhcHBsaWNhdGlvbi92bmQub3BlbnhtbGZvcm1hdHMtb2ZmaWNlZG9jdW1lbnQud29yZHByb2Nlc3NpbmdtbC5kb2N1bWVudC5tYWluK3htbCIvPjxPdmVycmlkZSBQYXJ0TmFtZT0iL3dvcmQvc3R5bGVzLnhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3ZuZC5vcGVueG1sZm9ybWF0cy1vZmZpY2Vkb2N1bWVudC53b3JkcHJvY2Vzc2luZ21sLnN0eWxlcyt4bWwiLz48L1R5cGVzPlBLAwQUAAAAAAAAAHRdm/036ikBAAApAQAACwAAAF9yZWxzLy5yZWxzPD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/PjxSZWxhdGlvbnNoaXBzIHhtbG5zPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvcGFja2FnZS8yMDA2L3JlbGF0aW9uc2hpcHMiPjxSZWxhdGlvbnNoaXAgSWQ9InJJZDEiIFR5cGU9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9vZmZpY2VEb2N1bWVudC8yMDA2L3JlbGF0aW9uc2hpcHMvb2ZmaWNlRG9jdW1lbnQiIFRhcmdldD0id29yZC9kb2N1bWVudC54bWwiLz48L1JlbGF0aW9uc2hpcHM+UEsDBBQAAAAAAAAAdF029hnbmQUAAJkFAAARAAAAd29yZC9kb2N1bWVudC54bWw8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PHc6ZG9jdW1lbnQgeG1sbnM6dz0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL3dvcmRwcm9jZXNzaW5nbWwvMjAwNi9tYWluIiB4bWxuczpyPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvb2ZmaWNlRG9jdW1lbnQvMjAwNi9yZWxhdGlvbnNoaXBzIj48dzpib2R5Pjx3OnA+PHc6cFByPjx3OnBTdHlsZSB3OnZhbD0iRXN0aWxvUHJvcGlvIi8+PC93OnBQcj48dzpyPjx3OnJQcj48L3c6clByPjx3OnQgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+TWF0cml6IGltYWdlbiBMYWphIElJIMK3IHt7RkVDSEF9fTwvdzp0PjwvdzpyPjwvdzpwPjx3OnA+PHc6cj48dzpyUHI+PC93OnJQcj48dzp0IHhtbDpzcGFjZT0icHJlc2VydmUiPkNhdXNhIHt7UklUfX0gZGUge3tOT01CUkV9fSwgcHJvZ3JhbWEge3tQUk9HUkFNQX19Ljwvdzp0PjwvdzpyPjwvdzpwPjx3OnA+PHc6cj48dzpkcmF3aW5nPjx3cDppbmxpbmUgeG1sbnM6d3A9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9kcmF3aW5nbWwvMjAwNi93b3JkcHJvY2Vzc2luZ0RyYXdpbmciPjx3cDpleHRlbnQgY3g9Ijk1MjUiIGN5PSI5NTI1Ii8+PHdwOmRvY1ByIGlkPSIxIiBuYW1lPSJMb2dvQ3VlcnBvIi8+PGE6Z3JhcGhpYyB4bWxuczphPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvZHJhd2luZ21sLzIwMDYvbWFpbiI+PGE6Z3JhcGhpY0RhdGEgdXJpPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvZHJhd2luZ21sLzIwMDYvcGljdHVyZSI+PHBpYzpwaWMgeG1sbnM6cGljPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvZHJhd2luZ21sLzIwMDYvcGljdHVyZSI+PHBpYzpudlBpY1ByPjxwaWM6Y052UHIgaWQ9IjEiIG5hbWU9IkxvZ29DdWVycG8iLz48cGljOmNOdlBpY1ByLz48L3BpYzpudlBpY1ByPjxwaWM6YmxpcEZpbGw+PGE6YmxpcCByOmVtYmVkPSJySWQyIi8+PC9waWM6YmxpcEZpbGw+PHBpYzpzcFByPjxhOnhmcm0+PGE6b2ZmIHg9IjAiIHk9IjAiLz48YTpleHQgY3g9Ijk1MjUiIGN5PSI5NTI1Ii8+PC9hOnhmcm0+PGE6cHJzdEdlb20gcHJzdD0icmVjdCI+PGE6YXZMc3QvPjwvYTpwcnN0R2VvbT48L3BpYzpzcFByPjwvcGljOnBpYz48L2E6Z3JhcGhpY0RhdGE+PC9hOmdyYXBoaWM+PC93cDppbmxpbmU+PC93OmRyYXdpbmc+PC93OnI+PC93OnA+PHc6c2VjdFByPjx3OnBnU3ogdzp3PSIxMjI0MCIgdzpoPSIxNTg0MCIvPjx3OnBnTWFyIHc6dG9wPSIxNDQwIiB3OnJpZ2h0PSIxNDQwIiB3OmJvdHRvbT0iMTQ0MCIgdzpsZWZ0PSIxNDQwIiB3OmhlYWRlcj0iNzIwIiB3OmZvb3Rlcj0iNzIwIiB3Omd1dHRlcj0iMCIvPjwvdzpzZWN0UHI+PC93OmJvZHk+PC93OmRvY3VtZW50PlBLAwQUAAAAAAAAAHRdmd0iQp4BAACeAQAAHAAAAHdvcmQvX3JlbHMvZG9jdW1lbnQueG1sLnJlbHM8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PFJlbGF0aW9uc2hpcHMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvcmVsYXRpb25zaGlwcyI+PFJlbGF0aW9uc2hpcCBJZD0icklkMSIgVHlwZT0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL29mZmljZURvY3VtZW50LzIwMDYvcmVsYXRpb25zaGlwcy9zdHlsZXMiIFRhcmdldD0ic3R5bGVzLnhtbCIvPjxSZWxhdGlvbnNoaXAgSWQ9InJJZDIiIFR5cGU9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9vZmZpY2VEb2N1bWVudC8yMDA2L3JlbGF0aW9uc2hpcHMvaW1hZ2UiIFRhcmdldD0ibWVkaWEvaW1hZ2UxLnBuZyIvPjwvUmVsYXRpb25zaGlwcz5QSwMEFAAAAAAAAAB0XRtTjkteAQAAXgEAAA8AAAB3b3JkL3N0eWxlcy54bWw8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PHc6c3R5bGVzIHhtbG5zOnc9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy93b3JkcHJvY2Vzc2luZ21sLzIwMDYvbWFpbiI+PHc6c3R5bGUgdzp0eXBlPSJwYXJhZ3JhcGgiIHc6ZGVmYXVsdD0iMSIgdzpzdHlsZUlkPSJOb3JtYWwiPjx3Om5hbWUgdzp2YWw9Ik5vcm1hbCIvPjwvdzpzdHlsZT48dzpzdHlsZSB3OnR5cGU9InBhcmFncmFwaCIgdzpzdHlsZUlkPSJFc3RpbG9Qcm9waW8iPjx3Om5hbWUgdzp2YWw9IkVzdGlsb1Byb3BpbyIvPjx3OnJQcj48L3c6clByPjwvdzpzdHlsZT48L3c6c3R5bGVzPlBLAwQUAAAAAAAAAHRdTDeWJUkAAABJAAAAFQAAAHdvcmQvbWVkaWEvaW1hZ2UxLnBuZ4lQTkcNChoKAAAADUlIRFIAAAACAAAAAggCAAAA/dSacwAAABBJREFUeNpj4HFpAiIGCAUAFS4DSbeAlc0AAAAASUVORK5CYIJQSwECFAMUAAAAAAAAAHRdlvLcqF4CAABeAgAAEwAAAAAAAAAAAAAApAEAAAAAW0NvbnRlbnRfVHlwZXNdLnhtbFBLAQIUAxQAAAAAAAAAdF2b/TfqKQEAACkBAAALAAAAAAAAAAAAAACkAY8CAABfcmVscy8ucmVsc1BLAQIUAxQAAAAAAAAAdF029hnbmQUAAJkFAAARAAAAAAAAAAAAAACkAeEDAAB3b3JkL2RvY3VtZW50LnhtbFBLAQIUAxQAAAAAAAAAdF2Z3SJCngEAAJ4BAAAcAAAAAAAAAAAAAACkAakJAAB3b3JkL19yZWxzL2RvY3VtZW50LnhtbC5yZWxzUEsBAhQDFAAAAAAAAAB0XRtTjkteAQAAXgEAAA8AAAAAAAAAAAAAAKQBgQsAAHdvcmQvc3R5bGVzLnhtbFBLAQIUAxQAAAAAAAAAdF1MN5YlSQAAAEkAAAAVAAAAAAAAAAAAAACkAQwNAAB3b3JkL21lZGlhL2ltYWdlMS5wbmdQSwUGAAAAAAYABgCDAQAAiA0AAAAA"
+      },
+      "por_tribunal": {
+        "LAJA": {
+          "cantidad": 2,
+          "cursivas": false,
+          "relaciones_validas": true,
+          "medios": [
+            {
+              "ruta": "word/media/image1.png",
+              "sha256": "799c41148823fcc25f924f428b4c78974b086c30f72c40f67e26e58b8cc32bed"
+            }
+          ],
+          "partes": [
+            {
+              "ruta": "_rels/.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/_rels/document.xml.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/document.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+            },
+            {
+              "ruta": "word/media/image1.png",
+              "tipo": "image/png"
+            },
+            {
+              "ruta": "word/styles.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"
+            }
+          ],
+          "indice": [
+            "Índice",
+            "1. X-92-2026 — PC_IE — Pide cuenta ingreso efectivo",
+            "2. X-93-2026 — NOMENCL — Nomenclatura"
+          ],
+          "parrafos": [
+            {
+              "texto": "Matriz imagen Laja · uno de enero de dos mil noventa y nueve",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "Causa X-92-2026 de Persona Img A, programa AFT Ficticio.",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "Matriz imagen Laja II · uno de enero de dos mil noventa y nueve",
+              "salto": true,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "Causa X-93-2026 de Persona Img B, programa AFT Ficticio.",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "nombre": "institucional_mas_propia_con_imagen",
+      "modo": "ESPERA",
+      "encabezados": [
+        "RIT",
+        "TRIBUNAL",
+        "NOMBRE",
+        "RUT",
+        "DERIVACION",
+        "T ESPERA",
+        "FEC. RESOLUCION",
+        "DURACION"
+      ],
+      "filas": [
+        [
+          "X-94-2026",
+          "Jgdo. L. y G. de Laja",
+          "Persona Base",
+          "24242424-6",
+          "AFT Ficticio",
+          10,
+          "08/10/2026",
+          "6 meses"
+        ],
+        [
+          "X-95-2026",
+          "Jgdo. L. y G. de Laja",
+          "Persona Img Extra",
+          "25252525-7",
+          "AFT Ficticio",
+          90,
+          "09/10/2026",
+          "6 meses"
+        ]
+      ],
+      "res": [
+        "NOMENCL",
+        "PC_IE"
+      ],
+      "editadas": [],
+      "plantillas_propias": {
+        "LAJA/PC_IE.docx": "UEsDBBQAAAAAAAAAdF2W8tyoXgIAAF4CAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48VHlwZXMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvY29udGVudC10eXBlcyI+PERlZmF1bHQgRXh0ZW5zaW9uPSJyZWxzIiBDb250ZW50VHlwZT0iYXBwbGljYXRpb24vdm5kLm9wZW54bWxmb3JtYXRzLXBhY2thZ2UucmVsYXRpb25zaGlwcyt4bWwiLz48RGVmYXVsdCBFeHRlbnNpb249InhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3htbCIvPjxEZWZhdWx0IEV4dGVuc2lvbj0icG5nIiBDb250ZW50VHlwZT0iaW1hZ2UvcG5nIi8+PE92ZXJyaWRlIFBhcnROYW1lPSIvd29yZC9kb2N1bWVudC54bWwiIENvbnRlbnRUeXBlPSJhcHBsaWNhdGlvbi92bmQub3BlbnhtbGZvcm1hdHMtb2ZmaWNlZG9jdW1lbnQud29yZHByb2Nlc3NpbmdtbC5kb2N1bWVudC5tYWluK3htbCIvPjxPdmVycmlkZSBQYXJ0TmFtZT0iL3dvcmQvc3R5bGVzLnhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3ZuZC5vcGVueG1sZm9ybWF0cy1vZmZpY2Vkb2N1bWVudC53b3JkcHJvY2Vzc2luZ21sLnN0eWxlcyt4bWwiLz48L1R5cGVzPlBLAwQUAAAAAAAAAHRdm/036ikBAAApAQAACwAAAF9yZWxzLy5yZWxzPD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/PjxSZWxhdGlvbnNoaXBzIHhtbG5zPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvcGFja2FnZS8yMDA2L3JlbGF0aW9uc2hpcHMiPjxSZWxhdGlvbnNoaXAgSWQ9InJJZDEiIFR5cGU9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9vZmZpY2VEb2N1bWVudC8yMDA2L3JlbGF0aW9uc2hpcHMvb2ZmaWNlRG9jdW1lbnQiIFRhcmdldD0id29yZC9kb2N1bWVudC54bWwiLz48L1JlbGF0aW9uc2hpcHM+UEsDBBQAAAAAAAAAdF1eVRWElgUAAJYFAAARAAAAd29yZC9kb2N1bWVudC54bWw8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PHc6ZG9jdW1lbnQgeG1sbnM6dz0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL3dvcmRwcm9jZXNzaW5nbWwvMjAwNi9tYWluIiB4bWxuczpyPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvb2ZmaWNlRG9jdW1lbnQvMjAwNi9yZWxhdGlvbnNoaXBzIj48dzpib2R5Pjx3OnA+PHc6cFByPjx3OnBTdHlsZSB3OnZhbD0iRXN0aWxvUHJvcGlvIi8+PC93OnBQcj48dzpyPjx3OnJQcj48L3c6clByPjx3OnQgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+TWF0cml6IGltYWdlbiBMYWphIMK3IHt7RkVDSEF9fTwvdzp0PjwvdzpyPjwvdzpwPjx3OnA+PHc6cj48dzpyUHI+PC93OnJQcj48dzp0IHhtbDpzcGFjZT0icHJlc2VydmUiPkNhdXNhIHt7UklUfX0gZGUge3tOT01CUkV9fSwgcHJvZ3JhbWEge3tQUk9HUkFNQX19Ljwvdzp0PjwvdzpyPjwvdzpwPjx3OnA+PHc6cj48dzpkcmF3aW5nPjx3cDppbmxpbmUgeG1sbnM6d3A9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9kcmF3aW5nbWwvMjAwNi93b3JkcHJvY2Vzc2luZ0RyYXdpbmciPjx3cDpleHRlbnQgY3g9Ijk1MjUiIGN5PSI5NTI1Ii8+PHdwOmRvY1ByIGlkPSIxIiBuYW1lPSJMb2dvQ3VlcnBvIi8+PGE6Z3JhcGhpYyB4bWxuczphPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvZHJhd2luZ21sLzIwMDYvbWFpbiI+PGE6Z3JhcGhpY0RhdGEgdXJpPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvZHJhd2luZ21sLzIwMDYvcGljdHVyZSI+PHBpYzpwaWMgeG1sbnM6cGljPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvZHJhd2luZ21sLzIwMDYvcGljdHVyZSI+PHBpYzpudlBpY1ByPjxwaWM6Y052UHIgaWQ9IjEiIG5hbWU9IkxvZ29DdWVycG8iLz48cGljOmNOdlBpY1ByLz48L3BpYzpudlBpY1ByPjxwaWM6YmxpcEZpbGw+PGE6YmxpcCByOmVtYmVkPSJySWQyIi8+PC9waWM6YmxpcEZpbGw+PHBpYzpzcFByPjxhOnhmcm0+PGE6b2ZmIHg9IjAiIHk9IjAiLz48YTpleHQgY3g9Ijk1MjUiIGN5PSI5NTI1Ii8+PC9hOnhmcm0+PGE6cHJzdEdlb20gcHJzdD0icmVjdCI+PGE6YXZMc3QvPjwvYTpwcnN0R2VvbT48L3BpYzpzcFByPjwvcGljOnBpYz48L2E6Z3JhcGhpY0RhdGE+PC9hOmdyYXBoaWM+PC93cDppbmxpbmU+PC93OmRyYXdpbmc+PC93OnI+PC93OnA+PHc6c2VjdFByPjx3OnBnU3ogdzp3PSIxMjI0MCIgdzpoPSIxNTg0MCIvPjx3OnBnTWFyIHc6dG9wPSIxNDQwIiB3OnJpZ2h0PSIxNDQwIiB3OmJvdHRvbT0iMTQ0MCIgdzpsZWZ0PSIxNDQwIiB3OmhlYWRlcj0iNzIwIiB3OmZvb3Rlcj0iNzIwIiB3Omd1dHRlcj0iMCIvPjwvdzpzZWN0UHI+PC93OmJvZHk+PC93OmRvY3VtZW50PlBLAwQUAAAAAAAAAHRdmd0iQp4BAACeAQAAHAAAAHdvcmQvX3JlbHMvZG9jdW1lbnQueG1sLnJlbHM8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PFJlbGF0aW9uc2hpcHMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvcmVsYXRpb25zaGlwcyI+PFJlbGF0aW9uc2hpcCBJZD0icklkMSIgVHlwZT0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL29mZmljZURvY3VtZW50LzIwMDYvcmVsYXRpb25zaGlwcy9zdHlsZXMiIFRhcmdldD0ic3R5bGVzLnhtbCIvPjxSZWxhdGlvbnNoaXAgSWQ9InJJZDIiIFR5cGU9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9vZmZpY2VEb2N1bWVudC8yMDA2L3JlbGF0aW9uc2hpcHMvaW1hZ2UiIFRhcmdldD0ibWVkaWEvaW1hZ2UxLnBuZyIvPjwvUmVsYXRpb25zaGlwcz5QSwMEFAAAAAAAAAB0XRtTjkteAQAAXgEAAA8AAAB3b3JkL3N0eWxlcy54bWw8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PHc6c3R5bGVzIHhtbG5zOnc9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy93b3JkcHJvY2Vzc2luZ21sLzIwMDYvbWFpbiI+PHc6c3R5bGUgdzp0eXBlPSJwYXJhZ3JhcGgiIHc6ZGVmYXVsdD0iMSIgdzpzdHlsZUlkPSJOb3JtYWwiPjx3Om5hbWUgdzp2YWw9Ik5vcm1hbCIvPjwvdzpzdHlsZT48dzpzdHlsZSB3OnR5cGU9InBhcmFncmFwaCIgdzpzdHlsZUlkPSJFc3RpbG9Qcm9waW8iPjx3Om5hbWUgdzp2YWw9IkVzdGlsb1Byb3BpbyIvPjx3OnJQcj48L3c6clByPjwvdzpzdHlsZT48L3c6c3R5bGVzPlBLAwQUAAAAAAAAAHRdTDeWJUkAAABJAAAAFQAAAHdvcmQvbWVkaWEvaW1hZ2UxLnBuZ4lQTkcNChoKAAAADUlIRFIAAAACAAAAAggCAAAA/dSacwAAABBJREFUeNpj4HFpAiIGCAUAFS4DSbeAlc0AAAAASUVORK5CYIJQSwECFAMUAAAAAAAAAHRdlvLcqF4CAABeAgAAEwAAAAAAAAAAAAAApAEAAAAAW0NvbnRlbnRfVHlwZXNdLnhtbFBLAQIUAxQAAAAAAAAAdF2b/TfqKQEAACkBAAALAAAAAAAAAAAAAACkAY8CAABfcmVscy8ucmVsc1BLAQIUAxQAAAAAAAAAdF1eVRWElgUAAJYFAAARAAAAAAAAAAAAAACkAeEDAAB3b3JkL2RvY3VtZW50LnhtbFBLAQIUAxQAAAAAAAAAdF2Z3SJCngEAAJ4BAAAcAAAAAAAAAAAAAACkAaYJAAB3b3JkL19yZWxzL2RvY3VtZW50LnhtbC5yZWxzUEsBAhQDFAAAAAAAAAB0XRtTjkteAQAAXgEAAA8AAAAAAAAAAAAAAKQBfgsAAHdvcmQvc3R5bGVzLnhtbFBLAQIUAxQAAAAAAAAAdF1MN5YlSQAAAEkAAAAVAAAAAAAAAAAAAACkAQkNAAB3b3JkL21lZGlhL2ltYWdlMS5wbmdQSwUGAAAAAAYABgCDAQAAhQ0AAAAA"
+      },
+      "por_tribunal": {
+        "LAJA": {
+          "cantidad": 2,
+          "cursivas": false,
+          "relaciones_validas": true,
+          "medios": [
+            {
+              "ruta": "word/media/image1.png",
+              "sha256": "799c41148823fcc25f924f428b4c78974b086c30f72c40f67e26e58b8cc32bed"
+            }
+          ],
+          "partes": [
+            {
+              "ruta": "_rels/.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "customXml/_rels/item1.xml.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "customXml/item1.xml",
+              "tipo": "application/xml"
+            },
+            {
+              "ruta": "customXml/itemProps1.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.customXmlProperties+xml"
+            },
+            {
+              "ruta": "docProps/app.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.extended-properties+xml"
+            },
+            {
+              "ruta": "docProps/core.xml",
+              "tipo": "application/vnd.openxmlformats-package.core-properties+xml"
+            },
+            {
+              "ruta": "docProps/thumbnail.jpeg",
+              "tipo": "image/jpeg"
+            },
+            {
+              "ruta": "word/_rels/document.xml.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/document.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+            },
+            {
+              "ruta": "word/fontTable.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.fontTable+xml"
+            },
+            {
+              "ruta": "word/media/image1.png",
+              "tipo": "image/png"
+            },
+            {
+              "ruta": "word/numbering.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"
+            },
+            {
+              "ruta": "word/settings.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"
+            },
+            {
+              "ruta": "word/styles.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"
+            },
+            {
+              "ruta": "word/stylesWithEffects.xml",
+              "tipo": "application/vnd.ms-word.stylesWithEffects+xml"
+            },
+            {
+              "ruta": "word/theme/theme1.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.theme+xml"
+            },
+            {
+              "ruta": "word/webSettings.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.webSettings+xml"
+            }
+          ],
+          "indice": [
+            "Índice",
+            "1. X-94-2026 — NOMENCL — Nomenclatura",
+            "2. X-95-2026 — PC_IE — Pide cuenta ingreso efectivo"
+          ],
+          "parrafos": [
+            {
+              "texto": "Laja, la fecha de la resolución es la que se indica en el pie de firma.",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "Advirtiendo el Tribunal que se omitió la incorporación de la nomenclatura \"[COMPLETAR NOMENCLATURA]\", aplíquese a la presente resolución, para efectos de regularizar el correcto registro en el sistema de seguimiento de tramitación de causas.",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "RIT: X-94-2026",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "Proveyó, Juez del juzgado de Letras y Garantía de Laja, quien suscribe con firma electrónica avanzada.",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "En Laja, con esta fecha, notifique por el estado diario la resolución que antecede.",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "Matriz imagen Laja · uno de enero de dos mil noventa y nueve",
+              "salto": true,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "Causa X-95-2026 de Persona Img Extra, programa AFT Ficticio.",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "nombre": "plantilla_lista_con_vinetas",
+      "modo": "ESPERA",
+      "encabezados": [
+        "RIT",
+        "TRIBUNAL",
+        "NOMBRE",
+        "RUT",
+        "DERIVACION",
+        "T ESPERA",
+        "FEC. RESOLUCION",
+        "DURACION"
+      ],
+      "filas": [
+        [
+          "X-96-2026",
+          "Jgdo. L. y G. de Laja",
+          "Persona Vineta A",
+          "26262626-8",
+          "AFT Ficticio",
+          90,
+          "10/10/2026",
+          "6 meses"
+        ],
+        [
+          "X-97-2026",
+          "Jgdo. L. y G. de Laja",
+          "Persona Vineta B",
+          "27272727-9",
+          "AFT Ficticio",
+          10,
+          "11/10/2026",
+          "6 meses"
+        ]
+      ],
+      "res": [
+        "PC_IE",
+        "NOMENCL"
+      ],
+      "editadas": [],
+      "plantillas_propias": {
+        "LAJA/PC_IE.docx": "UEsDBBQAAAAAAAAAdF1RacMgsQIAALECAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48VHlwZXMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvY29udGVudC10eXBlcyI+PERlZmF1bHQgRXh0ZW5zaW9uPSJyZWxzIiBDb250ZW50VHlwZT0iYXBwbGljYXRpb24vdm5kLm9wZW54bWxmb3JtYXRzLXBhY2thZ2UucmVsYXRpb25zaGlwcyt4bWwiLz48RGVmYXVsdCBFeHRlbnNpb249InhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3htbCIvPjxPdmVycmlkZSBQYXJ0TmFtZT0iL3dvcmQvbnVtYmVyaW5nLnhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3ZuZC5vcGVueG1sZm9ybWF0cy1vZmZpY2Vkb2N1bWVudC53b3JkcHJvY2Vzc2luZ21sLm51bWJlcmluZyt4bWwiLz48T3ZlcnJpZGUgUGFydE5hbWU9Ii93b3JkL2RvY3VtZW50LnhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3ZuZC5vcGVueG1sZm9ybWF0cy1vZmZpY2Vkb2N1bWVudC53b3JkcHJvY2Vzc2luZ21sLmRvY3VtZW50Lm1haW4reG1sIi8+PE92ZXJyaWRlIFBhcnROYW1lPSIvd29yZC9zdHlsZXMueG1sIiBDb250ZW50VHlwZT0iYXBwbGljYXRpb24vdm5kLm9wZW54bWxmb3JtYXRzLW9mZmljZWRvY3VtZW50LndvcmRwcm9jZXNzaW5nbWwuc3R5bGVzK3htbCIvPjwvVHlwZXM+UEsDBBQAAAAAAAAAdF2b/TfqKQEAACkBAAALAAAAX3JlbHMvLnJlbHM8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PFJlbGF0aW9uc2hpcHMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvcmVsYXRpb25zaGlwcyI+PFJlbGF0aW9uc2hpcCBJZD0icklkMSIgVHlwZT0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL29mZmljZURvY3VtZW50LzIwMDYvcmVsYXRpb25zaGlwcy9vZmZpY2VEb2N1bWVudCIgVGFyZ2V0PSJ3b3JkL2RvY3VtZW50LnhtbCIvPjwvUmVsYXRpb25zaGlwcz5QSwMEFAAAAAAAAAB0XXBNhOYOBAAADgQAABEAAAB3b3JkL2RvY3VtZW50LnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48dzpkb2N1bWVudCB4bWxuczp3PSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvd29yZHByb2Nlc3NpbmdtbC8yMDA2L21haW4iIHhtbG5zOnI9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9vZmZpY2VEb2N1bWVudC8yMDA2L3JlbGF0aW9uc2hpcHMiPjx3OmJvZHk+PHc6cD48dzpwUHI+PHc6cFN0eWxlIHc6dmFsPSJFc3RpbG9Qcm9waW8iLz48L3c6cFByPjx3OnI+PHc6clByPjwvdzpyUHI+PHc6dCB4bWw6c3BhY2U9InByZXNlcnZlIj5NYXRyaXogdmluZXRhcyBBIMK3IHt7RkVDSEF9fTwvdzp0PjwvdzpyPjwvdzpwPjx3OnA+PHc6cj48dzpyUHI+PC93OnJQcj48dzp0IHhtbDpzcGFjZT0icHJlc2VydmUiPkNhdXNhIHt7UklUfX0gZGUge3tOT01CUkV9fSwgcHJvZ3JhbWEge3tQUk9HUkFNQX19Ljwvdzp0PjwvdzpyPjwvdzpwPjx3OnA+PHc6cFByPjx3OnBTdHlsZSB3OnZhbD0iTGlzdGFQcm9waWEiLz48dzpudW1Qcj48dzppbHZsIHc6dmFsPSIwIi8+PHc6bnVtSWQgdzp2YWw9IjEiLz48L3c6bnVtUHI+PC93OnBQcj48dzpyPjx3OnQgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+UHJpbWVyIHB1bnRvIHt7UklUfX08L3c6dD48L3c6cj48L3c6cD48dzpwPjx3OnBQcj48dzpwU3R5bGUgdzp2YWw9Ikxpc3RhUHJvcGlhIi8+PHc6bnVtUHI+PHc6aWx2bCB3OnZhbD0iMCIvPjx3Om51bUlkIHc6dmFsPSIxIi8+PC93Om51bVByPjwvdzpwUHI+PHc6cj48dzp0IHhtbDpzcGFjZT0icHJlc2VydmUiPlNlZ3VuZG8gcHVudG8ge3tQUk9HUkFNQX19PC93OnQ+PC93OnI+PC93OnA+PHc6c2VjdFByPjx3OnBnU3ogdzp3PSIxMjI0MCIgdzpoPSIxNTg0MCIvPjx3OnBnTWFyIHc6dG9wPSIxNDQwIiB3OnJpZ2h0PSIxNDQwIiB3OmJvdHRvbT0iMTQ0MCIgdzpsZWZ0PSIxNDQwIiB3OmhlYWRlcj0iNzIwIiB3OmZvb3Rlcj0iNzIwIiB3Omd1dHRlcj0iMCIvPjwvdzpzZWN0UHI+PC93OmJvZHk+PC93OmRvY3VtZW50PlBLAwQUAAAAAAAAAHRd0su5Ip8BAACfAQAAHAAAAHdvcmQvX3JlbHMvZG9jdW1lbnQueG1sLnJlbHM8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PFJlbGF0aW9uc2hpcHMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvcmVsYXRpb25zaGlwcyI+PFJlbGF0aW9uc2hpcCBJZD0icklkMSIgVHlwZT0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL29mZmljZURvY3VtZW50LzIwMDYvcmVsYXRpb25zaGlwcy9zdHlsZXMiIFRhcmdldD0ic3R5bGVzLnhtbCIvPjxSZWxhdGlvbnNoaXAgSWQ9InJJZDMiIFR5cGU9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9vZmZpY2VEb2N1bWVudC8yMDA2L3JlbGF0aW9uc2hpcHMvbnVtYmVyaW5nIiBUYXJnZXQ9Im51bWJlcmluZy54bWwiLz48L1JlbGF0aW9uc2hpcHM+UEsDBBQAAAAAAAAAdF3P9zeouQEAALkBAAAPAAAAd29yZC9zdHlsZXMueG1sPD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/Pjx3OnN0eWxlcyB4bWxuczp3PSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvd29yZHByb2Nlc3NpbmdtbC8yMDA2L21haW4iPjx3OnN0eWxlIHc6dHlwZT0icGFyYWdyYXBoIiB3OmRlZmF1bHQ9IjEiIHc6c3R5bGVJZD0iTm9ybWFsIj48dzpuYW1lIHc6dmFsPSJOb3JtYWwiLz48L3c6c3R5bGU+PHc6c3R5bGUgdzp0eXBlPSJwYXJhZ3JhcGgiIHc6c3R5bGVJZD0iRXN0aWxvUHJvcGlvIj48dzpuYW1lIHc6dmFsPSJFc3RpbG9Qcm9waW8iLz48dzpyUHI+PC93OnJQcj48L3c6c3R5bGU+PHc6c3R5bGUgdzp0eXBlPSJwYXJhZ3JhcGgiIHc6c3R5bGVJZD0iTGlzdGFQcm9waWEiPjx3Om5hbWUgdzp2YWw9Ikxpc3RhUHJvcGlhIi8+PC93OnN0eWxlPjwvdzpzdHlsZXM+UEsDBBQAAAAAAAAAdF2MrdunqQEAAKkBAAASAAAAd29yZC9udW1iZXJpbmcueG1sPD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/Pjx3Om51bWJlcmluZyB4bWxuczp3PSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvd29yZHByb2Nlc3NpbmdtbC8yMDA2L21haW4iPjx3OmFic3RyYWN0TnVtIHc6YWJzdHJhY3ROdW1JZD0iMCI+PHc6bnNpZCB3OnZhbD0iMTEyMjMzNDQiLz48dzptdWx0aUxldmVsVHlwZSB3OnZhbD0iaHlicmlkTXVsdGlsZXZlbCIvPjx3Omx2bCB3Omlsdmw9IjAiPjx3OnN0YXJ0IHc6dmFsPSIxIi8+PHc6bnVtRm10IHc6dmFsPSJidWxsZXQiLz48dzpsdmxUZXh0IHc6dmFsPSLigKIiLz48L3c6bHZsPjwvdzphYnN0cmFjdE51bT48dzpudW0gdzpudW1JZD0iMSI+PHc6YWJzdHJhY3ROdW1JZCB3OnZhbD0iMCIvPjwvdzpudW0+PC93Om51bWJlcmluZz5QSwECFAMUAAAAAAAAAHRdUWnDILECAACxAgAAEwAAAAAAAAAAAAAApAEAAAAAW0NvbnRlbnRfVHlwZXNdLnhtbFBLAQIUAxQAAAAAAAAAdF2b/TfqKQEAACkBAAALAAAAAAAAAAAAAACkAeICAABfcmVscy8ucmVsc1BLAQIUAxQAAAAAAAAAdF1wTYTmDgQAAA4EAAARAAAAAAAAAAAAAACkATQEAAB3b3JkL2RvY3VtZW50LnhtbFBLAQIUAxQAAAAAAAAAdF3Sy7kinwEAAJ8BAAAcAAAAAAAAAAAAAACkAXEIAAB3b3JkL19yZWxzL2RvY3VtZW50LnhtbC5yZWxzUEsBAhQDFAAAAAAAAAB0Xc/3N6i5AQAAuQEAAA8AAAAAAAAAAAAAAKQBSgoAAHdvcmQvc3R5bGVzLnhtbFBLAQIUAxQAAAAAAAAAdF2MrdunqQEAAKkBAAASAAAAAAAAAAAAAACkATAMAAB3b3JkL251bWJlcmluZy54bWxQSwUGAAAAAAYABgCAAQAACQ4AAAAA",
+        "LAJA/NOMENCL.docx": "UEsDBBQAAAAAAAAAdF1RacMgsQIAALECAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48VHlwZXMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvY29udGVudC10eXBlcyI+PERlZmF1bHQgRXh0ZW5zaW9uPSJyZWxzIiBDb250ZW50VHlwZT0iYXBwbGljYXRpb24vdm5kLm9wZW54bWxmb3JtYXRzLXBhY2thZ2UucmVsYXRpb25zaGlwcyt4bWwiLz48RGVmYXVsdCBFeHRlbnNpb249InhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3htbCIvPjxPdmVycmlkZSBQYXJ0TmFtZT0iL3dvcmQvbnVtYmVyaW5nLnhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3ZuZC5vcGVueG1sZm9ybWF0cy1vZmZpY2Vkb2N1bWVudC53b3JkcHJvY2Vzc2luZ21sLm51bWJlcmluZyt4bWwiLz48T3ZlcnJpZGUgUGFydE5hbWU9Ii93b3JkL2RvY3VtZW50LnhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3ZuZC5vcGVueG1sZm9ybWF0cy1vZmZpY2Vkb2N1bWVudC53b3JkcHJvY2Vzc2luZ21sLmRvY3VtZW50Lm1haW4reG1sIi8+PE92ZXJyaWRlIFBhcnROYW1lPSIvd29yZC9zdHlsZXMueG1sIiBDb250ZW50VHlwZT0iYXBwbGljYXRpb24vdm5kLm9wZW54bWxmb3JtYXRzLW9mZmljZWRvY3VtZW50LndvcmRwcm9jZXNzaW5nbWwuc3R5bGVzK3htbCIvPjwvVHlwZXM+UEsDBBQAAAAAAAAAdF2b/TfqKQEAACkBAAALAAAAX3JlbHMvLnJlbHM8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PFJlbGF0aW9uc2hpcHMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvcmVsYXRpb25zaGlwcyI+PFJlbGF0aW9uc2hpcCBJZD0icklkMSIgVHlwZT0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL29mZmljZURvY3VtZW50LzIwMDYvcmVsYXRpb25zaGlwcy9vZmZpY2VEb2N1bWVudCIgVGFyZ2V0PSJ3b3JkL2RvY3VtZW50LnhtbCIvPjwvUmVsYXRpb25zaGlwcz5QSwMEFAAAAAAAAAB0Xf30YHAOBAAADgQAABEAAAB3b3JkL2RvY3VtZW50LnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48dzpkb2N1bWVudCB4bWxuczp3PSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvd29yZHByb2Nlc3NpbmdtbC8yMDA2L21haW4iIHhtbG5zOnI9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9vZmZpY2VEb2N1bWVudC8yMDA2L3JlbGF0aW9uc2hpcHMiPjx3OmJvZHk+PHc6cD48dzpwUHI+PHc6cFN0eWxlIHc6dmFsPSJFc3RpbG9Qcm9waW8iLz48L3c6cFByPjx3OnI+PHc6clByPjwvdzpyUHI+PHc6dCB4bWw6c3BhY2U9InByZXNlcnZlIj5NYXRyaXogdmluZXRhcyBCIMK3IHt7RkVDSEF9fTwvdzp0PjwvdzpyPjwvdzpwPjx3OnA+PHc6cj48dzpyUHI+PC93OnJQcj48dzp0IHhtbDpzcGFjZT0icHJlc2VydmUiPkNhdXNhIHt7UklUfX0gZGUge3tOT01CUkV9fSwgcHJvZ3JhbWEge3tQUk9HUkFNQX19Ljwvdzp0PjwvdzpyPjwvdzpwPjx3OnA+PHc6cFByPjx3OnBTdHlsZSB3OnZhbD0iTGlzdGFQcm9waWEiLz48dzpudW1Qcj48dzppbHZsIHc6dmFsPSIwIi8+PHc6bnVtSWQgdzp2YWw9IjEiLz48L3c6bnVtUHI+PC93OnBQcj48dzpyPjx3OnQgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+UHJpbWVyIHB1bnRvIHt7UklUfX08L3c6dD48L3c6cj48L3c6cD48dzpwPjx3OnBQcj48dzpwU3R5bGUgdzp2YWw9Ikxpc3RhUHJvcGlhIi8+PHc6bnVtUHI+PHc6aWx2bCB3OnZhbD0iMCIvPjx3Om51bUlkIHc6dmFsPSIxIi8+PC93Om51bVByPjwvdzpwUHI+PHc6cj48dzp0IHhtbDpzcGFjZT0icHJlc2VydmUiPlNlZ3VuZG8gcHVudG8ge3tQUk9HUkFNQX19PC93OnQ+PC93OnI+PC93OnA+PHc6c2VjdFByPjx3OnBnU3ogdzp3PSIxMjI0MCIgdzpoPSIxNTg0MCIvPjx3OnBnTWFyIHc6dG9wPSIxNDQwIiB3OnJpZ2h0PSIxNDQwIiB3OmJvdHRvbT0iMTQ0MCIgdzpsZWZ0PSIxNDQwIiB3OmhlYWRlcj0iNzIwIiB3OmZvb3Rlcj0iNzIwIiB3Omd1dHRlcj0iMCIvPjwvdzpzZWN0UHI+PC93OmJvZHk+PC93OmRvY3VtZW50PlBLAwQUAAAAAAAAAHRd0su5Ip8BAACfAQAAHAAAAHdvcmQvX3JlbHMvZG9jdW1lbnQueG1sLnJlbHM8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PFJlbGF0aW9uc2hpcHMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvcmVsYXRpb25zaGlwcyI+PFJlbGF0aW9uc2hpcCBJZD0icklkMSIgVHlwZT0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL29mZmljZURvY3VtZW50LzIwMDYvcmVsYXRpb25zaGlwcy9zdHlsZXMiIFRhcmdldD0ic3R5bGVzLnhtbCIvPjxSZWxhdGlvbnNoaXAgSWQ9InJJZDMiIFR5cGU9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9vZmZpY2VEb2N1bWVudC8yMDA2L3JlbGF0aW9uc2hpcHMvbnVtYmVyaW5nIiBUYXJnZXQ9Im51bWJlcmluZy54bWwiLz48L1JlbGF0aW9uc2hpcHM+UEsDBBQAAAAAAAAAdF3P9zeouQEAALkBAAAPAAAAd29yZC9zdHlsZXMueG1sPD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/Pjx3OnN0eWxlcyB4bWxuczp3PSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvd29yZHByb2Nlc3NpbmdtbC8yMDA2L21haW4iPjx3OnN0eWxlIHc6dHlwZT0icGFyYWdyYXBoIiB3OmRlZmF1bHQ9IjEiIHc6c3R5bGVJZD0iTm9ybWFsIj48dzpuYW1lIHc6dmFsPSJOb3JtYWwiLz48L3c6c3R5bGU+PHc6c3R5bGUgdzp0eXBlPSJwYXJhZ3JhcGgiIHc6c3R5bGVJZD0iRXN0aWxvUHJvcGlvIj48dzpuYW1lIHc6dmFsPSJFc3RpbG9Qcm9waW8iLz48dzpyUHI+PC93OnJQcj48L3c6c3R5bGU+PHc6c3R5bGUgdzp0eXBlPSJwYXJhZ3JhcGgiIHc6c3R5bGVJZD0iTGlzdGFQcm9waWEiPjx3Om5hbWUgdzp2YWw9Ikxpc3RhUHJvcGlhIi8+PC93OnN0eWxlPjwvdzpzdHlsZXM+UEsDBBQAAAAAAAAAdF2MrdunqQEAAKkBAAASAAAAd29yZC9udW1iZXJpbmcueG1sPD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/Pjx3Om51bWJlcmluZyB4bWxuczp3PSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvd29yZHByb2Nlc3NpbmdtbC8yMDA2L21haW4iPjx3OmFic3RyYWN0TnVtIHc6YWJzdHJhY3ROdW1JZD0iMCI+PHc6bnNpZCB3OnZhbD0iMTEyMjMzNDQiLz48dzptdWx0aUxldmVsVHlwZSB3OnZhbD0iaHlicmlkTXVsdGlsZXZlbCIvPjx3Omx2bCB3Omlsdmw9IjAiPjx3OnN0YXJ0IHc6dmFsPSIxIi8+PHc6bnVtRm10IHc6dmFsPSJidWxsZXQiLz48dzpsdmxUZXh0IHc6dmFsPSLigKIiLz48L3c6bHZsPjwvdzphYnN0cmFjdE51bT48dzpudW0gdzpudW1JZD0iMSI+PHc6YWJzdHJhY3ROdW1JZCB3OnZhbD0iMCIvPjwvdzpudW0+PC93Om51bWJlcmluZz5QSwECFAMUAAAAAAAAAHRdUWnDILECAACxAgAAEwAAAAAAAAAAAAAApAEAAAAAW0NvbnRlbnRfVHlwZXNdLnhtbFBLAQIUAxQAAAAAAAAAdF2b/TfqKQEAACkBAAALAAAAAAAAAAAAAACkAeICAABfcmVscy8ucmVsc1BLAQIUAxQAAAAAAAAAdF399GBwDgQAAA4EAAARAAAAAAAAAAAAAACkATQEAAB3b3JkL2RvY3VtZW50LnhtbFBLAQIUAxQAAAAAAAAAdF3Sy7kinwEAAJ8BAAAcAAAAAAAAAAAAAACkAXEIAAB3b3JkL19yZWxzL2RvY3VtZW50LnhtbC5yZWxzUEsBAhQDFAAAAAAAAAB0Xc/3N6i5AQAAuQEAAA8AAAAAAAAAAAAAAKQBSgoAAHdvcmQvc3R5bGVzLnhtbFBLAQIUAxQAAAAAAAAAdF2MrdunqQEAAKkBAAASAAAAAAAAAAAAAACkATAMAAB3b3JkL251bWJlcmluZy54bWxQSwUGAAAAAAYABgCAAQAACQ4AAAAA"
+      },
+      "por_tribunal": {
+        "LAJA": {
+          "cantidad": 2,
+          "cursivas": false,
+          "relaciones_validas": true,
+          "medios": [],
+          "partes": [
+            {
+              "ruta": "_rels/.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/_rels/document.xml.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/document.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+            },
+            {
+              "ruta": "word/numbering.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"
+            },
+            {
+              "ruta": "word/styles.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"
+            }
+          ],
+          "indice": [
+            "Índice",
+            "1. X-96-2026 — PC_IE — Pide cuenta ingreso efectivo",
+            "2. X-97-2026 — NOMENCL — Nomenclatura"
+          ],
+          "parrafos": [
+            {
+              "texto": "Matriz vinetas A · uno de enero de dos mil noventa y nueve",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "Causa X-96-2026 de Persona Vineta A, programa AFT Ficticio.",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "Primer punto X-96-2026",
+              "salto": false,
+              "num_id": "1",
+              "ilvl": "0",
+              "num_fmt": "bullet",
+              "reinicia": false
+            },
+            {
+              "texto": "Segundo punto AFT Ficticio",
+              "salto": false,
+              "num_id": "1",
+              "ilvl": "0",
+              "num_fmt": "bullet",
+              "reinicia": false
+            },
+            {
+              "texto": "Matriz vinetas B · uno de enero de dos mil noventa y nueve",
+              "salto": true,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "Causa X-97-2026 de Persona Vineta B, programa AFT Ficticio.",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "Primer punto X-97-2026",
+              "salto": false,
+              "num_id": "2",
+              "ilvl": "0",
+              "num_fmt": "bullet",
+              "reinicia": false
+            },
+            {
+              "texto": "Segundo punto AFT Ficticio",
+              "salto": false,
+              "num_id": "2",
+              "ilvl": "0",
+              "num_fmt": "bullet",
+              "reinicia": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "nombre": "plantilla_lista_numerada_seguidos",
+      "modo": "ESPERA",
+      "encabezados": [
+        "RIT",
+        "TRIBUNAL",
+        "NOMBRE",
+        "RUT",
+        "DERIVACION",
+        "T ESPERA",
+        "FEC. RESOLUCION",
+        "DURACION"
+      ],
+      "filas": [
+        [
+          "X-98-2026",
+          "Jgdo. L. y G. de Mulchen",
+          "Persona Num A",
+          "28282828-0",
+          "AFT Ficticio",
+          95,
+          "12/10/2026",
+          "6 meses"
+        ],
+        [
+          "X-99-2026",
+          "Jgdo. L. y G. de Mulchen",
+          "Persona Num B",
+          "29292929-1",
+          "AFT Ficticio",
+          10,
+          "13/10/2026",
+          "6 meses"
+        ]
+      ],
+      "res": [
+        "PC_IE",
+        "NOMENCL"
+      ],
+      "editadas": [],
+      "plantillas_propias": {
+        "MULCHEN/PC_IE.docx": "UEsDBBQAAAAAAAAAdF1RacMgsQIAALECAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48VHlwZXMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvY29udGVudC10eXBlcyI+PERlZmF1bHQgRXh0ZW5zaW9uPSJyZWxzIiBDb250ZW50VHlwZT0iYXBwbGljYXRpb24vdm5kLm9wZW54bWxmb3JtYXRzLXBhY2thZ2UucmVsYXRpb25zaGlwcyt4bWwiLz48RGVmYXVsdCBFeHRlbnNpb249InhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3htbCIvPjxPdmVycmlkZSBQYXJ0TmFtZT0iL3dvcmQvbnVtYmVyaW5nLnhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3ZuZC5vcGVueG1sZm9ybWF0cy1vZmZpY2Vkb2N1bWVudC53b3JkcHJvY2Vzc2luZ21sLm51bWJlcmluZyt4bWwiLz48T3ZlcnJpZGUgUGFydE5hbWU9Ii93b3JkL2RvY3VtZW50LnhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3ZuZC5vcGVueG1sZm9ybWF0cy1vZmZpY2Vkb2N1bWVudC53b3JkcHJvY2Vzc2luZ21sLmRvY3VtZW50Lm1haW4reG1sIi8+PE92ZXJyaWRlIFBhcnROYW1lPSIvd29yZC9zdHlsZXMueG1sIiBDb250ZW50VHlwZT0iYXBwbGljYXRpb24vdm5kLm9wZW54bWxmb3JtYXRzLW9mZmljZWRvY3VtZW50LndvcmRwcm9jZXNzaW5nbWwuc3R5bGVzK3htbCIvPjwvVHlwZXM+UEsDBBQAAAAAAAAAdF2b/TfqKQEAACkBAAALAAAAX3JlbHMvLnJlbHM8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PFJlbGF0aW9uc2hpcHMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvcmVsYXRpb25zaGlwcyI+PFJlbGF0aW9uc2hpcCBJZD0icklkMSIgVHlwZT0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL29mZmljZURvY3VtZW50LzIwMDYvcmVsYXRpb25zaGlwcy9vZmZpY2VEb2N1bWVudCIgVGFyZ2V0PSJ3b3JkL2RvY3VtZW50LnhtbCIvPjwvUmVsYXRpb25zaGlwcz5QSwMEFAAAAAAAAAB0Xf2Y5qEPBAAADwQAABEAAAB3b3JkL2RvY3VtZW50LnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48dzpkb2N1bWVudCB4bWxuczp3PSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvd29yZHByb2Nlc3NpbmdtbC8yMDA2L21haW4iIHhtbG5zOnI9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9vZmZpY2VEb2N1bWVudC8yMDA2L3JlbGF0aW9uc2hpcHMiPjx3OmJvZHk+PHc6cD48dzpwUHI+PHc6cFN0eWxlIHc6dmFsPSJFc3RpbG9Qcm9waW8iLz48L3c6cFByPjx3OnI+PHc6clByPjwvdzpyUHI+PHc6dCB4bWw6c3BhY2U9InByZXNlcnZlIj5NYXRyaXogbnVtZXJhZGEgQSDCtyB7e0ZFQ0hBfX08L3c6dD48L3c6cj48L3c6cD48dzpwPjx3OnI+PHc6clByPjwvdzpyUHI+PHc6dCB4bWw6c3BhY2U9InByZXNlcnZlIj5DYXVzYSB7e1JJVH19IGRlIHt7Tk9NQlJFfX0sIHByb2dyYW1hIHt7UFJPR1JBTUF9fS48L3c6dD48L3c6cj48L3c6cD48dzpwPjx3OnBQcj48dzpwU3R5bGUgdzp2YWw9Ikxpc3RhUHJvcGlhIi8+PHc6bnVtUHI+PHc6aWx2bCB3OnZhbD0iMCIvPjx3Om51bUlkIHc6dmFsPSIxIi8+PC93Om51bVByPjwvdzpwUHI+PHc6cj48dzp0IHhtbDpzcGFjZT0icHJlc2VydmUiPlByaW1lciBwdW50byB7e1JJVH19PC93OnQ+PC93OnI+PC93OnA+PHc6cD48dzpwUHI+PHc6cFN0eWxlIHc6dmFsPSJMaXN0YVByb3BpYSIvPjx3Om51bVByPjx3Omlsdmwgdzp2YWw9IjAiLz48dzpudW1JZCB3OnZhbD0iMSIvPjwvdzpudW1Qcj48L3c6cFByPjx3OnI+PHc6dCB4bWw6c3BhY2U9InByZXNlcnZlIj5TZWd1bmRvIHB1bnRvIHt7UFJPR1JBTUF9fTwvdzp0PjwvdzpyPjwvdzpwPjx3OnNlY3RQcj48dzpwZ1N6IHc6dz0iMTIyNDAiIHc6aD0iMTU4NDAiLz48dzpwZ01hciB3OnRvcD0iMTQ0MCIgdzpyaWdodD0iMTQ0MCIgdzpib3R0b209IjE0NDAiIHc6bGVmdD0iMTQ0MCIgdzpoZWFkZXI9IjcyMCIgdzpmb290ZXI9IjcyMCIgdzpndXR0ZXI9IjAiLz48L3c6c2VjdFByPjwvdzpib2R5Pjwvdzpkb2N1bWVudD5QSwMEFAAAAAAAAAB0XdLLuSKfAQAAnwEAABwAAAB3b3JkL19yZWxzL2RvY3VtZW50LnhtbC5yZWxzPD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/PjxSZWxhdGlvbnNoaXBzIHhtbG5zPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvcGFja2FnZS8yMDA2L3JlbGF0aW9uc2hpcHMiPjxSZWxhdGlvbnNoaXAgSWQ9InJJZDEiIFR5cGU9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9vZmZpY2VEb2N1bWVudC8yMDA2L3JlbGF0aW9uc2hpcHMvc3R5bGVzIiBUYXJnZXQ9InN0eWxlcy54bWwiLz48UmVsYXRpb25zaGlwIElkPSJySWQzIiBUeXBlPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvb2ZmaWNlRG9jdW1lbnQvMjAwNi9yZWxhdGlvbnNoaXBzL251bWJlcmluZyIgVGFyZ2V0PSJudW1iZXJpbmcueG1sIi8+PC9SZWxhdGlvbnNoaXBzPlBLAwQUAAAAAAAAAHRdz/c3qLkBAAC5AQAADwAAAHdvcmQvc3R5bGVzLnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48dzpzdHlsZXMgeG1sbnM6dz0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL3dvcmRwcm9jZXNzaW5nbWwvMjAwNi9tYWluIj48dzpzdHlsZSB3OnR5cGU9InBhcmFncmFwaCIgdzpkZWZhdWx0PSIxIiB3OnN0eWxlSWQ9Ik5vcm1hbCI+PHc6bmFtZSB3OnZhbD0iTm9ybWFsIi8+PC93OnN0eWxlPjx3OnN0eWxlIHc6dHlwZT0icGFyYWdyYXBoIiB3OnN0eWxlSWQ9IkVzdGlsb1Byb3BpbyI+PHc6bmFtZSB3OnZhbD0iRXN0aWxvUHJvcGlvIi8+PHc6clByPjwvdzpyUHI+PC93OnN0eWxlPjx3OnN0eWxlIHc6dHlwZT0icGFyYWdyYXBoIiB3OnN0eWxlSWQ9Ikxpc3RhUHJvcGlhIj48dzpuYW1lIHc6dmFsPSJMaXN0YVByb3BpYSIvPjwvdzpzdHlsZT48L3c6c3R5bGVzPlBLAwQUAAAAAAAAAHRdr73ya6oBAACqAQAAEgAAAHdvcmQvbnVtYmVyaW5nLnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48dzpudW1iZXJpbmcgeG1sbnM6dz0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL3dvcmRwcm9jZXNzaW5nbWwvMjAwNi9tYWluIj48dzphYnN0cmFjdE51bSB3OmFic3RyYWN0TnVtSWQ9IjAiPjx3Om5zaWQgdzp2YWw9IjExMjIzMzQ0Ii8+PHc6bXVsdGlMZXZlbFR5cGUgdzp2YWw9Imh5YnJpZE11bHRpbGV2ZWwiLz48dzpsdmwgdzppbHZsPSIwIj48dzpzdGFydCB3OnZhbD0iMSIvPjx3Om51bUZtdCB3OnZhbD0iZGVjaW1hbCIvPjx3Omx2bFRleHQgdzp2YWw9IiUxLiIvPjwvdzpsdmw+PC93OmFic3RyYWN0TnVtPjx3Om51bSB3Om51bUlkPSIxIj48dzphYnN0cmFjdE51bUlkIHc6dmFsPSIwIi8+PC93Om51bT48L3c6bnVtYmVyaW5nPlBLAQIUAxQAAAAAAAAAdF1RacMgsQIAALECAAATAAAAAAAAAAAAAACkAQAAAABbQ29udGVudF9UeXBlc10ueG1sUEsBAhQDFAAAAAAAAAB0XZv9N+opAQAAKQEAAAsAAAAAAAAAAAAAAKQB4gIAAF9yZWxzLy5yZWxzUEsBAhQDFAAAAAAAAAB0Xf2Y5qEPBAAADwQAABEAAAAAAAAAAAAAAKQBNAQAAHdvcmQvZG9jdW1lbnQueG1sUEsBAhQDFAAAAAAAAAB0XdLLuSKfAQAAnwEAABwAAAAAAAAAAAAAAKQBcggAAHdvcmQvX3JlbHMvZG9jdW1lbnQueG1sLnJlbHNQSwECFAMUAAAAAAAAAHRdz/c3qLkBAAC5AQAADwAAAAAAAAAAAAAApAFLCgAAd29yZC9zdHlsZXMueG1sUEsBAhQDFAAAAAAAAAB0Xa+98muqAQAAqgEAABIAAAAAAAAAAAAAAKQBMQwAAHdvcmQvbnVtYmVyaW5nLnhtbFBLBQYAAAAABgAGAIABAAALDgAAAAA=",
+        "MULCHEN/NOMENCL.docx": "UEsDBBQAAAAAAAAAdF1RacMgsQIAALECAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48VHlwZXMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvY29udGVudC10eXBlcyI+PERlZmF1bHQgRXh0ZW5zaW9uPSJyZWxzIiBDb250ZW50VHlwZT0iYXBwbGljYXRpb24vdm5kLm9wZW54bWxmb3JtYXRzLXBhY2thZ2UucmVsYXRpb25zaGlwcyt4bWwiLz48RGVmYXVsdCBFeHRlbnNpb249InhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3htbCIvPjxPdmVycmlkZSBQYXJ0TmFtZT0iL3dvcmQvbnVtYmVyaW5nLnhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3ZuZC5vcGVueG1sZm9ybWF0cy1vZmZpY2Vkb2N1bWVudC53b3JkcHJvY2Vzc2luZ21sLm51bWJlcmluZyt4bWwiLz48T3ZlcnJpZGUgUGFydE5hbWU9Ii93b3JkL2RvY3VtZW50LnhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3ZuZC5vcGVueG1sZm9ybWF0cy1vZmZpY2Vkb2N1bWVudC53b3JkcHJvY2Vzc2luZ21sLmRvY3VtZW50Lm1haW4reG1sIi8+PE92ZXJyaWRlIFBhcnROYW1lPSIvd29yZC9zdHlsZXMueG1sIiBDb250ZW50VHlwZT0iYXBwbGljYXRpb24vdm5kLm9wZW54bWxmb3JtYXRzLW9mZmljZWRvY3VtZW50LndvcmRwcm9jZXNzaW5nbWwuc3R5bGVzK3htbCIvPjwvVHlwZXM+UEsDBBQAAAAAAAAAdF2b/TfqKQEAACkBAAALAAAAX3JlbHMvLnJlbHM8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PFJlbGF0aW9uc2hpcHMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvcmVsYXRpb25zaGlwcyI+PFJlbGF0aW9uc2hpcCBJZD0icklkMSIgVHlwZT0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL29mZmljZURvY3VtZW50LzIwMDYvcmVsYXRpb25zaGlwcy9vZmZpY2VEb2N1bWVudCIgVGFyZ2V0PSJ3b3JkL2RvY3VtZW50LnhtbCIvPjwvUmVsYXRpb25zaGlwcz5QSwMEFAAAAAAAAAB0XXAhAjcPBAAADwQAABEAAAB3b3JkL2RvY3VtZW50LnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48dzpkb2N1bWVudCB4bWxuczp3PSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvd29yZHByb2Nlc3NpbmdtbC8yMDA2L21haW4iIHhtbG5zOnI9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9vZmZpY2VEb2N1bWVudC8yMDA2L3JlbGF0aW9uc2hpcHMiPjx3OmJvZHk+PHc6cD48dzpwUHI+PHc6cFN0eWxlIHc6dmFsPSJFc3RpbG9Qcm9waW8iLz48L3c6cFByPjx3OnI+PHc6clByPjwvdzpyUHI+PHc6dCB4bWw6c3BhY2U9InByZXNlcnZlIj5NYXRyaXogbnVtZXJhZGEgQiDCtyB7e0ZFQ0hBfX08L3c6dD48L3c6cj48L3c6cD48dzpwPjx3OnI+PHc6clByPjwvdzpyUHI+PHc6dCB4bWw6c3BhY2U9InByZXNlcnZlIj5DYXVzYSB7e1JJVH19IGRlIHt7Tk9NQlJFfX0sIHByb2dyYW1hIHt7UFJPR1JBTUF9fS48L3c6dD48L3c6cj48L3c6cD48dzpwPjx3OnBQcj48dzpwU3R5bGUgdzp2YWw9Ikxpc3RhUHJvcGlhIi8+PHc6bnVtUHI+PHc6aWx2bCB3OnZhbD0iMCIvPjx3Om51bUlkIHc6dmFsPSIxIi8+PC93Om51bVByPjwvdzpwUHI+PHc6cj48dzp0IHhtbDpzcGFjZT0icHJlc2VydmUiPlByaW1lciBwdW50byB7e1JJVH19PC93OnQ+PC93OnI+PC93OnA+PHc6cD48dzpwUHI+PHc6cFN0eWxlIHc6dmFsPSJMaXN0YVByb3BpYSIvPjx3Om51bVByPjx3Omlsdmwgdzp2YWw9IjAiLz48dzpudW1JZCB3OnZhbD0iMSIvPjwvdzpudW1Qcj48L3c6cFByPjx3OnI+PHc6dCB4bWw6c3BhY2U9InByZXNlcnZlIj5TZWd1bmRvIHB1bnRvIHt7UFJPR1JBTUF9fTwvdzp0PjwvdzpyPjwvdzpwPjx3OnNlY3RQcj48dzpwZ1N6IHc6dz0iMTIyNDAiIHc6aD0iMTU4NDAiLz48dzpwZ01hciB3OnRvcD0iMTQ0MCIgdzpyaWdodD0iMTQ0MCIgdzpib3R0b209IjE0NDAiIHc6bGVmdD0iMTQ0MCIgdzpoZWFkZXI9IjcyMCIgdzpmb290ZXI9IjcyMCIgdzpndXR0ZXI9IjAiLz48L3c6c2VjdFByPjwvdzpib2R5Pjwvdzpkb2N1bWVudD5QSwMEFAAAAAAAAAB0XdLLuSKfAQAAnwEAABwAAAB3b3JkL19yZWxzL2RvY3VtZW50LnhtbC5yZWxzPD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiIHN0YW5kYWxvbmU9InllcyI/PjxSZWxhdGlvbnNoaXBzIHhtbG5zPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvcGFja2FnZS8yMDA2L3JlbGF0aW9uc2hpcHMiPjxSZWxhdGlvbnNoaXAgSWQ9InJJZDEiIFR5cGU9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9vZmZpY2VEb2N1bWVudC8yMDA2L3JlbGF0aW9uc2hpcHMvc3R5bGVzIiBUYXJnZXQ9InN0eWxlcy54bWwiLz48UmVsYXRpb25zaGlwIElkPSJySWQzIiBUeXBlPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvb2ZmaWNlRG9jdW1lbnQvMjAwNi9yZWxhdGlvbnNoaXBzL251bWJlcmluZyIgVGFyZ2V0PSJudW1iZXJpbmcueG1sIi8+PC9SZWxhdGlvbnNoaXBzPlBLAwQUAAAAAAAAAHRdz/c3qLkBAAC5AQAADwAAAHdvcmQvc3R5bGVzLnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48dzpzdHlsZXMgeG1sbnM6dz0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL3dvcmRwcm9jZXNzaW5nbWwvMjAwNi9tYWluIj48dzpzdHlsZSB3OnR5cGU9InBhcmFncmFwaCIgdzpkZWZhdWx0PSIxIiB3OnN0eWxlSWQ9Ik5vcm1hbCI+PHc6bmFtZSB3OnZhbD0iTm9ybWFsIi8+PC93OnN0eWxlPjx3OnN0eWxlIHc6dHlwZT0icGFyYWdyYXBoIiB3OnN0eWxlSWQ9IkVzdGlsb1Byb3BpbyI+PHc6bmFtZSB3OnZhbD0iRXN0aWxvUHJvcGlvIi8+PHc6clByPjwvdzpyUHI+PC93OnN0eWxlPjx3OnN0eWxlIHc6dHlwZT0icGFyYWdyYXBoIiB3OnN0eWxlSWQ9Ikxpc3RhUHJvcGlhIj48dzpuYW1lIHc6dmFsPSJMaXN0YVByb3BpYSIvPjwvdzpzdHlsZT48L3c6c3R5bGVzPlBLAwQUAAAAAAAAAHRdr73ya6oBAACqAQAAEgAAAHdvcmQvbnVtYmVyaW5nLnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48dzpudW1iZXJpbmcgeG1sbnM6dz0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL3dvcmRwcm9jZXNzaW5nbWwvMjAwNi9tYWluIj48dzphYnN0cmFjdE51bSB3OmFic3RyYWN0TnVtSWQ9IjAiPjx3Om5zaWQgdzp2YWw9IjExMjIzMzQ0Ii8+PHc6bXVsdGlMZXZlbFR5cGUgdzp2YWw9Imh5YnJpZE11bHRpbGV2ZWwiLz48dzpsdmwgdzppbHZsPSIwIj48dzpzdGFydCB3OnZhbD0iMSIvPjx3Om51bUZtdCB3OnZhbD0iZGVjaW1hbCIvPjx3Omx2bFRleHQgdzp2YWw9IiUxLiIvPjwvdzpsdmw+PC93OmFic3RyYWN0TnVtPjx3Om51bSB3Om51bUlkPSIxIj48dzphYnN0cmFjdE51bUlkIHc6dmFsPSIwIi8+PC93Om51bT48L3c6bnVtYmVyaW5nPlBLAQIUAxQAAAAAAAAAdF1RacMgsQIAALECAAATAAAAAAAAAAAAAACkAQAAAABbQ29udGVudF9UeXBlc10ueG1sUEsBAhQDFAAAAAAAAAB0XZv9N+opAQAAKQEAAAsAAAAAAAAAAAAAAKQB4gIAAF9yZWxzLy5yZWxzUEsBAhQDFAAAAAAAAAB0XXAhAjcPBAAADwQAABEAAAAAAAAAAAAAAKQBNAQAAHdvcmQvZG9jdW1lbnQueG1sUEsBAhQDFAAAAAAAAAB0XdLLuSKfAQAAnwEAABwAAAAAAAAAAAAAAKQBcggAAHdvcmQvX3JlbHMvZG9jdW1lbnQueG1sLnJlbHNQSwECFAMUAAAAAAAAAHRdz/c3qLkBAAC5AQAADwAAAAAAAAAAAAAApAFLCgAAd29yZC9zdHlsZXMueG1sUEsBAhQDFAAAAAAAAAB0Xa+98muqAQAAqgEAABIAAAAAAAAAAAAAAKQBMQwAAHdvcmQvbnVtYmVyaW5nLnhtbFBLBQYAAAAABgAGAIABAAALDgAAAAA="
+      },
+      "por_tribunal": {
+        "MULCHEN": {
+          "cantidad": 2,
+          "cursivas": false,
+          "relaciones_validas": true,
+          "medios": [],
+          "partes": [
+            {
+              "ruta": "_rels/.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/_rels/document.xml.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/document.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+            },
+            {
+              "ruta": "word/numbering.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"
+            },
+            {
+              "ruta": "word/styles.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"
+            }
+          ],
+          "indice": [
+            "Índice",
+            "1. X-98-2026 — PC_IE — Pide cuenta ingreso efectivo",
+            "2. X-99-2026 — NOMENCL — Nomenclatura"
+          ],
+          "parrafos": [
+            {
+              "texto": "Matriz numerada A · uno de enero de dos mil noventa y nueve",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "Causa X-98-2026 de Persona Num A, programa AFT Ficticio.",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "Primer punto X-98-2026",
+              "salto": false,
+              "num_id": "1",
+              "ilvl": "0",
+              "num_fmt": "decimal",
+              "reinicia": false
+            },
+            {
+              "texto": "Segundo punto AFT Ficticio",
+              "salto": false,
+              "num_id": "1",
+              "ilvl": "0",
+              "num_fmt": "decimal",
+              "reinicia": false
+            },
+            {
+              "texto": "Matriz numerada B · uno de enero de dos mil noventa y nueve",
+              "salto": true,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "Causa X-99-2026 de Persona Num B, programa AFT Ficticio.",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "Primer punto X-99-2026",
+              "salto": false,
+              "num_id": "3",
+              "ilvl": "0",
+              "num_fmt": "decimal",
+              "reinicia": true
+            },
+            {
+              "texto": "Segundo punto AFT Ficticio",
+              "salto": false,
+              "num_id": "3",
+              "ilvl": "0",
+              "num_fmt": "decimal",
+              "reinicia": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "nombre": "encabezado_con_imagen",
+      "modo": "ESPERA",
+      "encabezados": [
+        "RIT",
+        "TRIBUNAL",
+        "NOMBRE",
+        "RUT",
+        "DERIVACION",
+        "T ESPERA",
+        "FEC. RESOLUCION",
+        "DURACION"
+      ],
+      "filas": [
+        [
+          "X-100-2026",
+          "Jgdo. L. y G. de Mulchen",
+          "Persona Hdr A",
+          "30303030-2",
+          "AFT Ficticio",
+          95,
+          "14/10/2026",
+          "6 meses"
+        ],
+        [
+          "X-101-2026",
+          "Jgdo. L. y G. de Mulchen",
+          "Persona Hdr B",
+          "31313131-3",
+          "AFT Ficticio",
+          10,
+          "15/10/2026",
+          "6 meses"
+        ]
+      ],
+      "res": [
+        "PC_IE",
+        "NOMENCL"
+      ],
+      "editadas": [],
+      "plantillas_propias": {
+        "MULCHEN/PC_IE.docx": "UEsDBBQAAAAAAAAAdF08o2uM3gIAAN4CAAATAAAAW0NvbnRlbnRfVHlwZXNdLnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48VHlwZXMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvY29udGVudC10eXBlcyI+PERlZmF1bHQgRXh0ZW5zaW9uPSJyZWxzIiBDb250ZW50VHlwZT0iYXBwbGljYXRpb24vdm5kLm9wZW54bWxmb3JtYXRzLXBhY2thZ2UucmVsYXRpb25zaGlwcyt4bWwiLz48RGVmYXVsdCBFeHRlbnNpb249InhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3htbCIvPjxPdmVycmlkZSBQYXJ0TmFtZT0iL3dvcmQvaGVhZGVyMS54bWwiIENvbnRlbnRUeXBlPSJhcHBsaWNhdGlvbi92bmQub3BlbnhtbGZvcm1hdHMtb2ZmaWNlZG9jdW1lbnQud29yZHByb2Nlc3NpbmdtbC5oZWFkZXIreG1sIi8+PERlZmF1bHQgRXh0ZW5zaW9uPSJwbmciIENvbnRlbnRUeXBlPSJpbWFnZS9wbmciLz48T3ZlcnJpZGUgUGFydE5hbWU9Ii93b3JkL2RvY3VtZW50LnhtbCIgQ29udGVudFR5cGU9ImFwcGxpY2F0aW9uL3ZuZC5vcGVueG1sZm9ybWF0cy1vZmZpY2Vkb2N1bWVudC53b3JkcHJvY2Vzc2luZ21sLmRvY3VtZW50Lm1haW4reG1sIi8+PE92ZXJyaWRlIFBhcnROYW1lPSIvd29yZC9zdHlsZXMueG1sIiBDb250ZW50VHlwZT0iYXBwbGljYXRpb24vdm5kLm9wZW54bWxmb3JtYXRzLW9mZmljZWRvY3VtZW50LndvcmRwcm9jZXNzaW5nbWwuc3R5bGVzK3htbCIvPjwvVHlwZXM+UEsDBBQAAAAAAAAAdF2b/TfqKQEAACkBAAALAAAAX3JlbHMvLnJlbHM8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PFJlbGF0aW9uc2hpcHMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvcmVsYXRpb25zaGlwcyI+PFJlbGF0aW9uc2hpcCBJZD0icklkMSIgVHlwZT0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL29mZmljZURvY3VtZW50LzIwMDYvcmVsYXRpb25zaGlwcy9vZmZpY2VEb2N1bWVudCIgVGFyZ2V0PSJ3b3JkL2RvY3VtZW50LnhtbCIvPjwvUmVsYXRpb25zaGlwcz5QSwMEFAAAAAAAAAB0XSH/bjIeAwAAHgMAABEAAAB3b3JkL2RvY3VtZW50LnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48dzpkb2N1bWVudCB4bWxuczp3PSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvd29yZHByb2Nlc3NpbmdtbC8yMDA2L21haW4iIHhtbG5zOnI9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9vZmZpY2VEb2N1bWVudC8yMDA2L3JlbGF0aW9uc2hpcHMiPjx3OmJvZHk+PHc6cD48dzpwUHI+PHc6cFN0eWxlIHc6dmFsPSJFc3RpbG9Qcm9waW8iLz48L3c6cFByPjx3OnI+PHc6clByPjx3OmkvPjx3Omkgdzp2YWw9IjEiLz48dzppQ3MvPjwvdzpyUHI+PHc6dCB4bWw6c3BhY2U9InByZXNlcnZlIj5NYXRyaXogZW5jYWJlemFkbyBpbWcgTXVsY2hlbiDCtyB7e0ZFQ0hBfX08L3c6dD48L3c6cj48L3c6cD48dzpwPjx3OnI+PHc6clByPjx3OmkvPjx3Omkgdzp2YWw9IjEiLz48dzppQ3MvPjwvdzpyUHI+PHc6dCB4bWw6c3BhY2U9InByZXNlcnZlIj5DYXVzYSB7e1JJVH19IGRlIHt7Tk9NQlJFfX0sIHByb2dyYW1hIHt7UFJPR1JBTUF9fS48L3c6dD48L3c6cj48L3c6cD48dzpzZWN0UHI+PHc6aGVhZGVyUmVmZXJlbmNlIHc6dHlwZT0iZGVmYXVsdCIgcjppZD0icklkNCIvPjx3OnBnU3ogdzp3PSIxMjI0MCIgdzpoPSIxNTg0MCIvPjx3OnBnTWFyIHc6dG9wPSIxNDQwIiB3OnJpZ2h0PSIxNDQwIiB3OmJvdHRvbT0iMTQ0MCIgdzpsZWZ0PSIxNDQwIiB3OmhlYWRlcj0iNzIwIiB3OmZvb3Rlcj0iNzIwIiB3Omd1dHRlcj0iMCIvPjwvdzpzZWN0UHI+PC93OmJvZHk+PC93OmRvY3VtZW50PlBLAwQUAAAAAAAAAHRd0NvguJoBAACaAQAAHAAAAHdvcmQvX3JlbHMvZG9jdW1lbnQueG1sLnJlbHM8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PFJlbGF0aW9uc2hpcHMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvcmVsYXRpb25zaGlwcyI+PFJlbGF0aW9uc2hpcCBJZD0icklkMSIgVHlwZT0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL29mZmljZURvY3VtZW50LzIwMDYvcmVsYXRpb25zaGlwcy9zdHlsZXMiIFRhcmdldD0ic3R5bGVzLnhtbCIvPjxSZWxhdGlvbnNoaXAgSWQ9InJJZDQiIFR5cGU9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9vZmZpY2VEb2N1bWVudC8yMDA2L3JlbGF0aW9uc2hpcHMvaGVhZGVyIiBUYXJnZXQ9ImhlYWRlcjEueG1sIi8+PC9SZWxhdGlvbnNoaXBzPlBLAwQUAAAAAAAAAHRdar13i2QBAABkAQAADwAAAHdvcmQvc3R5bGVzLnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48dzpzdHlsZXMgeG1sbnM6dz0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL3dvcmRwcm9jZXNzaW5nbWwvMjAwNi9tYWluIj48dzpzdHlsZSB3OnR5cGU9InBhcmFncmFwaCIgdzpkZWZhdWx0PSIxIiB3OnN0eWxlSWQ9Ik5vcm1hbCI+PHc6bmFtZSB3OnZhbD0iTm9ybWFsIi8+PC93OnN0eWxlPjx3OnN0eWxlIHc6dHlwZT0icGFyYWdyYXBoIiB3OnN0eWxlSWQ9IkVzdGlsb1Byb3BpbyI+PHc6bmFtZSB3OnZhbD0iRXN0aWxvUHJvcGlvIi8+PHc6clByPjx3OmkvPjwvdzpyUHI+PC93OnN0eWxlPjwvdzpzdHlsZXM+UEsDBBQAAAAAAAAAdF3CfgJQSAQAAEgEAAAQAAAAd29yZC9oZWFkZXIxLnhtbDw/eG1sIHZlcnNpb249IjEuMCIgZW5jb2Rpbmc9IlVURi04IiBzdGFuZGFsb25lPSJ5ZXMiPz48dzpoZHIgeG1sbnM6dz0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL3dvcmRwcm9jZXNzaW5nbWwvMjAwNi9tYWluIiB4bWxuczpyPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvb2ZmaWNlRG9jdW1lbnQvMjAwNi9yZWxhdGlvbnNoaXBzIj48dzpwPjx3OnI+PHc6ZHJhd2luZz48d3A6aW5saW5lIHhtbG5zOndwPSJodHRwOi8vc2NoZW1hcy5vcGVueG1sZm9ybWF0cy5vcmcvZHJhd2luZ21sLzIwMDYvd29yZHByb2Nlc3NpbmdEcmF3aW5nIj48d3A6ZXh0ZW50IGN4PSI5NTI1IiBjeT0iOTUyNSIvPjx3cDpkb2NQciBpZD0iMSIgbmFtZT0iTG9nb0VuY2FiZXphZG8iLz48YTpncmFwaGljIHhtbG5zOmE9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9kcmF3aW5nbWwvMjAwNi9tYWluIj48YTpncmFwaGljRGF0YSB1cmk9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9kcmF3aW5nbWwvMjAwNi9waWN0dXJlIj48cGljOnBpYyB4bWxuczpwaWM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9kcmF3aW5nbWwvMjAwNi9waWN0dXJlIj48cGljOm52UGljUHI+PHBpYzpjTnZQciBpZD0iMSIgbmFtZT0iTG9nb0VuY2FiZXphZG8iLz48cGljOmNOdlBpY1ByLz48L3BpYzpudlBpY1ByPjxwaWM6YmxpcEZpbGw+PGE6YmxpcCByOmVtYmVkPSJySWQxIi8+PC9waWM6YmxpcEZpbGw+PHBpYzpzcFByPjxhOnhmcm0+PGE6b2ZmIHg9IjAiIHk9IjAiLz48YTpleHQgY3g9Ijk1MjUiIGN5PSI5NTI1Ii8+PC9hOnhmcm0+PGE6cHJzdEdlb20gcHJzdD0icmVjdCI+PGE6YXZMc3QvPjwvYTpwcnN0R2VvbT48L3BpYzpzcFByPjwvcGljOnBpYz48L2E6Z3JhcGhpY0RhdGE+PC9hOmdyYXBoaWM+PC93cDppbmxpbmU+PC93OmRyYXdpbmc+PC93OnI+PC93OnA+PHc6cD48dzpyPjx3OnJQcj48dzppLz48dzppIHc6dmFsPSIxIi8+PHc6aUNzLz48L3c6clByPjx3OnQgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+RW5jYWJlemFkbyBvZmljaWFsPC93OnQ+PC93OnI+PC93OnA+PC93Omhkcj5QSwMEFAAAAAAAAAB0XSg6OuYfAQAAHwEAABsAAAB3b3JkL19yZWxzL2hlYWRlcjEueG1sLnJlbHM8P3htbCB2ZXJzaW9uPSIxLjAiIGVuY29kaW5nPSJVVEYtOCIgc3RhbmRhbG9uZT0ieWVzIj8+PFJlbGF0aW9uc2hpcHMgeG1sbnM9Imh0dHA6Ly9zY2hlbWFzLm9wZW54bWxmb3JtYXRzLm9yZy9wYWNrYWdlLzIwMDYvcmVsYXRpb25zaGlwcyI+PFJlbGF0aW9uc2hpcCBJZD0icklkMSIgVHlwZT0iaHR0cDovL3NjaGVtYXMub3BlbnhtbGZvcm1hdHMub3JnL29mZmljZURvY3VtZW50LzIwMDYvcmVsYXRpb25zaGlwcy9pbWFnZSIgVGFyZ2V0PSJtZWRpYS9pbWFnZTEucG5nIi8+PC9SZWxhdGlvbnNoaXBzPlBLAwQUAAAAAAAAAHRdqzXH2kkAAABJAAAAFQAAAHdvcmQvbWVkaWEvaW1hZ2UxLnBuZ4lQTkcNChoKAAAADUlIRFIAAAACAAAAAggCAAAA/dSacwAAABBJREFUeNpjWK+lBUQMEAoAHnYEDSbyonkAAAAASUVORK5CYIJQSwECFAMUAAAAAAAAAHRdPKNrjN4CAADeAgAAEwAAAAAAAAAAAAAApAEAAAAAW0NvbnRlbnRfVHlwZXNdLnhtbFBLAQIUAxQAAAAAAAAAdF2b/TfqKQEAACkBAAALAAAAAAAAAAAAAACkAQ8DAABfcmVscy8ucmVsc1BLAQIUAxQAAAAAAAAAdF0h/24yHgMAAB4DAAARAAAAAAAAAAAAAACkAWEEAAB3b3JkL2RvY3VtZW50LnhtbFBLAQIUAxQAAAAAAAAAdF3Q2+C4mgEAAJoBAAAcAAAAAAAAAAAAAACkAa4HAAB3b3JkL19yZWxzL2RvY3VtZW50LnhtbC5yZWxzUEsBAhQDFAAAAAAAAAB0XWq9d4tkAQAAZAEAAA8AAAAAAAAAAAAAAKQBggkAAHdvcmQvc3R5bGVzLnhtbFBLAQIUAxQAAAAAAAAAdF3CfgJQSAQAAEgEAAAQAAAAAAAAAAAAAACkARMLAAB3b3JkL2hlYWRlcjEueG1sUEsBAhQDFAAAAAAAAAB0XSg6OuYfAQAAHwEAABsAAAAAAAAAAAAAAKQBiQ8AAHdvcmQvX3JlbHMvaGVhZGVyMS54bWwucmVsc1BLAQIUAxQAAAAAAAAAdF2rNcfaSQAAAEkAAAAVAAAAAAAAAAAAAACkAeEQAAB3b3JkL21lZGlhL2ltYWdlMS5wbmdQSwUGAAAAAAgACAAKAgAAXREAAAAA"
+      },
+      "por_tribunal": {
+        "MULCHEN": {
+          "cantidad": 2,
+          "cursivas": false,
+          "relaciones_validas": true,
+          "medios": [
+            {
+              "ruta": "word/media/image1.png",
+              "sha256": "1990a1740a35574c26c46decc320c4aaedd520a141aeb1f8b4e2a41c4a3223f2"
+            }
+          ],
+          "partes": [
+            {
+              "ruta": "_rels/.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/_rels/document.xml.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/_rels/header1.xml.rels",
+              "tipo": "application/vnd.openxmlformats-package.relationships+xml"
+            },
+            {
+              "ruta": "word/document.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"
+            },
+            {
+              "ruta": "word/header1.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.header+xml"
+            },
+            {
+              "ruta": "word/media/image1.png",
+              "tipo": "image/png"
+            },
+            {
+              "ruta": "word/styles.xml",
+              "tipo": "application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"
+            }
+          ],
+          "indice": [
+            "Índice",
+            "1. X-100-2026 — PC_IE — Pide cuenta ingreso efectivo",
+            "2. X-101-2026 — NOMENCL — Nomenclatura"
+          ],
+          "parrafos": [
+            {
+              "texto": "Matriz encabezado img Mulchen · uno de enero de dos mil noventa y nueve",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "Causa X-100-2026 de Persona Hdr A, programa AFT Ficticio.",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "Mulchén, uno de enero de dos mil noventa y nueve.",
+              "salto": true,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "Advirtiendo el Tribunal que se omitió la incorporación de la nomenclatura \"[COMPLETAR NOMENCLATURA]\", aplíquese a la presente resolución para efectos de regularizar el correcto registro en el sistema de tramitación de causas.",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "RIT: X-101-2026",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "Se proveyó y firmó mediante firma electrónica avanzada, según lo dispuesto en la ley 20.886 y acta 71-2016 de la Excelentísima Corte Suprema.",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
+            },
+            {
+              "texto": "En Mulchén, uno de enero de dos mil noventa y nueve, notifiqué por el estado diario la resolución precedente.",
+              "salto": false,
+              "num_id": null,
+              "ilvl": null,
+              "num_fmt": null,
+              "reinicia": false
             }
           ]
         }
