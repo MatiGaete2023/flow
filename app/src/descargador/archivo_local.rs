@@ -215,8 +215,15 @@ mod pruebas {
     }
 
     fn comparar_caso(caso: &Value) -> Result<(), String> {
-        let base = std::env::temp_dir().join(format!("flow-es2-{}-{}", std::process::id(), caso["caso"].as_str().unwrap_or("x")));
-        let _ = std::fs::remove_dir_all(&base);
+        let marca_tiempo = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos();
+        let base = std::env::temp_dir().join(format!(
+            "flow-es2-{}-{marca_tiempo}-{}",
+            std::process::id(),
+            caso["caso"].as_str().unwrap_or("x")
+        ));
         std::fs::create_dir_all(&base).map_err(|e| e.to_string())?;
         let base = std::fs::canonicalize(&base).map_err(|e| e.to_string())?;
         reconstruir(&base, &caso["archivos"]);
@@ -261,7 +268,7 @@ mod pruebas {
             let destino = base.join("captura.zip");
             paquete::exportar_con(&carpetas, &destino, &paquete::Opciones {
                 bitacoras: vec![diario], emparejar: true, ..Default::default()
-            })?;
+            }).map_err(|error| format!("{} paquete: {error}", caso["caso"]))?;
             let tablas = contenido_tablas(&destino)?;
             for (tabla, esperado) in caso["paquete"].as_object().into_iter().flat_map(|m| m.iter()) {
                 let obtenido = tablas.get(tabla).cloned().unwrap_or_else(|| json!([]));
