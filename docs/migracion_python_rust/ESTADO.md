@@ -9,9 +9,9 @@ Actualizado: 25 de noviembre de 2026, tras E-I2, E-A9, E-A8, E-A7, E-A6, E-X1, E
 
 ## Siguiente paso
 
-1. **Encargo siguiente: E-A10** (anulaciones de columnas de origen por fila, F08). Antes de escribir código, leer `_prepass_peers` de `record_edits.py`: editar una fila puede cambiar la duplicidad o el acumulado de otras de su causa.
-2. Después, por orden: **E-P1** (Word por tribunal con índice y salto de página) y **E-I1** (instalador; necesita la decisión de firma y alojamiento).
-3. **E-I2 cerrado** (run 45644045890, commit `5f21612`): el artefacto `Flow_Rust_Windows_exe` de ese run (13,4 MB) es el primer `.exe` con actualizador; la primera vez se reemplaza a mano.
+1. **Coordinación (orquestador):** tres agentes trabajan en paralelo en ramas propias: **A** (E-A10, luego E-P1 y E-I1, en la rama principal), **B** (Meta 4, rama `estudio/agente-b-meta4-20261125`) y **C** (paquetes parciales, rama `estudio/agente-c-parciales-20261125`). Cada uno entrega un informe en `informes/AGENTE_<letra>_<fecha>.md`; el orquestador lo revisa, lo integra a la rama principal y valida de nuevo. Reparto, procedimiento y prompt en [CONTINUACION.md](CONTINUACION.md).
+2. **E-U2** (correcciones de la primera prueba con el `.exe`) está `HECHO` con CI verde (run 45648680625); falta que el usuario lo confirme con el `.exe` nuevo.
+3. Orden de trabajo del Asistente (agente A): **E-A10** (anulaciones de columnas de origen por fila; antes, leer `_prepass_peers`), después **E-P1** (Word por tribunal con índice y salto de página) y **E-I1** (instalador; necesita la decisión de firma y alojamiento).
 4. Decisiones ya tomadas por el usuario (13 respuestas del 25-nov y la de actualización sin reinstalar): ver «Decisiones del usuario vigentes» de [PLAN.md](PLAN.md). Descartados: M6, M7, formatos antiguos de Meta 4, conteo del Anonimizador y paginación del Word manual.
 
 ## Pendiente del usuario
@@ -20,6 +20,8 @@ Actualizado: 25 de noviembre de 2026, tras E-I2, E-A9, E-A8, E-A7, E-A6, E-X1, E
 - **Prueba corta, primeros hallazgos (25-nov, `.exe` de E-I2 en Windows):** el Descargador no se podía usar con la ventana pequeña porque su vista no se desplazaba (corregido en E-U2, CI verde en el run 45648680625; falta que lo confirmes con el `.exe` nuevo); «Validar perfil» es una consulta única y ahora lo dice en pantalla; y «Resultados del lote» rechazó un lote antiguo de Flow Python con «falta resumen.json». **Para cerrar lo último, envía solo la lista de nombres de archivos de esa carpeta** (en la carpeta: `dir /b`, sin abrir ni copiar su contenido): Python abre carpetas con `resumen.json`, `flujo.json` (conjunto «Flujo CSMP …») o `bitacoras.json`, y Rust solo la primera; si es un conjunto, hay que abrir sus subcarpetas.
 - **Diagnósticos de lecturas parciales:** dependen de la prueba corta. Cuando exista un paquete parcial real, enviar solo extractos anónimos: `resumen.json` y `diagnostico_bitacoras.json`, el aviso del paquete parcial y, con la versión Rust, `diagnostico_calendarios.json`.
 - **Acta de uso real:** un mes real completo, en paralelo con Python. Prevista para dentro de un mes (alrededor del 25 de diciembre de 2026). Antes, revisión visual de las capturas del run y paquete H.
+- **Asignar el modelo de cada agente** (ChatGPT, DeepSeek, Gemini); recomendaciones y advertencias en [CONTINUACION.md](CONTINUACION.md).
+- **Lote antiguo de Flow Python rechazado por Resultados:** enviar la lista de nombres de archivos (`dir /b`) de esa carpeta, sin su contenido.
 - **Instalador (E-I1): firma y alojamiento.** Se decide con lo que se vea en la prueba corta: si Windows (SmartScreen) o el antivirus del equipo bloquea el `.exe` sin firma. Explicado en [CONTINUACION.md](CONTINUACION.md).
 
 ## Capacidades
