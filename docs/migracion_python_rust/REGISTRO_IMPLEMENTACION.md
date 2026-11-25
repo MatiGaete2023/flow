@@ -310,3 +310,13 @@ E-R3 · Meta 4: contraste ampliado (`92ab9c1`, CI Windows verde, run 45656558813
 - Revisión del informe de B (E-R3, ya integrado por otra sesión): alcance correcto, CI de su rama verde con regeneración corrida; sus diferencias (fecha de emisión al regenerar, filas fuera de FAE/Residencia, plantillas con celdas combinadas) se conservan como decisiones revertibles. E-Q9 pasa al Agente B. Aclaración del usuario: el ZIP de la prueba eran controles de dos procesos en carpetas separadas.
 - CI manual 45660388335 (`f7b0481`): `resultados` ya coincide; `paquete` y `excel` no. Causas: `ventana_historia.html` leído con CRLF del checkout de Windows (cambia la huella del HTML, `historias.json` y `capture_id`) y `xlsx_fijo` sin `create_system = 3` (en Windows vale 0 y cambia los bytes del XLS). Corregidos en `generar_paquete.py`; los tres regeneran idénticos en Linux.
 - CI manual 45663137240 (`af48086`): `excel` ya coincide y `word_tribunal` queda resuelto por `a986d7c` (ZIP sin compresión, de A). `paquete` difería en `capture_id` y huellas de tablas: Python suma las huellas de `bitacoras.json` e `historias.json`, que en Windows `Path.write_text` escribe con CRLF. `generar_lote.py` (que importan paquete, excel y resultados) hace que `write_text` escriba LF durante la generación; la referencia no cambia.
+
+## 2026-11-25 · E-P1 · Proyectos Word por proyecto o por tribunal (agente A)
+
+- Cambió: `productos.rs` (`generar_word_por_tribunal`, `generar_word_formato`, `lineas_indice`; preserva estilos y quita cursivas; `generar_word` sin cambios), `ui.rs` (selector en Resoluciones, conteos y recibos por archivo de tribunal), `generar_word_tribunal.py` → `word_tribunal.json` y la línea `word_tribunal` del workflow.
+- Acredita: `word_por_tribunal_igual_a_python` (6 casos, 7 archivos), `oraculo_de_word_tribunal_detecta_alteraciones` y `por_tribunal_soporta_tribunal_generico_y_excluidos`.
+- CI: run 45663684583 (A) y 45665516823 (todos los oráculos) verdes. Dos ejecutores de A en paralelo (Matias Gaete y OpenAI Codex `4966b6d`); el merge `05dfd19` dejó una implementación.
+
+## 2026-11-25 · Orquestador · Cierres con todos los oráculos regenerados en Windows
+
+- Run 45665516823 (`db33e78`, `workflow_dispatch`, «todos»): `linux` y `validar` verdes; regeneración sin diferencias. Cierra como `HECHO`: E-A10, E-P1, la corrección del aviso de cobertura (`980c6ed`), E-R3 sobre la rama principal y el determinismo de los generadores.
