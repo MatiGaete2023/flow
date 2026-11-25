@@ -230,5 +230,5 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Cambió: `conciliar.rs` y `ui.rs` (ausentes con/sin cobertura), `motor/historia.rs` (R11 no se redacta con varias órdenes en causa compartida), `util.rs`/`productos.rs` (`hoy()`), `generar_correos.py` y `correos.json` (fecha fija).
 - Acredita: `ausente_no_implica_egreso_sin_la_misma_consulta_completa`, `d11_varias_ordenes_en_causa_compartida_no_se_atribuyen` y los oráculos de historia con `d11 == 3` declarados. `probar_app.sh todo`: 72 y 90 pruebas, 0 fallos; clippy limpio.
 - Corrige: `correos_iguales_a_python` fallaba al cambiar el día (el oráculo guardaba la fecha de generación).
-- Pendiente: CI de Windows verde; el contraste E3 con el ZIP de Python no se pudo correr aquí (sin `tkinter`).
+- CI: run 45609310864 verde (`linux` y `validar`, con el contraste E3 con el ZIP de Python y `correos.json` regenerado en Windows).
 

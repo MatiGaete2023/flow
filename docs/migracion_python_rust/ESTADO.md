@@ -12,7 +12,7 @@ Actualizado: 24 de noviembre de 2026, tras D-10, D-11, E-A6, E-X1, E-X2, E-R1 y 
 1. **Hecho:** el run 45487699648 (commit `4313c54`) quedó verde en `linux` y `validar`, con `meta4.json` regenerado en Windows. Cierra E-R1, E-R2, E-X1 y E-X2; los runs 45470928947 y 45471386495 habían fallado por la carpeta de bitácoras no canónica (corregida).
 2. **Usuario:** prueba corta del tramo 1 (ver «Pendiente del usuario»).
 3. **E-U1** (por especificar con el usuario) de [PLAN.md](PLAN.md); después, el tramo 3 (Asistente).
-4. **Decisiones delegadas al asistente el 25-nov («Decide tú»), por revisar:** D-10 y D-11 aprobadas e implementadas (`HECHO` en Linux, falta su CI de Windows), D-12 diferida y D-13 conservar. Detalle en «Decisiones del usuario vigentes» de [PLAN.md](PLAN.md). Revertirlas es decisión del usuario.
+4. **Decisiones delegadas al asistente el 25-nov («Decide tú»), por revisar:** D-10 y D-11 aprobadas e implementadas (`HECHO`: CI Windows verde, run 45609310864), D-12 diferida y D-13 conservar. Detalle en «Decisiones del usuario vigentes» de [PLAN.md](PLAN.md). Revertirlas es decisión del usuario.
 
 ## Pendiente del usuario
 
