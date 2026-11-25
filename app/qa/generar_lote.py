@@ -18,6 +18,18 @@ import threading
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parents[2]
+
+# La referencia escribe sus controles con `Path.write_text` en modo texto: en Windows salen con CRLF y sus huellas
+# (p. ej. el `capture_id`, que suma las de bitacoras.json e historias.json) dejan de ser las de Linux. Durante la
+# generación se escriben en LF para que el oráculo sea el mismo en cualquier sistema; la referencia no se modifica.
+_write_text = Path.write_text
+
+
+def _write_text_lf(self, data, encoding=None, errors=None, newline=None):
+    return _write_text(self, data, encoding=encoding, errors=errors, newline='\n' if newline is None else newline)
+
+
+Path.write_text = _write_text_lf
 sys.path[:0] = [str(RAIZ / 'descargador'), str(RAIZ / 'src'), str(RAIZ / 'tests')]
 
 from csmp_shared import parser  # noqa: E402
