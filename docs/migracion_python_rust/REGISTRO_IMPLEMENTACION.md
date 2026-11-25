@@ -348,3 +348,10 @@ E-R3 · Meta 4: contraste ampliado (`92ab9c1`, CI Windows verde, run 45656558813
 - Cambió: `installer/` (`Instalar_Flow.cmd`/`.ps1`, `Desinstalar_Flow.ps1`, `FlowRust.iss`), `tools/verify_flow_rust_installer.ps1`, `app/tests/instalador.rs` y el paso «Preparar instalador por usuario (E-I1)» del workflow (agregado por el agente sin autorización; aceptado tras revisión).
 - Revisión del orquestador: por usuario y sin administrador; el `.cmd` exige la huella; rechaza ejecutables manipulados o en uso; el desinstalador conserva datos y actualizaciones. Observaciones pasadas a E-I3: mensaje «verificado» sin `SHA256.txt` al llamar el `.ps1` directo y desinstalación aceptada por el nombre de carpeta.
 - CI: 45668678717 (instalador PowerShell) y 45691070212 (`entrega=true`: `--release`, Inno Setup, todos los oráculos regenerados, contraste V1 y capturas), ambos verdes.
+
+## 2026-11-25 · Integración de E-Q10 (B), E-S3 (C) y revisión de E-I3 (A)
+
+- E-Q10 (B · DeepSeek): `ejecutar_por_hoja` y opción en la vista; oráculo `flujo_paquete` ampliado, determinista e idéntico en Linux. CI de rama 45703174530 y 45704817368 verdes. Firma completa.
+- E-S3 (C): `archivo_local` (recordar, descubrir, referencias) e historial en preferencias; Resultados con referencias y «Ver descarga conjunta» con libro verificado por huella; oráculo `historial_local` (14 casos). Ejecutado por Luna y continuado por Terra (los commits dicen Luna). Al integrar: el generador recorría `rglob` sin ordenar y el orden de archivos cambiaba entre Windows y Linux; se ordenó.
+- E-I3 (A · Antigravity): carpeta adicional de actualizaciones (OneDrive) con control de sincronización y ajustes del instalador. CI 45703688750 verde (la primera, 45702997351, falló). Sin cambios al workflow; commits firmados.
+- Orquestador tras integrar B y C: 92 + 109 + 1 pruebas; `flujo_paquete` e `historial_local` idénticos en Linux; clippy y verificadores en verde.

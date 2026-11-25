@@ -38,7 +38,7 @@ def run(destino):
             casos.append({'caso': nombre, 'lotes': [relativo(p) for p in prefs.data['historial_lotes']],
                           'bitacoras': [relativo(p) for p in prefs.data['historial_bitacoras']],
                           'base': base, 'ultimo': ultimo,
-                          'archivos': {relativo(f): f.read_text(encoding='utf-8') for f in raiz.rglob('*') if f.is_file()},
+                          'archivos': {relativo(f): f.read_text(encoding='utf-8') for f in sorted(raiz.rglob('*')) if f.is_file()},  # orden fijo: rglob no lo garantiza entre sistemas
                           'excluidas': list(excluidas),
                           'referencias': [relativo(p) for p in diary_references(prefs, [raiz / p for p in excluidas])],
                           'resultado': [[relativo(p), t, e, str(n)] for p, t, e, n in filas]})
