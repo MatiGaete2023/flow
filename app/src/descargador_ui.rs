@@ -1173,6 +1173,11 @@ impl Descargador {
                         self.error = None;
                     }
                     ui.add_space(6.0);
+                    ui.label(
+                        RichText::new("Consulta única: un tribunal, una pestaña y una modalidad. «Validar perfil» solo comprueba que SITFA acepta esa combinación. Para descargar varios a la vez, usa «Planificar lote» más abajo.")
+                            .color(p.muted)
+                            .size(12.5),
+                    );
                     if theme::primary(ui, p, "Validar perfil").clicked() {
                         match catalogo.preparar(self.edicion, &self.seleccion) {
                             Ok(perfil) => {

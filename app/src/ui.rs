@@ -756,8 +756,14 @@ impl App {
                 Vista::Resultados => self.v_resultados(ui, &p),
                 Vista::Contactos => self.v_contactos(ui, &p),
                 Vista::Anonimizador => self.v_anon(ui, &p),
-                Vista::Descargador => self.descargador.mostrar(ui, &p),
-                Vista::Meta4 => self.meta4.mostrar(ui, &p),
+                // Estas dos vistas son largas y no traen su propio desplazamiento: sin él, lo que queda bajo el borde de la
+                // ventana (por ejemplo al abrir «Planificar lote») no se puede alcanzar.
+                Vista::Descargador => {
+                    egui::ScrollArea::vertical().id_salt("vista descargador").auto_shrink([false, false]).show(ui, |ui| self.descargador.mostrar(ui, &p));
+                }
+                Vista::Meta4 => {
+                    egui::ScrollArea::vertical().id_salt("vista meta4").auto_shrink([false, false]).show(ui, |ui| self.meta4.mostrar(ui, &p));
+                }
                 Vista::Ajustes => self.v_ajustes(ui, &p),
             });
         if let Some(paquete) = self.descargador.paquete_para_trabajo() {

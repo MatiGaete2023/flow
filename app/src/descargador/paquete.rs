@@ -261,6 +261,16 @@ pub fn cargar_lote(carpeta: &Path) -> Result<Lote, String> {
 /// `load_lot(folder, partial)`: con `parcial`, un lote incompleto se abre con sus consultas INCOMPLETA.
 pub fn cargar_lote_con(carpeta: &Path, parcial: bool) -> Result<Lote, String> {
     let carpeta = carpeta.canonicalize().map_err(|e| format!("No se pudo abrir el lote: {e}"))?;
+    if !carpeta.join("resumen.json").is_file() {
+        return Err(if carpeta.join("flujo.json").is_file() {
+            "Esta carpeta es un conjunto de Flow Python (tiene flujo.json). Elige una de sus subcarpetas de descarga: la que contiene resumen.json."
+        } else if carpeta.join("bitacoras.json").is_file() {
+            "Esta carpeta es un lote de bitácoras (tiene bitacoras.json), no de registros. Elige la carpeta de la descarga de registros: la que contiene resumen.json."
+        } else {
+            "La carpeta no es un lote de registros: falta resumen.json. Elige la carpeta de la descarga (la que contiene resumen.json y sus archivos verificacion NNN.json)."
+        }
+        .into());
+    }
     let resumen = leer_json(&carpeta.join("resumen.json"))?;
     let incompleto = resumen["estado"] != "VALIDADA";
     if incompleto && !parcial {
@@ -1965,6 +1975,27 @@ mod tests {
     use super::*;
     use base64::Engine;
     use std::io::Read;
+
+    /// Una carpeta que no es un lote de registros dice qué es y qué carpeta elegir, en vez de solo «falta resumen.json».
+    #[test]
+    fn una_carpeta_sin_resumen_dice_que_es_y_que_elegir() {
+        let base = std::env::temp_dir().join(format!("flow-lote-sin-resumen-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&base);
+        for (nombre, archivo, esperado) in [
+            ("conjunto", Some("flujo.json"), "conjunto de Flow Python"),
+            ("bitacoras", Some("bitacoras.json"), "lote de bitácoras"),
+            ("otra", None, "falta resumen.json"),
+        ] {
+            let carpeta = base.join(nombre);
+            std::fs::create_dir_all(&carpeta).unwrap();
+            if let Some(a) = archivo {
+                std::fs::write(carpeta.join(a), "{}").unwrap();
+            }
+            let Err(e) = cargar_lote(&carpeta) else { panic!("{nombre}: debía rechazarse") };
+            assert!(e.contains(esperado) && e.contains("resumen.json"), "{nombre}: {e}");
+        }
+        let _ = std::fs::remove_dir_all(&base);
+    }
 
     fn reconstruir(destino: &Path, archivos: &Value) {
         for (ruta, b64) in archivos.as_object().unwrap() {

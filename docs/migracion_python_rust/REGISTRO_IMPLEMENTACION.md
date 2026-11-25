@@ -268,3 +268,13 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Acredita: tres pruebas nuevas (aplicar y volver atrás, rechazos y restauración, extensión en el lugar). `probar_app.sh todo`: 73 y 94 pruebas, 0 fallos; clippy de la biblioteca limpio; inventario de escrituras al día.
 - Corrige: la huella del ejecutable se calculaba en cada cuadro de Ajustes (la corrida de pruebas pasó de más de 10 minutos a 20 segundos al corregirlo).
 - CI: run 45644045890 verde (`linux` y `validar`; sin cambios de oráculos, la regeneración se omitió). Pendiente: prueba del usuario con un `.exe` real (la primera actualización es manual).
+
+## 2026-11-25 · E-U2 · Correcciones de la primera prueba con el .exe
+
+- Hallazgos del usuario: el Descargador no se podía usar con la ventana pequeña, «Validar perfil» no dejaba elegir varios y Resultados rechazó un lote antiguo («falta resumen.json»).
+- Cambió: `ui.rs` (desplazamiento general en Descargador y Meta 4), `descargador_ui.rs` (texto de la consulta única) y `descargador/paquete.rs` (mensajes de `cargar_lote`).
+- Acredita: `una_carpeta_sin_resumen_dice_que_es_y_que_elegir`. `probar_app.sh todo`: 74 y 94 pruebas, 0 fallos; clippy limpio. El desplazamiento solo lo valida el usuario.
+- Sin resolver: abrir conjuntos `flujo.json` en Resultados; hace falta la lista de nombres de archivos del lote antiguo para confirmar su tipo.
+- Coordinación: toca `descargador_ui.rs` y `paquete.rs`, que usa el Agente C; integrar con cuidado.
+- Pendiente: CI de Windows verde.
+
