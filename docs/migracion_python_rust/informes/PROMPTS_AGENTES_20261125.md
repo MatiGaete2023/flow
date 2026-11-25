@@ -236,3 +236,47 @@ INFORME: docs/migracion_python_rust/informes/AGENTE_B_20261125b.md, en un commit
 
 ESTILO: español chileno, primera línea = la respuesta, sin cortesías, código completo.
 ```
+
+## Prompt del Agente A · E-P2 Word por tribunal con imágenes, numeración y relaciones (GPT-5.6 Luna)
+
+```
+Eres el Agente A (ejecutor único: si hay otra sesión de A abierta, detente y avisa al usuario). Trabajas en MatiGaete2023/flow, directamente en la rama estudio/paridad-python-rust-20261119. Otros agentes: B (rama estudio/agente-b-flujo-20261125: flujo_paquete.rs, descargador_ui.rs) y C (rama estudio/agente-c-conjuntos-20261125: descargador_resultados_ui.rs, archivo_local.rs). No toques lo suyo.
+
+EVALUACIÓN DE TU ENTREGA ANTERIOR (E-P1, cerrada como HECHO por el coordinador en el run 45665516823):
+- Bien: respetaste los archivos y los documentos de estado, pusiste ENTREGADO con la salida literal del paso de regeneración y resolviste el determinismo con ZIP_STORED.
+- Corrige:
+  1. Trabajo duplicado: 4966b6d reimplementó E-P1 desde una base vieja cuando 9aac149 ya estaba publicado. Antes de escribir código, haz git fetch y revisa git log origin/estudio/paridad-python-rust-20261119 -- <tus archivos>. Si el encargo ya tiene commits publicados, continúa sobre ellos; no lo empieces de nuevo.
+  2. Conteos inconsistentes: el resumen dice 81 + 101 y la tabla 76 + 101; el coordinador obtuvo 82 + 100. Copia los conteos de la línea literal «test result» de la corrida que citas, con su commit.
+  3. Un run lanzado por el coordinador (workflow_dispatch) no es evidencia tuya: cítalo como «revalidación del coordinador».
+  4. E-I1: hay un commit af0224d («E-I1: instalador…») con la identidad «Matias Gaete», hecho antes de la decisión de firma y alojamiento y con cambios en el workflow. No lo toques, no lo amplíes ni lo reviertas: lo revisa el coordinador. En tu primera respuesta di si ese commit es tuyo (sí o no).
+
+PASO 0 · CHECKOUT. Usa un solo clon con `git remote get-url origin` = MatiGaete2023/flow. git fetch origin estudio/paridad-python-rust-20261119; git checkout estudio/paridad-python-rust-20261119; git merge --ff-only origin/estudio/paridad-python-rust-20261119; comprueba git merge-base --is-ancestor 8dfc185 HEAD (debe terminar en 0). Si el clon tiene cambios locales que no son tuyos, detente. Si falla el fetch: BLOQUEADO con el error literal. Primera respuesta: ruta del clon, commit de HEAD y la respuesta del punto 4.
+
+Lee solo AGENTS.md, docs/migracion_python_rust/ESTADO.md (F14), PLAN.md (E-P2 y E-I1) y CONTINUACION.md.
+
+ENCARGO · E-P2 · Word por tribunal con plantillas que traen imágenes, numeración o relaciones (F14).
+Hecho: al unir matrices en un .docx por tribunal, productos.rs no combina word/_rels/document.xml.rels, word/media/*, word/numbering.xml ni [Content_Types].xml. Con una plantilla propia que trae una imagen (p. ej. un logo en el cuerpo o en el encabezado), viñetas o numeración, el archivo resultante puede quedar con referencias rId rotas, viñetas perdidas o un documento que Word repara al abrir. Python une con docxcompose (Composer(docs[0], preserve_styles=True).append(doc)), que renumera las relaciones, copia los medios, fusiona la numeración y actualiza los tipos de contenido.
+
+Tareas, en orden:
+1. Lee src/nurus/personal/resolutions.py (generate_projects) y el código instalado de docxcompose (composer.py: append, add_referenced_parts, add_numberings, add_styles, restart_numbering) para fijar la conducta exacta que vas a igualar. No modifiques Python.
+2. En productos.rs, al unir cada proyecto: renumera sus rId para que no choquen con los ya presentes; copia sus partes referenciadas (imágenes, encabezados y pies con sus propias relaciones) con nombres únicos; fusiona numbering.xml (abstractNum y num con ids nuevos y las referencias numId del cuerpo actualizadas) y agrega a [Content_Types].xml las extensiones y partes nuevas. No cambies la firma de generar_word, generar_word_por_tribunal ni generar_word_formato.
+3. Si docxcompose reinicia o continúa la numeración entre proyectos, haz lo mismo y fíjalo en el oráculo; no elijas otra conducta.
+4. Oráculo: amplía app/qa/generar_word_tribunal.py y app/tests/datos/word_tribunal.json (ya está en el workflow; no lo toques) con al menos 5 casos sintéticos: plantilla propia con una imagen PNG pequeña generada en el script; dos proyectos del mismo tribunal con la misma imagen; plantilla con lista con viñetas; plantilla con lista numerada en dos proyectos seguidos; encabezado con imagen. Por archivo graba: secuencia de párrafos (texto, salto previo, numId e ilvl resueltos a su formato), lista de partes del ZIP con su tipo de contenido, huella SHA-256 de cada medio y que toda referencia r:embed y r:id del cuerpo y encabezados resuelve a una relación existente. Determinista: ZIP_STORED, create_system = 3, external_attr fijo, fechas fijas.
+5. Pruebas Rust: amplía word_por_tribunal_igual_a_python con los nuevos conteos y oraculo_de_word_tribunal_detecta_alteraciones con una alteración de relación (rId que no resuelve) y una de numeración; agrega una prueba que abre cada .docx generado y verifica que todas las relaciones resuelven y que [Content_Types].xml cubre todas las partes.
+6. Si hay escrituras nuevas a disco, ajusta solo la línea de productos.rs en tools/inventario_escrituras.py.
+
+Archivos tuyos: app/src/productos.rs, app/qa/generar_word_tribunal.py, app/tests/datos/word_tribunal.json y la línea de productos.rs del inventario.
+Prohibido: ui.rs (no hace falta en este encargo), installer/**, el workflow, descargador/**, descargador_ui.rs, descargador_resultados_ui.rs, meta4_ui.rs, Cargo.toml y Cargo.lock (sin dependencias nuevas), archivos Python de src/, descargador/ y tests/, y ESTADO.md, PLAN.md, REGISTRO_IMPLEMENTACION.md, AGENTS.md y CONTINUACION.md. Las matrices institucionales y sus textos no se tocan.
+
+REGLAS: datos sintéticos (la imagen se genera en el script; nada real); sin escritura en RUS/SATURNO; Outlook solo borradores con CC fijo; sin --force, sin merge a main, sin releases.
+
+CRITERIO DE PARADA: si docxcompose hace algo ambiguo o que parece un error, reprodúcelo, fíjalo en el oráculo y repórtalo. Si necesitas una dependencia o un archivo prohibido: BLOQUEADO con el motivo. Si la CI falla dos veces por la misma causa sin que la entiendas, detente y reporta el log.
+
+PRUEBAS: tools/probar_app.sh rapido word mientras trabajas; tools/probar_app.sh todo una vez antes de publicar; cargo clippy --manifest-path app/Cargo.toml --features eframe/x11 --lib -- -D warnings; verificar_textos_umbrales.py e inventario_escrituras.py.
+
+PUBLICACIÓN: commits en estudio/paridad-python-rust-20261119 con las líneas de atribución del sistema; antes de cada push, git fetch y git merge --no-edit (nunca rebase de commits ajenos, nunca --force). Revisa la CI de tu push con las herramientas de GitHub sin sondear en bucle: «Regenerar los oráculos» debe CORRER y terminar en «Oráculos regenerados sin diferencias.» nombrando word_tribunal.
+
+INFORME: docs/migracion_python_rust/informes/AGENTE_A_20261125b.md, en un commit aparte y el último: 1) resumen ≤10 líneas; 2) ruta del clon, commits y archivos; 3) conteos antes → después copiados de la línea literal «test result», con su commit; 4) run de tu push con la conclusión y la última línea del paso de regeneración; 5) hallazgos (hechos | inferencias | especulación); 6) texto propuesto para ESTADO, PLAN y registro (≤10 líneas); 7) riesgos y pendientes. Estado: ENTREGADO o BLOQUEADO.
+
+ESTILO: español chileno, primera línea = la respuesta, sin cortesías, código completo.
+```
