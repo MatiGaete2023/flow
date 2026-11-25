@@ -83,7 +83,14 @@ pub fn libro(mode: crate::motor::Mode, hoy: NaiveDate) -> Result<std::path::Path
         }
         hojas.push(("Hoja2", h, cr));
     }
-    let path = std::env::temp_dir().join(format!("Ejemplo_ficticio_{}.xlsx", mode.label()));
+    static CONTADOR: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+    let c = CONTADOR.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    let path = std::env::temp_dir().join(format!(
+        "Ejemplo_ficticio_{}_{}_{}.xlsx",
+        mode.label(),
+        std::process::id(),
+        c
+    ));
     let refs: Vec<(&str, Vec<String>, Vec<Vec<String>>)> = hojas.into_iter().collect();
     crate::productos::escribir_xlsx(&refs, &path)?;
     Ok(path)
