@@ -217,9 +217,9 @@ fn combinar(
 /// `sync.refresh`: combina la revisión de la copia con la de Trabajo. Todo o nada.
 ///
 /// F10: si una columna de origen cambió en la copia, se toma el valor de Excel y se recalculan la propuesta y las reglas
-/// (`record_edits.recalculate`); la revisión de la persona se conserva. Solo en trabajos de un archivo de RUS: en un
-/// paquete el origen es la captura y solo se avisa. Diferencia con Python: se vuelven a analizar todas las filas, no solo
-/// las editadas, así que también se actualiza una fila cuya duplicidad depende de la editada.
+/// (`record_edits.recalculate`); la revisión de la persona se conserva. En un trabajo de paquete el contexto de lectura
+/// (historia, bitácora, calendario) sigue siendo el de la captura. Diferencia con Python: se vuelven a analizar todas las
+/// filas, no solo las editadas, así que también se actualiza una fila cuya duplicidad depende de la editada.
 pub fn actualizar(w: &mut Trabajo, cfg: &Config, headers: &[String], filas: &[Vec<Cell>], resoluciones: &Resoluciones) -> Result<Resumen, Error> {
     let asociadas = asociar(w, headers, filas)?;
     let cols = columnas(headers);
@@ -324,11 +324,7 @@ pub fn actualizar(w: &mut Trabajo, cfg: &Config, headers: &[String], filas: &[Ve
             nuevos_valores.push((i, editadas.into_iter().map(|(c, j)| (c, fila.get(j).cloned().unwrap_or(Cell::Empty))).collect()));
         }
     }
-    if origen_editado > 0 && w.paquete.is_some() {
-        resumen.avisos.push(format!(
-            "{origen_editado} fila(s) tienen datos de origen distintos en Excel. En un paquete el origen es la captura: esta versión no los recalcula; descarga y abre el paquete de nuevo."
-        ));
-    } else if origen_editado > 0 {
+    if origen_editado > 0 {
         // `analizar` conserva la observación editada, la revisión y RES, pero no los campos de Excel ni la línea base.
         let extras: HashMap<usize, Extras> = w
             .registros
@@ -422,8 +418,12 @@ mod pruebas {
 
     /// Repite el escenario de Python sobre Trabajo y devuelve las diferencias con lo que Python grabó.
     fn comparar(datos: &Value, caso: &Value) -> Vec<String> {
-        let mut w = trabajo(datos);
-        recordar_exportacion(&mut w, "ESPERA");
+        comparar_con(trabajo(datos), "ESPERA", caso)
+    }
+
+    /// Repite el escenario sobre un trabajo ya armado (de un archivo de RUS o de un paquete); `hoja` es la de su copia.
+    fn comparar_con(mut w: Trabajo, hoja: &str, caso: &Value) -> Vec<String> {
+        recordar_exportacion(&mut w, hoja);
         let sugerida: Vec<String> = w.registros.iter().map(|r| r.res.clone()).collect();
         for l in caso["locales"].as_array().unwrap() {
             let (i, campo, v) = (l[0].as_u64().unwrap() as usize, l[1].as_str().unwrap(), texto(&l[2]));
@@ -507,7 +507,7 @@ mod pruebas {
                 d.push(format!("fila {i} propuesta: Rust {:?} · Python {esperada:?}", r.propuesta));
             }
         }
-        for (i, esperado) in caso["correo"].as_array().unwrap().iter().enumerate() {
+        for (i, esperado) in caso["correo"].as_array().into_iter().flatten().enumerate() {
             let previsto: BTreeMap<String, String> = esperado.as_object().unwrap().iter().map(|(k, v)| (k.clone(), texto(v))).collect();
             if w.registros[i].gestiones_correo != previsto {
                 d.push(format!("fila {i} gestiones de correo: Rust {:?} · Python {previsto:?}", w.registros[i].gestiones_correo));
@@ -616,5 +616,65 @@ mod pruebas {
             assert_eq!(w.registros[0].gestiones_correo["medidas"], esperado, "{elegido}");
             assert_eq!(w.registros[0].sync_correo.as_deref(), Some(r#"{"medidas":"include"}"#), "la línea base es la de Excel");
         }
+    }
+
+    /// E-A9: «Actualizar desde Excel» en un trabajo que viene de un paquete, contra `refresh` de Flow Python
+    /// (`app/qa/generar_sync_paquete.py`): el lote de listados con tres columnas de origen, empaquetado por cada lado.
+    fn trabajo_de_paquete(datos: &Value, carpeta: &std::path::Path) -> Trabajo {
+        use flow_rust::descargador::paquete::{self, Opciones};
+        use base64::Engine;
+        let lote = &datos["lote"];
+        let lote_dir = carpeta.join(lote["carpeta"].as_str().unwrap());
+        for (ruta, b64) in lote["archivos"].as_object().unwrap() {
+            let destino = lote_dir.join(ruta);
+            std::fs::create_dir_all(destino.parent().unwrap()).unwrap();
+            std::fs::write(destino, base64::engine::general_purpose::STANDARD.decode(b64.as_str().unwrap()).unwrap()).unwrap();
+        }
+        let zip = carpeta.join("captura.zip");
+        paquete::exportar_con(&[lote_dir], &zip, &Opciones::default()).unwrap();
+        let corte = NaiveDate::parse_from_str(datos["corte"].as_str().unwrap(), "%Y-%m-%d").unwrap();
+        Trabajo::abrir_archivo(zip, Some(Mode::Cumplimiento), corte, &Config::default()).unwrap()
+    }
+
+    #[test]
+    fn actualizar_desde_excel_en_un_paquete_igual_a_python() {
+        let datos: Value = serde_json::from_str(include_str!("../tests/datos/sync_paquete.json")).unwrap();
+        let (_candado, perfil) = crate::prueba_entorno::perfil_aislado();
+        let casos = datos["casos"].as_array().unwrap();
+        let (mut iguales, mut fallos) = (0, Vec::new());
+        for caso in casos {
+            let carpeta = perfil.join("sync_paquete").join(caso["escenario"].as_str().unwrap());
+            let _ = std::fs::remove_dir_all(&carpeta);
+            std::fs::create_dir_all(&carpeta).unwrap();
+            let d = comparar_con(trabajo_de_paquete(&datos, &carpeta), "CUMPLIMIENTO", caso);
+            if d.is_empty() {
+                iguales += 1;
+            } else {
+                fallos.push(format!("{}:\n  {}", caso["escenario"], d.join("\n  ")));
+            }
+        }
+        for f in &fallos {
+            println!("FALLA {f}");
+        }
+        println!("SYNC_PAQUETE: {iguales}/{}, fallos {}", casos.len(), fallos.len());
+        assert_eq!(casos.len(), 6, "el oráculo debe traer 6 casos");
+        assert!(fallos.is_empty());
+    }
+
+    /// Prueba permanente del oráculo: la regla que Python recalculó en el paquete, alterada, debe detectarse.
+    #[test]
+    fn oraculo_de_sync_en_paquete_detecta_alteraciones() {
+        let datos: Value = serde_json::from_str(include_str!("../tests/datos/sync_paquete.json")).unwrap();
+        let (_candado, perfil) = crate::prueba_entorno::perfil_aislado();
+        let carpeta = perfil.join("sync_paquete_alterado");
+        let _ = std::fs::remove_dir_all(&carpeta);
+        std::fs::create_dir_all(&carpeta).unwrap();
+        let mut caso = datos["casos"].as_array().unwrap().iter().find(|c| c["escenario"] == "origen_editado").unwrap().clone();
+        assert!(comparar_con(trabajo_de_paquete(&datos, &carpeta), "CUMPLIMIENTO", &caso).is_empty());
+        caso["reglas"][0] = serde_json::json!(["CUMPLIMIENTO.C05_POR_VENCER"]);
+        let carpeta2 = perfil.join("sync_paquete_alterado_2");
+        let _ = std::fs::remove_dir_all(&carpeta2);
+        std::fs::create_dir_all(&carpeta2).unwrap();
+        assert!(!comparar_con(trabajo_de_paquete(&datos, &carpeta2), "CUMPLIMIENTO", &caso).is_empty(), "una regla alterada no se detecta");
     }
 }

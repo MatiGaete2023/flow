@@ -1,0 +1,285 @@
+{
+ "corte": "2026-10-08",
+ "lote": {
+  "carpeta": "2026-10-08 13-00-00",
+  "archivos": {
+   "CUMP Ambulatorio Jdo Familia Tome 1.xls": "PGh0bWw+PG1ldGEgY2hhcnNldD0idXRmLTgiPjx0YWJsZSBpZD0ieCI+PHRyPjx0aD5SSVQ8L3RoPjx0aD5SVVQ8L3RoPjx0aD5Ob21icmU8L3RoPjx0aD5EZXJpdmFjacOzbjwvdGg+PHRoPkFjY2lvbmVzPC90aD48dGg+RElBUyBERSBDVU1QTElNSUVOVE88L3RoPjx0aD5ESUFTIFBBUkEgRUdSRVNBUjwvdGg+PHRoPkZFQy5FR1JFU08gUFJPWUVDVEFETzwvdGg+PC90cj48dHI+PHRkPlgtMS0yMDk5PC90ZD48dGQ+MTExMTExMTEtMDwvdGQ+PHRkPlBlcnNvbmEgRmljdGljaWEgMTwvdGQ+PHRkPlBSTSBDZW50cm8gRmljdGljaW88L3RkPjx0ZD48L3RkPjx0ZD4zMDA8L3RkPjx0ZD4yNTwvdGQ+PHRkPjE1LzEyLzIwMjY8L3RkPjwvdHI+PC90YWJsZT48L2h0bWw+",
+   "CUMP Ambulatorio Jdo Familia Tome 2.xls": "PGh0bWw+PG1ldGEgY2hhcnNldD0idXRmLTgiPjx0YWJsZSBpZD0ieCI+PHRyPjx0aD5SSVQ8L3RoPjx0aD5SVVQ8L3RoPjx0aD5Ob21icmU8L3RoPjx0aD5EZXJpdmFjacOzbjwvdGg+PHRoPkFjY2lvbmVzPC90aD48dGg+RElBUyBERSBDVU1QTElNSUVOVE88L3RoPjx0aD5ESUFTIFBBUkEgRUdSRVNBUjwvdGg+PHRoPkZFQy5FR1JFU08gUFJPWUVDVEFETzwvdGg+PC90cj48dHI+PHRkPlgtMi0yMDk5PC90ZD48dGQ+MTExMTExMTItMDwvdGQ+PHRkPlBlcnNvbmEgRmljdGljaWEgMjwvdGQ+PHRkPlBSTSBDZW50cm8gRmljdGljaW88L3RkPjx0ZD48L3RkPjx0ZD4zMDA8L3RkPjx0ZD4yNTwvdGQ+PHRkPjE1LzEyLzIwMjY8L3RkPjwvdHI+PC90YWJsZT48L2h0bWw+",
+   "resumen.json": "ewogICJ2ZXJzaW9uX2NvbnRyYXRvIjogMSwKICAiZmVjaGFfaG9yYSI6ICIyMDI2LTEwLTA4VDEzOjAwOjAwLjEyMzQ1Ni0wMzowMCIsCiAgImVzdGFkbyI6ICJWQUxJREFEQSIsCiAgInBsYW4iOiBbCiAgICB7CiAgICAgICJ0cmlidW5hbCI6ICI0OSIsCiAgICAgICJ0YWIiOiAiQ3VtcGxpbWllbnRvIiwKICAgICAgIm1vZGFsaXR5IjogIjIiLAogICAgICAicmVwb3J0IjogbnVsbCwKICAgICAgInNjcmVlbiI6ICJzZWd1aW1pZW50byIsCiAgICAgICJzdGF0ZSI6ICIxIiwKICAgICAgIm1vbnRoIjogbnVsbCwKICAgICAgInllYXIiOiBudWxsLAogICAgICAic3RhcnQiOiBudWxsLAogICAgICAiZW5kIjogbnVsbCwKICAgICAgInRyaWJ1bmFsX25vbWJyZSI6ICJKdXpnYWRvIGRlIEZhbWlsaWEgVG9tw6kiLAogICAgICAibW9kYWxpZGFkX25vbWJyZSI6ICJBbWJ1bGF0b3JpbyIsCiAgICAgICJmZWNoYV9kZXNjYXJnYSI6ICIyMDI2LTEwLTA4VDEzOjAwOjAwLjEyMzQ1Ni0wMzowMCIKICAgIH0KICBdLAogICJjb25zdWx0YXNfZXNwZXJhZGFzIjogMSwKICAiY29uc3VsdGFzX2NvbXBsZXRhZGFzIjogMSwKICAiY29uc3VsdGFzIjogWwogICAgewogICAgICAiY29uc3VsdGEiOiAiSnV6Z2FkbyBkZSBGYW1pbGlhIFRvbcOpIC8gQ3VtcGxpbWllbnRvIC8gQW1idWxhdG9yaW8iLAogICAgICAiZXN0YWRvIjogIlZBTElEQURBIiwKICAgICAgInBhZ2luYXMiOiAyLAogICAgICAicmVnaXN0cm9zIjogMiwKICAgICAgInZlcmlmaWNhY2lvbiI6ICJ2ZXJpZmljYWNpb24gMDAxLmpzb24iLAogICAgICAic2VsZWNjaW9uIjogewogICAgICAgICJ0cmlidW5hbCI6ICI0OSIsCiAgICAgICAgInRhYiI6ICJDdW1wbGltaWVudG8iLAogICAgICAgICJtb2RhbGl0eSI6ICIyIiwKICAgICAgICAicmVwb3J0IjogbnVsbCwKICAgICAgICAic2NyZWVuIjogInNlZ3VpbWllbnRvIiwKICAgICAgICAic3RhdGUiOiAiMSIsCiAgICAgICAgIm1vbnRoIjogbnVsbCwKICAgICAgICAieWVhciI6IG51bGwsCiAgICAgICAgInN0YXJ0IjogbnVsbCwKICAgICAgICAiZW5kIjogbnVsbCwKICAgICAgICAidHJpYnVuYWxfbm9tYnJlIjogIkp1emdhZG8gZGUgRmFtaWxpYSBUb23DqSIsCiAgICAgICAgIm1vZGFsaWRhZF9ub21icmUiOiAiQW1idWxhdG9yaW8iLAogICAgICAgICJmZWNoYV9kZXNjYXJnYSI6ICIyMDI2LTEwLTA4VDEzOjAwOjAwLjEyMzQ1Ni0wMzowMCIKICAgICAgfQogICAgfQogIF0sCiAgImZpbHRyb19mZWNoYSI6IG51bGwsCiAgIm90cm9zX2ZpbHRyb3MiOiAidG9kb3MgbG9zIHJlZ2lzdHJvcyIKfQ==",
+   "verificacion 001.json": "ewogICJmZWNoYV9ob3JhIjogIjIwMjYtMTAtMDhUMTM6MDA6MDAuMTIzNDU2LTAzOjAwIiwKICAiY2FzbyI6ICJUNDktQ3VtcGxpbWllbnRvLU0yIiwKICAiY29uc3VsdGEiOiAiSnV6Z2FkbyBkZSBGYW1pbGlhIFRvbcOpIC8gQ3VtcGxpbWllbnRvIC8gQW1idWxhdG9yaW8iLAogICJlc3RhZG8iOiAiVkFMSURBREEiLAogICJwYWdpbmFzX2VzcGVyYWRhcyI6IDIsCiAgInBhZ2luYXNfdmVyaWZpY2FkYXMiOiAyLAogICJhcmNoaXZvcyI6IFsKICAgIHsKICAgICAgInBhZ2luYSI6IDEsCiAgICAgICJ0b3RhbCI6IDIsCiAgICAgICJhcmNoaXZvIjogIkNVTVAgQW1idWxhdG9yaW8gSmRvIEZhbWlsaWEgVG9tZSAxLnhscyIsCiAgICAgICJieXRlcyI6IDM3OCwKICAgICAgInNoYTI1NiI6ICIzZGJlNGU3ZmFiNzRjMjE2MzlkNjVlMzI1NDZmMjMwYWNmMTcwMWZmZTMzOTk3N2IzOTljM2Y3ZjBmZGMxZjlhIiwKICAgICAgImZvcm1hdG8iOiAiSFRNTC10YWJ1bGFyLWNvbi1leHRlbnNpb24teGxzIiwKICAgICAgInJlZ2lzdHJvcyI6IDEsCiAgICAgICJjb2luY2lkZV9jb25faHRtbCI6IHRydWUsCiAgICAgICJlc3RhZG8iOiAiT0siLAogICAgICAidmluY3Vsb3NfaW5ncmVzbyI6IFsKICAgICAgICB7CiAgICAgICAgICAicml0IjogIlgtMS0yMDk5IiwKICAgICAgICAgICJub21icmUiOiAiUGVyc29uYSBGaWN0aWNpYSAxIiwKICAgICAgICAgICJydXQiOiAiMTExMTExMTEtMCIsCiAgICAgICAgICAicHJvZ3JhbWEiOiAiUFJNIENlbnRybyBGaWN0aWNpbyIsCiAgICAgICAgICAidHJpYnVuYWxfY29kaWdvIjogIjQ5IiwKICAgICAgICAgICJjYXVzYV9pZCI6ICIxMDEiLAogICAgICAgICAgImluZ3Jlc29faWQiOiAiMjAxIiwKICAgICAgICAgICJldGFwYSI6ICIzIiwKICAgICAgICAgICJhbnRpZ3VvIjogIjAiLAogICAgICAgICAgInRpcG9fcG9wdXAiOiAiMTIiLAogICAgICAgICAgInBlcnNvbmFfaWQiOiAiMzAwIiwKICAgICAgICAgICJjZW50cm9faWQiOiAiNDAwIiwKICAgICAgICAgICJjYWxlbmRhcmlvIjogWwogICAgICAgICAgICAiMTAxIiwKICAgICAgICAgICAgIjMwMCIsCiAgICAgICAgICAgICI0OSIsCiAgICAgICAgICAgICI0MDAiLAogICAgICAgICAgICAiWC0xLTIwOTkiLAogICAgICAgICAgICAiMDEvMDMvMjAyNiIsCiAgICAgICAgICAgICJQUk0gQ2VudHJvIEZpY3RpY2lvIiwKICAgICAgICAgICAgIlBlcnNvbmEgRmljdGljaWEgMSIsCiAgICAgICAgICAgICI2IE1lc2VzIiwKICAgICAgICAgICAgIjMgTWVzZXMiLAogICAgICAgICAgICAiMjAxIiwKICAgICAgICAgICAgIjEiCiAgICAgICAgICBdCiAgICAgICAgfQogICAgICBdCiAgICB9LAogICAgewogICAgICAicGFnaW5hIjogMiwKICAgICAgInRvdGFsIjogMiwKICAgICAgImFyY2hpdm8iOiAiQ1VNUCBBbWJ1bGF0b3JpbyBKZG8gRmFtaWxpYSBUb21lIDIueGxzIiwKICAgICAgImJ5dGVzIjogMzc4LAogICAgICAic2hhMjU2IjogImI4ZTNhMGNmNjI5YTc2YjllN2RmMGY0YWQ4YTQ1MTRhZTFlN2E3MTMwZDI5ZWIxODJlNzljNzJmMWFiZTQwNjAiLAogICAgICAiZm9ybWF0byI6ICJIVE1MLXRhYnVsYXItY29uLWV4dGVuc2lvbi14bHMiLAogICAgICAicmVnaXN0cm9zIjogMSwKICAgICAgImNvaW5jaWRlX2Nvbl9odG1sIjogdHJ1ZSwKICAgICAgImVzdGFkbyI6ICJPSyIsCiAgICAgICJ2aW5jdWxvc19pbmdyZXNvIjogWwogICAgICAgIHsKICAgICAgICAgICJyaXQiOiAiWC0yLTIwOTkiLAogICAgICAgICAgIm5vbWJyZSI6ICJQZXJzb25hIEZpY3RpY2lhIDIiLAogICAgICAgICAgInJ1dCI6ICIxMTExMTExMi0wIiwKICAgICAgICAgICJwcm9ncmFtYSI6ICJQUk0gQ2VudHJvIEZpY3RpY2lvIiwKICAgICAgICAgICJ0cmlidW5hbF9jb2RpZ28iOiAiNDkiLAogICAgICAgICAgImNhdXNhX2lkIjogIjEwMiIsCiAgICAgICAgICAiaW5ncmVzb19pZCI6ICIyMDIiLAogICAgICAgICAgImV0YXBhIjogIjMiLAogICAgICAgICAgImFudGlndW8iOiAiMCIsCiAgICAgICAgICAidGlwb19wb3B1cCI6ICIxMiIsCiAgICAgICAgICAicGVyc29uYV9pZCI6ICIzMDAiLAogICAgICAgICAgImNlbnRyb19pZCI6ICI0MDAiLAogICAgICAgICAgImNhbGVuZGFyaW8iOiBbCiAgICAgICAgICAgICIxMDIiLAogICAgICAgICAgICAiMzAwIiwKICAgICAgICAgICAgIjQ5IiwKICAgICAgICAgICAgIjQwMCIsCiAgICAgICAgICAgICJYLTItMjA5OSIsCiAgICAgICAgICAgICIwMS8wMy8yMDI2IiwKICAgICAgICAgICAgIlBSTSBDZW50cm8gRmljdGljaW8iLAogICAgICAgICAgICAiUGVyc29uYSBGaWN0aWNpYSAyIiwKICAgICAgICAgICAgIjYgTWVzZXMiLAogICAgICAgICAgICAiMyBNZXNlcyIsCiAgICAgICAgICAgICIyMDIiLAogICAgICAgICAgICAiMSIKICAgICAgICAgIF0KICAgICAgICB9CiAgICAgIF0KICAgIH0KICBdLAogICJzZWxlY2Npb24iOiB7CiAgICAidHJpYnVuYWwiOiAiNDkiLAogICAgInRhYiI6ICJDdW1wbGltaWVudG8iLAogICAgIm1vZGFsaXR5IjogIjIiLAogICAgInJlcG9ydCI6IG51bGwsCiAgICAic2NyZWVuIjogInNlZ3VpbWllbnRvIiwKICAgICJzdGF0ZSI6ICIxIiwKICAgICJtb250aCI6IG51bGwsCiAgICAieWVhciI6IG51bGwsCiAgICAic3RhcnQiOiBudWxsLAogICAgImVuZCI6IG51bGwsCiAgICAidHJpYnVuYWxfbm9tYnJlIjogIkp1emdhZG8gZGUgRmFtaWxpYSBUb23DqSIsCiAgICAibW9kYWxpZGFkX25vbWJyZSI6ICJBbWJ1bGF0b3JpbyIsCiAgICAiZmVjaGFfZGVzY2FyZ2EiOiAiMjAyNi0xMC0wOFQxMzowMDowMC4xMjM0NTYtMDM6MDAiCiAgfSwKICAiZmlsdHJvX2ZlY2hhIjogbnVsbAp9"
+  }
+ },
+ "casos": [
+  {
+   "escenario": "sin_cambios",
+   "locales": [],
+   "remotas": [],
+   "resoluciones": [],
+   "cambio": true,
+   "revision": [
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    },
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    }
+   ],
+   "propuestas": [
+    "Persona PRM: Medida próxima a vencer en RUS el 15 de diciembre de 2026.",
+    "Persona PRM: Medida próxima a vencer en RUS el 15 de diciembre de 2026."
+   ],
+   "reglas": [
+    [
+     "CUMPLIMIENTO.C05_POR_VENCER"
+    ],
+    [
+     "CUMPLIMIENTO.C05_POR_VENCER"
+    ]
+   ]
+  },
+  {
+   "escenario": "origen_editado",
+   "locales": [],
+   "remotas": [
+    [
+     0,
+     "FEC.EGRESO PROYECTADO",
+     "01/09/2026"
+    ],
+    [
+     0,
+     "DIAS PARA EGRESAR",
+     -10
+    ]
+   ],
+   "resoluciones": [],
+   "cambio": true,
+   "revision": [
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    },
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    }
+   ],
+   "propuestas": [
+    "Persona PRM: Medida vencida en RUS desde el 1 de septiembre de 2026.",
+    "Persona PRM: Medida próxima a vencer en RUS el 15 de diciembre de 2026."
+   ],
+   "reglas": [
+    [
+     "CUMPLIMIENTO.C04_VENCIDA"
+    ],
+    [
+     "CUMPLIMIENTO.C05_POR_VENCER"
+    ]
+   ]
+  },
+  {
+   "escenario": "origen_editado_en_las_dos_filas",
+   "locales": [],
+   "remotas": [
+    [
+     0,
+     "DIAS PARA EGRESAR",
+     80
+    ],
+    [
+     1,
+     "DIAS PARA EGRESAR",
+     5
+    ]
+   ],
+   "resoluciones": [],
+   "cambio": true,
+   "revision": [
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    },
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    }
+   ],
+   "propuestas": [
+    "Persona PRM: Medida revisada, sin observaciones.",
+    "Persona PRM: Medida próxima a vencer en RUS el 15 de diciembre de 2026."
+   ],
+   "reglas": [
+    [
+     "CUMPLIMIENTO.C09_SIN_OBSERVACIONES"
+    ],
+    [
+     "CUMPLIMIENTO.C05_POR_VENCER"
+    ]
+   ]
+  },
+  {
+   "escenario": "origen_editado_y_observacion_local",
+   "locales": [
+    [
+     1,
+     "OBSERVACION",
+     "Versión local"
+    ]
+   ],
+   "remotas": [
+    [
+     1,
+     "FEC.EGRESO PROYECTADO",
+     "01/09/2026"
+    ],
+    [
+     1,
+     "DIAS PARA EGRESAR",
+     -10
+    ]
+   ],
+   "resoluciones": [],
+   "cambio": true,
+   "revision": [
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    },
+    {
+     "OBSERVACION": "Versión local",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    }
+   ],
+   "propuestas": [
+    "Persona PRM: Medida próxima a vencer en RUS el 15 de diciembre de 2026.",
+    "Persona PRM: Medida vencida en RUS desde el 1 de septiembre de 2026."
+   ],
+   "reglas": [
+    [
+     "CUMPLIMIENTO.C05_POR_VENCER"
+    ],
+    [
+     "CUMPLIMIENTO.C04_VENCIDA"
+    ]
+   ]
+  },
+  {
+   "escenario": "origen_editado_y_revision_remota",
+   "locales": [],
+   "remotas": [
+    [
+     0,
+     "DIAS PARA EGRESAR",
+     80
+    ],
+    [
+     0,
+     "CC",
+     1
+    ],
+    [
+     0,
+     "OBSERVACION",
+     "Texto de Excel"
+    ]
+   ],
+   "resoluciones": [],
+   "cambio": true,
+   "revision": [
+    {
+     "OBSERVACION": "Texto de Excel",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "1",
+     "RES": ""
+    },
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    }
+   ],
+   "propuestas": [
+    "Persona PRM: Medida revisada, sin observaciones.",
+    "Persona PRM: Medida próxima a vencer en RUS el 15 de diciembre de 2026."
+   ],
+   "reglas": [
+    [
+     "CUMPLIMIENTO.C09_SIN_OBSERVACIONES"
+    ],
+    [
+     "CUMPLIMIENTO.C05_POR_VENCER"
+    ]
+   ]
+  },
+  {
+   "escenario": "origen_con_el_mismo_valor",
+   "locales": [],
+   "remotas": [
+    [
+     0,
+     "DIAS PARA EGRESAR",
+     25
+    ]
+   ],
+   "resoluciones": [],
+   "cambio": true,
+   "revision": [
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    },
+    {
+     "OBSERVACION": "",
+     "FECHA_OBS": "",
+     "TT": "",
+     "CC": "",
+     "RES": ""
+    }
+   ],
+   "propuestas": [
+    "Persona PRM: Medida próxima a vencer en RUS el 15 de diciembre de 2026.",
+    "Persona PRM: Medida próxima a vencer en RUS el 15 de diciembre de 2026."
+   ],
+   "reglas": [
+    [
+     "CUMPLIMIENTO.C05_POR_VENCER"
+    ],
+    [
+     "CUMPLIMIENTO.C05_POR_VENCER"
+    ]
+   ]
+  }
+ ]
+}

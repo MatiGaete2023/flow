@@ -253,3 +253,11 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Acredita: los oráculos de conciliación e historia vuelven a pasar sin casos declarados. `probar_app.sh todo`: 72 y 90 pruebas, 0 fallos; clippy limpio.
 - Pendiente: CI de Windows verde.
 
+## 2026-11-25 · E-A9 · Recálculo al editar columnas de origen en un trabajo de paquete
+
+- Cambió: `sincronizar.rs` (se quita la restricción a archivos de RUS), `app/qa/generar_sync_paquete.py` y `sync_paquete.json` (en el workflow).
+- Acredita: `actualizar_desde_excel_en_un_paquete_igual_a_python` (6 casos con el paquete armado por Python) y `oraculo_de_sync_en_paquete_detecta_alteraciones`. `probar_app.sh todo`: 72 y 92 pruebas, 0 fallos; el contraste E3 con el ZIP de Python (6 pruebas) también pasa en local.
+- Decisiones del usuario registradas el mismo día: D-5 confirmada, formato de proyectos Word a elección (E-P1 abierto), M7 no por ahora.
+- Entorno: el generador necesita `tkinter` (como los demás de paquetes); la CI de Windows lo trae.
+- Pendiente: CI de Windows verde.
+
