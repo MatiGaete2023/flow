@@ -295,3 +295,9 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Siguiente: CI de Windows de la rama principal para cerrar E-A10 y E-Q8 como `HECHO`; encargo E-S2 al Agente C.
 - Cierre: E-Q8 `HECHO` con el run 45652560712 (`bf27446`; regeneró `bitacoras` y `lecturas`). E-A10 sigue sin `HECHO`: ningún run regeneró `anulaciones` ni `sync` en Windows; se lanzó la CI a mano (`workflow_dispatch`, regenera todos los oráculos).
 - CI manual 45655320215 (`1065344`, «todos»): falló `lote.json`, no E-A10. Python escribe los JSON del lote en modo texto y en Windows salen con CRLF. `generar_lote.py` los fija en LF antes del base64 (regenera idéntico en Linux), y el paso de regeneración ahora recorre todos los oráculos y lista al final los que difieren.
+
+## 2026-11-25 · Orquestador · Prueba del Descargador del usuario
+
+- Revisión autorizada por escrito de 8 controles JSON del usuario (estructura y conteos; nada copiado al repositorio): listados `VALIDADA` (2 consultas), 84/84 bitácoras y calendarios `LEIDA`, 66/66 causas de historia; el paquete de la misma sesión trae todo (302 consultas).
+- Causa de la impresión de falla: aviso «cobertura incompleta» disparado solo por `BITACORA_ADVERTENCIA (3)`. `paquete::diagnostico_cobertura` ahora distingue advertencias de lectura de motivos que degradan; prueba `advertencias_de_lectura_no_se_anuncian_como_cobertura_incompleta` con la forma del lote (81 + 3) y el caso con una bitácora fallida.
+- Pendiente: E-S2 ampliado (juntar carpetas y bitácoras separadas en Resultados) y E-Q9 («Consultar y crear paquete» en una acción, `flujo_paquete.py`).
