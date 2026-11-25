@@ -1,6 +1,6 @@
 # Estado de Flow Rust
 
-Actualizado: 24 de noviembre de 2026, tras E-I2, E-A9, E-A8, E-A7, E-A6, E-X1, E-X2, E-R1 y E-R2, E-S1 (con su vista), E-V1 a E-V3, E-Q7 el producto de Trabajo sin consolidado (E-W1) E-A1, E-U1, E-A2, E-A3, E-A4, E-T1, E-T2, E-T3 y E-A5. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
+Actualizado: 25 de noviembre de 2026, tras E-I2, E-A9, E-A8, E-A7, E-A6, E-X1, E-X2, E-R1 y E-R2, E-S1 (con su vista), E-V1 a E-V3, E-Q7 el producto de Trabajo sin consolidado (E-W1) E-A1, E-U1, E-A2, E-A3, E-A4, E-T1, E-T2, E-T3 y E-A5. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
 
 - Aplicación: `app/` (`flow_rust.exe`). Referencia funcional: rama `flow-python`.
 - Rama única: `estudio/paridad-python-rust-20261119`.
@@ -9,17 +9,17 @@ Actualizado: 24 de noviembre de 2026, tras E-I2, E-A9, E-A8, E-A7, E-A6, E-X1, E
 
 ## Siguiente paso
 
-1. **Hecho:** el run 45487699648 (commit `4313c54`) quedó verde en `linux` y `validar`, con `meta4.json` regenerado en Windows. Cierra E-R1, E-R2, E-X1 y E-X2; los runs 45470928947 y 45471386495 habían fallado por la carpeta de bitácoras no canónica (corregida).
-2. **Usuario:** prueba corta del tramo 1 (ver «Pendiente del usuario»).
-3. **E-U1** (por especificar con el usuario) de [PLAN.md](PLAN.md); después, el tramo 3 (Asistente).
-4. **Decisiones del usuario del 25-nov (13 respuestas; ver «Decisiones del usuario vigentes» de [PLAN.md](PLAN.md)):** el orden de trabajo es **E-A10** (anulaciones de origen por fila), después **E-P1** (Word por tribunal con índice) y **E-I1** (instalador). Descartados: M6, M7, formatos antiguos de Meta 4, conteo del Anonimizador y paginación del Word manual.
+1. **Encargo siguiente: E-A10** (anulaciones de columnas de origen por fila, F08). Antes de escribir código, leer `_prepass_peers` de `record_edits.py`: editar una fila puede cambiar la duplicidad o el acumulado de otras de su causa.
+2. Después, por orden: **E-P1** (Word por tribunal con índice y salto de página) y **E-I1** (instalador; necesita la decisión de firma y alojamiento).
+3. **Al abrir cada sesión:** revisar la CI de Windows del último commit (E-I2 estaba en curso, run 45644045890) y, si está en verde, pasar E-I2 a `HECHO`.
+4. Decisiones ya tomadas por el usuario (13 respuestas del 25-nov y la de actualización sin reinstalar): ver «Decisiones del usuario vigentes» de [PLAN.md](PLAN.md). Descartados: M6, M7, formatos antiguos de Meta 4, conteo del Anonimizador y paginación del Word manual.
 
 ## Pendiente del usuario
 
-- **Diagnóstico de Notificación y Diligencias (E-X2):** tras un lote con «Historia de la causa», enviar el contenido de `historia/estructura_pestanas.json` (solo estructura, sin datos). Dice si esas tablas llegan en la respuesta ya descargada.
-
-- **Prueba corta del tramo 1** con el `.exe` de un run de «Flow Rust local · Windows» lanzado a mano con `entrega` (Actions › Run workflow): un lote Integral de Seguimiento con Chrome y la sesión SITFA propia, «Leer bitácoras del lote», «Crear paquete de este lote…», abrir el ZIP en Trabajo y guardar el Excel. Anotar lo que falle; no hace falta acta.
-- Revisión visual de las capturas del run (antes E-E) y paquete H: acta de uso real.
+- **Prueba corta del tramo 1** con el `.exe` de un run de «Flow Rust local · Windows» (artefacto `Flow_Rust_Windows_exe`): un lote Integral de Seguimiento con Chrome y la sesión SITFA propia, «Leer bitácoras del lote», «Crear paquete de este lote…», abrir el ZIP en Trabajo y guardar el Excel. **En espera:** el usuario sigue preparando GitHub Actions (25-nov). La primera vez el `.exe` se reemplaza a mano; las siguientes veces se deja en `%LOCALAPPDATA%\FlowRust\actualizaciones` (E-I2). Anotar lo que falle; no hace falta acta.
+- **Diagnósticos de lecturas parciales:** dependen de la prueba corta. Cuando exista un paquete parcial real, enviar solo extractos anónimos: `resumen.json` y `diagnostico_bitacoras.json`, el aviso del paquete parcial y, con la versión Rust, `diagnostico_calendarios.json`.
+- **Acta de uso real:** un mes real completo, en paralelo con Python. Prevista para dentro de un mes (alrededor del 25 de diciembre de 2026). Antes, revisión visual de las capturas del run y paquete H.
+- **Instalador (E-I1): firma y alojamiento.** Se decide con lo que se vea en la prueba corta: si Windows (SmartScreen) o el antivirus del equipo bloquea el `.exe` sin firma. Explicado en [CONTINUACION.md](CONTINUACION.md).
 
 ## Capacidades
 
@@ -73,7 +73,7 @@ Actualizado: 24 de noviembre de 2026, tras E-I2, E-A9, E-A8, E-A7, E-A6, E-X1, E
 
 ## Documentos
 
-- Lectura al iniciar: `AGENTS.md`, este archivo y [PLAN.md](PLAN.md).
+- Lectura al iniciar: `AGENTS.md`, este archivo, [PLAN.md](PLAN.md) y, para continuar una sesión anterior, [CONTINUACION.md](CONTINUACION.md).
 - Según necesidad: [VERIFICACION.md](VERIFICACION.md), [DISENO.md](DISENO.md), [REGISTRO_IMPLEMENTACION.md](REGISTRO_IMPLEMENTACION.md), [REVISION_20261124.md](REVISION_20261124.md) y [ANALISIS_INFORME_RUS_SITFA_20261124.md](ANALISIS_INFORME_RUS_SITFA_20261124.md).
 - La documentación del proyecto Python se retiró de esta rama (D-8) y sigue en `flow-python`. Quedan `docs/aceptacion/`, `docs/evidencia_p0/golden/` y dos archivos de `docs/implementacion/` que usa `rust/`.
 - [historico/](historico/) guarda el registro, los encargos, la matriz y los informes anteriores al 24 de noviembre. No se lee al iniciar.
