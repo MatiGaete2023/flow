@@ -810,8 +810,11 @@ mod pruebas_oraculo {
         let corte: NaiveDate = caso["corte"].as_str().unwrap().parse().unwrap();
         let tribunales: Vec<String> = caso["tribunales"].as_array().unwrap().iter().map(texto_de).collect();
         let m = calcular(&lotes, &bitacoras, corte, corte, &tribunales)?;
-        let filas: Vec<Value> = m
-            .registros
+        // Una fila con una derivación que no es FAE ni Residencia queda fuera de META 4: Python la deja también fuera
+        // de Registros y Rust la conserva en su libro Registros (`fuera_de_meta4` del reporte). Se compara aparte.
+        let todas: Vec<&Registro4> = m.registros.iter().collect();
+        let (fuera, dentro): (Vec<&Registro4>, Vec<&Registro4>) = todas.into_iter().partition(|r| r.categoria.is_none());
+        let filas: Vec<Value> = dentro
             .iter()
             .map(|r| {
                 serde_json::json!({
@@ -829,7 +832,7 @@ mod pruebas_oraculo {
         Ok(serde_json::json!({
             "filas": filas, "lecturas": lecturas, "filtros": m.filtros, "lotes": m.lotes,
             "sin_bitacoras": m.sin_bitacoras.iter().map(|(a, b)| [a, b]).collect::<Vec<_>>(),
-            "avisos": m.avisos,
+            "avisos": m.avisos, "fuera_de_meta4": fuera.len(),
         }))
     }
 
@@ -872,6 +875,12 @@ mod pruebas_oraculo {
                 dif.push(format!("{nombre}.{campo}: Rust {} · Python {}", rust[campo], python[campo]));
             }
         }
+        if rust["fuera_de_meta4"] != python["fuera_de_alcance"] {
+            dif.push(format!(
+                "{nombre}: {} filas fuera de FAE/Residencia en Rust y {} en Python",
+                rust["fuera_de_meta4"], python["fuera_de_alcance"]
+            ));
+        }
         for aviso in python["avisos_de_lectura"].as_array().unwrap() {
             if !rust["avisos"].as_array().unwrap().contains(aviso) {
                 dif.push(format!("{nombre}: falta el aviso de lectura {aviso}"));
@@ -901,9 +910,7 @@ mod pruebas_oraculo {
     /// nuevas (hojas con valores distintos que no están declaradas) y las hojas distintas encontradas. El diseño (anchos,
     /// filtros y paneles) es de cada producto y no se compara.
     fn comparar_productos(caso: &Value, base: &Path, distintas: &mut BTreeSet<String>) -> Vec<String> {
-        use super::super::excel::volcado::{diferencias, volcar};
         let nombre = caso["caso"].as_str().unwrap();
-        let python = &caso["python"]["productos"];
         let lotes: Vec<PathBuf> = caso["lotes"].as_object().unwrap().keys().map(|n| base.join(n)).collect();
         let corte: NaiveDate = caso["corte"].as_str().unwrap().parse().unwrap();
         let tribunales: Vec<String> = caso["tribunales"].as_array().unwrap().iter().map(texto_de).collect();
@@ -913,43 +920,13 @@ mod pruebas_oraculo {
             Ok(a) => a,
             Err(e) => return vec![format!("{nombre}: Rust no publicó: {e}")],
         };
-        let mut dif = Vec::new();
         let rust: BTreeMap<String, PathBuf> =
             archivos.into_iter().filter_map(|a| Some((a.file_name()?.to_string_lossy().into_owned(), a))).collect();
-        let esperados: Vec<&String> = python["libros"].as_object().unwrap().keys().collect();
-        let obtenidos: Vec<&String> = rust.keys().filter(|n| n.ends_with(".xlsx")).collect();
-        if esperados != obtenidos {
-            dif.push(format!("{nombre}: libros Rust {obtenidos:?} · Python {esperados:?}"));
-        }
-        for (archivo, volcado_python) in python["libros"].as_object().unwrap() {
-            let Some(ruta) = rust.get(archivo) else { continue };
-            let volcado_rust = volcar(&std::fs::read(ruta).unwrap(), "<BASE>");
-            let titulos = |v: &Value| v["hojas"].as_array().unwrap().iter().map(|h| h["titulo"].clone()).collect::<Vec<_>>();
-            if titulos(&volcado_rust) != titulos(volcado_python) {
-                dif.push(format!("{nombre} · {archivo}: hojas Rust {:?} · Python {:?}", titulos(&volcado_rust), titulos(volcado_python)));
-                continue;
-            }
-            for (r, p) in volcado_rust["hojas"].as_array().unwrap().iter().zip(volcado_python["hojas"].as_array().unwrap()) {
-                let hoja = format!("{archivo} | {}", p["titulo"].as_str().unwrap());
-                let valores = |h: &Value| {
-                    let mut h = h.clone();
-                    for k in ["congelar", "filtro", "anchos"] {
-                        h[k] = Value::Null;
-                    }
-                    serde_json::json!({"hojas": [h]})
-                };
-                let d = diferencias(&valores(r), &valores(p));
-                if !d.is_empty() {
-                    distintas.insert(hoja.clone());
-                    if !HOJAS_DECLARADAS.contains(&hoja.as_str()) {
-                        dif.push(format!("{nombre} · {hoja}: {}", d.join("\n")));
-                    }
-                }
-            }
-        }
+        let mut dif = comparar_libros(nombre, &caso["python"]["productos"], &rust, &HOJAS_DECLARADAS, distintas, false);
         // `Reporte META4.json`: las cifras de control del crate (otros nombres de campo) coinciden con las de Python. Fuera de
         // la comparación: `requieren_revision` (el crate suma las alertas; `revision_bitacora` de Python no).
         let reporte: Value = serde_json::from_slice(&std::fs::read(salida.join("Reporte META4.json")).unwrap()).unwrap();
+        let python = &caso["python"]["productos"];
         for (rust_campo, python_campo) in [
             ("/periodo/desde", "desde"), ("/periodo/hasta", "hasta"), ("/registros", "registros"), ("/alertas", "alertas"),
             ("/conteo_por_control", "controles_bitacora"),
@@ -964,13 +941,81 @@ mod pruebas_oraculo {
         dif
     }
 
+    /// Compara los libros XLSX de una carpeta de productos de Rust con los volcados de Python: nombres, hojas y valores.
+    /// Toda hoja con valores distintos queda en `distintas`; solo las declaradas dejan de ser una diferencia.
+    /// `emision` normaliza la fila «Fecha Emisión» (ver la diferencia declarada en el oráculo de regeneración).
+    fn comparar_libros(
+        nombre: &str,
+        python: &Value,
+        rust: &BTreeMap<String, PathBuf>,
+        declaradas: &[&str],
+        distintas: &mut BTreeSet<String>,
+        emision: bool,
+    ) -> Vec<String> {
+        use super::super::excel::volcado::{diferencias, volcar};
+        let mut dif = Vec::new();
+        let mut esperados: Vec<&String> = python["libros"].as_object().unwrap().keys().collect();
+        let mut obtenidos: Vec<&String> = rust.keys().filter(|n| n.ends_with(".xlsx")).collect();
+        esperados.sort();
+        obtenidos.sort();
+        if esperados != obtenidos {
+            dif.push(format!("{nombre}: libros Rust {obtenidos:?} · Python {esperados:?}"));
+        }
+        // La fecha de emisión se compara aparte en el oráculo de regeneración: Python la reduce al día 1 del mes.
+        let sin_emision = |hoja: &Value| {
+            let mut hoja = hoja.clone();
+            if let Some(filas) = hoja["celdas"].as_array_mut() {
+                for fila in filas.iter_mut().filter_map(Value::as_array_mut) {
+                    for celda in fila.iter_mut().filter_map(Value::as_array_mut) {
+                        if celda.first().and_then(Value::as_str) == Some("s")
+                            && celda.get(1).and_then(Value::as_str).is_some_and(|t| t.starts_with("Fecha Emisión"))
+                        {
+                            celda[1] = Value::from("<EMISIÓN>");
+                        }
+                    }
+                }
+            }
+            hoja
+        };
+        for (archivo, volcado_python) in python["libros"].as_object().unwrap() {
+            let Some(ruta) = rust.get(archivo) else { continue };
+            let volcado_rust = volcar(&std::fs::read(ruta).unwrap(), "<BASE>");
+            let titulos = |v: &Value| v["hojas"].as_array().unwrap().iter().map(|h| h["titulo"].clone()).collect::<Vec<_>>();
+            if titulos(&volcado_rust) != titulos(volcado_python) {
+                dif.push(format!("{nombre} · {archivo}: hojas Rust {:?} · Python {:?}", titulos(&volcado_rust), titulos(volcado_python)));
+                continue;
+            }
+            for (r, p) in volcado_rust["hojas"].as_array().unwrap().iter().zip(volcado_python["hojas"].as_array().unwrap()) {
+                let hoja = format!("{archivo} | {}", p["titulo"].as_str().unwrap());
+                let valores = |h: &Value| {
+                    let mut h = if emision { sin_emision(h) } else { h.clone() };
+                    for k in ["congelar", "filtro", "anchos"] {
+                        h[k] = Value::Null;
+                    }
+                    serde_json::json!({"hojas": [h]})
+                };
+                let d = diferencias(&valores(r), &valores(p));
+                if !d.is_empty() {
+                    distintas.insert(hoja.clone());
+                    if !declaradas.contains(&hoja.as_str()) {
+                        dif.push(format!("{nombre} · {hoja}: {}", d.join("\n")));
+                    }
+                }
+            }
+        }
+        dif
+    }
+
     fn casos() -> Vec<Value> {
         let datos: Value = serde_json::from_str(include_str!("../../tests/datos/meta4.json")).unwrap();
         datos["casos"].as_array().unwrap().clone()
     }
 
     fn carpeta(nombre: &str) -> PathBuf {
-        let base = std::env::temp_dir().join(format!("flow-meta4-oraculo-{}-{nombre}", std::process::id()));
+        // Serie propia: dos pruebas que usan el mismo nombre no deben compartir carpeta temporal.
+        static SERIE: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+        let serie = SERIE.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        let base = std::env::temp_dir().join(format!("flow-meta4-oraculo-{}-{nombre}-{serie}", std::process::id()));
         let _ = std::fs::remove_dir_all(&base);
         base
     }
@@ -991,7 +1036,7 @@ mod pruebas_oraculo {
         assert!(diferencias.is_empty(), "{}", diferencias.join("\n"));
         let declaradas: BTreeSet<String> = HOJAS_DECLARADAS.iter().map(|h| h.to_string()).collect();
         assert_eq!(distintas, declaradas, "hojas con valores distintos de Python (Rust ⊃ declaradas = nuevas; Rust ⊂ = ya no difieren)");
-        assert_eq!((casos.len(), errores, filas), (22, 7, 30), "conteos del oráculo");
+        assert_eq!((casos.len(), errores, filas), (33, 7, 55), "conteos del oráculo");
         println!("oraculo meta4: {} casos, {errores} errores de Python reproducidos, {filas} filas", casos.len());
     }
 
@@ -1004,5 +1049,217 @@ mod pruebas_oraculo {
         let dif = comparar(&caso, &base, &mut BTreeSet::new());
         let _ = std::fs::remove_dir_all(&base);
         assert!(dif.iter().any(|d| d.contains("filas[")), "{dif:?}");
+    }
+
+    fn datos() -> Value {
+        serde_json::from_str(include_str!("../../tests/datos/meta4.json")).unwrap()
+    }
+
+    /// Meta 4 del caso indicado del oráculo, reconstruyendo sus lotes y bitácoras.
+    fn meta4_del_caso(caso: &Value, base: &Path) -> Meta4 {
+        let lotes: Vec<PathBuf> = caso["lotes"]
+            .as_object()
+            .unwrap()
+            .iter()
+            .map(|(nombre, archivos)| {
+                reconstruir(&base.join(nombre), archivos);
+                base.join(nombre)
+            })
+            .collect();
+        let bitacoras: Vec<PathBuf> = if caso["bitacoras"].is_null() {
+            Vec::new()
+        } else {
+            reconstruir(&base.join("bitacoras"), &caso["bitacoras"]);
+            vec![base.join("bitacoras")]
+        };
+        let corte: NaiveDate = caso["corte"].as_str().unwrap().parse().unwrap();
+        let tribunales: Vec<String> = caso["tribunales"].as_array().unwrap().iter().map(texto_de).collect();
+        calcular(&lotes, &bitacoras, corte, corte, &tribunales).unwrap()
+    }
+
+    /// Hojas de los productos regenerados cuyos valores difieren de `regenerar` de Python, ya identificadas
+    /// (`archivo | hoja`): la prueba falla si aparece otra o si alguna deja de diferir. Las dos son auxiliares:
+    /// «Control bitácoras» escribe las fechas y las cifras como texto y no agrega la línea «Regenerado desde…», y
+    /// «ERRORES_Y_ADVERTENCIAS» la reescribe Flow con sus avisos en vez de conservar la del libro revisado.
+    const HOJAS_REGENERADAS: [&str; 2] = [
+        "META 4 - actualizado 2026-08.xlsx | Control bitácoras",
+        "Registros.xlsx | ERRORES_Y_ADVERTENCIAS",
+    ];
+
+    /// E-R2 · Regeneración desde un `Registros.xlsx` revisado: `regenerar` de Python contra
+    /// `flow_meta4::regenerar` con las mismas celdas editadas, con y sin `Bitacoras_del_mes.xlsx` y con plantilla.
+    fn comparar_regeneracion(caso: &Value) -> (Vec<String>, BTreeSet<String>, usize) {
+        let nombre = caso["escenario"].as_str().unwrap();
+        let mut diferencias = Vec::new();
+        let mut distintas = BTreeSet::new();
+        let base = carpeta(&format!("regeneracion-{nombre}"));
+        let entrada = base.join("entrada");
+        reconstruir(&entrada, &caso["entrada"]);
+        let salida = base.join("Regenerado");
+        let archivos = match flow_meta4::regenerar::ejecutar(&entrada.join("Registros.xlsx"), &salida) {
+            Ok(a) => a,
+            Err(e) => {
+                let _ = std::fs::remove_dir_all(&base);
+                return (vec![format!("{nombre}: Rust no regeneró: {e}")], distintas, 0);
+            }
+        };
+        let mut rust: BTreeMap<String, PathBuf> =
+            archivos.into_iter().filter_map(|a| Some((a.file_name()?.to_string_lossy().into_owned(), a))).collect();
+        let libros = rust.values().filter(|p| p.extension().is_some_and(|e| e == "xlsx")).count();
+        let python = &caso["python"];
+        // `Bitacoras_del_mes.xlsx` se copia sin reinterpretar: se compara byte a byte, no por valores (el libro
+        // copiado lo escribió openpyxl y el volcado de valores solo lee libros de rust_xlsxwriter).
+        let original = caso["entrada"]["Bitacoras_del_mes.xlsx"].as_str();
+        let copia = rust.remove("Bitacoras_del_mes.xlsx");
+        let mut libros_python = python["productos"].clone();
+        libros_python["libros"].as_object_mut().unwrap().remove("Bitacoras_del_mes.xlsx");
+        match (original, copia) {
+            (Some(_), Some(destino)) if std::fs::read(&entrada.join("Bitacoras_del_mes.xlsx")).unwrap() != std::fs::read(&destino).unwrap() => {
+                diferencias.push(format!("{nombre}: la copia de Bitacoras_del_mes.xlsx cambió de bytes"));
+            }
+            (Some(_), None) => diferencias.push(format!("{nombre}: Rust no conservó Bitacoras_del_mes.xlsx")),
+            (None, Some(_)) => diferencias.push(format!("{nombre}: Rust copió un Bitacoras_del_mes.xlsx que no existía")),
+            _ => {}
+        }
+        diferencias.extend(comparar_libros(nombre, &libros_python, &rust, &HOJAS_REGENERADAS, &mut distintas, true));
+        // Diferencia declarada: al regenerar, Python escribe el día 1 del mes de emisión (su reporte solo guarda
+        // AAAA-MM); Rust conserva la fecha de corte de su propio reporte.
+        if let (Some(ruta), Some(celda_python)) = (
+            rust.get("META 4 - actualizado 2026-08.xlsx"),
+            libros_python["libros"]["META 4 - actualizado 2026-08.xlsx"]["hojas"][0]["celdas"][2][0][1].as_str(),
+        ) {
+            let volcado = super::super::excel::volcado::volcar(&std::fs::read(ruta).unwrap(), "<BASE>");
+            let celda_rust = volcado["hojas"][0]["celdas"][2][0][1].as_str().unwrap_or("");
+            if !celda_rust.contains("31-08-2026") || !celda_python.contains("01-08-2026") {
+                diferencias.push(format!(
+                    "{nombre} · fecha de emisión: Rust «{celda_rust}» · Python «{celda_python}» (se esperaba 31-08 en Rust y 01-08 en Python)"
+                ));
+            }
+        }
+        let reporte: Value = serde_json::from_slice(&std::fs::read(salida.join("Reporte META4.json")).unwrap()).unwrap();
+        let p = &python["reporte"];
+        for (campo, esperado) in [
+            ("/periodo/desde", &p["desde"]), ("/periodo/hasta", &p["hasta"]),
+            ("/registros", &p["registros"]), ("/alertas", &p["alertas"]),
+            ("/conteo_por_control", &p["controles_bitacora"]), ("/resumen_por_tribunal", &p["resumen_tribunales"]),
+            ("/totales_por_hoja", &p["totales_meta4"]), ("/fuera_de_meta4", &p["excluidos_meta4"]),
+        ] {
+            let propio = reporte.pointer(campo).cloned().unwrap_or(Value::Null);
+            if &propio != esperado {
+                diferencias.push(format!("{nombre} · reporte {campo}: Rust {propio} · Python {esperado}"));
+            }
+        }
+        let emision = reporte["fecha_emision"].as_str().unwrap_or("");
+        if emision.get(..7) != p["mes_emision"].as_str() {
+            diferencias.push(format!("{nombre} · mes de emisión: Rust {emision} · Python {}", p["mes_emision"]));
+        }
+        let tribunales = if p["tribunales"] == "TODOS" { Value::from("Todos") } else { p["tribunales"].clone() };
+        if reporte["tribunales_incluidos"] != tribunales {
+            diferencias.push(format!("{nombre} · tribunales: Rust {} · Python {tribunales}", reporte["tribunales_incluidos"]));
+        }
+        let _ = std::fs::remove_dir_all(&base);
+        (diferencias, distintas, libros)
+    }
+
+    #[test]
+    fn regeneracion_del_registros_revisado_igual_a_python() {
+        let datos = datos();
+        let (mut diferencias, mut distintas, mut libros) = (Vec::new(), BTreeSet::new(), 0usize);
+        for caso in datos["regeneraciones"].as_array().unwrap() {
+            let (dif, hojas, n) = comparar_regeneracion(caso);
+            diferencias.extend(dif);
+            distintas.extend(hojas);
+            libros += n;
+        }
+        assert!(diferencias.is_empty(), "{}", diferencias.join("\n"));
+        assert_eq!(libros, 11, "libros regenerados");
+        let declaradas: BTreeSet<String> = HOJAS_REGENERADAS.iter().map(|h| h.to_string()).collect();
+        assert_eq!(distintas, declaradas, "hojas con valores distintos al regenerar (Rust ⊃ declaradas = nuevas; Rust ⊂ = ya no difieren)");
+        println!("oraculo de regeneración: {} escenarios, {libros} libros", datos["regeneraciones"].as_array().unwrap().len());
+    }
+
+    /// Una cifra del reporte y una celda del libro regenerado alteradas a mano deben hacer fallar el comparador.
+    #[test]
+    fn oraculo_de_regeneracion_detecta_alteraciones() {
+        let datos = datos();
+        let mut caso = datos["regeneraciones"][0].clone();
+        caso["python"]["reporte"]["registros"] = Value::from(99);
+        let (dif, _, _) = comparar_regeneracion(&caso);
+        assert!(dif.iter().any(|d| d.contains("/registros")), "{dif:?}");
+        let mut caso = datos["regeneraciones"][0].clone();
+        caso["python"]["productos"]["libros"]["Registros.xlsx"]["hojas"][1]["celdas"][1][0][1] = Value::from("OTRO");
+        let (dif, _, _) = comparar_regeneracion(&caso);
+        assert!(dif.iter().any(|d| d.contains("Registros.xlsx | CUMPLIMIENTO")), "{dif:?}");
+    }
+
+    /// E-R2 · Plantilla propia: `validar_plantilla` de Python (que la revisa antes de generar) contra lo que Rust
+    /// acepta al publicar con plantilla. Una plantilla con celdas combinadas la acepta Python y Rust la rechaza: es
+    /// una diferencia declarada (Rust no copia combinaciones ni dibujos para no alterar los datos).
+    fn comparar_plantillas(datos: &Value) -> (Vec<String>, usize, usize) {
+        let base_caso = datos["casos"].as_array().unwrap().iter().find(|c| c["caso"] == "observacion_en_el_mes").unwrap().clone();
+        let mut resultados = Vec::new();
+        for caso in datos["plantillas"].as_array().unwrap() {
+            let nombre = caso["caso"].as_str().unwrap();
+            let base = carpeta(&format!("plantilla-{nombre}"));
+            let m = meta4_del_caso(&base_caso, &base);
+            let archivo = base.join("plantilla.xlsx");
+            std::fs::write(&archivo, base64::engine::general_purpose::STANDARD.decode(caso["archivo"].as_str().unwrap()).unwrap())
+                .unwrap();
+            let salida = base.join("Productos con plantilla");
+            let resultado = flow_meta4::salida::publicar_con_plantilla(&m, &salida, Some(&archivo));
+            resultados.push((nombre.to_string(), caso["python"]["acepta"].as_bool().unwrap(), resultado));
+            let _ = std::fs::remove_dir_all(&base);
+        }
+        let mut problemas = Vec::new();
+        let mut publicados = 0usize;
+        for (nombre, python_acepta, resultado) in &resultados {
+            let rust_acepta = resultado.is_ok();
+            if nombre == "plantilla_con_combinadas" {
+                // Diferencia declarada: Python la acepta y Rust la rechaza con su motivo.
+                if !*python_acepta || rust_acepta {
+                    problemas.push(format!("{nombre}: se esperaba Python sí y Rust no"));
+                }
+                continue;
+            }
+            if *python_acepta != rust_acepta {
+                problemas.push(format!("{nombre}: Python acepta {python_acepta} y Rust {rust_acepta} ({:?})", resultado.as_ref().err()));
+            }
+            if rust_acepta {
+                publicados += 1;
+            }
+            match (nombre.as_str(), resultado) {
+                ("plantilla_sin_una_hoja", Err(e)) if !e.contains("FAE Cumplimiento") => {
+                    problemas.push(format!("{nombre}: el error no nombra la hoja que falta ({e})"));
+                }
+                ("plantilla_ilegible", Err(e)) if !e.contains("plantilla") => {
+                    problemas.push(format!("{nombre}: el error no explica que la plantilla no se pudo abrir ({e})"));
+                }
+                _ => {}
+            }
+        }
+        (problemas, resultados.len(), publicados)
+    }
+
+    #[test]
+    fn plantilla_propia_igual_a_python() {
+        let (problemas, plantillas, publicados) = comparar_plantillas(&datos());
+        assert!(problemas.is_empty(), "{}", problemas.join("\n"));
+        assert_eq!((plantillas, publicados), (5, 2), "plantillas contrastadas y aceptadas por ambos");
+        println!("oraculo de plantilla: {plantillas} plantillas, {publicados} aceptadas");
+    }
+
+    /// Aceptar en Python una plantilla que Rust rechaza debe hacer fallar el comparador (salvo la declarada).
+    #[test]
+    fn oraculo_de_plantilla_detecta_alteraciones() {
+        let mut datos = datos();
+        let sin_hoja = datos["plantillas"].as_array().unwrap().iter().position(|c| c["caso"] == "plantilla_sin_una_hoja").unwrap();
+        datos["plantillas"][sin_hoja]["python"]["acepta"] = Value::from(true);
+        let (problemas, _, _) = comparar_plantillas(&datos);
+        assert!(problemas.iter().any(|p| p.contains("plantilla_sin_una_hoja")), "{problemas:?}");
+        let mut datos = self::datos();
+        let valida = datos["plantillas"].as_array().unwrap().iter().position(|c| c["caso"] == "plantilla_valida").unwrap();
+        datos["plantillas"][valida]["python"]["acepta"] = Value::from(false);
+        let (problemas, _, _) = comparar_plantillas(&datos);
+        assert!(problemas.iter().any(|p| p.contains("plantilla_valida")), "{problemas:?}");
     }
 }
