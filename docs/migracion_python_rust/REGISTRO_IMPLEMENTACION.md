@@ -295,3 +295,16 @@ No se copian salidas completas ni listas de mutaciones: la prueba afirma sus con
 - Siguiente: CI de Windows de la rama principal para cerrar E-A10 y E-Q8 como `HECHO`; encargo E-S2 al Agente C.
 - Cierre: E-Q8 `HECHO` con el run 45652560712 (`bf27446`; regeneró `bitacoras` y `lecturas`). E-A10 sigue sin `HECHO`: ningún run regeneró `anulaciones` ni `sync` en Windows; se lanzó la CI a mano (`workflow_dispatch`, regenera todos los oráculos).
 - CI manual 45655320215 (`1065344`, «todos»): falló `lote.json`, no E-A10. Python escribe los JSON del lote en modo texto y en Windows salen con CRLF. `generar_lote.py` los fija en LF antes del base64 (regenera idéntico en Linux), y el paso de regeneración ahora recorre todos los oráculos y lista al final los que difieren.
+
+## 2026-11-25 · Orquestador · Prueba del Descargador del usuario
+
+- Revisión autorizada por escrito de 8 controles JSON del usuario (estructura y conteos; nada copiado al repositorio): listados `VALIDADA` (2 consultas), 84/84 bitácoras y calendarios `LEIDA`, 66/66 causas de historia; el paquete de la misma sesión trae todo (302 consultas).
+- Causa de la impresión de falla: aviso «cobertura incompleta» disparado solo por `BITACORA_ADVERTENCIA (3)`. `paquete::diagnostico_cobertura` ahora distingue advertencias de lectura de motivos que degradan; prueba `advertencias_de_lectura_no_se_anuncian_como_cobertura_incompleta` con la forma del lote (81 + 3) y el caso con una bitácora fallida.
+- Pendiente: E-S2 ampliado (juntar carpetas y bitácoras separadas en Resultados) y E-Q9 («Consultar y crear paquete» en una acción, `flujo_paquete.py`).
+- CI manual 45657877437 (`622a56b`, «todos»): `sync`, `anulaciones` y los demás coinciden en Windows; fallan `paquete` (JSON con CRLF), `excel` y `resultados` (la carpeta temporal llega con nombre corto `RUNNER~1` y Python la resuelve al largo, así que `<BASE>` no se reemplazaba). Corregido: `Path(tmp).resolve()` como base y JSON en LF con rutas `as_posix()`; los tres regeneran idénticos en Linux.
+
+## 2026-11-25 · Orquestador · Integra al Agente B (E-R3)
+
+E-R3 · Meta 4: contraste ampliado (`92ab9c1`, CI Windows verde, run 45656558813). `generar_meta4.py` pasa a 33 casos (55 filas, 7 errores): Espera, FAE y Residencia en un lote, Laja, Mulchén, dos lotes, filtro de varios tribunales, bordes de la ventana y etapas distintas el mismo día; agrega regeneración (3 escenarios, 11 libros) y plantilla propia (5 plantillas) con 2 hojas auxiliares declaradas más. `plantilla.rs` acepta plantillas sin anchos de columna. Rust conserva en Registros las filas fuera de FAE/Residencia y, al regenerar, la fecha de corte en vez del día 1 del mes.
+- Integración: merge `3a2da44`; `probar_app.sh todo` (82 y 97 pruebas, 0 fallos), clippy `--lib` y verificadores en verde. Falta la CI de Windows sobre la rama principal.
+- Revisión del informe de B (E-R3, ya integrado por otra sesión): alcance correcto, CI de su rama verde con regeneración corrida; sus diferencias (fecha de emisión al regenerar, filas fuera de FAE/Residencia, plantillas con celdas combinadas) se conservan como decisiones revertibles. E-Q9 pasa al Agente B. Aclaración del usuario: el ZIP de la prueba eran controles de dos procesos en carpetas separadas.

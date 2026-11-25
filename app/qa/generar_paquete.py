@@ -91,7 +91,10 @@ class PuenteContexto(gl.ConVinculos):
 
 
 def carpeta_json(carpeta):
-    return {str(p.relative_to(carpeta)): base64.b64encode(p.read_bytes()).decode()
+    # Los JSON del lote los escribe Python en modo texto (CRLF en Windows): se fijan en LF para que el oráculo sea el
+    # mismo en cualquier sistema. Los HTML, XLS y PDF van tal cual porque sus huellas están en los manifiestos.
+    return {p.relative_to(carpeta).as_posix(): base64.b64encode(
+                p.read_bytes().replace(b'\r\n', b'\n') if p.suffix == '.json' else p.read_bytes()).decode()
             for p in sorted(carpeta.rglob('*')) if p.is_file()}
 
 
