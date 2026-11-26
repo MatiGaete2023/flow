@@ -309,10 +309,15 @@ def _alcance(root, state):
 
 
 def _consultas_validadas(carpeta):
-    try:
-        return json.loads((carpeta / 'resumen.json').read_text(encoding='utf-8')).get('estado') == 'VALIDADA'
-    except (TypeError, OSError, ValueError, AttributeError):
+    from resultados import load_lot
+
+    if carpeta is None:
         return False
+    try:
+        load_lot(carpeta)
+    except (m.PocError, OSError, ValueError, TypeError, AttributeError, KeyError):
+        return False
+    return True
 
 
 def retomar(bridge, catalog, emit, cancel, carpeta, consolidated=True, **opciones):
@@ -334,21 +339,41 @@ def meses_informes(today, dias=60):
 def _informes(bridge, relay, emit, cancel, batch, backup, state, phase, pause, informes, today, pdf_vacias=True):
     """Calendario de informes por vencer de los próximos 60 días, solo con la hoja de Cumplimiento (es la que lo usa).
     La extensión cambia SITFA al calendario por sí sola (sin pedirlo al usuario) y al terminar vuelve a Seguimiento.
-    Devuelve (carpetas, completo): un mes que falla no descarta los ya descargados, pero el paquete queda parcial."""
+    Devuelve (carpetas, completo): conserva los meses verificados y reintenta solo los que falten."""
     if not informes or 'Cumplimiento' not in getattr(batch, 'tabs', ()):
         return [], True
     from lotes import Batch
 
     phase('informes')
-    carpetas = []
-    meses = meses_informes(today or m.now().date())
+    meses = {f'informes-{year}-{month}': (month, year) for month, year in meses_informes(today or m.now().date())}
+    carpetas = {}
+    for clave in meses:
+        carpeta = state['carpetas'].get(clave)
+        if carpeta and _consultas_validadas(backup.parent / carpeta):
+            carpetas[clave] = backup.parent / carpeta
+    pendientes = [clave for clave in meses if clave not in carpetas]
+    if not pendientes:
+        return list(carpetas.values()), True
+
     try:
         catalog = bridge.call('catalog', {'screen': 'calendario_informes'})
-        for month, year in meses:
-            state['fase'] = f'informes-{year}-{month}'
+        for clave in pendientes:
+            if cancel.is_set():
+                raise m.PocError('Proceso detenido. Los originales verificados se conservan en respaldo.')
+            month, year = meses[clave]
+            state['fase'] = clave
+            state['carpetas'].pop(clave, None)
             plan = Batch(batch.tribunals, (), (), screen='calendario_informes', month=month, year=year)
-            BatchRunner(bridge, catalog, relay, cancel, pause=pause, evidencia=pdf_vacias).run(plan, backup)
-            carpetas.append(backup.parent / state['carpetas'][state['fase']])
+            try:
+                BatchRunner(bridge, catalog, relay, cancel, pause=pause, evidencia=pdf_vacias).run(plan, backup)
+                carpeta = state['carpetas'].get(clave)
+                if not carpeta:
+                    raise m.PocError('La consulta no identificó sus originales.')
+                carpetas[clave] = backup.parent / carpeta
+            except m.PocError as exc:
+                if cancel.is_set():
+                    raise
+                emit('warning', f'No se incluyeron los informes por vencer de {month}/{year}. {exc}')
     except m.PocError as exc:
         if cancel.is_set():
             raise
@@ -359,7 +384,7 @@ def _informes(bridge, relay, emit, cancel, batch, backup, state, phase, pause, i
             bridge.call('catalog', {'screen': 'seguimiento'})
         except Exception:
             pass
-    return carpetas, len(carpetas) == len(meses)
+    return [carpetas[clave] for clave in meses if clave in carpetas], len(carpetas) == len(meses)
 
 
 def run_por_hoja(bridge, catalog, emit, cancel, batch, destination, consolidated=True, **opciones):

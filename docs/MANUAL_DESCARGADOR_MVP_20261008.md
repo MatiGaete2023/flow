@@ -67,6 +67,8 @@ y un paquete conserva solo su ZIP (la carpeta `respaldo/` se borra). Para guarda
 
 **Más opciones › Retomar paquete…** usa el alcance y las opciones guardadas al iniciar el paquete, aunque hayas cambiado
 las preferencias del Descargador. Un paquete antiguo sin opciones guardadas toma las actuales en su primer reintento.
+El Descargador vuelve a comprobar los originales antes de reutilizarlos. Para informes por vencer, conserva los meses
+validados y consulta de nuevo los meses faltantes o dañados. Si un mes falla, sigue con los posteriores.
 Si la nueva exportación falla o se cancela antes de validarse, el ZIP anterior sigue disponible en la carpeta principal.
 Cuando el reemplazo se valida, la versión anterior queda en `respaldo/`.
 

@@ -2,9 +2,11 @@
 
 import json
 import threading
+from datetime import date
 from pathlib import Path
 
 import pytest
+from nurus.capture import read_capture
 
 import flujo_paquete
 import lectura_bitacoras as lb
@@ -17,14 +19,18 @@ from test_reutilizacion_local import bound_lot, diaries
 BATCH = Batch(('49',), ('2',), ('Cumplimiento',))
 
 
-def fakes(monkeypatch, llamadas, *, parcial):
+def fakes(monkeypatch, llamadas, *, parcial, meses_con_falla=()):
     class Consultas:
         def __init__(self, bridge, catalog, emit, gate, pause, evidencia=True):
             self.emit = emit
 
         def run(self, batch, destination):
             llamadas.append(('consultas', batch))
-            lot = bound_lot(destination / 'principal')
+            intento = len(tuple(destination.glob('consulta-*')))
+            if batch.screen == 'calendario_informes' and batch.month in meses_con_falla:
+                raise PocError('El mes ficticio no respondió.')
+            modo = 'Informes' if batch.screen == 'calendario_informes' else 'Cumplimiento'
+            lot = bound_lot(destination / f'consulta-{intento}', mode=modo)
             self.emit('folder', str(lot.folder))
 
     class Bitacoras:
@@ -87,6 +93,58 @@ def test_retomar_reutiliza_consultas_y_bitacoras_y_rehace_el_zip(monkeypatch, tm
 def test_retomar_rechaza_una_carpeta_que_no_es_paquete(tmp_path):
     with pytest.raises(PocError, match='Paquete CSMP'):
         flujo_paquete.retomar(None, CATALOG, lambda *e: None, threading.Event(), tmp_path)
+
+
+def test_retomar_repite_consulta_si_un_original_perdio_su_huella(monkeypatch, tmp_path):
+    llamadas, parcial = [], [True]
+    fakes(monkeypatch, llamadas, parcial=parcial)
+    args = (None, CATALOG, lambda *e: None, threading.Event())
+    primero = flujo_paquete.run(*args, BATCH, tmp_path)
+    carpeta = Path(primero['path']).parent
+    danado = next(Path(primero['sheets_folder']).glob('*.xls'))
+    danado.write_bytes(b'original ficticio que cambio')
+
+    parcial[0] = False
+    llamadas.clear()
+    retomado = flujo_paquete.retomar(*args, carpeta)
+    assert [c[0] for c in llamadas] == ['consultas', 'bitacoras']
+    assert Path(retomado['sheets_folder']) != danado.parent
+    assert danado.read_bytes() == b'original ficticio que cambio'
+    assert not retomado['partial'] and read_capture(retomado['path']).rows('registros')
+
+
+@pytest.mark.parametrize(
+    ('falla_noviembre', 'danar_octubre', 'meses_repetidos'),
+    [(True, False, ['11']), (True, True, ['10', '11']), (False, False, [])],
+)
+def test_retomar_calendario_reintenta_solo_meses_fallidos_o_danados(
+    monkeypatch, tmp_path, falla_noviembre, danar_octubre, meses_repetidos
+):
+    from test_flujo_paquete import PuenteCatalogo
+
+    llamadas, fallas, parcial = [], {'11'} if falla_noviembre else set(), [not falla_noviembre]
+    fakes(monkeypatch, llamadas, parcial=parcial, meses_con_falla=fallas)
+    puente = PuenteCatalogo()
+    args = (puente, CATALOG, lambda *e: None, threading.Event())
+    primero = flujo_paquete.run(*args, BATCH, tmp_path, False, informes=True, today=date(2026, 10, 14))
+    carpeta = Path(primero['path']).parent
+    assert primero['partial']
+    assert [c[1].month for c in llamadas if c[0] == 'consultas'] == [None, '10', '11', '12']
+    proceso = json.loads((carpeta / 'respaldo/proceso.json').read_text())
+    if danar_octubre:
+        octubre = carpeta / proceso['carpetas']['informes-2026-10']
+        next(octubre.glob('*.xls')).unlink()
+
+    parcial[0] = False
+    fallas.clear()
+    llamadas.clear()
+    puente.llamadas.clear()
+    retomado = flujo_paquete.retomar(*args, carpeta, today=date(2026, 12, 20))
+    assert [c[1].month for c in llamadas if c[0] == 'consultas'] == meses_repetidos
+    assert bool(puente.llamadas) == bool(meses_repetidos)
+    assert not retomado['partial']
+    comprobadas = [q for q in read_capture(retomado['path']).rows('consultas') if q['screen'] != 'bitacoras']
+    assert len(comprobadas) == 4
 
 
 def test_retomar_conserva_opciones_originales_del_paquete(monkeypatch, tmp_path):

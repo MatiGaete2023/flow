@@ -3,7 +3,7 @@
 **Actualizar al terminar CADA turno** (antes de quedarse sin tokens): qué se hizo, verificación, siguiente paso exacto.
 Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 
-## Estado al 20-nov-2026
+## Estado al 26-nov-2026
 
 | Paquete | Estado | Último commit / nota |
 |---|---|---|
@@ -29,6 +29,15 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 
 Comprobar la corrida de CI rápida de la rama y hacer la prueba de P3c con un lote chico en Windows y SITFA. Sigue
 pendiente la revisión E3 específica de la extensión.
+
+## Revisión de código del 26-nov-2026
+
+- [Informe y pasos de verificación](REVISION_CODIGO_20261126.md) sobre la punta `afc4d12`.
+- «Retomar paquete» comprueba la descarga principal y los archivos de calendario antes de reutilizarlos. Si se dañan
+  los originales, genera una nueva descarga. El calendario sigue con los demás meses si uno falla y conserva los meses
+  que ya fueron verificados al retomar.
+- Pruebas ficticias de recuperación con un Excel modificado, un mes fallido intermedio, un mes con archivos faltantes y
+  un calendario enteramente reutilizable. El verificador se ejecuta con la lista histórica de bajas de octubre.
 
 ## Revisión de código del 20-nov-2026
 
