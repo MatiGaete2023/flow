@@ -367,3 +367,11 @@ E-R3 · Meta 4: contraste ampliado (`92ab9c1`, CI Windows verde, run 45656558813
 - CI: 45718105751 rojo (`check_contactos` por una dirección real de ejemplo en una prueba; corregido a `example.test` en `b6e0b70`), 45719672640 verde con todos los oráculos (`workflow_dispatch` lanzado por el agente).
 - Orquestador: `sync` idéntico en Linux; 92 + 110 + 1 pruebas; clippy, solo lectura, contactos, RUT, textos e inventario en verde; CC fijo por constante y sin `.Send(`.
 - Corrida de entrega 45708908715 (`60fe600`) verde: `.exe` final e instalador listos (no incluye E-A11 ni E-T6).
+
+## 2026-11-26 · E-Q11 (agente B · ChatGPT Terra)
+
+- Cambió: `descargador/flujo_csmp.rs` (nuevo: plan, fases, `flujo.json`, libro con huella, recuperación por fase), acción conjunta en `descargador_ui.rs`, «Retomar pendientes» en Resultados, `generar_flujo_csmp.py` y `flujo_csmp.json` (8 casos), una línea del workflow.
+- CI de la rama: 45720394795 verde, `flujo_csmp` regenerado. El primer informe se declaró `BLOQUEADO` por falta de Linux; el orquestador regeneró el oráculo en Linux (idéntico) y Terra cerró el informe (`7d4bf17`).
+- Orquestador: fusión sin conflictos; 99 + 112 + 1 pruebas; clippy, solo lectura, contactos, RUT, textos, referencia e inventario (122 escrituras) en verde. Aprobado el cambio de B al workflow.
+- Descartado: la continuación de E-S3 por Terra (`AGENTE_C_20261125c.md`, no publicada); E-S3 ya estaba `HECHO`.
+

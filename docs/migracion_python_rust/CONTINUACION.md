@@ -9,7 +9,7 @@ Claude es el **orquestador y coordinador**: decide, integra y valida. Tres agent
 | Agente · ejecutor | Rama | Encargo | Archivos propios |
 |---|---|---|---|
 | A · Antigravity | `estudio/paridad-python-rust-20261119` | E-A11 y E-T6 `HECHO`; sin encargo | `sincronizar.rs`, `trabajo.rs` (estado), `generar_sync.py`, `sync.json`, `outlook.rs`, sección Outlook de `ui.rs` |
-| B · ChatGPT Terra (por ahora; antes DeepSeek) | `estudio/agente-b-conjunta-20261125` | E-Q11 descarga conjunta CSMP y «Retomar pendientes» | `flujo_csmp.rs` (nuevo), su acción en `descargador_ui.rs`, el botón «Retomar pendientes» en `descargador_resultados_ui.rs`, `generar_flujo_csmp.py`, `flujo_csmp.json` |
+| B · ChatGPT Terra (por ahora; antes DeepSeek) | `estudio/agente-b-conjunta-20261125` | E-Q11 integrado (26-nov); sin encargo | `flujo_csmp.rs` (nuevo), su acción en `descargador_ui.rs`, el botón «Retomar pendientes» en `descargador_resultados_ui.rs`, `generar_flujo_csmp.py`, `flujo_csmp.json` |
 | C · ChatGPT Terra (antes Luna) | — | Sin encargo (E-S3 `HECHO`) | — |
 
 Los prompts completos están en [informes/PROMPTS_AGENTES_20261125.md](informes/PROMPTS_AGENTES_20261125.md). Cada agente entrega un informe en `informes/AGENTE_<letra>_<fecha>.md` y no edita `ESTADO`, `PLAN`, `REGISTRO`, `AGENTS`, `CONTINUACION` ni el workflow.
