@@ -75,12 +75,47 @@ def test_rt27_regla_valida_con_dato_faltante_de_otra(tmp_path):
     assert any('días de cumplimiento ausentes o inválidos' in aviso for aviso in fila.warnings)
 
 
-def test_rt28_tribunal_no_soportado_sin_textos_inventados(tmp_path):
-    encabezados = ['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'NOMBRE CENTRO', 'T ESPERA']
-    fila = analizar(tmp_path, 'ESPERA', encabezados, [persona(1, tribunal='TRIBUNAL FICTICIO') + [90]]).rows[0]
-    assert fila.rules == [] and fila.observation == '' and fila.actions == []
-    assert any('Tribunal fuera de Laja, Mulchén y Tomé' in aviso for aviso in fila.warnings)
-    assert fila.values['TRIBUNAL'] == 'TRIBUNAL FICTICIO'
+@pytest.mark.parametrize(
+    'modo,columnas,datos,regla',
+    [
+        ('ESPERA', ['T ESPERA'], [49], 'ESPERA.E06_SIN_RESOLUCION'),
+        ('ESPERA', ['T ESPERA'], [50], 'ESPERA.E05_SOLO_CORREO'),
+        ('ESPERA', ['T ESPERA'], [80], 'ESPERA.E05_PROYECTO_Y_CORREO'),
+        (
+            'CUMPLIMIENTO', ['DIAS PARA EGRESAR', 'FEC. EGRESO PROYECTADO'],
+            [10, '2026-10-19'], 'CUMPLIMIENTO.C05_POR_VENCER',
+        ),
+        ('INFORMES', ['FECHA VENCIMIENTO'], ['2026-10-08'], 'INFORMES.I01_VENCIDO_GENERAL'),
+    ],
+)
+def test_rt28_otro_tribunal_aplica_reglas_de_tome(tmp_path, modo, columnas, datos, regla):
+    cfg = defaults()
+    cfg['umbrales'].update(espera_tome=50, proyecto_tome=80)
+    tribunales = ['Juzgado de Familia de Tomé', 'TRIBUNAL FICTICIO', None]
+    filas = analizar(
+        tmp_path, modo, BASE[:-1] + columnas, [persona(1, tribunal=t) + datos for t in tribunales], configuracion=cfg
+    ).rows
+    assert len(filas) == 3
+    tome, otro, sin_tribunal = filas
+    assert regla in tome.rules and tome.observation
+    assert (otro.observation, otro.rules, otro.actions) == (tome.observation, tome.rules, tome.actions)
+    assert otro.values['TRIBUNAL'] == 'TRIBUNAL FICTICIO'
+    assert sin_tribunal.rules == [] and sin_tribunal.observation == ''
+    assert 'Tribunal sin identificar; requiere revisión manual.' in sin_tribunal.warnings
+
+
+def test_rt28_recalcular_otro_tribunal_aplica_umbral_de_proyecto_tome(tmp_path):
+    cfg = defaults()
+    cfg['umbrales'].update(espera_tome=50, proyecto_tome=80)
+    trabajo = analizar(
+        tmp_path, 'ESPERA', BASE[:-1] + ['T ESPERA'], [persona(1, tribunal='TRIBUNAL FICTICIO') + [50]],
+        configuracion=cfg,
+    )
+    assert trabajo.rows[0].actions == ['programa_espera']
+    apply(trabajo, [trabajo.rows[0].id], overrides={'espera': 80})
+    assert 'ESPERA.E05_PROYECTO_Y_CORREO' in trabajo.rows[0].rules
+    assert trabajo.rows[0].actions == ['programa_espera', 'PC_IE']
+    assert trabajo.rows[0].values['TRIBUNAL'] == 'TRIBUNAL FICTICIO'
 
 
 ESPERA = ['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'NOMBRE CENTRO', 'T ESPERA', 'CURADOR']

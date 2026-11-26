@@ -223,12 +223,13 @@ def _prepass_peers(work, before_rows, after_rows, ids):
 
 def _recalculate(work, row):
     from datetime import date
-    from nurus.rus.util import tribunal, as_date, as_int
+    from nurus.rus.util import as_date, as_int
     from .motor.contexto import current
     from .motor.composicion import Incidencias
     from .motor.reglas_espera import generar_observacion_espera
     from .motor.reglas_cumplimiento import generar_observacion_cumplimiento
     from .motor.reglas_informes import generar_observacion_informes
+    from .motor.utilidades import tribunal_para_reglas
     from .work import actions_for
 
     mode = getattr(work, 'capture_modes', {}).get(row.id, work.mode)
@@ -282,7 +283,7 @@ def _recalculate(work, row):
                     'Días negativos y egreso futuro: verifica la contradicción; no se afirma que la medida esté vencida.'
                 )
                 ctx['invalid'].append('CUMPLIMIENTO.C04_VENCIDA')
-        court = tribunal(values.get(mapping.get('tribunal', ''), '')) or ''
+        court = tribunal_para_reglas(values.get(mapping.get('tribunal', '')))
         args = dict(incidencias=incidences, fila_excel=row.source_row)
         if mode == 'CUMPLIMIENTO':
             args['fecha_hoja2'] = as_date(getattr(work, 'cross_dates', {}).get(row.id))
@@ -293,7 +294,7 @@ def _recalculate(work, row):
         }[mode]
         row.observation = function(values, court, mapping, **args) if court else ''
         if not court:
-            warnings.append('Tribunal sin reglas configuradas; requiere revisión manual.')
+            warnings.append('Tribunal sin identificar; requiere revisión manual.')
         warnings.extend(item['MOTIVO'] for item in incidences._items)
     finally:
         current.reset(token)
