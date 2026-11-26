@@ -205,7 +205,7 @@ jobs:
           $lista = '${{ steps.cambios.outputs.lista }}'
           # Se recorren todos los oráculos y se falla al final con la lista completa de los que no coinciden.
           $fallas = @()
-          foreach ($o in @('a78', 'lecturas', 'vinculos', 'bitacoras', 'lote', 'paquete', 'excel', 'resultados', 'sync', 'conciliacion', 'personalizacion', 'estadisticas', 'correos', 'ordenes', 'meta4', 'catastro', 'sync_paquete', 'anulaciones', 'word_tribunal', 'flujo_paquete', 'archivo_local', 'historial_local')) {
+          foreach ($o in @('a78', 'lecturas', 'vinculos', 'bitacoras', 'lote', 'paquete', 'excel', 'resultados', 'sync', 'conciliacion', 'personalizacion', 'estadisticas', 'correos', 'ordenes', 'meta4', 'catastro', 'sync_paquete', 'anulaciones', 'word_tribunal', 'flujo_paquete', 'archivo_local', 'historial_local', 'flujo_csmp')) {
             if ($lista -ne 'todos' -and (($lista -split ',') -notcontains $o)) { continue }
             # a78 lleva ZIP en base64 que cambia byte a byte entre ejecutores: solo se contrasta cuando se pide por nombre.
             if ($o -eq 'a78' -and $lista -eq 'todos') { continue }

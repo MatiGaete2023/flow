@@ -455,6 +455,7 @@ impl Resultados {
                         }
                     }
                     if ui.button("Abrir carpeta").clicked() { crate::ui::abrir_en_sistema(&carpeta); }
+                    if ui.button("Retomar pendientes").clicked() { flow_rust::descargador::flujo_csmp::solicitar_retomar(carpeta.clone()); }
                 }
             });
             self.conjunta = abierta;
