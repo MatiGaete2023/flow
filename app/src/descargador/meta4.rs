@@ -778,7 +778,7 @@ mod tests {
         assert!(!nombres_compatibles("Juan Pérez", "Ana Pérez"));
         let f = |d: u32, h: u32| NaiveDate::from_ymd_opt(2026, 10, d).unwrap().and_hms_opt(h, 0, 0).unwrap();
         let corte = NaiveDate::from_ymd_opt(2026, 10, 16).unwrap();
-        let (dia, etapa, _) = ultima(&[(f(10, 9), "Cumplimiento".into()), (f(12, 9), "Espera".into()), (f(14, 9), "Informes".into())], corte);
+        let (dia, etapa, _) = flow_meta4::ultima(&[(f(10, 9), "Cumplimiento".into()), (f(12, 9), "Espera".into()), (f(14, 9), "Informes".into())], corte);
         assert_eq!((dia, etapa), (NaiveDate::from_ymd_opt(2026, 10, 12), "Espera"));
     }
 }
