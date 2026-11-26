@@ -1,6 +1,6 @@
 # Estado de Flow Rust
 
-Actualizado: 25 de noviembre de 2026, tras la integración de los Agentes B (E-R3) y C (E-Q8, paquetes parciales), E-A10, E-U2, E-I2, E-A9, E-A8, E-A7, E-A6, E-X1, E-X2, E-R1 y E-R2, E-S1 (con su vista), E-V1 a E-V3, E-Q7 el producto de Trabajo sin consolidado (E-W1) E-A1, E-U1, E-A2, E-A3, E-A4, E-T1, E-T2, E-T3 y E-A5. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
+Actualizado: 26 de noviembre de 2026, tras la integración de E-Q11 (Agente B · ChatGPT Terra) y, el 25-nov, de los Agentes B (E-R3) y C (E-Q8, paquetes parciales), E-A10, E-U2, E-I2, E-A9, E-A8, E-A7, E-A6, E-X1, E-X2, E-R1 y E-R2, E-S1 (con su vista), E-V1 a E-V3, E-Q7 el producto de Trabajo sin consolidado (E-W1) E-A1, E-U1, E-A2, E-A3, E-A4, E-T1, E-T2, E-T3 y E-A5. Es la única fuente del estado: se edita en el mismo commit que cierra cada encargo.
 
 - Aplicación: `app/` (`flow_rust.exe`). Referencia funcional: rama `flow-python`.
 - Rama única: `estudio/paridad-python-rust-20261119`.
@@ -59,6 +59,7 @@ Actualizado: 25 de noviembre de 2026, tras la integración de los Agentes B (E-R
 - **Un paquete por hoja (F22; E-Q10, agente B) — Sí (`HECHO`, run 45708628960).** Opción «Un paquete por hoja» junto a «Consultar y crear paquete»: un ZIP y una carpeta por pestaña.
 - **Historial de Resultados y descarga conjunta (F22; E-S3, agente C) — Sí (`HECHO`, run 45708628960).** Resultados recuerda las carpetas, conjuntos y bitácoras usadas (con `NO_DISPONIBLE` si ya no existen) y «Ver descarga conjunta» muestra fases y abre el libro CSMP solo si su huella coincide.
 - **«Consultar y crear paquete» en una acción (F17, F19, F22; E-Q9, agente B) — Sí (`HECHO`: CI Windows verde, run 45685219486).** Con Seguimiento, una sola acción descarga las hojas, lee bitácoras, calendarios, historia e histórico, agrega informes por vencer y arma el ZIP, todo en una carpeta «Paquete CSMP …» con `respaldo/proceso.json`; «Retomar paquete…» completa lo pendiente reutilizando lo validado. Los pasos sueltos siguen en «Avanzado». Oráculo de 12 casos contra `flujo_paquete.py`. Pendiente: `run_por_hoja` (un paquete por hoja).
+- **Descarga conjunta CSMP y «Retomar pendientes» (F17, F22; E-Q11, agente B · ChatGPT Terra) — Sí (integrado; CI de la rama verde, run 45720394795, `flujo_csmp` regenerado; `HECHO` al pasar la CI de la rama principal).** Como `flujo_csmp.run` de Python: consulta principal de Espera o Cumplimiento más el calendario de informes del mes actual y el siguiente, control `flujo.json` por fase, libro para CSMP con cobertura y huella, y «Retomar pendientes» desde la vista conjunta, que consulta solo los tribunales que faltan. Oráculo `flujo_csmp` (8 escenarios, idéntico en Windows y Linux) y prueba integral con SITFA ficticio (ambos modos, cortes en la fase principal y en informes). Firmas y Carga quedan fuera, como en Python.
 - **F27 Intercambio entre herramientas — Sí, opción B (D-9).** «Abrir en Trabajo» tras crear el paquete. Sin solicitudes ni recuperación entre herramientas.
 
 ### Otras herramientas
