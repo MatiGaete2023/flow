@@ -107,6 +107,7 @@ En este orden, salvo que el usuario indique otro:
 
 ## Decisiones del usuario vigentes
 
+- **Dos agentes (26-nov).** Solo A · Antigravity y C · ChatGPT Terra; lo que era de B pasa a C. Cada agente trabaja en su rama `estudio/agente-<letra>-<tema>-<fecha>` (A deja de trabajar en la principal). Delegado al orquestador y revertible: el reparto de archivos de [CONTINUACION.md](CONTINUACION.md).
 - **Producto Excel (20-nov).** Columnas NURUS al final del consolidado o del original, en el orden `NURUS_ID_REGISTRO, NURUS_REGLAS, NURUS_PROPUESTA, FECHA_OBS, OBSERVACION, TT, CC, RES, NURUS_ESTADO_REVISION, NURUS_DECISIONES`. Prima sobre el orden de `flow-python`.
 - **Redacción (20-nov).** Se aplica en Flow Rust; cambiar Flow Python requiere instrucción expresa.
   - **R1:** con la medida por vencer, sin la oración del próximo informe.

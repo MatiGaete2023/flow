@@ -375,3 +375,9 @@ E-R3 · Meta 4: contraste ampliado (`92ab9c1`, CI Windows verde, run 45656558813
 - Orquestador: fusión sin conflictos; 99 + 112 + 1 pruebas; clippy, solo lectura, contactos, RUT, textos, referencia e inventario (122 escrituras) en verde. Aprobado el cambio de B al workflow.
 - Descartado: la continuación de E-S3 por Terra (`AGENTE_C_20261125c.md`, no publicada); E-S3 ya estaba `HECHO`.
 
+## 2026-11-26 · Relevo del orquestador y reparto con dos agentes
+
+- Decisión del usuario: solo A · Antigravity y C · ChatGPT Terra; B sin ejecutor y sus archivos pasan a C. `AGENTS.md` y PLAN lo registran.
+- `CONTINUACION.md` reescrito: resumen, reparto, capacidades observadas de cada ejecutor (Terra sin `cargo`), procedimiento, lecciones y prompt del orquestador nuevo.
+- Pendiente al relevo: cerrar E-Q11 con el run 45740546126 y lanzar una entrega nueva.
+
