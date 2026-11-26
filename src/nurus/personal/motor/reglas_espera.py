@@ -142,19 +142,14 @@ def generar_observacion_espera(row, tribunal, cols, incidencias=None, fila_excel
         incidencias.agregar(fila_excel, _rit(row, cols), 'E-05/E-06',
                             'tiempo de espera ausente o inválido (G-05)')
     # Los días de espera no se escriben en la observación (decisión del usuario, 11-nov-2026): solo deciden la gestión.
-    threshold = (parametro('espera_dce') if es_dce(programa) else
-                 parametro('espera_' + tribunal.lower()) if tribunal in ('LAJA','MULCHEN','TOME') else 30)
+    dce = es_dce(programa)
+    perfil = tribunal if tribunal in ('LAJA', 'MULCHEN') else 'TOME'
+    threshold = parametro('espera_dce' if dce else 'espera_' + perfil.lower())
     if espera is not None and espera >= threshold and not proyeccion:
-        if es_dce(programa):
-            frags.append(render('ESPERA','E05_SOLO_CORREO')); principal=True
-        elif tribunal in ('LAJA','MULCHEN'):
-            frags.append(render('ESPERA','E05_PROYECTO_Y_CORREO')); principal=True
-        elif tribunal == 'TOME':
-            frags.append(render('ESPERA','E05_PROYECTO_Y_CORREO' if espera >= parametro('proyecto_tome') else 'E05_SOLO_CORREO')); principal=True
-        else:
-            incidencias.agregar(fila_excel, _rit(row, cols), 'E-05', 'tribunal no reconocido — regla omitida (G-06)')
-    # E-06 es el fallback del §9.1: dispara siempre que no haya principal
-    # (incluye T ESPERA ausente/ inválido y tribunal no reconocido — D11).
+        proyecto = not dce and (perfil != 'TOME' or espera >= parametro('proyecto_tome'))
+        frags.append(render('ESPERA', 'E05_PROYECTO_Y_CORREO' if proyecto else 'E05_SOLO_CORREO'))
+        principal = True
+    # E-06 se aplica siempre que no haya observación principal (incluido T ESPERA ausente o inválido).
     if not principal:
         frags.append(render('ESPERA','E06_SIN_RESOLUCION', PROGRAMA=titulo_programa(programa)))
     # Con E-04 la resolución de ingreso ya se dijo: el trámite «Ing.Serv.» no la repite (un dato, una vez).

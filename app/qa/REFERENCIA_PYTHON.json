@@ -1,10 +1,10 @@
 {
-  "descripcion": "Referencia Python única de los oráculos (E-V1): rama flow-python en este commit. Los árboles descargador/, src/ y tests/ de esta rama deben ser idénticos; la CI hace checkout de este SHA.",
+  "descripcion": "Referencia Python de los oráculos (E-V1): base de Flow Python con el cambio de reglas de Tomé. Los árboles descargador/, src/ y tests/ de esta rama son idénticos a los de esta referencia.",
   "rama": "flow-python",
-  "commit": "afc4d12ae1adabf21049c809c0d0d8f747e2e306",
+  "commit": "fc6fe2550c29ed6624aabf21d19bddba68a39225",
   "arboles": {
     "descargador": "f734c298750391700ad1306615c465c4b18ad943",
-    "src": "ab4f793cf456084d28a8fff696ce9d1db7ec8b72",
-    "tests": "0da4129b263d652076265673f85876d54abc7e41"
+    "src": "16fc771222e900f14cf3b0d76fbcf4b8f98e8b8f",
+    "tests": "002bfeebefde1e89142d38df43bf1ba549b28ef8"
   }
 }

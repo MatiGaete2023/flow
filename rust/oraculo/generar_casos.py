@@ -31,8 +31,9 @@ from nurus.personal.motor.evidencia import (
 from nurus.personal.motor.reglas_cumplimiento import generar_observacion_cumplimiento
 from nurus.personal.motor.reglas_espera import generar_observacion_espera
 from nurus.personal.motor.reglas_informes import generar_observacion_informes
+from nurus.personal.motor.utilidades import tribunal_para_reglas
 from nurus.personal.work import actions_for
-from nurus.rus.util import as_date, as_int, tribunal
+from nurus.rus.util import as_date, as_int
 
 TEXTOS = json.loads((RAIZ / 'src/nurus/personal/textos_base.json').read_text(encoding='utf-8'))
 CORTE = date(2026, 11, 12)
@@ -316,9 +317,9 @@ def esperado(caso):
             if end and end > corte and any(n is not None and n < 0 for n in counts):
                 avisos.append('Días negativos y egreso futuro: verifica la contradicción; no se afirma que la medida esté vencida.')
                 ctx['invalid'].append('CUMPLIMIENTO.C04_VENCIDA')
-        court = tribunal(values.get('tribunal', '')) or ''
+        court = tribunal_para_reglas(values.get('tribunal'))
         if not court:
-            avisos.append('Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual.')
+            avisos.append('Tribunal sin identificar; requiere revisión manual.')
         args = {'incidencias': inc, 'fila_excel': 1}
         if etapa == 'CUMPLIMIENTO':
             args['fecha_hoja2'] = hoja2

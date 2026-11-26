@@ -75,7 +75,7 @@ jobs:
       - name: Obtener la referencia Flow Python
         uses: actions/checkout@v4
         with:
-          ref: afc4d12ae1adabf21049c809c0d0d8f747e2e306
+          ref: fc6fe2550c29ed6624aabf21d19bddba68a39225
           path: referencia-python-ci
           persist-credentials: false
       - uses: dtolnay/rust-toolchain@stable

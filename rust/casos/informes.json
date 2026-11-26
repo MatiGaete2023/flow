@@ -651,13 +651,20 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel PRM: Informe de avance vencido desde el 29 de octubre de 2026. Se hace presente que el informe de PRM LAJA registra ingreso a folio s/f y figura pendiente en el calendario. Se sugiere revisar su asociación con la fecha proyectada 29 de octubre de 2026.",
+"reglas":[
+"HISTORIA.INFORME_REVISAR_ASOCIACION",
+"HISTORIA.I01_SIN_ENVIO_GENERAL"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":2,
+"codigo":"I01_CONTRADICHA",
+"texto":"Informe vencido en RUS contradicho por la historia"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -723,12 +730,16 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel PRM: Informe de avance vencido desde el 19 de octubre de 2026. Registra 4 informes vencidos en RUS; el más antiguo venció el 21 de agosto de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa PRM LAJA requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL",
+"HISTORIA.J2_ACUMULADOS"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -1954,14 +1965,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas OPD: La derivación OPD LAJA no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -2388,12 +2399,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas DIA: Informe diagnóstico vencido desde el 30 de septiembre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa Diagnóstico Clínico Especializado requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_DCE"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -3432,7 +3446,7 @@
 "reglas":[],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"sin fecha de vencimiento (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -3624,9 +3638,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -3792,12 +3804,16 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"FAE: Informe de avance vencido desde el 28 de septiembre de 2026. Registra 3 informes vencidos en RUS; el más antiguo venció el 22 de mayo de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa FAE PRO Biobío requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL",
+"HISTORIA.J2_ACUMULADOS"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -4474,14 +4490,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel OPD: La derivación OPD LAJA no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -4579,12 +4595,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías FAS: Informe de avance vencido desde el 11 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa FAS TOMÉ requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -5034,9 +5053,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -5383,13 +5400,22 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel FAS: Informe de avance vencido desde el 10 de noviembre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa FAS TOMÉ requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
-"marcas":[],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
+"marcas":[
+{
+"nivel":2,
+"codigo":"ENTREGA_ANTERIOR",
+"texto":"Posible entrega anterior al vencimiento: no se acredita su período; se conservan las acciones para revisión"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -6213,12 +6239,15 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"RES: Informe de avance vencido desde el 20 de septiembre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa RES Residencia Familiar requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -7758,12 +7787,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel RTA: Informe de avance vencido desde el 12 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa RTA Lactantes (SEDE Norte) requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -8181,9 +8213,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -8254,14 +8284,14 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -8592,7 +8622,7 @@
 "reglas":[],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"sin fecha de vencimiento (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -8868,12 +8898,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías PRM: Informe de avance vencido desde el 19 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa PRM LAJA requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -10078,12 +10111,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías FAS: Informe de avance vencido desde el 26 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa FAS TOMÉ requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -10823,14 +10859,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -10997,12 +11033,16 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia DCE: Informe diagnóstico vencido desde el 24 de septiembre de 2026. Registra 3 informes vencidos en RUS; el más antiguo venció el 12 de junio de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa DCE los Ángeles requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_DCE",
+"HISTORIA.J2_ACUMULADOS"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -11317,12 +11357,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel DIA: Se remite correo al programa Diagnóstico Clínico Especializado informando que el informe diagnóstico debe ser remitido a más tardar el 7 de diciembre de 2026.",
+"reglas":[
+"INFORMES.I02_POR_VENCER_DCE"
 ],
+"acciones":[
+"programa_por_vencer"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -12102,14 +12144,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -12784,14 +12826,14 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -13285,14 +13327,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -13681,12 +13723,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel DCE: Informe diagnóstico vencido desde el 25 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa DCE los Ángeles requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_DCE"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -14218,9 +14263,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -14455,12 +14498,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías DIA: Se remite correo al programa Diagnóstico Clínico Especializado informando que el informe diagnóstico debe ser remitido a más tardar el 8 de diciembre de 2026.",
+"reglas":[
+"INFORMES.I02_POR_VENCER_DCE"
 ],
+"acciones":[
+"programa_por_vencer"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -14728,9 +14773,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -15203,12 +15246,16 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel RTA: Informe de avance vencido desde el 30 de octubre de 2026. Registra 4 informes vencidos en RUS; el más antiguo venció el 30 de junio de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa RTA Lactantes (SEDE Norte) requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL",
+"HISTORIA.J2_ACUMULADOS"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -16116,12 +16163,15 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías RVA: Registra 4 informes vencidos en RUS; el más antiguo venció el 8 de julio de 2026. Se remite correo al programa RVA Residencia del Valle informando que el próximo informe de avance vence el 7 de diciembre de 2026.",
+"reglas":[
+"INFORMES.I02_POR_VENCER_GENERAL",
+"HISTORIA.J2_ACUMULADOS"
 ],
+"acciones":[
+"programa_por_vencer"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -16189,12 +16239,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"PIE: Informe de avance vencido desde el 25 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa PIE 24 Horas requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -16267,12 +16320,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel RES: Informe de avance vencido desde el 22 de septiembre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa RES Residencia Familiar requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -17107,14 +17163,14 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -17298,7 +17354,7 @@
 "reglas":[],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"sin fecha de vencimiento (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -17644,14 +17700,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas OPD: La derivación OPD LAJA no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -17733,14 +17789,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -17897,12 +17953,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel DIA: Informe diagnóstico vencido desde el 7 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa Diagnóstico Clínico Especializado requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_DCE"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -18007,9 +18066,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -19192,11 +19249,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
+"observacion":"RVA: Se remite correo al programa RVA Residencia del Valle informando que el próximo informe de avance vence el 24 de noviembre de 2026.",
+"reglas":[
+"INFORMES.I02_POR_VENCER_GENERAL"
+],
+"acciones":[
+"programa_por_vencer"
+],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"N-02: audiencia el 21 de noviembre de 2026 y el informe vence el 24 de noviembre de 2026; se sugiere solicitarlo antes de la audiencia."
 ],
 "marcas":[],
 "excluido":false,
@@ -19399,12 +19460,16 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel PRM: Informe de avance vencido desde el 2 de octubre de 2026. Registra 2 informes vencidos en RUS; el más antiguo venció el 17 de junio de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa PRM LAJA requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL",
+"HISTORIA.J2_ACUMULADOS"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -19754,12 +19819,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías PRO: Se remite correo al programa Programa de Protección Especializada informando que el próximo informe de avance vence el 12 de noviembre de 2026.",
+"reglas":[
+"INFORMES.I02_POR_VENCER_GENERAL"
 ],
+"acciones":[
+"programa_por_vencer"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -20153,9 +20220,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -20302,12 +20367,15 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía PEE: Informe de avance vencido desde el 28 de septiembre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa PEE los Aromos requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -20858,7 +20926,7 @@
 "reglas":[],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"sin fecha de vencimiento (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -21287,14 +21355,14 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -21597,12 +21665,16 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel PRO: Informe de avance vencido desde el 13 de octubre de 2026. Registra 4 informes vencidos en RUS; el más antiguo venció el 9 de agosto de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa Programa de Protección Especializada requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL",
+"HISTORIA.J2_ACUMULADOS"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -23189,12 +23261,16 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas RES: Informe de avance vencido desde el 21 de octubre de 2026. Registra 4 informes vencidos en RUS; el más antiguo venció el 18 de agosto de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa RES Residencia Familiar requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL",
+"HISTORIA.J2_ACUMULADOS"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -23867,7 +23943,7 @@
 "reglas":[],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"sin fecha de vencimiento (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -24310,12 +24386,16 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia RES: Informe de avance vencido desde el 1 de octubre de 2026. Registra 2 informes vencidos en RUS; el más antiguo venció el 8 de agosto de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa RES Residencia Familiar requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL",
+"HISTORIA.J2_ACUMULADOS"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -24756,12 +24836,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"DCE: Informe diagnóstico vencido desde el 10 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa DCE los Ángeles requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_DCE"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -25211,12 +25294,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel PRM: Informe de avance vencido desde el 11 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa PRM LAJA requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -25291,12 +25377,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"PEE: Informe de avance vencido desde el 22 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa PEE los Aromos requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -26823,12 +26912,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú RFA: Informe de avance vencido desde el 25 de septiembre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa RFA Hogar Ficticio requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -27337,9 +27429,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -27412,12 +27502,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel DIA: Informe diagnóstico vencido desde el 30 de septiembre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa Diagnóstico Clínico Especializado requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_DCE"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -27613,12 +27706,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel RTA: Informe de avance vencido desde el 14 de septiembre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa RTA Lactantes (SEDE Norte) requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -28399,7 +28495,7 @@
 "reglas":[],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"sin fecha de vencimiento (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -29111,9 +29207,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -30617,7 +30711,7 @@
 "reglas":[],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"sin fecha de vencimiento (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -30689,9 +30783,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -30788,12 +30880,15 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas PRM: Informe de avance vencido desde el 19 de septiembre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa PRM Ciudad del NIÑO Mulchén requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -30965,9 +31060,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -31055,7 +31148,7 @@
 "reglas":[],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"sin fecha de vencimiento (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -31573,12 +31666,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel PRO: Informe de avance vencido desde el 3 de noviembre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa Programa de Protección Especializada requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -32672,7 +32768,7 @@
 "reglas":[],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"sin fecha de vencimiento (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -33385,12 +33481,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía RTA: Informe de avance vencido desde el 15 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa RTA Lactantes (SEDE Norte) requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -33569,9 +33668,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -33694,14 +33791,14 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías HOS: La derivación Hospital de TOMÉ no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -35893,14 +35990,14 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"HOS: La derivación Hospital de TOMÉ no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -36090,14 +36187,14 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"OPD: La derivación OPD LAJA no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -36321,12 +36418,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"FAS: Informe de avance vencido desde el 23 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa FAS TOMÉ requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -36424,12 +36524,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia FAE: Informe de avance vencido desde el 15 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa FAE PRO Biobío requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -38250,9 +38353,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -39734,14 +39835,14 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías HOS: La derivación Hospital de TOMÉ no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -40386,14 +40487,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -40777,9 +40878,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -40983,14 +41082,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía OPD: La derivación OPD LAJA no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -42001,14 +42100,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"HOS: La derivación Hospital de TOMÉ no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -42842,14 +42941,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -43217,12 +43316,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas FAE: Informe de avance vencido desde el 16 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa FAE PRO Biobío requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -44154,14 +44256,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel HOS: La derivación Hospital de TOMÉ no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -44241,9 +44343,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -45113,12 +45213,16 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú PRO: Informe de avance vencido desde el 31 de octubre de 2026. Registra 3 informes vencidos en RUS; el más antiguo venció el 3 de agosto de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa Programa de Protección Especializada requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL",
+"HISTORIA.J2_ACUMULADOS"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -45615,12 +45719,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías FAE: Se remite correo al programa FAE PRO Biobío informando que el próximo informe de avance vence el 7 de diciembre de 2026.",
+"reglas":[
+"INFORMES.I02_POR_VENCER_GENERAL"
 ],
+"acciones":[
+"programa_por_vencer"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -46218,14 +46324,14 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel CES: La derivación Cesfam Mulchén no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -46735,7 +46841,7 @@
 "reglas":[],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"sin fecha de vencimiento (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -46809,9 +46915,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -47633,12 +47737,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel RVA: Informe de avance vencido desde el 23 de septiembre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa RVA Residencia del Valle requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -48154,13 +48261,22 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"PRM: Informe de avance vencido desde el 15 de septiembre de 2026. Informe de avance recepcionado en resolución de fecha 22 de septiembre de 2026 (folio s/f). Se deja constancia de que se remite proyecto de resolución que aplica la nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa.",
+"reglas":[
+"HISTORIA.C10_ESCRITO",
+"HISTORIA.I01_SIN_ENVIO_GENERAL"
 ],
-"marcas":[],
+"acciones":[
+"NOMENCL"
+],
+"avisos":[],
+"marcas":[
+{
+"nivel":2,
+"codigo":"I01_CONTRADICHA",
+"texto":"Informe vencido en RUS contradicho por la historia"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -48863,12 +48979,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel DIA: Informe diagnóstico vencido desde el 20 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa Diagnóstico Clínico Especializado requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_DCE"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -49420,12 +49539,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel RVA: Informe de avance vencido desde el 24 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa RVA Residencia del Valle requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -49746,7 +49868,7 @@
 "reglas":[],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"sin fecha de vencimiento (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -50136,12 +50258,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas RVA: Informe de avance vencido desde el 14 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa RVA Residencia del Valle requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -50212,7 +50337,7 @@
 "reglas":[],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"sin fecha de vencimiento (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -50481,12 +50606,16 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia DCE: Informe diagnóstico vencido desde el 27 de octubre de 2026. Registra 4 informes vencidos en RUS; el más antiguo venció el 15 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa DCE los Ángeles requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_DCE",
+"HISTORIA.J2_ACUMULADOS"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -50558,12 +50687,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia FAS: Se remite correo al programa FAS TOMÉ informando que el próximo informe de avance vence el 25 de noviembre de 2026.",
+"reglas":[
+"INFORMES.I02_POR_VENCER_GENERAL"
 ],
+"acciones":[
+"programa_por_vencer"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -50653,12 +50784,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas RFA: Informe de avance vencido desde el 4 de noviembre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa RFA Hogar Ficticio requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -50786,13 +50920,22 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú PIE: Informe de avance vencido desde el 26 de septiembre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa PIE 24 Horas requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
-"marcas":[],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
+"marcas":[
+{
+"nivel":2,
+"codigo":"ENTREGA_ANTERIOR",
+"texto":"Posible entrega anterior al vencimiento: no se acredita su período; se conservan las acciones para revisión"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -50951,9 +51094,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -51275,14 +51416,14 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías OPD: La derivación OPD LAJA no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -51757,14 +51898,14 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -53403,14 +53544,14 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -53900,7 +54041,7 @@
 "reglas":[],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"sin fecha de vencimiento (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -55740,14 +55881,14 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"OPD: La derivación OPD LAJA no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -56219,13 +56360,22 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía PIE: Informe de avance vencido desde el 2 de noviembre de 2026. Informe de avance recepcionado en resolución de fecha 2 de noviembre de 2026 (folio s/f). Se deja constancia de que se remite proyecto de resolución que aplica la nomenclatura «Ingreso Informe de Cumplimiento X» a fin de regularizar informáticamente la causa.",
+"reglas":[
+"HISTORIA.C10_ESCRITO",
+"HISTORIA.I01_SIN_ENVIO_GENERAL"
 ],
-"marcas":[],
+"acciones":[
+"NOMENCL"
+],
+"avisos":[],
+"marcas":[
+{
+"nivel":2,
+"codigo":"I01_CONTRADICHA",
+"texto":"Informe vencido en RUS contradicho por la historia"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -56291,14 +56441,14 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia OPD: La derivación OPD LAJA no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -56702,12 +56852,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú RVA: Se remite correo al programa RVA Residencia del Valle informando que el próximo informe de avance vence el 25 de noviembre de 2026.",
+"reglas":[
+"INFORMES.I02_POR_VENCER_GENERAL"
 ],
+"acciones":[
+"programa_por_vencer"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -57245,14 +57397,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -57965,14 +58117,14 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías CES: La derivación Cesfam Mulchén no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -58038,12 +58190,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía PRM: Informe de avance vencido desde el 27 de septiembre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa PRM LAJA requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -58396,13 +58551,22 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel RTA: Informe de avance vencido desde el 1 de noviembre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa RTA Lactantes (SEDE Norte) requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
-"marcas":[],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
+"marcas":[
+{
+"nivel":2,
+"codigo":"ENTREGA_ANTERIOR",
+"texto":"Posible entrega anterior al vencimiento: no se acredita su período; se conservan las acciones para revisión"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -59397,14 +59561,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -59847,14 +60011,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -60926,12 +61090,16 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía DCE: Informe diagnóstico vencido desde el 6 de octubre de 2026. Registra 4 informes vencidos en RUS; el más antiguo venció el 6 de julio de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa DCE los Ángeles requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_DCE",
+"HISTORIA.J2_ACUMULADOS"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -61118,9 +61286,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -62055,14 +62221,14 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -62332,9 +62498,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -62491,14 +62655,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía OPD: La derivación OPD LAJA no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -63829,7 +63993,7 @@
 "reglas":[],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"sin fecha de vencimiento (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -64664,12 +64828,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía RES: Se remite correo al programa RES Residencia Familiar informando que el próximo informe de avance vence el 2 de diciembre de 2026.",
+"reglas":[
+"INFORMES.I02_POR_VENCER_GENERAL"
 ],
+"acciones":[
+"programa_por_vencer"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -64945,12 +65111,16 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"PIE: Informe de avance vencido desde el 17 de septiembre de 2026. Registra 4 informes vencidos en RUS; el más antiguo venció el 23 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa PIE 24 Horas requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL",
+"HISTORIA.J2_ACUMULADOS"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -65334,12 +65504,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia RES: Informe de avance vencido desde el 28 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa RES Residencia Familiar requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -65540,7 +65713,7 @@
 "reglas":[],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"sin fecha de vencimiento (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -65625,12 +65798,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas RFA: Informe de avance vencido desde el 26 de septiembre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa RFA Hogar Ficticio requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -65776,12 +65952,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel RVA: Informe de avance vencido desde el 14 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa RVA Residencia del Valle requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -65984,12 +66163,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía PRO: Informe de avance vencido desde el 16 de septiembre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa Programa de Protección Especializada requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -67516,7 +67698,7 @@
 "reglas":[],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"sin fecha de vencimiento (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -67863,12 +68045,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía RFA: Informe de avance vencido desde el 29 de septiembre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa RFA Hogar Ficticio requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -69166,14 +69351,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel OPD: La derivación OPD LAJA no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -69355,12 +69540,15 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías PRO: Registra 3 informes vencidos en RUS; el más antiguo venció el 22 de agosto de 2026. Se remite correo al programa Programa de Protección Especializada informando que el próximo informe de avance vence el 9 de diciembre de 2026.",
+"reglas":[
+"INFORMES.I02_POR_VENCER_GENERAL",
+"HISTORIA.J2_ACUMULADOS"
 ],
+"acciones":[
+"programa_por_vencer"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -69717,9 +69905,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -69831,7 +70017,7 @@
 "reglas":[],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"sin fecha de vencimiento (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -71094,7 +71280,7 @@
 "reglas":[],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"sin fecha de vencimiento (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -71840,12 +72026,14 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia PRM: Se remite correo al programa PRM Ciudad del NIÑO Mulchén informando que el próximo informe de avance vence el 11 de diciembre de 2026.",
+"reglas":[
+"INFORMES.I02_POR_VENCER_GENERAL"
 ],
+"acciones":[
+"programa_por_vencer"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -71943,14 +72131,14 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -72268,12 +72456,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"DIA: Informe diagnóstico vencido en RUS desde el 7 de noviembre de 2026. Se remite correo al programa Diagnóstico Clínico Especializado requiriendo su envío a más tardar el 17 de noviembre de 2026.",
+"reglas":[
+"INFORMES.I02_MARGEN_DCE"
 ],
+"acciones":[
+"programa_por_vencer"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -72425,14 +72615,14 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -72789,12 +72979,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia DIA: Informe diagnóstico vencido desde el 20 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa Diagnóstico Clínico Especializado requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_DCE"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -72930,9 +73123,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -73545,9 +73736,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -73685,14 +73874,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -74504,12 +74693,15 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel FAS: Informe de avance vencido desde el 1 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa FAS TOMÉ requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -74626,12 +74818,16 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel PRM: Informe de avance vencido desde el 9 de noviembre de 2026. Registra 4 informes vencidos en RUS; el más antiguo venció el 14 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa PRM LAJA requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL",
+"HISTORIA.J2_ACUMULADOS"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -75183,7 +75379,7 @@
 "reglas":[],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"sin fecha de vencimiento (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -75485,7 +75681,7 @@
 "reglas":[],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"sin fecha de vencimiento (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -76232,14 +76428,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú CES: La derivación Cesfam Mulchén no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -76905,12 +77101,16 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel RTA: Informe de avance vencido desde el 10 de noviembre de 2026. Registra 2 informes vencidos en RUS; el más antiguo venció el 14 de junio de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa RTA Lactantes (SEDE Norte) requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL",
+"HISTORIA.J2_ACUMULADOS"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -78278,12 +78478,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía PRM: Informe de avance vencido desde el 4 de octubre de 2026. Se deja constancia de que se remite proyecto de resolución pidiendo cuenta del informe y, de igual manera, correo al programa PRM Ciudad del NIÑO Mulchén requiriendo su envío.",
+"reglas":[
+"INFORMES.I01_VENCIDO_GENERAL"
 ],
+"acciones":[
+"programa_vencido",
+"PC_INFO"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -82577,14 +82780,14 @@
 ],
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías OPD: La derivación OPD LAJA no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -83144,9 +83347,7 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
-],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -83949,14 +84150,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },

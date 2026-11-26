@@ -13,6 +13,15 @@ import math
 from datetime import datetime
 from .contexto import datetime as Clock
 import pandas as pd
+from nurus.rus.columns import normalize
+from nurus.rus.util import tribunal
+
+
+def tribunal_para_reglas(value):
+    """Selecciona las reglas sin modificar la identidad del tribunal en la fila."""
+    if normalize(value).strip() in {"", "nan", "nat", "none"}:
+        return None
+    return tribunal(value) or "TOME"
 
 _PREPOSICIONES  = {"de", "del", "los", "las", "y", "en", "el", "la", "por", "con", "a"}
 _VALORES_VACIOS = {"", "---", "-", "nan", "nat", "none"}

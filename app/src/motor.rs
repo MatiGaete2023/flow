@@ -1,4 +1,4 @@
-//! Motor de observaciones: reglas tradicionales de Espera, Cumplimiento e Informes (Laja, Mulchén y Tomé).
+//! Motor de observaciones de Espera, Cumplimiento e Informes. Usa Tomé para los demás tribunales identificados.
 //! Reescrito desde la hoja de reglas (MECHANICS.md). No escribe en RUS ni envía nada.
 
 use crate::captura_trabajo::ContextoFila;
@@ -397,27 +397,19 @@ fn espera(ctx: &mut Ctx, f: &Fila, trib: &str) -> String {
     let dce = es_dce(&programa);
     let umbral = if dce {
         ctx.p("espera_dce")
-    } else if ["LAJA", "MULCHEN", "TOME"].contains(&trib) {
-        ctx.p(&format!("espera_{}", trib.to_lowercase()))
     } else {
-        30
+        ctx.p(&format!("espera_{}", trib.to_lowercase()))
     };
     if let Some(e) = espera.filter(|_| !proyeccion) {
         if e >= umbral {
-            let key = if dce {
-                Some("ESPERA.E05_SOLO_CORREO")
-            } else if trib == "LAJA" || trib == "MULCHEN" {
-                Some("ESPERA.E05_PROYECTO_Y_CORREO")
-            } else if trib == "TOME" {
-                Some(if e >= ctx.p("proyecto_tome") { "ESPERA.E05_PROYECTO_Y_CORREO" } else { "ESPERA.E05_SOLO_CORREO" })
+            let proyecto = !dce && (trib != "TOME" || e >= ctx.p("proyecto_tome"));
+            let key = if proyecto {
+                "ESPERA.E05_PROYECTO_Y_CORREO"
             } else {
-                ctx.aviso("tribunal no reconocido — regla omitida (G-06)");
-                None
+                "ESPERA.E05_SOLO_CORREO"
             };
-            if let Some(k) = key {
-                frags.extend(ctx.render(k, &[]));
-                principal = true;
-            }
+            frags.extend(ctx.render(key, &[]));
+            principal = true;
         }
     }
     if !principal {
@@ -746,17 +738,16 @@ pub(crate) fn evaluar_con_captura(
             }
         }
     }
-    let trib = tribunal(&f.text("tribunal"));
-    let observacion = match trib {
-        None => {
-            ctx.aviso("Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual.");
-            String::new()
-        }
-        Some(t) => match mode {
-            Mode::Espera => espera(&mut ctx, f, t),
+    let tribunal_original = f.text("tribunal");
+    let observacion = if matches!(normalizar(&tribunal_original).as_str(), "" | "nan" | "nat" | "none") {
+        ctx.aviso("Tribunal sin identificar; requiere revisión manual.");
+        String::new()
+    } else {
+        match mode {
+            Mode::Espera => espera(&mut ctx, f, tribunal(&tribunal_original).unwrap_or("TOME")),
             Mode::Cumplimiento => cumplimiento(&mut ctx, f, fecha_hoja2),
             Mode::Informes => informes(&mut ctx, f),
-        },
+        }
     };
     if !observacion.is_empty() && !ctx.eventos.iter().any(|e| e == "COMUN.NO_SEGUIMIENTO") {
         avisos_fila(&mut ctx, f, mode, fecha_hoja2);
@@ -1004,6 +995,42 @@ mod tests {
             "Sofía PRM: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente."
         );
         assert_eq!(acciones(&r.eventos, None, hoy), vec!["programa_espera", "PC_IE"]);
+    }
+
+    #[test]
+    fn otro_tribunal_aplica_reglas_y_umbrales_de_tome() {
+        let mut cfg = Config::default();
+        cfg.umbrales.insert("espera_tome".into(), 50);
+        cfg.umbrales.insert("proyecto_tome".into(), 80);
+        let hoy = NaiveDate::from_ymd_opt(2026, 10, 9).unwrap();
+        let casos = [
+            (Mode::Espera, "espera", Cell::Number(49.0), "ESPERA.E06_SIN_RESOLUCION"),
+            (Mode::Espera, "espera", Cell::Number(50.0), "ESPERA.E05_SOLO_CORREO"),
+            (Mode::Espera, "espera", Cell::Number(80.0), "ESPERA.E05_PROYECTO_Y_CORREO"),
+            (Mode::Cumplimiento, "dias_egresar", Cell::Number(10.0), "CUMPLIMIENTO.C05_POR_VENCER"),
+            (Mode::Informes, "vencimiento", Cell::Date(hoy - Duration::days(1)), "INFORMES.I01_VENCIDO_GENERAL"),
+        ];
+        for (modo, columna, dato, regla) in casos {
+            let cols = fila_cols(&["tribunal", "nombre", "programa", columna, "egreso_proy"]);
+            let analizar = |tribunal: &str| {
+                let vals = [
+                    Cell::Text(tribunal.into()), Cell::Text("Persona Ficticia".into()),
+                    Cell::Text("PRM UNO".into()), dato.clone(), Cell::Date(hoy + Duration::days(10)),
+                ];
+                let fila = Fila { values: &vals, cols: &cols };
+                evaluar(&cfg, modo, &fila, hoy, &Prepaso::default(), 0, None)
+            };
+            let tome = analizar("Juzgado de Familia de Tomé");
+            let otro = analizar("TRIBUNAL FICTICIO");
+            let sin_tribunal = analizar("");
+            assert!(tome.eventos.iter().any(|e| e == regla), "{tome:?}");
+            assert!(!otro.observacion.is_empty());
+            assert_eq!(otro.observacion, tome.observacion);
+            assert_eq!(otro.eventos, tome.eventos);
+            assert_eq!(otro.avisos, tome.avisos);
+            assert!(sin_tribunal.observacion.is_empty() && sin_tribunal.eventos.is_empty());
+            assert!(sin_tribunal.avisos.iter().any(|a| a.contains("Tribunal sin identificar")));
+        }
     }
 
     #[test]

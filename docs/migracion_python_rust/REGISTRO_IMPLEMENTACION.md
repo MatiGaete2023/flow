@@ -16,6 +16,13 @@ Una entrada por encargo, de diez líneas como máximo, la más reciente arriba:
 
 No se copian salidas completas ni listas de mutaciones: la prueba afirma sus conteos y la CI del commit es la evidencia.
 
+## 2026-11-26 · Reglas de Tomé para otros tribunales
+
+- Rust y Python aplican el perfil de Tomé a los demás tribunales identificados en Espera, Cumplimiento e Informes. Los cruces conservan su tribunal.
+- Las pruebas verifican cinco escenarios de paridad con Tomé, el recálculo en Python y el aviso cuando falta el tribunal.
+- Los oráculos de Python actualizan 633 respuestas de casos sintéticos de otros tribunales. El contraste conserva las entradas originales del corpus.
+- Pendiente verificar el uso con un Excel o paquete de otro tribunal.
+
 ## 2026-11-26 · Lectura de bitácoras de Seguimiento con filtro de ingresos
 
 - Cambió la validación de las bitácoras para leer los campos Desde y Hasta de Seguimiento que devuelve Chrome. El descargador muestra cuántas consultas de listado fallaron antes de abrir las bitácoras.

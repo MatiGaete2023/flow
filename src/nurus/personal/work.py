@@ -9,7 +9,7 @@ import json
 
 from nurus.rus.columns import normalize
 from nurus.rus.reader import read_workbook
-from nurus.rus.util import as_date, as_int, tribunal, historical_match
+from nurus.rus.util import as_date, as_int, historical_match
 from nurus.services.exports import _export_preserved_payload
 from .config import atomic_json
 from .motor.contexto import current
@@ -17,6 +17,7 @@ from .motor.composicion import Incidencias
 from .motor.reglas_espera import generar_observacion_espera
 from .motor.reglas_cumplimiento import generar_observacion_cumplimiento
 from .motor.reglas_informes import generar_observacion_informes
+from .motor.utilidades import tribunal_para_reglas
 
 
 @dataclass
@@ -503,10 +504,10 @@ class Work:
                             'Días negativos y egreso futuro: verifica la contradicción; no se afirma que la medida esté vencida.'
                         )
                         ctx['invalid'].append('CUMPLIMIENTO.C04_VENCIDA')
-                court = tribunal(values.get(cols.get('tribunal', ''), '')) or ''
+                court = tribunal_para_reglas(values.get(cols.get('tribunal', '')))
                 if not court:
                     warnings.append(
-                        'Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual.'
+                        'Tribunal sin identificar; requiere revisión manual.'
                     )
                 key = tuple(historical_match(values.get(cols.get(k, ''), '')) for k in key_fields)
                 args = {'incidencias': inc, 'fila_excel': record.source.row_number}

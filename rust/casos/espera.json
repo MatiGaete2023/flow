@@ -1219,14 +1219,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel OPD: La derivación OPD LAJA no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -2951,13 +2951,24 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías RES: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa RES Residencia Familiar ordenado el 22 de octubre de 2026. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. Atendido que en sistema de seguimiento RUS se visualizan 2 instituciones distintas como curadores ad litem de Matías, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
+"reglas":[
+"ESPERA.E04_RESOLUCION_RECIENTE",
+"ESPERA.E05_PROYECTO_Y_CORREO",
+"HISTORIA.T5_INSTITUCIONES"
 ],
-"marcas":[],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"T5_INSTITUCIONES",
+"texto":"Curador con varias instituciones en RUS"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -3165,14 +3176,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia OPD: La derivación OPD LAJA no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -3386,13 +3397,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel DIA: Ángel alcanzó la mayoría de edad el 19 de octubre de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -3495,13 +3512,28 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas RTA: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. Atendido que en sistema de seguimiento RUS se visualizan 2 instituciones distintas como curadores ad litem de Lucas, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
+"reglas":[
+"ESPERA.E05_PROYECTO_Y_CORREO",
+"HISTORIA.T5_INSTITUCIONES"
 ],
-"marcas":[],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"R11_BUSQUEDA_VIGENTE",
+"texto":"Orden de búsqueda vigente"
+},
+{
+"nivel":1,
+"codigo":"T5_INSTITUCIONES",
+"texto":"Curador con varias instituciones en RUS"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -3961,13 +3993,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel PIE: Ángel alcanzó la mayoría de edad el 28 de mayo de 2025. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -4346,13 +4384,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel PEE: José-miguel alcanzó la mayoría de edad el 18 de julio de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -5096,13 +5140,24 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia RES: Medida revisada, a la espera de ingreso efectivo. Audiencias decretadas para el 5 de diciembre de 2026 y el 23 de diciembre de 2026. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. Atendido que en sistema de seguimiento RUS se visualizan 2 instituciones distintas como curadores ad litem de Emilia, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
+"reglas":[
+"ESPERA.E05_PROYECTO_Y_CORREO",
+"COMUN.PROX_AUDIENCIAS",
+"HISTORIA.T5_INSTITUCIONES"
 ],
-"marcas":[],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"T5_INSTITUCIONES",
+"texto":"Curador con varias instituciones en RUS"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -5246,13 +5301,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas RVA: Medida revisada, a la espera de ingreso efectivo al programa RVA Residencia del Valle.",
+"reglas":[
+"ESPERA.E06_SIN_RESOLUCION"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"R6_DUPLICIDAD",
+"texto":"Más de un ingreso del mismo NNA al mismo programa"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -5328,12 +5389,17 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia RES: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa RES Residencia Familiar ordenado el 18 de octubre de 2026. Audiencias decretadas para el 23 de diciembre de 2026 y el 3 de marzo de 2027. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+"reglas":[
+"ESPERA.E04_RESOLUCION_RECIENTE",
+"ESPERA.E05_PROYECTO_Y_CORREO",
+"COMUN.PROX_AUDIENCIAS"
 ],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -5414,14 +5480,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -5531,13 +5597,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas PEE: Lucas alcanzó la mayoría de edad el 3 de enero de 2025. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -6951,13 +7023,23 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía DIA: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa Diagnóstico Clínico Especializado ordenado el 24 de octubre de 2026. Audiencias decretadas para el 24 de noviembre de 2026 y el 4 de enero de 2027. Se remite correo al programa consultando fecha estimada de ingreso.",
+"reglas":[
+"ESPERA.E04_RESOLUCION_RECIENTE",
+"ESPERA.E05_SOLO_CORREO",
+"COMUN.PROX_AUDIENCIAS"
 ],
-"marcas":[],
+"acciones":[
+"programa_espera"
+],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"TRAMITES_SIN_REGLA",
+"texto":"Trámites sin regla en la historia (1): Audiencia preparatoria ficticia"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -8174,14 +8256,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -8436,13 +8518,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel RFA: Ángel alcanzó la mayoría de edad el 11 de julio de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -9631,12 +9719,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía PPF: La causa se encuentra finalizada, se deja constancia de que se remite proyecto de resolución que aplica nomenclatura «Egreso de servicio protección especializada y otras redes» a fin de regularizar informáticamente la causa.",
+"reglas":[
+"HISTORIA.P_FINALIZADA"
 ],
+"acciones":[
+"NOMENCL"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -9712,13 +9802,24 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú RTA: Medida revisada, a la espera de ingreso efectivo. Audiencia decretada para el 30 de enero de 2027. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+"reglas":[
+"ESPERA.E05_PROYECTO_Y_CORREO",
+"COMUN.PROX_AUDIENCIA",
+"COMUN.CURADOR"
 ],
-"marcas":[],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"R6_DUPLICIDAD",
+"texto":"Más de un ingreso del mismo NNA al mismo programa"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -9902,12 +10003,12 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía PEE: Medida revisada, a la espera de ingreso efectivo al programa PEE los Aromos.",
+"reglas":[
+"ESPERA.E06_SIN_RESOLUCION"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -10817,13 +10918,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú PEE: Ñandú alcanzó la mayoría de edad el 28 de febrero de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -11344,13 +11451,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía RES: Sofía alcanzó la mayoría de edad el 1 de junio de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -12712,14 +12825,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -12792,12 +12905,16 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia RFA: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+"reglas":[
+"ESPERA.E05_PROYECTO_Y_CORREO",
+"COMUN.CURADOR"
 ],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -12958,13 +13075,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías PRO: Matías alcanzó la mayoría de edad el 16 de octubre de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -13272,12 +13395,17 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías RES: Matías alcanzará la mayoría de edad el 1 de enero de 2027. Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+"reglas":[
+"COMUN.PROXIMA_MAYORIA",
+"ESPERA.E05_PROYECTO_Y_CORREO",
+"COMUN.CURADOR"
 ],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -13597,12 +13725,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia PRO: La causa se encuentra finalizada, se deja constancia de que se remite proyecto de resolución que aplica nomenclatura «Egreso de servicio protección especializada y otras redes» a fin de regularizar informáticamente la causa.",
+"reglas":[
+"HISTORIA.P_FINALIZADA"
 ],
+"acciones":[
+"NOMENCL"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -14133,13 +14263,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia PRM: Emilia alcanzó la mayoría de edad el 4 de diciembre de 2025. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -14502,13 +14638,23 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel RVA: José-miguel alcanzará la mayoría de edad el 14 de noviembre de 2026. Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+"reglas":[
+"COMUN.PROXIMA_MAYORIA",
+"ESPERA.E05_PROYECTO_Y_CORREO"
 ],
-"marcas":[],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"R6_DUPLICIDAD",
+"texto":"Más de un ingreso del mismo NNA al mismo programa"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -15634,12 +15780,16 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel PRO: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+"reglas":[
+"ESPERA.E05_PROYECTO_Y_CORREO",
+"COMUN.CURADOR"
 ],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -16614,13 +16764,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"PRM: Medida revisada, a la espera de ingreso efectivo al programa PRM LAJA.",
+"reglas":[
+"ESPERA.E06_SIN_RESOLUCION"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"R6_DUPLICIDAD",
+"texto":"Más de un ingreso del mismo NNA al mismo programa"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -16760,13 +16916,20 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías PEE: Medida revisada, a la espera de ingreso efectivo al programa PEE los Aromos. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+"reglas":[
+"ESPERA.E06_SIN_RESOLUCION",
+"COMUN.CURADOR"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"R6_DUPLICIDAD",
+"texto":"Más de un ingreso del mismo NNA al mismo programa"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -17150,13 +17313,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú PEE: Ñandú alcanzó la mayoría de edad el 28 de febrero de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -18231,13 +18400,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia PPF: Emilia alcanzó la mayoría de edad el 8 de septiembre de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -18710,14 +18885,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -19023,13 +19198,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía DCE: Sofía alcanzó la mayoría de edad el 16 de agosto de 2025. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -19628,12 +19809,13 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia RFA: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa RFA Hogar Ficticio ordenado el 2 de noviembre de 2026. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+"reglas":[
+"ESPERA.E04_RESOLUCION_RECIENTE",
+"COMUN.CURADOR"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -19729,11 +19911,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
+"observacion":"Ñandú PEE: Medida revisada, a la espera de ingreso efectivo. El programa proyecta el ingreso para enero de 2027. Audiencia decretada para el 17 de enero de 2027.",
+"reglas":[
+"ESPERA.E07_PROYECCION",
+"COMUN.PROX_AUDIENCIA"
+],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"tiempo de espera ausente o inválido (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -19846,14 +20031,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías HOS: La derivación Hospital de TOMÉ no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -20971,11 +21156,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
+"observacion":"Sofía PPF: Medida revisada, a la espera de ingreso efectivo al programa PPF Viento SUR. Oído el 18 de octubre de 2026.",
+"reglas":[
+"ESPERA.E06_SIN_RESOLUCION",
+"COMUN.OIDO"
+],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"tiempo de espera ausente o inválido (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -22870,12 +23058,16 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía PRM: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa PRM Ciudad del NIÑO Mulchén ordenado el 26 de octubre de 2026. Oído el 11 de noviembre de 2026. No registra curador ad litem en RUS; se reitera la sugerencia formulada en la observación del 5 de agosto de 2026.",
+"reglas":[
+"ESPERA.E04_RESOLUCION_RECIENTE",
+"COMUN.OIDO",
+"HISTORIA.MATERIA_CURADOR",
+"HISTORIA.REITERA",
+"COMUN.CURADOR"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -23483,13 +23675,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel RVA: José-miguel alcanzó la mayoría de edad el 28 de febrero de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -23639,12 +23837,13 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel PRO: Medida revisada, a la espera de ingreso efectivo. El programa proyecta el ingreso para enero de 2027. Audiencias decretadas para el 19 de diciembre de 2026, el 3 de enero de 2027 y el 16 de febrero de 2027.",
+"reglas":[
+"ESPERA.E07_PROYECCION",
+"COMUN.PROX_AUDIENCIAS"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -23722,10 +23921,14 @@
 "observacion":"",
 "reglas":[],
 "acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
 ],
-"marcas":[],
 "excluido":false,
 "otros_programas":[]
 }
@@ -24285,12 +24488,13 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías PPF: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa PPF Viento SUR ordenado el 14 de octubre de 2026. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+"reglas":[
+"ESPERA.E04_RESOLUCION_RECIENTE",
+"COMUN.CURADOR"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -24698,14 +24902,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel OPD: La derivación OPD LAJA no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -24880,12 +25084,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"RES: La causa se encuentra finalizada, se deja constancia de que se remite proyecto de resolución que aplica nomenclatura «Egreso de servicio protección especializada y otras redes» a fin de regularizar informáticamente la causa.",
+"reglas":[
+"HISTORIA.P_FINALIZADA"
 ],
+"acciones":[
+"NOMENCL"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -25609,13 +25815,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas PRM: Lucas alcanzó la mayoría de edad el 28 de febrero de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -26126,13 +26338,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"PRM: alcanzó la mayoría de edad el 28 de febrero de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -26221,12 +26439,12 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia PPF: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa PPF Viento SUR ordenado el 25 de octubre de 2026. (Observación administrativa; no requiere gestión del Tribunal).",
+"reglas":[
+"ESPERA.E04_RESOLUCION_RECIENTE"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -26909,13 +27127,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"RES: alcanzó la mayoría de edad el 15 de septiembre de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -27409,14 +27633,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -27502,14 +27726,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -29133,14 +29357,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -29238,13 +29462,25 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú PRM: Ñandú alcanzará la mayoría de edad el 9 de diciembre de 2026. Medida revisada, a la espera de ingreso efectivo. Ingreso al programa PRM Ciudad del NIÑO Mulchén ordenado el 17 de octubre de 2026. Oído el 31 de octubre de 2026. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+"reglas":[
+"COMUN.PROXIMA_MAYORIA",
+"ESPERA.E04_RESOLUCION_RECIENTE",
+"ESPERA.E05_PROYECTO_Y_CORREO",
+"COMUN.OIDO"
 ],
-"marcas":[],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"R6_DUPLICIDAD",
+"texto":"Más de un ingreso del mismo NNA al mismo programa"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -29423,11 +29659,16 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
+"observacion":"Lucas DCE: Medida revisada, a la espera de ingreso efectivo al programa DCE los Ángeles. No registra curador ad litem en RUS; se reitera la sugerencia formulada en la observación del 21 de agosto de 2026.",
+"reglas":[
+"ESPERA.E06_SIN_RESOLUCION",
+"HISTORIA.MATERIA_CURADOR",
+"HISTORIA.REITERA",
+"COMUN.CURADOR"
+],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"tiempo de espera ausente o inválido (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -32088,12 +32329,12 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia PRM: Medida revisada, a la espera de ingreso efectivo al programa PRM LAJA.",
+"reglas":[
+"ESPERA.E06_SIN_RESOLUCION"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -32236,13 +32477,23 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"DIA: alcanzará la mayoría de edad el 25 de diciembre de 2026. Medida revisada, a la espera de ingreso efectivo. Se remite correo al programa consultando fecha estimada de ingreso. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+"reglas":[
+"COMUN.PROXIMA_MAYORIA",
+"ESPERA.E05_SOLO_CORREO",
+"COMUN.CURADOR"
 ],
-"marcas":[],
+"acciones":[
+"programa_espera"
+],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"R6_DUPLICIDAD",
+"texto":"Más de un ingreso del mismo NNA al mismo programa"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -32742,12 +32993,13 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel RFA: Medida revisada, a la espera de ingreso efectivo. El programa proyecta el ingreso para enero de 2027. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+"reglas":[
+"ESPERA.E07_PROYECCION",
+"COMUN.CURADOR"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -33006,13 +33258,22 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel RFA: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa RFA Hogar Ficticio ordenado el 11 de noviembre de 2026. Oído el 6 de octubre de 2026. Audiencia decretada para el 29 de diciembre de 2026. Atendido que en sistema de seguimiento RUS se visualizan 2 instituciones distintas como curadores ad litem de José-miguel, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
+"reglas":[
+"ESPERA.E04_RESOLUCION_RECIENTE",
+"COMUN.OIDO",
+"COMUN.PROX_AUDIENCIA",
+"HISTORIA.T5_INSTITUCIONES"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"T5_INSTITUCIONES",
+"texto":"Curador con varias instituciones en RUS"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -33985,14 +34246,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías CES: La derivación Cesfam Mulchén no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -34217,11 +34478,16 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
+"observacion":"Sofía PRO: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa Programa de Protección Especializada ordenado el 12 de noviembre de 2026. Oído el 10 de octubre de 2026. Audiencia decretada para el 6 de diciembre de 2026. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+"reglas":[
+"ESPERA.E04_RESOLUCION_RECIENTE",
+"COMUN.OIDO",
+"COMUN.PROX_AUDIENCIA",
+"COMUN.CURADOR"
+],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"próxima audiencia con fecha ilegible (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -34838,13 +35104,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"DCE: alcanzó la mayoría de edad el 11 de septiembre de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -35340,14 +35612,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -36064,12 +36336,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú PRM: Medida revisada, a la espera de ingreso efectivo al programa PRM LAJA. Oído el 27 de octubre de 2026. Audiencia decretada para el 22 de noviembre de 2026.",
+"reglas":[
+"ESPERA.E06_SIN_RESOLUCION",
+"COMUN.OIDO",
+"COMUN.PROX_AUDIENCIA"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -36657,12 +36931,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia PIE: Emilia alcanzará la mayoría de edad el 31 de diciembre de 2026. Medida revisada, a la espera de ingreso efectivo al programa PIE 24 Horas. Audiencias decretadas para el 29 de noviembre de 2026, el 10 de diciembre de 2026 y el 29 de enero de 2027.",
+"reglas":[
+"COMUN.PROXIMA_MAYORIA",
+"ESPERA.E06_SIN_RESOLUCION",
+"COMUN.PROX_AUDIENCIAS"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -37440,14 +37716,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"OPD: La derivación OPD LAJA no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -38163,14 +38439,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas CES: La derivación Cesfam Mulchén no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -38251,13 +38527,25 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel PEE: Medida revisada, a la espera de ingreso efectivo al programa PEE los Aromos. Atendido que en sistema de seguimiento RUS se visualizan 2 instituciones distintas como curadores ad litem de Ángel, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
+"reglas":[
+"ESPERA.E06_SIN_RESOLUCION",
+"HISTORIA.T5_INSTITUCIONES"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"TRAMITES_SIN_REGLA",
+"texto":"Trámites sin regla en la historia (1): Mero trámite"
+},
+{
+"nivel":1,
+"codigo":"T5_INSTITUCIONES",
+"texto":"Curador con varias instituciones en RUS"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -38515,12 +38803,16 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú RVA: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+"reglas":[
+"ESPERA.E05_PROYECTO_Y_CORREO",
+"COMUN.CURADOR"
 ],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -38765,14 +39057,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -39161,14 +39453,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú CES: La derivación Cesfam Mulchén no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -39256,14 +39548,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -39836,13 +40128,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía RES: Sofía alcanzó la mayoría de edad el 9 de julio de 2025. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -40117,13 +40415,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías RFA: Matías alcanzó la mayoría de edad el 1 de septiembre de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -40228,12 +40532,17 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías PRM: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa PRM LAJA ordenado el 2 de noviembre de 2026. Audiencias decretadas para el 3 de enero de 2027, el 17 de enero de 2027 y el 11 de marzo de 2027. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+"reglas":[
+"ESPERA.E04_RESOLUCION_RECIENTE",
+"ESPERA.E05_PROYECTO_Y_CORREO",
+"COMUN.PROX_AUDIENCIAS"
 ],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -41010,14 +41319,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú HOS: La derivación Hospital de TOMÉ no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -41128,13 +41437,22 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías PEE: Medida revisada, a la espera de ingreso efectivo al programa PEE los Aromos. Se hace presente que en resolución de fecha 14 de octubre de 2026 (folio 48), consta el trámite «Pide cuenta búsqueda». Audiencia decretada para el 12 de diciembre de 2026. Atendido que en sistema de seguimiento RUS se visualizan 2 instituciones distintas como curadores ad litem de Matías, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
+"reglas":[
+"ESPERA.E06_SIN_RESOLUCION",
+"HISTORIA.BASE_TRAMITE",
+"COMUN.PROX_AUDIENCIA",
+"HISTORIA.T5_INSTITUCIONES"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"T5_INSTITUCIONES",
+"texto":"Curador con varias instituciones en RUS"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -41660,13 +41978,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas PPF: Lucas alcanzó la mayoría de edad el 24 de octubre de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -42458,12 +42782,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías RES: Medida revisada, a la espera de ingreso efectivo al programa RES Residencia Familiar. Audiencias decretadas para el 19 de enero de 2027 y el 27 de enero de 2027. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+"reglas":[
+"ESPERA.E06_SIN_RESOLUCION",
+"COMUN.PROX_AUDIENCIAS",
+"COMUN.CURADOR"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -42729,12 +43055,15 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú PRO: Ñandú alcanzará la mayoría de edad el 4 de diciembre de 2026. Medida revisada, a la espera de ingreso efectivo. El programa proyecta el ingreso para enero de 2027. Audiencias decretadas para el 3 de enero de 2027 y el 8 de enero de 2027. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+"reglas":[
+"COMUN.PROXIMA_MAYORIA",
+"ESPERA.E07_PROYECCION",
+"COMUN.PROX_AUDIENCIAS",
+"COMUN.CURADOR"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -43535,14 +43864,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia HOS: La derivación Hospital de TOMÉ no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -44664,14 +44993,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú OPD: La derivación OPD LAJA no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -45092,13 +45421,37 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia PRM: Medida revisada, a la espera de ingreso efectivo al programa PRM LAJA. Se hace presente que en resolución de fecha 15 de octubre de 2026 (folio 12-A), se decretó orden de búsqueda. Asimismo, se hace presente que en actuación de fecha 5 de octubre de 2026 (folio 48), consta el trámite «Deja sin efecto búsqueda». Oído el 3 de octubre de 2026.",
+"reglas":[
+"ESPERA.E06_SIN_RESOLUCION",
+"HISTORIA.R11_ORDEN",
+"HISTORIA.BASE_TRAMITE",
+"COMUN.OIDO"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"R6_DUPLICIDAD",
+"texto":"Más de un ingreso del mismo NNA al mismo programa"
+},
+{
+"nivel":2,
+"codigo":"DEJA_SIN_EFECTO_DR",
+"texto":"Deja sin efecto derivación D.R. en la historia"
+},
+{
+"nivel":2,
+"codigo":"DEJA_SIN_EFECTO_MN",
+"texto":"Deja sin efecto medida interconexión M.N. en la historia"
+},
+{
+"nivel":1,
+"codigo":"R11_BUSQUEDA_VIGENTE",
+"texto":"Orden de búsqueda vigente"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -45328,14 +45681,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -45706,11 +46059,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
+"observacion":"José-miguel DIA: Medida revisada, a la espera de ingreso efectivo al programa Diagnóstico Clínico Especializado. Audiencia decretada para el 13 de enero de 2027.",
+"reglas":[
+"ESPERA.E06_SIN_RESOLUCION",
+"COMUN.PROX_AUDIENCIA"
+],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"tiempo de espera ausente o inválido (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -45959,13 +46315,23 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"PRM: Medida revisada, a la espera de ingreso efectivo. Audiencia decretada para el 13 de diciembre de 2026. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+"reglas":[
+"ESPERA.E05_PROYECTO_Y_CORREO",
+"COMUN.PROX_AUDIENCIA"
 ],
-"marcas":[],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"R6_DUPLICIDAD",
+"texto":"Más de un ingreso del mismo NNA al mismo programa"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -46068,14 +46434,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -46133,14 +46499,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú CES: La derivación Cesfam Mulchén no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -46876,13 +47242,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia PIE: Emilia alcanzó la mayoría de edad el 9 de octubre de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -46993,14 +47365,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia OPD: La derivación OPD LAJA no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -47649,12 +48021,13 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia FAS: Medida revisada, a la espera de ingreso efectivo al programa FAS TOMÉ. Audiencias decretadas para el 29 de noviembre de 2026, el 2 de enero de 2027 y el 7 de marzo de 2027.",
+"reglas":[
+"ESPERA.E06_SIN_RESOLUCION",
+"COMUN.PROX_AUDIENCIAS"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -48203,13 +48576,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas DCE: Lucas alcanzó la mayoría de edad el 24 de abril de 2025. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -49843,12 +50222,17 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel RVA: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa RVA Residencia del Valle ordenado el 10 de noviembre de 2026. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+"reglas":[
+"ESPERA.E04_RESOLUCION_RECIENTE",
+"ESPERA.E05_PROYECTO_Y_CORREO",
+"COMUN.CURADOR"
 ],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -51068,14 +51452,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -51370,14 +51754,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -52019,14 +52403,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -52637,14 +53021,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel HOS: La derivación Hospital de TOMÉ no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -52825,13 +53209,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel FAS: Ángel alcanzó la mayoría de edad el 12 de junio de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -53797,14 +54187,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -54798,12 +55188,13 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía PPF: Medida revisada, a la espera de ingreso efectivo al programa PPF Viento SUR. Oído el 22 de octubre de 2026.",
+"reglas":[
+"ESPERA.E06_SIN_RESOLUCION",
+"COMUN.OIDO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -54995,14 +55386,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -55108,12 +55499,17 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel PPF: Medida revisada, a la espera de ingreso efectivo. Audiencias decretadas para el 30 de noviembre de 2026 y el 28 de diciembre de 2026. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+"reglas":[
+"ESPERA.E05_PROYECTO_Y_CORREO",
+"COMUN.PROX_AUDIENCIAS",
+"COMUN.CURADOR"
 ],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -55317,13 +55713,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel RES: José-miguel alcanzó la mayoría de edad el 10 de octubre de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -55819,12 +56221,16 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia FAE: Emilia alcanzará la mayoría de edad el 23 de noviembre de 2026. Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+"reglas":[
+"COMUN.PROXIMA_MAYORIA",
+"ESPERA.E05_PROYECTO_Y_CORREO"
 ],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -56769,13 +57175,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia PRM: Emilia alcanzó la mayoría de edad el 4 de octubre de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -57160,14 +57572,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"CES: La derivación Cesfam Mulchén no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -57506,13 +57918,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel RTA: José-miguel alcanzó la mayoría de edad el 18 de marzo de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -57944,13 +58362,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas DIA: Lucas alcanzó la mayoría de edad el 2 de agosto de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -58053,13 +58477,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías FAE: Matías alcanzó la mayoría de edad el 28 de febrero de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -58332,13 +58762,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú RVA: Ñandú alcanzó la mayoría de edad el 17 de septiembre de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -58707,14 +59143,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -59568,13 +60004,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel DCE: José-miguel alcanzó la mayoría de edad el 11 de septiembre de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -59659,14 +60101,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía CES: La derivación Cesfam Mulchén no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -59987,13 +60429,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel DIA: Ángel alcanzó la mayoría de edad el 13 de junio de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -60230,13 +60678,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía DIA: Sofía alcanzó la mayoría de edad el 27 de octubre de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -61820,13 +62274,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía RTA: Sofía alcanzó la mayoría de edad el 28 de febrero de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -61962,14 +62422,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -62249,12 +62709,17 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías RES: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa RES Residencia Familiar ordenado el 24 de octubre de 2026. Audiencias decretadas para el 13 de enero de 2027 y el 28 de enero de 2027. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+"reglas":[
+"ESPERA.E04_RESOLUCION_RECIENTE",
+"ESPERA.E05_PROYECTO_Y_CORREO",
+"COMUN.PROX_AUDIENCIAS"
 ],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -63158,12 +63623,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías PPF: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa PPF Viento SUR ordenado el 30 de octubre de 2026. Audiencias decretadas para el 22 de enero de 2027, el 19 de febrero de 2027 y el 9 de marzo de 2027. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+"reglas":[
+"ESPERA.E04_RESOLUCION_RECIENTE",
+"COMUN.PROX_AUDIENCIAS",
+"COMUN.CURADOR"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -63562,14 +64029,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas CES: La derivación Cesfam Mulchén no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -64471,13 +64938,23 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías FAE: Medida revisada, a la espera de ingreso efectivo. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. Atendido que en sistema de seguimiento RUS se visualizan 2 instituciones distintas como curadores ad litem de Matías, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
+"reglas":[
+"ESPERA.E05_PROYECTO_Y_CORREO",
+"HISTORIA.T5_INSTITUCIONES"
 ],
-"marcas":[],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"T5_INSTITUCIONES",
+"texto":"Curador con varias instituciones en RUS"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -65644,13 +66121,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel RVA: José-miguel alcanzó la mayoría de edad el 2 de octubre de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -67005,14 +67488,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -68204,14 +68687,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -68537,14 +69020,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -68887,12 +69370,13 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"RTA: Medida revisada, a la espera de ingreso efectivo al programa RTA Lactantes (SEDE Norte). Oído el 29 de octubre de 2026.",
+"reglas":[
+"ESPERA.E06_SIN_RESOLUCION",
+"COMUN.OIDO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -68987,12 +69471,13 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú RES: Medida revisada, a la espera de ingreso efectivo al programa RES Residencia Familiar. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+"reglas":[
+"ESPERA.E06_SIN_RESOLUCION",
+"COMUN.CURADOR"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -69207,11 +69692,16 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
+"observacion":"Emilia RFA: Emilia alcanzará la mayoría de edad el 25 de diciembre de 2026. Medida revisada, a la espera de ingreso efectivo al programa RFA Hogar Ficticio. Oído el 22 de octubre de 2026. Audiencias decretadas para el 12 de enero de 2027 y el 6 de febrero de 2027.",
+"reglas":[
+"COMUN.PROXIMA_MAYORIA",
+"ESPERA.E06_SIN_RESOLUCION",
+"COMUN.OIDO",
+"COMUN.PROX_AUDIENCIAS"
+],
 "acciones":[],
 "avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"próxima audiencia con fecha ilegible (G-05)"
 ],
 "marcas":[],
 "excluido":false,
@@ -69443,13 +69933,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel PPF: Ángel alcanzó la mayoría de edad el 4 de marzo de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -70097,14 +70593,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"CES: La derivación Cesfam Mulchén no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -70685,13 +71181,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía RVA: Sofía alcanzó la mayoría de edad el 3 de octubre de 2025. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -70782,12 +71284,17 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel FAE: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa FAE PRO Biobío ordenado el 11 de noviembre de 2026. Oído el 2 de octubre de 2026. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+"reglas":[
+"ESPERA.E04_RESOLUCION_RECIENTE",
+"ESPERA.E05_PROYECTO_Y_CORREO",
+"COMUN.OIDO"
 ],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -71098,13 +71605,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú PRM: Ñandú alcanzó la mayoría de edad el 30 de septiembre de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -72094,13 +72607,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas DCE: Lucas alcanzó la mayoría de edad el 15 de septiembre de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -72553,14 +73072,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú CES: La derivación Cesfam Mulchén no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -72635,12 +73154,16 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"PRM: Medida revisada, a la espera de ingreso efectivo al programa PRM LAJA. Oído el 16 de octubre de 2026. No registra curador ad litem en RUS; se reitera la sugerencia formulada en la observación del 28 de octubre de 2026.",
+"reglas":[
+"ESPERA.E06_SIN_RESOLUCION",
+"COMUN.OIDO",
+"HISTORIA.MATERIA_CURADOR",
+"HISTORIA.REITERA",
+"COMUN.CURADOR"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -72994,13 +73517,25 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"PPF: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa PPF Viento SUR ordenado el 25 de octubre de 2026. Oído el 24 de octubre de 2026. Audiencia decretada para el 28 de noviembre de 2026. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso.",
+"reglas":[
+"ESPERA.E04_RESOLUCION_RECIENTE",
+"ESPERA.E05_PROYECTO_Y_CORREO",
+"COMUN.OIDO",
+"COMUN.PROX_AUDIENCIA"
 ],
-"marcas":[],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"R6_DUPLICIDAD",
+"texto":"Más de un ingreso del mismo NNA al mismo programa"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -73584,13 +74119,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía PIE: Audiencia decretada para el 27 de diciembre de 2026.",
+"reglas":[
+"COMUN.PROX_AUDIENCIA"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"R6_DUPLICIDAD",
+"texto":"Más de un ingreso del mismo NNA al mismo programa"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -73685,13 +74226,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas PPF: Lucas alcanzó la mayoría de edad el 16 de enero de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -74406,13 +74953,22 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía FAS: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa FAS TOMÉ ordenado el 17 de octubre de 2026. Oído el 15 de octubre de 2026. Audiencias decretadas para el 6 de febrero de 2027 y el 11 de marzo de 2027. Atendido que en sistema de seguimiento RUS se visualizan 2 instituciones distintas como curadores ad litem de Sofía, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
+"reglas":[
+"ESPERA.E04_RESOLUCION_RECIENTE",
+"COMUN.OIDO",
+"COMUN.PROX_AUDIENCIAS",
+"HISTORIA.T5_INSTITUCIONES"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"T5_INSTITUCIONES",
+"texto":"Curador con varias instituciones en RUS"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -76763,12 +77319,18 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía DCE: Medida revisada, a la espera de ingreso efectivo. Audiencias decretadas para el 13 de noviembre de 2026, el 12 de enero de 2027 y el 6 de febrero de 2027. Se remite correo al programa consultando fecha estimada de ingreso. No registra curador ad litem en RUS; se reitera la sugerencia formulada en la observación del 23 de julio de 2026.",
+"reglas":[
+"ESPERA.E05_SOLO_CORREO",
+"COMUN.PROX_AUDIENCIAS",
+"HISTORIA.MATERIA_CURADOR",
+"HISTORIA.REITERA",
+"COMUN.CURADOR"
 ],
+"acciones":[
+"programa_espera"
+],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -76990,13 +77552,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel DIA: José-miguel alcanzó la mayoría de edad el 7 de enero de 2025. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -77384,13 +77952,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel FAS: Ángel alcanzó la mayoría de edad el 28 de julio de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -77486,13 +78060,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel PRO: Ángel alcanzó la mayoría de edad el 11 de abril de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -78005,13 +78585,20 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel FAE: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa FAE PRO Biobío ordenado el 12 de noviembre de 2026. Atendido que en sistema de seguimiento RUS se visualizan 2 instituciones distintas como curadores ad litem de José-miguel, se sugiere eliminar aquellas designaciones que no se encuentren vigentes.",
+"reglas":[
+"ESPERA.E04_RESOLUCION_RECIENTE",
+"HISTORIA.T5_INSTITUCIONES"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"T5_INSTITUCIONES",
+"texto":"Curador con varias instituciones en RUS"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -78333,12 +78920,12 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú RTA: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa RTA Lactantes (SEDE Norte) ordenado el 15 de octubre de 2026. (Observación administrativa; no requiere gestión del Tribunal).",
+"reglas":[
+"ESPERA.E04_RESOLUCION_RECIENTE"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -79343,12 +79930,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías PRM: Medida revisada, a la espera de ingreso efectivo. Ingreso al programa PRM Ciudad del NIÑO Mulchén ordenado el 20 de octubre de 2026. (Observación administrativa; no requiere gestión del Tribunal). Oído el 31 de octubre de 2026. Audiencia decretada para el 28 de noviembre de 2026.",
+"reglas":[
+"ESPERA.E04_RESOLUCION_RECIENTE",
+"COMUN.OIDO",
+"COMUN.PROX_AUDIENCIA"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -79927,14 +80516,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel COL: La derivación Colegio Ejemplo no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -80309,14 +80898,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -81068,13 +81657,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel PRM: José-miguel alcanzó la mayoría de edad el 25 de octubre de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -81597,12 +82192,13 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú DCE: Medida revisada, a la espera de ingreso efectivo al programa DCE los Ángeles. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+"reglas":[
+"ESPERA.E06_SIN_RESOLUCION",
+"COMUN.CURADOR"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
 "excluido":false,
 "otros_programas":[]
@@ -81678,14 +82274,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel CES: La derivación Cesfam Mulchén no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -81839,13 +82435,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"José-miguel PRO: José-miguel alcanzó la mayoría de edad el 9 de septiembre de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -81916,13 +82518,22 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Emilia RTA: Medida revisada, a la espera de ingreso efectivo. El programa proyecta ingreso efectivo para el mes de diciembre. No registra curador ad litem en RUS; se reitera la sugerencia formulada en la observación del 9 de agosto de 2026.",
+"reglas":[
+"ESPERA.E07_PROYECCION",
+"HISTORIA.MATERIA_CURADOR",
+"HISTORIA.REITERA",
+"COMUN.CURADOR"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"R6_DUPLICIDAD",
+"texto":"Más de un ingreso del mismo NNA al mismo programa"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -82517,13 +83128,26 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"RES: Medida revisada, a la espera de ingreso efectivo. El programa proyecta el ingreso para enero de 2027. Audiencia decretada para el 31 de enero de 2027. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+"reglas":[
+"ESPERA.E07_PROYECCION",
+"COMUN.PROX_AUDIENCIA",
+"COMUN.CURADOR"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":1,
+"codigo":"R6_DUPLICIDAD",
+"texto":"Más de un ingreso del mismo NNA al mismo programa"
+},
+{
+"nivel":2,
+"codigo":"R3_INGRESO_EFECTIVO",
+"texto":"Historia con ingreso efectivo y RUS en Espera"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -83103,13 +83727,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"PIE: alcanzó la mayoría de edad el 4 de noviembre de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -84439,13 +85069,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"FAE: alcanzó la mayoría de edad el 15 de mayo de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -84766,13 +85402,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ángel RFA: Ángel alcanzó la mayoría de edad el 20 de septiembre de 2025. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -84847,14 +85489,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Lucas DAM: La derivación DAM Biobío no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },
@@ -84999,13 +85641,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Sofía FAE: Sofía alcanzó la mayoría de edad el 6 de febrero de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -85115,13 +85763,25 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"FAS: Medida revisada, a la espera de ingreso efectivo. Se hace presente que en escrito de fecha 20 de septiembre de 2026 (folio s/f), consta el trámite «Deja sin efecto búsqueda». Audiencias decretadas para el 24 de enero de 2027, el 8 de febrero de 2027 y el 18 de febrero de 2027. Se remite proyecto de resolución pidiendo cuenta del ingreso efectivo y correo al programa consultando fecha estimada de ingreso. No registra curador ad litem en RUS. Se sugiere asociarlo informáticamente.",
+"reglas":[
+"ESPERA.E05_PROYECTO_Y_CORREO",
+"HISTORIA.BASE_TRAMITE",
+"COMUN.PROX_AUDIENCIAS",
+"COMUN.CURADOR"
 ],
-"marcas":[],
+"acciones":[
+"programa_espera",
+"PC_IE"
+],
+"avisos":[],
+"marcas":[
+{
+"nivel":2,
+"codigo":"DEJA_SIN_EFECTO_DR",
+"texto":"Deja sin efecto derivación D.R. en la historia"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -85637,13 +86297,19 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Ñandú RES: Ñandú alcanzó la mayoría de edad el 8 de noviembre de 2026. Se sugiere egresar la medida.",
+"reglas":[
+"COMUN.MAYORIA_EDAD"
 ],
-"marcas":[],
+"acciones":[],
+"avisos":[],
+"marcas":[
+{
+"nivel":3,
+"codigo":"REVISAR_MAYORIA",
+"texto":"Mayoría de edad"
+}
+],
 "excluido":false,
 "otros_programas":[]
 }
@@ -85710,14 +86376,14 @@
 "acumulado":null,
 "fecha_hoja2":null,
 "esperado":{
-"observacion":"",
-"reglas":[],
-"acciones":[],
-"avisos":[
-"Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual."
+"observacion":"Matías OPD: La derivación OPD LAJA no se encuentra sujeta a seguimiento por este Centro.",
+"reglas":[
+"COMUN.NO_SEGUIMIENTO"
 ],
+"acciones":[],
+"avisos":[],
 "marcas":[],
-"excluido":false,
+"excluido":true,
 "otros_programas":[]
 }
 },

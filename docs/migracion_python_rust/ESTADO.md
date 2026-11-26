@@ -17,6 +17,8 @@ Actualizado: 26 de noviembre de 2026, tras la integración de E-Q11 (Agente B ·
 
 ## Pendiente del usuario
 
+- **Reglas de Tomé para otros tribunales (26-nov):** Espera, Cumplimiento e Informes aplican las reglas y umbrales de Tomé cuando el tribunal informado es distinto de Laja, Mulchén y Tomé. Flow conserva el tribunal original en la fila y sus cruces. Cuando el campo está vacío, la fila queda para revisión manual. Pendiente comprobar un Excel o paquete de otro tribunal en Trabajo.
+
 - **Bitácoras de Seguimiento con fechas (26-nov):** el lector verifica el Desde y el Hasta con los mismos campos que los listados. La prueba sintética recorre dos páginas y lee dos bitácoras con el rango 01/11–26/11. También comprueba el rechazo antes de buscar si el filtro se desactiva o cambia cualquiera de los extremos. Pendiente confirmar la lectura en SITFA con el ejecutable corregido.
 
 - **Correcciones del 26-nov (Correos y Meta 4):** Flow completa una vez el catastro existente con destinatarios y alias de Python, conserva los contactos locales y rellena destinatarios vacíos al volver a preparar. Outlook clásico inserta su firma de mensajes nuevos para la cuenta del borrador. Meta 4 permite elegir Desde y Hasta y conserva el período al regenerar. Pendiente comprobar el ejecutable con los contactos y la cuenta Outlook del usuario.

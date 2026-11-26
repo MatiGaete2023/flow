@@ -20,8 +20,11 @@ from nurus.personal.outputs import Draft
 from nurus.personal.resolutions import prepare_projects, automatic_project_selections
 bar=app.next_step
 assert bar.values['revisar']==0 and not bar.values['exportar']
-app.work=Work(app.cfg.data).analyze(source(root),'ESPERA',as_of=date(2026,10,2));app._show_work();app.update()
-assert bar.values['revisar']==int(app.incident_text.get().split()[0])==len(app.work.rows)
+app.work=Work(app.cfg.data).analyze(source(root),'ESPERA',as_of=date(2026,10,2))
+app.work.rows[0].warnings.append('Incidencia de prueba')
+app._show_work();app.update()
+assert bar.values['revisar']==int(app.incident_text.get().split()[0])==sum(bool(row.warnings) for row in app.work.rows)
+assert bar.values['revisar']>=1
 app.work.export(root/'copia.xlsx',backend='portable',reduced_fidelity=True)
 projects,_=prepare_projects(app.work,automatic_project_selections(app.work,'PC_IE'),app.template_dir)
 app.projects=projects
@@ -123,6 +126,7 @@ from unittest.mock import patch
 import nurus.personal.next_step as modulo
 bar=app.next_step
 app.work=Work(app.cfg.data).analyze(source(root),'ESPERA',as_of=date(2026,10,2))
+app.work.rows[0].warnings.append('Incidencia de prueba')
 original=modulo.counts
 with patch.object(modulo,'counts',side_effect=OSError('ruta temporalmente inaccesible')):
     bar._tick()
@@ -130,6 +134,7 @@ assert isinstance(bar.error,OSError)
 with patch.object(modulo,'counts',wraps=original) as recalcular:
     bar._tick()
     assert recalcular.call_count==1
-assert bar.error is None and bar.values['revisar']==len(app.work.rows)
+assert bar.error is None and bar.values['revisar']==sum(bool(row.warnings) for row in app.work.rows)
+assert bar.values['revisar']>=1
 """,
     )

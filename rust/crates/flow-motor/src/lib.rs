@@ -131,7 +131,7 @@ fn avisos_fila(e: &Entrada) -> Vec<String> {
     out
 }
 
-/// Analiza una fila. Sin tribunal reconocido no hay observación: solo un aviso.
+/// Analiza una fila con las reglas de Tomé para los demás tribunales identificados.
 pub fn analizar(e: &Entrada) -> Resultado {
     let r = e.registro;
     let mut bitacora: Vec<Observacion> = e.bitacora.iter().filter(|o| o.fecha <= e.corte).cloned().collect();
@@ -164,16 +164,16 @@ pub fn analizar(e: &Entrada) -> Resultado {
             ctx.invalidas.push("CUMPLIMIENTO.C04_VENCIDA");
         }
     }
-    let observacion = match Tribunal::desde(&r.texto("tribunal")) {
-        None => {
-            avisos.push("Tribunal fuera de Laja, Mulchén y Tomé: sin reglas configuradas; requiere revisión manual.".to_string());
-            String::new()
-        }
-        Some(tribunal) => match e.etapa {
-            Etapa::Espera => reglas::espera(&mut ctx, r, tribunal),
+    let tribunal_original = r.texto("tribunal");
+    let observacion = if matches!(clave(&tribunal_original).as_str(), "" | "nan" | "nat" | "none") {
+        avisos.push("Tribunal sin identificar; requiere revisión manual.".to_string());
+        String::new()
+    } else {
+        match e.etapa {
+            Etapa::Espera => reglas::espera(&mut ctx, r, Tribunal::desde(&tribunal_original).unwrap_or(Tribunal::Tome)),
             Etapa::Cumplimiento => reglas::cumplimiento(&mut ctx, r, e.fecha_hoja2),
             Etapa::Informes => reglas::informes(&mut ctx, r),
-        },
+        }
     };
     avisos.extend(ctx.incidencias.iter().map(|i| i.motivo.clone()));
     let eventos: Vec<String> = ctx.eventos.iter().filter(|x| !ctx.desactivada(x)).cloned().collect();
