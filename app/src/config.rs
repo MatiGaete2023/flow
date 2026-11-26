@@ -212,6 +212,7 @@ pub struct Config {
     pub desactivadas: BTreeSet<String>,
     /// Programa → correos (separados por «;»).
     pub contactos: BTreeMap<String, String>,
+    pub contactos_python_migrados: bool,
     pub tribunales: BTreeMap<String, Tribunal>,
     pub cc_adicional: String,
     pub firma: String,
@@ -246,6 +247,7 @@ impl Default for Config {
             textos: BTreeMap::new(),
             desactivadas: BTreeSet::new(),
             contactos: BTreeMap::new(),
+            contactos_python_migrados: false,
             tribunales,
             cc_adicional: String::new(),
             firma: String::new(),
@@ -341,71 +343,115 @@ pub fn config_path() -> PathBuf {
 
 pub fn load() -> (Config, Option<String>) {
     let path = config_path();
-    let (mut c, mut aviso) = match std::fs::read_to_string(&path) {
+    let (mut c, mut aviso, persistir) = match std::fs::read_to_string(&path) {
         Ok(t) => match serde_json::from_str::<Config>(&t) {
             Ok(mut c) => {
                 c.completar();
-                (c, None)
+                (c, None, true)
             }
             Err(e) => (
                 Config::default(),
                 Some(format!("No se pudo leer la configuración guardada ({e}); se conserva el archivo y se usan los valores base.")),
+                false,
             ),
         },
-        Err(_) => (Config::default(), None),
+        Err(e) => (Config::default(), None, e.kind() == std::io::ErrorKind::NotFound),
     };
-    if c.contactos.is_empty() {
-        if let Some(n) = contactos_flow_python().map(|raw| c.importar_contactos_flow_python(&raw)).filter(|n| *n > 0) {
-            aviso = Some(format!("Se importaron {n} contactos de Flow Python. Revísalos en Contactos."));
+    if !c.contactos_python_migrados {
+        if let Some(base) = std::env::var_os("LOCALAPPDATA").or_else(|| std::env::var_os("HOME")) {
+            let base = PathBuf::from(base).join("CSMP_Personal");
+            let catastro = std::fs::read_to_string(base.join("contactos.json")).ok();
+            let configuracion = std::fs::read_to_string(base.join("configuracion.json")).ok();
+            let n = c.migrar_contactos_python(catastro.as_deref(), configuracion.as_deref());
+            if persistir && c.contactos_python_migrados {
+                aviso = match save(&c) {
+                    Ok(()) if n > 0 => Some(format!("Se incorporaron {n} contactos y alias de Flow Python. Revísalos en Contactos.")),
+                    Ok(()) => aviso,
+                    Err(e) => Some(format!("Los contactos de Flow Python están disponibles en esta sesión. No se pudo guardar la migración: {e}")),
+                };
+            }
         }
     }
     (c, aviso)
 }
 
-/// Contactos locales de Flow Python (`%LOCALAPPDATA%\CSMP_Personal\contactos.json`), si existen.
-fn contactos_flow_python() -> Option<String> {
-    let base = std::env::var_os("LOCALAPPDATA").or_else(|| std::env::var_os("HOME"))?;
-    std::fs::read_to_string(PathBuf::from(base).join("CSMP_Personal").join("contactos.json")).ok()
-}
-
-/// `config.emails`: una o más direcciones separadas por «;» o «,», cada una con usuario y dominio.
-fn correos_validos(texto: &str) -> bool {
-    let partes: Vec<&str> = texto.split([';', ',']).map(str::trim).filter(|p| !p.is_empty()).collect();
-    !partes.is_empty()
-        && partes.iter().all(|p| {
-            p.split_once('@').is_some_and(|(u, d)| !u.is_empty() && d.contains('.') && !p.contains(char::is_whitespace))
-        })
-}
-
 impl Config {
-    /// `config.parse_contacts`: lista de {Nombre, Mail} o el formato histórico de objetos separados por comas.
-    /// Un nombre con direcciones distintas se descarta. «Tribunal: LAJA» llena el destinatario del tribunal.
-    pub fn importar_contactos_flow_python(&mut self, raw: &str) -> usize {
-        let raw = raw.trim();
-        let texto = if raw.starts_with('[') { raw.to_string() } else { format!("[{}]", raw.trim_end_matches(',')) };
-        let Ok(registros) = serde_json::from_str::<Vec<serde_json::Value>>(&texto) else { return 0 };
-        let mut contactos: BTreeMap<String, String> = BTreeMap::new();
-        let mut ambiguos = BTreeSet::new();
-        for r in registros {
-            let nombre = r["Nombre"].as_str().unwrap_or("").trim().to_string();
-            let correo = r["Mail"].as_str().unwrap_or("").trim().to_string();
-            if nombre.is_empty() || !correos_validos(&correo) {
-                continue;
-            }
-            match contactos.get(&nombre) {
-                Some(previo) if *previo != correo => {
-                    ambiguos.insert(nombre);
-                }
-                _ => {
-                    contactos.insert(nombre, correo);
+    /// Completa los contactos de Rust con la configuración efectiva de Python y después con su catastro.
+    fn migrar_contactos_python(&mut self, catastro: Option<&str>, configuracion: Option<&str>) -> usize {
+        use crate::util::clave;
+        if self.contactos_python_migrados {
+            return 0;
+        }
+        let catastro = catastro.and_then(|s| crate::personalizar::parse_contactos(s.trim_start_matches('\u{feff}')).ok());
+        let cfg = configuracion.and_then(|s| serde_json::from_str::<serde_json::Value>(s.trim_start_matches('\u{feff}')).ok());
+        let mut n = 0;
+        if let Some(cfg) = &cfg {
+            let programas = cfg["contactos"].as_object().into_iter().flatten()
+                .filter_map(|(nombre, correo)| Some((nombre.clone(), correo.as_str()?.to_string())));
+            let tribunales = cfg["correos"]["tribunales"].as_object().into_iter().flatten()
+                .filter_map(|(nombre, t)| {
+                    let para = &t["para"];
+                    let correo = match para.as_str() {
+                        Some(texto) => texto.to_string(),
+                        None => para.as_array()?.iter().map(|v| v.as_str()).collect::<Option<Vec<_>>>()?.join("; "),
+                    };
+                    Some((format!("Tribunal: {nombre}"), correo))
+                });
+            n += self.completar_contactos_python(programas.chain(tribunales));
+        }
+        if let Some(lista) = catastro {
+            n += self.completar_contactos_python(lista);
+        }
+        if let Some(aliases) = cfg.as_ref().and_then(|v| v["aliases"].as_object()) {
+            let contactos: BTreeMap<_, _> = self.contactos.keys().map(|n| (clave(n), n.clone())).collect();
+            let mut ocupadas: BTreeSet<_> = contactos.keys().cloned().chain(self.aliases.keys().map(|a| clave(a))).collect();
+            for (alias, destino) in aliases {
+                let Some(contacto) = destino.as_str().and_then(|d| contactos.get(&clave(d))) else { continue };
+                let k = clave(alias);
+                if !k.is_empty() && ocupadas.insert(k) {
+                    self.aliases.insert(alias.clone(), contacto.clone());
+                    n += 1;
                 }
             }
         }
+        if n > 0 {
+            self.contactos_python_migrados = true;
+        }
+        n
+    }
+
+    fn completar_contactos_python(&mut self, filas: impl IntoIterator<Item = (String, String)>) -> usize {
+        use crate::util::clave;
+        let mut candidatos: BTreeMap<String, Option<(String, String)>> = BTreeMap::new();
+        for (nombre, direccion) in filas {
+            let k = clave(&nombre);
+            let Ok(correos) = crate::personalizar::correos(&direccion) else { continue };
+            if k.is_empty() || correos.is_empty() {
+                continue;
+            }
+            let correo = correos.join("; ");
+            candidatos.entry(k).and_modify(|previo| {
+                if previo.as_ref().is_some_and(|(_, p)| *p != correo) {
+                    *previo = None;
+                }
+            }).or_insert(Some((nombre, correo)));
+        }
+
         let mut n = 0;
-        for (nombre, correo) in contactos.into_iter().filter(|(k, _)| !ambiguos.contains(k)) {
-            if let Some(clave) = nombre.strip_prefix("Tribunal: ") {
-                if let Some(t) = self.tribunales.get_mut(&clave.trim().to_uppercase()) {
-                    t.para = correo;
+        for (k, candidato) in candidatos {
+            let Some((nombre, correo)) = candidato else { continue };
+            if let Some(tribunal) = k.strip_prefix("tribunal:") {
+                if let Some(t) = self.tribunales.get_mut(&tribunal.trim().to_uppercase()) {
+                    if t.para.trim().is_empty() {
+                        t.para = correo;
+                        n += 1;
+                    }
+                }
+                continue;
+            }
+            if let Some((_, existente)) = self.contactos.iter_mut().find(|(nombre, _)| clave(nombre) == k) {
+                if existente.trim().is_empty() {
+                    *existente = correo;
                     n += 1;
                 }
             } else {
@@ -444,9 +490,38 @@ mod pruebas_contactos {
             {"Nombre": "PIE EJEMPLO DOS", "Mail": "otra@example.invalid"},
             {"Nombre": "FAE EJEMPLO TRES", "Mail": "sin arroba"},
             {"Nombre": "Tribunal: laja", "Mail": "laja@example.invalid; copia@example.invalid"},"#;
-        assert_eq!(c.importar_contactos_flow_python(raw), 2);
+        assert_eq!(c.migrar_contactos_python(Some(raw), None), 2);
         assert_eq!(c.contactos.len(), 1);
         assert_eq!(c.contactos["PRM EJEMPLO UNO"], "prm.uno@example.invalid");
         assert_eq!(c.tribunales["LAJA"].para, "laja@example.invalid; copia@example.invalid");
+    }
+
+    #[test]
+    fn completa_un_catastro_existente_con_contactos_y_alias_de_python() {
+        let mut c = Config::default();
+        c.contactos.insert("Programa Río".into(), "rust@example.invalid".into());
+        c.tribunales.get_mut("LAJA").unwrap().para = "tribunal-rust@example.invalid".into();
+        let catastro = r#"[
+            {"Nombre":"Programa RIO","Mail":"base@example.invalid"},
+            {"Nombre":"Otro programa","Mail":"otro@example.invalid"},
+            {"Nombre":"Tribunal: LAJA","Mail":"tribunal-base@example.invalid"}
+        ]"#;
+        let cfg = r#"{
+            "contactos": {"Programa Rio":"python@example.invalid", "Programa Nuevo":"nuevo@example.invalid"},
+            "aliases": {"PRM NUEVO":"Programa Nuevo", "Programa RIO":"Programa Nuevo", "Sin contacto":"No existe"},
+            "correos": {"tribunales":{"TOME":{"para":["tribunal@example.invalid", "copia@example.invalid"]}}}
+        }"#;
+        assert_eq!(c.migrar_contactos_python(Some(catastro), Some(cfg)), 4);
+        assert_eq!(c.contacto_programa("programa rio"), "rust@example.invalid");
+        assert_eq!(c.contacto_programa("PRM Nuevo"), "nuevo@example.invalid");
+        assert_eq!(c.contacto_programa("Otro programa"), "otro@example.invalid");
+        assert!(c.contacto_programa("Sin contacto").is_empty());
+        assert_eq!(c.tribunales["LAJA"].para, "tribunal-rust@example.invalid");
+        assert_eq!(c.tribunales["TOME"].para, "tribunal@example.invalid; copia@example.invalid");
+
+        c.contactos.remove("Otro programa");
+        let mut persistida: Config = serde_json::from_str(&serde_json::to_string(&c).unwrap()).unwrap();
+        assert_eq!(persistida.migrar_contactos_python(Some(catastro), Some(cfg)), 0);
+        assert!(persistida.contacto_programa("Otro programa").is_empty());
     }
 }

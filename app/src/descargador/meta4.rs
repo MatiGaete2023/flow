@@ -14,7 +14,7 @@ use chrono::{NaiveDate, NaiveDateTime};
 use flow_dominio::Celda;
 use flow_meta4::tribunales::{categoria, norma, tribunal};
 use flow_meta4::{
-    expandir_lotes, normalizar_tribunales, periodo, ultima, Fuente as FuenteMeta4, Lectura, Meta4, ObservacionMes, Registro4, ALERTA,
+    expandir_lotes, normalizar_tribunales, periodo, ultima_en_periodo, Fuente as FuenteMeta4, Lectura, Meta4, ObservacionMes, Registro4, ALERTA,
     AMBIGUA, IDENTIDAD_VISIBLE, LEIDA_ANTES, NOMBRE_VISIBLE, NO_COMPLETADA, NO_VERIFICABLE, SIN_BITACORA, SIN_TRIBUNAL,
 };
 use serde_json::Value;
@@ -109,7 +109,7 @@ fn control_identidad(r: &Value, leida: &Value) -> Option<&'static str> {
     }
 }
 
-fn diario(carpeta: &Path, r: &Value, corte: NaiveDate) -> Diario {
+fn diario(carpeta: &Path, r: &Value, inicio: NaiveDate, corte: NaiveDate) -> Diario {
     let id: Clave = IDENTIDAD_REMOTA.map(|k| texto(r, k));
     let nombre_tribunal = texto(r, "tribunal_nombre");
     let mut d = Diario {
@@ -128,12 +128,11 @@ fn diario(carpeta: &Path, r: &Value, corte: NaiveDate) -> Diario {
     if d.estado != "LEIDA" {
         return d;
     }
-    let (inicio, fin) = periodo(corte);
     let leido = paquete::leer_registro(carpeta, r, &id).ok().and_then(|leida| {
         let mut entradas = Vec::new();
         for e in leida["entries"].as_array()? {
             let f = momento(e["fecha"].as_str()?)?;
-            if inicio <= f.date() && f.date() <= fin {
+            if inicio <= f.date() && f.date() <= corte {
                 entradas.push((f, texto(e, "etapa"), texto(e, "tipo"), texto(e, "texto")));
             }
         }
@@ -191,7 +190,7 @@ fn consulta_de(q: &Value) -> (String, String, String) {
     (texto(q, "tribunal"), texto(q, "tab"), texto(q, "modality"))
 }
 
-fn leer_bitacoras(raices: &[PathBuf], corte: NaiveDate) -> Result<LecturaBitacoras, String> {
+fn leer_bitacoras(raices: &[PathBuf], inicio: NaiveDate, corte: NaiveDate) -> Result<LecturaBitacoras, String> {
     // Rutas canónicas, como `diary_paths`: `copia_local` compara la carpeta con la de la copia ya resuelta.
     let manifiestos = buscar_manifiestos(&paquete::rutas_bitacoras(raices));
     if manifiestos.is_empty() {
@@ -228,7 +227,7 @@ fn leer_bitacoras(raices: &[PathBuf], corte: NaiveDate) -> Result<LecturaBitacor
         }
         // Un lote retomado conserva lecturas previas aún no reenumeradas: también valen.
         for r in datos["registros"].as_array().into_iter().flatten().chain(datos["anteriores_no_reenumeradas"].as_array().into_iter().flatten()) {
-            lectura.diarios.push(diario(carpeta, r, corte));
+            lectura.diarios.push(diario(carpeta, r, inicio, corte));
         }
     }
     Ok(lectura)
@@ -357,14 +356,28 @@ pub fn calcular(
     emision: NaiveDate,
     elegidos: &[String],
 ) -> Result<Meta4, String> {
+    calcular_en_periodo(carpetas, bitacoras, periodo(corte), emision, elegidos)
+}
+
+pub fn calcular_en_periodo(
+    carpetas: &[PathBuf],
+    bitacoras: &[PathBuf],
+    (inicio, corte): (NaiveDate, NaiveDate),
+    emision: NaiveDate,
+    elegidos: &[String],
+) -> Result<Meta4, String> {
+    if inicio > corte {
+        return Err("Desde debe ser anterior o igual a Hasta.".into());
+    }
     let tribunales_elegidos = normalizar_tribunales(elegidos)?;
     if carpetas.is_empty() {
         return Err("Agrega al menos un lote de registros.".into());
     }
     let raices_bitacoras: Vec<PathBuf> = if bitacoras.is_empty() { carpetas.to_vec() } else { bitacoras.to_vec() };
-    let lectura = leer_bitacoras(&raices_bitacoras, corte)?;
+    let lectura = leer_bitacoras(&raices_bitacoras, inicio, corte)?;
 
     let mut m = Meta4 {
+        desde: inicio,
         corte,
         emision,
         tribunales: tribunales_elegidos,
@@ -504,7 +517,7 @@ pub fn calcular(
                     Err(motivo) => (None, String::new(), motivo),
                     Ok(d) => {
                         let etapas: Vec<(NaiveDateTime, String)> = d.entradas.iter().map(|e| (e.0, e.1.clone())).collect();
-                        let (dia, etapa, resultado) = ultima(&etapas, corte);
+                        let (dia, etapa, resultado) = ultima_en_periodo(&etapas, inicio, corte);
                         let control = if d.control == OK { resultado.to_string() } else { format!("{resultado} · {}", d.control) };
                         (dia, etapa.to_string(), control)
                     }
@@ -575,7 +588,6 @@ pub fn calcular(
     }
 
     // -- bitácoras: lecturas y observaciones del mes
-    let (inicio, fin) = periodo(corte);
     for d in &lectura.diarios {
         let tribunal_diario = d.tribunal_canonico.unwrap_or(SIN_TRIBUNAL).to_string();
         m.lecturas.push(Lectura {
@@ -589,7 +601,7 @@ pub fn calcular(
             lectura: d.estado.clone(),
             control: d.control.clone(),
         });
-        for (fecha, etapa, tipo, texto_obs) in d.entradas.iter().filter(|e| inicio <= e.0.date() && e.0.date() <= fin) {
+        for (fecha, etapa, tipo, texto_obs) in &d.entradas {
             m.observaciones.push(ObservacionMes {
                 tribunal: tribunal_diario.clone(),
                 rit: d.rit.clone(),

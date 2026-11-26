@@ -16,6 +16,13 @@ Una entrada por encargo, de diez líneas como máximo, la más reciente arriba:
 
 No se copian salidas completas ni listas de mutaciones: la prueba afirma sus conteos y la CI del commit es la evidencia.
 
+## 2026-11-26 · Destinatarios y firma de Outlook, período de Meta 4
+
+- Cambió: migración de destinatarios y alias de Flow Python, resolución al volver a preparar y edición de borradores en Outlook clásico sin reemplazar la firma.
+- Cambió: Desde y Hasta inclusivos en Meta 4, guardados en el reporte y conservados al regenerar.
+- Acredita: pruebas sintéticas de migración sin sobrescribir, destinatarios al volver a preparar, orden de operaciones de Outlook, extremos del período y regeneración.
+- Pendiente: comprobación de la firma y el catastro con el perfil de Outlook del usuario.
+
 ## 2026-11-24 · E-A5: cotejos de correos, órdenes de búsqueda y edición masiva
 
 - Cambió: `ordenes.rs` (nuevo; lista en Trabajo), `trabajo.rs` (`aplicar_masivo`, `deshacer`), `ui.rs` (barra de edición masiva) y los oráculos `app/qa/generar_correos.py` y `app/qa/generar_ordenes.py`, agregados a la regeneración de la CI.

@@ -63,6 +63,14 @@ fn momento(texto: &str) -> Option<NaiveDateTime> {
 /// Informes no participa. Si dos etapas comparten la última fecha y hora, se pide revisión.
 pub fn ultima(entradas: &[(NaiveDateTime, String)], corte: NaiveDate) -> (Option<NaiveDate>, &'static str, &'static str) {
     let (inicio, fin) = periodo(corte);
+    ultima_en_periodo(entradas, inicio, fin)
+}
+
+pub fn ultima_en_periodo(
+    entradas: &[(NaiveDateTime, String)],
+    inicio: NaiveDate,
+    fin: NaiveDate,
+) -> (Option<NaiveDate>, &'static str, &'static str) {
     let validas: Vec<(NaiveDateTime, &'static str)> = entradas
         .iter()
         .filter(|(f, _)| inicio <= f.date() && f.date() <= fin)
@@ -182,6 +190,7 @@ pub struct Fuente {
 
 #[derive(Debug, Clone)]
 pub struct Meta4 {
+    pub desde: NaiveDate,
     pub corte: NaiveDate,
     pub emision: NaiveDate,
     /// Tribunales incluidos; None = todos.
@@ -528,7 +537,9 @@ fn controlar_bitacora(
 pub fn calcular(carpetas: &[PathBuf], corte: NaiveDate, emision: NaiveDate, elegidos: &[String]) -> Result<Meta4, String> {
     let tribunales_elegidos = normalizar_tribunales(elegidos)?;
     let (lotes, consultas) = leer_lotes(carpetas)?;
+    let (inicio, fin) = periodo(corte);
     let mut m = Meta4 {
+        desde: inicio,
         corte,
         emision,
         tribunales: tribunales_elegidos,
@@ -542,7 +553,6 @@ pub fn calcular(carpetas: &[PathBuf], corte: NaiveDate, emision: NaiveDate, eleg
         fuentes: Vec::new(),
         hojas_previas: Vec::new(),
     };
-    let (inicio, fin) = periodo(corte);
     // Como Python (`_lote`): la misma consulta solo se rechaza si aparece en dos lotes distintos.
     let mut consultas_vistas: HashMap<(String, String, String), (usize, String)> = HashMap::new();
     for (n, lote) in lotes.iter().enumerate() {

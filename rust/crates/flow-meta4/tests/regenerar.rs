@@ -31,6 +31,7 @@ fn meta() -> flow_meta4::Meta4 {
         ("DERIVACIÓN".into(), Celda::Texto("REM Hogar Ficticio".into())),
     ];
     flow_meta4::Meta4 {
+        desde: NaiveDate::from_ymd_opt(2026, 10, 1).unwrap(),
         corte: fecha(), emision: fecha(), tribunales: None,
         registros: vec![flow_meta4::Registro4 {
             lista: "Cumplimiento", categoria: Some("Residencia"), tribunal: Some("TOMÉ"),
@@ -117,6 +118,7 @@ fn regenera_desde_fecha_editada_sin_alterar_el_original() {
     let hoja = planilla.hojas.iter().find(|h| h.nombre == "Residencia Cumplimiento").unwrap();
     assert!(hoja.filas.iter().any(|f| f.get(7).is_some_and(|c| c.fecha() == r.fecha_obs)));
     let reporte: serde_json::Value = serde_json::from_slice(&std::fs::read(&archivos[4]).unwrap()).unwrap();
+    assert_eq!(reporte["periodo"], serde_json::json!({"desde": "2026-10-01", "hasta": "2026-10-16"}));
     assert_eq!(reporte["alertas"], 0);
     assert_eq!(reporte["regenerado_desde"], "Registros.xlsx revisado");
     assert_eq!(reporte["consultas_sin_bitacoras_detalle"][0]["tribunal"], "TOMÉ");

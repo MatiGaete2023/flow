@@ -157,6 +157,13 @@ pub fn cargar(registros: &Path) -> Result<Regeneracion, String> {
         return Err("El reporte no corresponde a Meta 4 de Flow.".into());
     }
     let corte = fecha_iso(&previo["periodo"]["hasta"], "período.hasta")?;
+    let desde = match previo["periodo"].get("desde") {
+        Some(fecha) => fecha_iso(fecha, "período.desde")?,
+        None => crate::periodo(corte).0,
+    };
+    if desde > corte {
+        return Err("El período del reporte tiene Desde posterior a Hasta.".into());
+    }
     let emision = fecha_iso(&previo["fecha_emision"], "fecha_emision")?;
     let tribunales = match &previo["tribunales_incluidos"] {
         Value::String(t) if t == "Todos" => None,
@@ -240,7 +247,7 @@ pub fn cargar(registros: &Path) -> Result<Regeneracion, String> {
         avisos.push(format!("{sin_clasificar} registros sin clasificación siguen fuera de la planilla."));
     }
     let meta = Meta4 {
-        corte, emision, tribunales, registros: registros_revisados, observaciones: Vec::new(),
+        desde, corte, emision, tribunales, registros: registros_revisados, observaciones: Vec::new(),
         lecturas: controles, sin_bitacoras, filtros, lotes, avisos, fuentes: Vec::new(), hojas_previas,
     };
     Ok(Regeneracion { meta, bitacoras, huella_registros: libro.sha256 })

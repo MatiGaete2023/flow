@@ -2134,7 +2134,9 @@ impl App {
         let mut out = Vec::new();
         for mut b in nuevos {
             if let Some(v) = self.borradores.iter().find(|v| v.kind == b.kind && v.titulo == b.titulo && v.guardado.is_none()) {
-                b.para = v.para.clone();
+                if !v.para.trim().is_empty() {
+                    b.para = v.para.clone();
+                }
                 b.cc = v.cc.clone();
                 b.asunto = v.asunto.clone();
                 b.cuerpo = v.cuerpo.clone();
@@ -3707,6 +3709,25 @@ mod pruebas_vigencia {
             .flat_map(|d| std::fs::read_dir(d.path()).into_iter().flatten().flatten())
             .filter(|f| f.path().extension().is_some_and(|e| e == "eml"))
             .count()
+    }
+
+    #[test]
+    fn volver_a_preparar_completa_destinatarios_vacios_y_conserva_el_editado() {
+        let (_candado, perfil) = crate::prueba_entorno::perfil_aislado();
+        let mut app = abrir_listados(&perfil.join("destinatarios-al-repreparar"));
+        let etapa = app.work.as_ref().unwrap().mode().key();
+        app.preparar_correos();
+        let informativo = |app: &App| app.borradores.iter().position(|b| b.kind == etapa).unwrap();
+        assert!(app.borradores[informativo(&app)].para.is_empty());
+        for tribunal in app.cfg.tribunales.values_mut() {
+            tribunal.para = "directorio@example.invalid".into();
+        }
+        app.preparar_correos();
+        let i = informativo(&app);
+        assert_eq!(app.borradores[i].para, "directorio@example.invalid");
+        app.borradores[i].para = "elegido@example.invalid".into();
+        app.preparar_correos();
+        assert_eq!(app.borradores[informativo(&app)].para, "elegido@example.invalid");
     }
 
     #[test]

@@ -281,6 +281,23 @@ fn cuatrocientos_cincuenta_calculos_coinciden_con_python() {
     }
 }
 
+#[test]
+fn rango_personalizado_incluye_ambos_extremos() {
+    let desde = dia("2026-11-01");
+    let hasta = dia("2026-11-26");
+    let observaciones = [
+        (dia("2026-10-31").and_hms_opt(23, 59, 59).unwrap(), "Cumplimiento".into()),
+        (desde.and_hms_opt(0, 0, 0).unwrap(), "Espera".into()),
+        (hasta.and_hms_opt(23, 59, 59).unwrap(), "Cumplimiento".into()),
+        (dia("2026-11-27").and_hms_opt(0, 0, 0).unwrap(), "Espera".into()),
+    ];
+    let ultima = |entradas| flow_meta4::ultima_en_periodo(entradas, desde, hasta).0;
+    assert_eq!(ultima(&observaciones[..1]), None);
+    assert_eq!(ultima(&observaciones[..2]), Some(desde));
+    assert_eq!(ultima(&observaciones[..]), Some(hasta));
+    assert_eq!(ultima(&observaciones[3..]), None);
+}
+
 /// Reescribe los datos de una lectura guardada del lote y actualiza su huella en el resumen.
 fn editar_lectura(carpeta: &Path, indice: usize, cambio: impl Fn(&mut serde_json::Value)) {
     let mut resumen = Resumen::leer(carpeta).unwrap();

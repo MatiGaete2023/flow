@@ -26,6 +26,7 @@ impl Drop for Temporal {
 fn dia(t: &str) -> NaiveDate { t.parse().unwrap() }
 fn meta() -> Meta4 {
     Meta4 {
+        desde: dia("2026-09-16"),
         corte: dia("2026-10-16"), emision: dia("2026-10-16"), tribunales: None,
         registros: vec![Registro4 {
             lista: "Cumplimiento", categoria: Some("Residencia"), tribunal: Some("TOMÉ"),

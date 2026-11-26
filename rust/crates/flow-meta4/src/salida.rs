@@ -2,7 +2,7 @@
 //! un error no deja una planilla parcial.
 
 use crate::tribunales::{norma, TRIBUNALES};
-use crate::{periodo, Fuente, Meta4, Registro4, SIN_TRIBUNAL};
+use crate::{Fuente, Meta4, Registro4, SIN_TRIBUNAL};
 use chrono::{Datelike, NaiveDate, Timelike};
 use flow_dominio::Celda;
 use rust_xlsxwriter::{Color, ExcelDateTime, Format, FormatAlign, FormatBorder, Note, Workbook, Worksheet, XlsxError};
@@ -229,7 +229,7 @@ pub fn resumen(m: &Meta4) -> Vec<BTreeMap<&'static str, Value>> {
 
 /// Líneas de la hoja «Control bitácoras».
 fn lineas_control(m: &Meta4) -> Vec<Vec<String>> {
-    let (inicio, fin) = periodo(m.corte);
+    let (inicio, fin) = (m.desde, m.corte);
     let mut estados: Vec<&str> = m.lecturas.iter().map(|l| l.control.as_str()).collect();
     estados.sort_unstable();
     estados.dedup();
@@ -242,7 +242,7 @@ fn lineas_control(m: &Meta4) -> Vec<Vec<String>> {
         vec!["Filtros del lote de registros".into(), if m.filtros.is_empty() { "Sin filtros".into() } else { m.filtros.join(" | ") }],
         vec!["Lotes de registros".into(), m.lotes.len().to_string(), m.lotes.join(" | ")],
         vec!["Rojo: última observación en Espera y registro en Cumplimiento. Amarillo: revisar control de bitácora.".into()],
-        vec!["Sin observación en el mes: FECHA OBS. vacía. Informes no participa.".into()],
+        vec!["Sin observación en el período: FECHA OBS. vacía. Informes no participa.".into()],
     ]
 }
 
@@ -589,7 +589,7 @@ pub fn bitacoras_del_mes(m: &Meta4, destino: &Path) -> Result<(), String> {
 
 /// Reporte en JSON: período, tribunales, resumen, alertas, controles y avisos. Sin datos de personas.
 pub fn reporte(m: &Meta4, totales: &BTreeMap<String, usize>) -> Value {
-    let (inicio, fin) = periodo(m.corte);
+    let (inicio, fin) = (m.desde, m.corte);
     let mut controles: BTreeMap<&str, usize> = BTreeMap::new();
     for r in &m.registros {
         *controles.entry(r.control.as_str()).or_default() += 1;

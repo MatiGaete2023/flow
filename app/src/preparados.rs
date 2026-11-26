@@ -81,6 +81,7 @@ pub fn dependencia(w: &Trabajo, cfg: &Config, registros: &[usize], tipo: &str) -
         "config": {
             "plantillas": cfg.plantillas,
             "contactos": cfg.contactos,
+            "aliases": cfg.aliases,
             "tribunales": cfg.tribunales,
             "firma": cfg.firma,
             "cc_adicional": cfg.cc_adicional,

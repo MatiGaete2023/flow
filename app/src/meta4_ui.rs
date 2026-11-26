@@ -26,7 +26,9 @@ pub struct Meta4Vista {
     pub lotes: Vec<PathBuf>,
     pub seleccion_lote: Option<usize>,
     pub bitacoras: String,
+    desde: String,
     pub corte: String,
+    corte_editado: bool,
     pub mes: String,
     pub tribunales: Vec<(&'static str, bool)>,
     pub plantilla: Option<PathBuf>,
@@ -49,7 +51,9 @@ impl Default for Meta4Vista {
             lotes: Vec::new(),
             seleccion_lote: None,
             bitacoras: String::new(),
+            desde: String::new(),
             corte: hoy.to_string(),
+            corte_editado: false,
             mes: hoy.format("%Y-%m").to_string(),
             tribunales: Vec::new(),
             plantilla: None,
@@ -63,11 +67,27 @@ impl Default for Meta4Vista {
     }
 }
 
-fn dia(texto: &str) -> Result<NaiveDate, String> {
-    NaiveDate::parse_from_str(texto.trim(), "%Y-%m-%d").map_err(|_| "La fecha de corte debe ser AAAA-MM-DD.".to_string())
+fn dia(texto: &str, campo: &str) -> Result<NaiveDate, String> {
+    let texto = texto.trim();
+    NaiveDate::parse_from_str(texto, "%Y-%m-%d")
+        .or_else(|_| NaiveDate::parse_from_str(texto, "%d/%m/%Y"))
+        .map_err(|_| format!("Escribe una fecha válida en {campo} con formato DD/MM/AAAA o AAAA-MM-DD."))
 }
 
-/// `--month AAAA-MM`: el último día del mes, como hace Python para la emisión de la planilla.
+fn periodo_elegido(desde: &str, hasta: &str) -> Result<(NaiveDate, NaiveDate), String> {
+    let hasta = dia(hasta, "Hasta")?;
+    let desde = if desde.trim().is_empty() {
+        flow_meta4::periodo(hasta).0
+    } else {
+        dia(desde, "Desde")?
+    };
+    if desde > hasta {
+        return Err("Desde debe ser anterior o igual a Hasta.".into());
+    }
+    Ok((desde, hasta))
+}
+
+/// `--month AAAA-MM`: el primer día del mes de emisión de la planilla.
 fn emision(mes: &str, corte: NaiveDate) -> Result<NaiveDate, String> {
     let mes = mes.trim();
     if mes.is_empty() {
@@ -95,7 +115,7 @@ fn largo_seguro(destino: &Path) -> Result<(), String> {
 fn generar(
     lotes: Vec<PathBuf>,
     bitacoras: Vec<PathBuf>,
-    corte: NaiveDate,
+    periodo: (NaiveDate, NaiveDate),
     mes: NaiveDate,
     elegidos: Vec<String>,
     plantilla: Option<PathBuf>,
@@ -103,11 +123,11 @@ fn generar(
 ) -> Result<Salida, String> {
     let destino = carpeta_nueva(&base, false);
     largo_seguro(&destino)?;
-    if corte > chrono::Local::now().date_naive() {
-        return Err("La fecha de corte no puede estar en el futuro.".into());
+    if periodo.1 > chrono::Local::now().date_naive() {
+        return Err("La fecha Hasta no puede estar en el futuro.".into());
     }
     flow_meta4::validar_destino(&destino)?;
-    let m = meta4::calcular(&lotes, &bitacoras, corte, mes, &elegidos)?;
+    let m = meta4::calcular_en_periodo(&lotes, &bitacoras, periodo, mes, &elegidos)?;
     let archivos = flow_meta4::salida::publicar_con_plantilla(&m, &destino, plantilla.as_deref())?;
     Ok(Salida { carpeta: destino, archivos, avisos: m.avisos.clone(), registros: m.registros.len(), regenerado: false })
 }
@@ -146,23 +166,26 @@ impl Meta4Vista {
     }
 
     fn proponer_corte(&mut self) {
+        if self.corte_editado {
+            return;
+        }
         let mut raices = self.rutas_bitacoras();
         if raices.is_empty() {
             raices = self.lotes.clone();
         }
         if let Some(d) = meta4::fecha_lectura(&raices) {
-            if d < chrono::Local::now().date_naive() {
+            if d <= chrono::Local::now().date_naive() {
                 self.corte = d.to_string();
             }
         }
     }
 
     fn lanzar_generar(&mut self, ctx: &egui::Context) {
-        let corte = match dia(&self.corte) {
-            Ok(c) => c,
+        let periodo = match periodo_elegido(&self.desde, &self.corte) {
+            Ok(p) => p,
             Err(e) => return self.estado = Some(Err(e)),
         };
-        let mes = match emision(&self.mes, corte) {
+        let mes = match emision(&self.mes, periodo.1) {
             Ok(m) => m,
             Err(e) => return self.estado = Some(Err(e)),
         };
@@ -181,7 +204,7 @@ impl Meta4Vista {
         let (plantilla, base) = (self.plantilla.clone(), PathBuf::from(self.destino.trim()));
         self.estado = Some(Ok("Leyendo lotes y bitácoras localmente…".into()));
         self.avisos.clear();
-        self.en_hilo(ctx, move || Mensaje::Resultado(generar(lotes, bitacoras, corte, mes, elegidos, plantilla, base)));
+        self.en_hilo(ctx, move || Mensaje::Resultado(generar(lotes, bitacoras, periodo, mes, elegidos, plantilla, base)));
     }
 
     fn lanzar_regenerar(&mut self, ctx: &egui::Context) {
@@ -286,15 +309,27 @@ impl Meta4Vista {
                     }
                 }
             });
+            let desde_sugerido = dia(&self.corte, "Hasta").ok().map(|hasta| flow_meta4::periodo(hasta).0.to_string());
+            ui.label("Fechas de búsqueda de observaciones (DD/MM/AAAA o AAAA-MM-DD)");
             ui.horizontal_wrapped(|ui| {
-                ui.label("Corte (AAAA-MM-DD)");
-                ui.add_enabled(!self.ocupado, egui::TextEdit::singleline(&mut self.corte).desired_width(100.0));
+                ui.label("Desde");
+                ui.add_enabled(!self.ocupado, egui::TextEdit::singleline(&mut self.desde)
+                    .hint_text(desde_sugerido.as_deref().unwrap_or("Mes móvil")).desired_width(108.0));
+                ui.label("Hasta");
+                let hasta = ui.add_enabled(!self.ocupado,
+                    egui::TextEdit::singleline(&mut self.corte).desired_width(108.0));
+                self.corte_editado |= hasta.changed();
+            });
+            ui.horizontal_wrapped(|ui| {
                 ui.label("Mes de la planilla (AAAA-MM)");
                 ui.add_enabled(!self.ocupado, egui::TextEdit::singleline(&mut self.mes).desired_width(80.0));
             });
-            if let Ok(c) = dia(&self.corte) {
-                let (a, b) = flow_meta4::periodo(c);
-                ui.label(RichText::new(format!("Período de bitácoras: {a} a {b}, ambos incluidos.")).color(p.muted));
+            match periodo_elegido(&self.desde, &self.corte) {
+                Ok((a, b)) => { ui.label(RichText::new(format!(
+                    "Período de búsqueda: {} al {}, ambos incluidos.",
+                    a.format("%d/%m/%Y"), b.format("%d/%m/%Y")
+                )).color(p.muted)); }
+                Err(e) => { ui.label(RichText::new(e).color(p.amber)); }
             }
             if !self.tribunales.is_empty() {
                 ui.label("Tribunales (todos marcados = todos)");
@@ -384,8 +419,12 @@ mod pruebas {
 
     #[test]
     fn fechas_y_carpetas_de_la_vista() {
-        assert!(dia("2026-10-16").is_ok() && dia("16-10-2026").is_err());
         let corte = NaiveDate::from_ymd_opt(2026, 10, 16).unwrap();
+        assert_eq!(dia("2026-10-16", "Hasta").unwrap(), corte);
+        assert_eq!(dia("16/10/2026", "Hasta").unwrap(), corte);
+        assert!(periodo_elegido("17/10/2026", "16/10/2026").is_err());
+        assert!(periodo_elegido("31/09/2026", "16/10/2026").is_err());
+        assert_eq!(periodo_elegido("", "16/10/2026").unwrap(), flow_meta4::periodo(corte));
         assert_eq!(emision("", corte).unwrap(), corte);
         assert_eq!(emision("2026-09", corte).unwrap(), NaiveDate::from_ymd_opt(2026, 9, 1).unwrap());
         assert!(emision("septiembre", corte).is_err());
@@ -417,13 +456,28 @@ mod pruebas {
             std::fs::write(r, t).unwrap();
         }
         let corte = NaiveDate::from_ymd_opt(2026, 10, 8).unwrap();
-        let salida = generar(vec![lote], vec![bitacoras], corte, corte, Vec::new(), None, base.join("resultados")).unwrap();
+        let (desde, _) = periodo_elegido("12/08/2026", "08/10/2026").unwrap();
+        let dentro = meta4::calcular_en_periodo(
+            std::slice::from_ref(&lote), std::slice::from_ref(&bitacoras), (desde, corte), corte, &[]
+        ).unwrap();
+        assert_eq!(dentro.observaciones.len(), 2);
+        assert!(dentro.observaciones.iter().all(|o| o.fecha.date() == desde));
+        let fuera = meta4::calcular_en_periodo(
+            std::slice::from_ref(&lote), std::slice::from_ref(&bitacoras), (desde.succ_opt().unwrap(), corte), corte, &[]
+        ).unwrap();
+        assert!(fuera.observaciones.is_empty());
+        let salida = generar(vec![lote], vec![bitacoras], (desde, corte), corte, Vec::new(), None, base.join("resultados")).unwrap();
         assert_eq!(salida.registros, 2);
         assert!(salida.archivos.len() >= 4, "{:?}", salida.archivos);
         let registros = salida.carpeta.join("Registros.xlsx");
         assert!(registros.is_file());
         let nueva = regenerar(registros, None, base.join("resultados")).unwrap();
         assert!(nueva.regenerado && nueva.carpeta != salida.carpeta && nueva.carpeta.display().to_string().ends_with("regenerado"));
+        for carpeta in [&salida.carpeta, &nueva.carpeta] {
+            let json = std::fs::read(carpeta.join("Reporte META4.json")).unwrap();
+            let reporte: serde_json::Value = serde_json::from_slice(&json).unwrap();
+            assert_eq!(reporte["periodo"], serde_json::json!({"desde": "2026-08-12", "hasta": "2026-10-08"}));
+        }
         // Una carpeta de salida se crea una vez: repetir en el mismo segundo no pisa la anterior.
         let _ = std::fs::remove_dir_all(&base);
     }

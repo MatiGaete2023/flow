@@ -59,14 +59,26 @@ if ($acc) { $m.SendUsingAccount = $acc }
 $m.To = [string]$d.to
 $m.CC = [string]$d.cc
 $m.Subject = [string]$d.subject
-$m.Body = [string]$d.body
-foreach ($a in $d.attachments) { [void]$m.Attachments.Add([string]$a) }
-Write-Output 'PREPARADO'
-$m.Save()
-$id = [string]$m.EntryID
-$st = [string]$carpeta.Store.StoreID
-if (-not $id.Trim() -or -not $st.Trim()) { Write-Output 'SIN_IDENTIDAD'; exit 4 }
-Write-Output "GUARDADO|$id|$st"
+$m.BodyFormat = 2
+try {
+  # Outlook inserta la firma de la cuenta al abrir el editor con el cuerpo vacío.
+  $m.Display($false)
+  $documento = $m.GetInspector.WordEditor
+  $inicio = $documento.Range(0, 0)
+  $salto = [string][char]13
+  $cuerpo = ([string]$d.body) -replace '\r\n?|\n', $salto
+  [void]$inicio.InsertBefore($cuerpo + $salto + $salto)
+  foreach ($a in $d.attachments) { [void]$m.Attachments.Add([string]$a) }
+  Write-Output 'PREPARADO'
+  $m.Save()
+  $id = [string]$m.EntryID
+  $st = [string]$carpeta.Store.StoreID
+  if (-not $id.Trim() -or -not $st.Trim()) { Write-Output 'SIN_IDENTIDAD'; exit 4 }
+  Write-Output "GUARDADO|$id|$st"
+} finally {
+  # olDiscard evita un segundo guardado o dejar abierta la ventana del borrador.
+  try { $m.Close(1) } catch {}
+}
 "#;
 
 /// Lo que se le entrega al script: destinatarios, CC con el fijo, texto y la nómina ya escrita como Excel.
@@ -180,6 +192,18 @@ mod pruebas {
         assert!(SCRIPT.contains("PREPARADO") && SCRIPT.contains("GUARDADO|"));
         // `Save()` va después de `PREPARADO`: un fallo anterior no deja un borrador, uno posterior sí puede.
         assert!(SCRIPT.find("PREPARADO").unwrap() < SCRIPT.find(".Save()").unwrap());
+    }
+
+    #[test]
+    fn el_cuerpo_se_inserta_despues_de_que_outlook_aplica_la_firma() {
+        let cuenta = SCRIPT.find("$m.SendUsingAccount = $acc").unwrap();
+        let mostrar = SCRIPT.find("$m.Display($false)").unwrap();
+        let insertar = SCRIPT.find("$inicio.InsertBefore(").unwrap();
+        let guardar = SCRIPT.find("$m.Save()").unwrap();
+        assert!(cuenta < mostrar && mostrar < insertar && insertar < guardar);
+        assert!(SCRIPT.contains("$m.GetInspector.WordEditor"));
+        assert!(SCRIPT.contains(".Range(0, 0)") && SCRIPT.contains("$m.Close(1)"));
+        assert!(!SCRIPT.contains("$m.Body =") && !SCRIPT.contains("$m.HTMLBody ="));
     }
 
     #[test]
