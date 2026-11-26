@@ -386,6 +386,8 @@ impl Flujo {
         conectado: bool,
         catalogo: &Catalogo,
         lote: &SeleccionLote,
+        desde: &str,
+        hasta: &str,
         destino: &str,
         pausa: f64,
         opciones: flujo_paquete::Opciones,
@@ -402,11 +404,17 @@ impl Flujo {
         );
         let activa = self.activa();
         let seguimiento = catalogo.pantalla == Pantalla::Seguimiento;
-        let plan = if seguimiento && !lote.tribunales.is_empty() && !lote.modalidades.is_empty() && !lote.pestanas.is_empty() {
+        let fechas = if desde.trim().is_empty() && hasta.trim().is_empty() { Some(None) }
+            else { parse_date_text(desde).zip(parse_date_text(hasta)).map(Some) };
+        let mut plan = if seguimiento && fechas.is_some() && !lote.tribunales.is_empty() && !lote.modalidades.is_empty() && !lote.pestanas.is_empty() {
             catalogo.planificar(Edicion::Integral, lote).ok()
         } else {
             None
         };
+        if let (Some(plan), Some(fechas)) = (&mut plan, fechas) { plan.fechas = fechas; }
+        if fechas.is_none() {
+            ui.label(RichText::new("Indica ambas fechas válidas (dd/mm/aaaa), o deja las dos vacías para consultar sin filtro.").color(p.amber));
+        }
         let puede = conectado && plan.is_some() && !destino.trim().is_empty() && conexion.is_some();
         if activa {
             ui.horizontal_wrapped(|ui| {
@@ -432,6 +440,7 @@ impl Flujo {
                             tribunales: lote.tribunales.clone(),
                             modalidades: lote.modalidades.clone(),
                             pestanas: lote.pestanas.clone(),
+                            fechas: fechas.flatten(),
                         };
                         let mut opciones = opciones.clone();
                         opciones.informes = self.informes;
@@ -736,6 +745,8 @@ impl Contexto {
         p: &Pal,
         catalogo: &Catalogo,
         lote: &SeleccionLote,
+        desde: &str,
+        hasta: &str,
         puente: Option<Arc<Puente>>,
         listados: Option<PathBuf>,
         destino: &str,
@@ -768,12 +779,17 @@ impl Contexto {
             });
         });
         let conectado = puente.as_ref().is_some_and(|b| b.conectado());
+        let fechas_visibles = if desde.trim().is_empty() && hasta.trim().is_empty() { Some(None) }
+            else { parse_date_text(desde).zip(parse_date_text(hasta)).map(Some) };
         let alcance = LoteBitacoras {
             tribunales: lote.tribunales.clone(),
             modalidades: lote.modalidades.clone(),
             pestanas: lote.pestanas.clone(),
+            fechas: fechas_visibles.flatten(),
         };
-        let impedimento_lectura = if !conectado {
+        let impedimento_lectura = if fechas_visibles.is_none() {
+            Some("Indica ambas fechas válidas, o deja las dos vacías para leer sin filtro.")
+        } else if !conectado {
             Some("Conecta la extensión Integral desde la pestaña SITFA.")
         } else if alcance.tribunales.is_empty() || alcance.modalidades.is_empty() || alcance.pestanas.is_empty() {
             Some("Selecciona tribunales, modalidades y pestañas.")
@@ -1039,11 +1055,13 @@ impl Ejecucion {
         puente: Option<Arc<Puente>>,
         remoto: bool,
         lote: &SeleccionLote,
+        desde: &str,
+        hasta: &str,
         opciones_paquete: flujo_paquete::Opciones,
     ) {
         let conectado = puente.as_ref().is_some_and(|b| b.conectado());
         let conexion: Option<Arc<dyn lote::Conexion + Send + Sync>> = puente.clone().map(|p| p as Arc<dyn lote::Conexion + Send + Sync>);
-        self.flujo.mostrar(ui, p, conectado, catalogo, lote, &self.destino, f64::from(self.pausa), opciones_paquete, conexion);
+        self.flujo.mostrar(ui, p, conectado, catalogo, lote, desde, hasta, &self.destino, f64::from(self.pausa), opciones_paquete, conexion);
         ui.add_space(8.0);
         theme::seccion(ui, p, "Avanzado · pasos sueltos");
         let activa = self.activa();
@@ -1161,7 +1179,7 @@ impl Ejecucion {
             // El paquete se arma desde un lote terminado: sin `fin`, una carpeta a medias no se ofrece.
             let listados = self.carpeta.clone().filter(|_| !activa && self.fin.is_some());
             let pausa = preferencias::limitar_pausa(f64::from(self.pausa));
-            self.contexto.mostrar(ui, p, catalogo, lote, puente, listados, &self.destino, pausa, activa);
+            self.contexto.mostrar(ui, p, catalogo, lote, desde, hasta, puente, listados, &self.destino, pausa, activa);
         }
     }
 }
@@ -1434,10 +1452,16 @@ impl Descargador {
                                     if ui.button("Guardar favorito").on_hover_text("Guarda el alcance; las fechas se recalculan al aplicarlo").clicked() {
                                         let ruta = Preferencias::ruta();
                                         let mut prefs = Preferencias::cargar(&ruta);
-                                        let resultado = catalogo
-                                            .planificar(self.edicion, &self.lote)
-                                            .and_then(|_| prefs.guardar_favorito(&self.favorito_nombre, catalogo.pantalla, &self.lote, self.ejecucion.conservar_filtros, hoy))
-                                            .and_then(|()| prefs.guardar(&ruta));
+                                        let fechas = if self.lote_desde.trim().is_empty() && self.lote_hasta.trim().is_empty() { Some(None) }
+                                            else { parse_date_text(&self.lote_desde).zip(parse_date_text(&self.lote_hasta)).map(Some) };
+                                        let resultado = if let Some(fechas) = fechas {
+                                            self.lote.fechas = fechas;
+                                            catalogo.planificar(self.edicion, &self.lote)
+                                                .and_then(|_| prefs.guardar_favorito(&self.favorito_nombre, catalogo.pantalla, &self.lote, self.ejecucion.conservar_filtros, hoy))
+                                                .and_then(|()| prefs.guardar(&ruta))
+                                        } else {
+                                            Err("Indica ambas fechas válidas, o deja las dos vacías para guardar sin filtro.".into())
+                                        };
                                         self.favorito_mensaje = Some(resultado.map(|()| "Perfil guardado; recalcula el período al aplicarlo.".into()));
                                         *favoritos = prefs.favoritos.into_keys().collect();
                                     }
@@ -1514,6 +1538,8 @@ impl Descargador {
                                 self.conexion.puente.clone(),
                                 self.catalogo_remoto,
                                 &self.lote,
+                                &self.lote_desde,
+                                &self.lote_hasta,
                                 opciones_paquete,
                             );
                         });
@@ -1988,7 +2014,7 @@ mod pruebas_interfaz {
         let mut h = Harness::builder().with_size(egui::Vec2::new(1200.0, 700.0)).build_ui_state(
             move |ui, v: &mut Vista| {
                 let Vista { contexto, catalogo, lote, listados, destino } = v;
-                contexto.mostrar(ui, &pal, catalogo, lote, None, listados.clone(), destino, 1.0, false);
+                contexto.mostrar(ui, &pal, catalogo, lote, "", "", None, listados.clone(), destino, 1.0, false);
             },
             vista,
         );
@@ -2143,7 +2169,7 @@ mod pruebas_interfaz {
         let mut h = Harness::builder().with_size(egui::Vec2::new(1200.0, 700.0)).build_ui_state(
             move |ui, f: &mut Flujo| {
                 f.mostrar(
-                    ui, &pal, true, &catalogo_pantalla, &lote_pantalla, "C:/destino", 0.0,
+                    ui, &pal, true, &catalogo_pantalla, &lote_pantalla, "", "", "C:/destino", 0.0,
                     flujo_paquete::Opciones::default(), None,
                 );
             },
@@ -2187,6 +2213,7 @@ mod pruebas_interfaz {
             tribunales: vec!["901".into()],
             modalidades: vec!["2".into()],
             pestanas: vec!["Cumplimiento".into()],
+            fechas: None,
         };
         let destino = perfil.join("paquete-en-una-accion");
         let mut flujo = Flujo::default();
@@ -2217,7 +2244,7 @@ mod pruebas_interfaz {
         };
         let mut h = Harness::builder().with_size(egui::Vec2::new(1200.0, 700.0)).build_ui_state(
             move |ui, f: &mut Flujo| {
-                f.mostrar(ui, &pal, true, &catalogo_pantalla, &lote_pantalla, "", 0.0, flujo_paquete::Opciones::default(), None);
+                f.mostrar(ui, &pal, true, &catalogo_pantalla, &lote_pantalla, "", "", "", 0.0, flujo_paquete::Opciones::default(), None);
             },
             flujo,
         );

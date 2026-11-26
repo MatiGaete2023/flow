@@ -237,11 +237,19 @@ fn registrar_origen(
     Ok(())
 }
 
-fn consultas_validadas(carpeta: Option<&PathBuf>) -> bool {
+fn consultas_validadas(carpeta: Option<&PathBuf>, fechas: Option<(NaiveDate, NaiveDate)>) -> bool {
     carpeta
         .and_then(|c| std::fs::read(c.join("resumen.json")).ok())
         .and_then(|b| serde_json::from_slice::<Value>(&b).ok())
-        .is_some_and(|r| r["estado"] == "VALIDADA")
+        .is_some_and(|r| {
+            if r["estado"] != "VALIDADA" { return false; }
+            let guardadas = &r["filtro_fecha"];
+            match fechas {
+                Some((a,b)) => guardadas["desde"].as_str() == Some(&a.format("%d/%m/%Y").to_string())
+                    && guardadas["hasta"].as_str() == Some(&b.format("%d/%m/%Y").to_string()),
+                None => guardadas.is_null(),
+            }
+        })
 }
 
 fn carpeta_del_estado(raiz: &Path, estado: &Value, fase: &str) -> Option<PathBuf> {
@@ -301,13 +309,35 @@ fn normalize(ruta: &Path) -> PathBuf {
 
 /// `_alcance`: el alcance guardado (`seleccion`) o, en paquetes anteriores, el de su lote de bitácoras.
 fn alcance_guardado(raiz: &Path, estado: &Value) -> Result<LoteBitacoras, String> {
+    let fechas = |v: &Value| -> Result<Option<(NaiveDate, NaiveDate)>, String> {
+        let Some(raw) = v.get("dates") else {
+            // Controles previos omitían el rango. Recuperarlo solo si el resumen de listados lo acredita.
+            let carpeta = carpeta_del_estado(raiz, estado, "consultas")
+                .ok_or("El control antiguo no guardó el rango; hace falta un lote nuevo.")?;
+            let bytes = std::fs::read(carpeta.join("resumen.json"))
+                .map_err(|_| "El control antiguo no guardó el rango; hace falta un lote nuevo.")?;
+            let resumen: Value = serde_json::from_slice(&bytes).map_err(|_| "El resumen antiguo no acredita un rango válido; hace falta un lote nuevo.")?;
+            let filtro = &resumen["filtro_fecha"];
+            if filtro.is_null() { return Ok(None); }
+            let parse = |k: &str| filtro[k].as_str().and_then(|x| NaiveDate::parse_from_str(x, "%d/%m/%Y").ok());
+            let (a,b) = parse("desde").zip(parse("hasta")).ok_or("El resumen antiguo tiene un rango incompleto; hace falta un lote nuevo.")?;
+            if a > b { return Err("El resumen antiguo tiene un rango invertido; hace falta un lote nuevo.".into()); }
+            return Ok(Some((a,b)));
+        };
+        if raw.is_null() { return Ok(None); }
+        let d = raw.as_object().ok_or("El control del paquete contiene un filtro inválido; hace falta un lote nuevo.")?;
+        let parse = |k: &str| d.get(k).and_then(Value::as_str).and_then(|x| NaiveDate::parse_from_str(x, "%d/%m/%Y").ok());
+        let (a,b) = parse("start").zip(parse("end")).ok_or("El control del paquete tiene un rango incompleto o inválido; hace falta un lote nuevo.")?;
+        if a > b { return Err("El control del paquete tiene un rango invertido; hace falta un lote nuevo.".into()); }
+        Ok(Some((a,b)))
+    };
     let lista = |v: &Value, k: &str| -> Option<Vec<String>> {
         v[k].as_array().map(|a| a.iter().filter_map(|x| x.as_str().map(str::to_string)).collect())
     };
     if estado["seleccion"].is_object() {
         let s = &estado["seleccion"];
         match (lista(s, "tribunals"), lista(s, "modalities"), lista(s, "tabs")) {
-            (Some(t), Some(m), Some(p)) => return Ok(LoteBitacoras { tribunales: t, modalidades: m, pestanas: p }),
+            (Some(t), Some(m), Some(p)) => return Ok(LoteBitacoras { tribunales: t, modalidades: m, pestanas: p, fechas: fechas(s)? }),
             _ => return Err(SIN_ALCANCE.into()),
         }
     }
@@ -329,7 +359,9 @@ fn plan_del_alcance(alcance: &LoteBitacoras, catalogo: &Catalogo, edicion: Edici
         medidas: vec![TODAS_LAS_MEDIDAS.into()],
         ..Default::default()
     };
-    catalogo.planificar(edicion, &lote)
+    let mut plan = catalogo.planificar(edicion, &lote)?;
+    plan.fechas = alcance.fechas;
+    Ok(plan)
 }
 
 /// `meses_informes`: meses (mes, año) desde hoy hasta hoy + 60 días; a veces dos, a veces tres.
@@ -440,7 +472,8 @@ fn correr(
         Some(control) => control.datos,
         None => json!({
             "estado": "EN_CURSO", "fase": "consultas", "carpetas": {},
-            "seleccion": {"tribunals": alcance.tribunales, "modalities": alcance.modalidades, "tabs": alcance.pestanas},
+            "seleccion": {"tribunals": alcance.tribunales, "modalities": alcance.modalidades, "tabs": alcance.pestanas,
+                "dates": alcance.fechas.map(|(a,b)| json!({"start": a.format("%d/%m/%Y").to_string(), "end": b.format("%d/%m/%Y").to_string()}))},
         }),
     };
     let respaldo = raiz.join("respaldo");
@@ -475,7 +508,14 @@ fn correr(
     let corrida = (|| -> Result<(Resultado, Value), String> {
         // -- consultas (`BatchRunner.run`)
         fase(&mut estado, &control, "consultas", cancelar, emitir)?;
-        if consultas_validadas(anterior.get("consultas")) {
+        if anterior.get("consultas").is_some_and(|c| {
+            std::fs::read(c.join("resumen.json")).ok()
+                .and_then(|b| serde_json::from_slice::<Value>(&b).ok())
+                .is_some_and(|r| r["estado"] == "VALIDADA")
+        }) && !consultas_validadas(anterior.get("consultas"), plan.fechas) {
+            return Err("El lote validado tiene otro alcance de fechas o no lo acredita; crea un paquete nuevo.".into());
+        }
+        if consultas_validadas(anterior.get("consultas"), plan.fechas) {
             anotar(&mut estado, "consultas reutilizadas del intento anterior");
             emitir(Evento::Estado("Consultas ya validadas en el intento anterior: se reutilizan.".into()));
         } else {
@@ -805,6 +845,7 @@ pub fn ejecutar_por_hoja(
             tribunales: alcance.tribunales.clone(),
             modalidades: alcance.modalidades.clone(),
             pestanas: vec![hoja.clone()],
+            fechas: alcance.fechas,
         };
         let mut opciones_hoja = opciones.clone();
         opciones_hoja.informes = opciones.informes && hoja == "Cumplimiento";
@@ -1222,6 +1263,21 @@ pub(crate) mod pruebas {
         base
     }
 
+    #[test]
+    fn consultas_validadas_exige_el_mismo_intervalo() {
+        let dir = carpeta("alcance-fechas");
+        std::fs::create_dir_all(&dir).unwrap();
+        let resumen = dir.join("resumen.json");
+        std::fs::write(&resumen, br#"{"estado":"VALIDADA","filtro_fecha":{"desde":"01/11/2026","hasta":"26/11/2026"}}"#).unwrap();
+        let solicitadas = Some(("2026-11-01".parse().unwrap(), "2026-11-26".parse().unwrap()));
+        assert!(consultas_validadas(Some(&dir), solicitadas));
+        assert!(!consultas_validadas(Some(&dir), Some(("2026-11-15".parse().unwrap(), "2026-11-15".parse().unwrap()))));
+        assert!(!consultas_validadas(Some(&dir), None));
+        std::fs::write(&resumen, br#"{"estado":"VALIDADA","filtro_fecha":null}"#).unwrap();
+        assert!(!consultas_validadas(Some(&dir), solicitadas));
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
     fn reconstruir(destino: &Path, archivos: &Value) {
         for (ruta, b64) in archivos.as_object().unwrap() {
             let ruta = destino.join(ruta);
@@ -1345,6 +1401,7 @@ pub(crate) mod pruebas {
         };
         let alcance = LoteBitacoras {
             tribunales: vec!["901".into()], modalidades: vec!["2".into()], pestanas: vec!["Cumplimiento".into()],
+            fechas: None,
         };
         let mut eventos: Vec<Evento> = Vec::new();
         let mut emitir = |e: Evento| eventos.push(e);
@@ -1521,6 +1578,7 @@ pub(crate) mod pruebas {
         let plan = catalogo.planificar(Edicion::Integral, &lote).unwrap();
         let alcance = LoteBitacoras {
             tribunales: vec!["901".into()], modalidades: vec!["2".into()], pestanas: hojas.clone(),
+            fechas: None,
         };
         let destino = base.join("destino");
         std::fs::create_dir_all(&destino).unwrap();
@@ -1626,6 +1684,7 @@ pub(crate) mod pruebas {
         let plan = catalogo.planificar(Edicion::Integral, &lote).unwrap();
         let alcance = LoteBitacoras {
             tribunales: vec!["901".into()], modalidades: vec!["2".into()], pestanas: vec!["Cumplimiento".into()],
+            fechas: None,
         };
         let base = carpeta("una-hoja-igual-a-run");
         let opciones = Opciones { pausa: Duration::ZERO, ..Default::default() };
@@ -1703,6 +1762,7 @@ mod pruebas_flujo {
         let plan = catalogo.planificar(Edicion::Integral, &lote).unwrap();
         let alcance = LoteBitacoras {
             tribunales: vec!["901".into()], modalidades: vec!["2".into()], pestanas: vec!["Cumplimiento".into()],
+            fechas: None,
         };
         let doble = super::pruebas::Doble::nuevo();
         let mut eventos = Vec::new();

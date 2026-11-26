@@ -61,6 +61,7 @@ pub struct LoteBitacoras {
     pub tribunales: Vec<String>,
     pub modalidades: Vec<String>,
     pub pestanas: Vec<String>,
+    pub fechas: Option<(chrono::NaiveDate, chrono::NaiveDate)>,
 }
 
 impl LoteBitacoras {
@@ -76,13 +77,22 @@ impl LoteBitacoras {
                 .map(|v| v.as_str().map(str::to_string).ok_or_else(|| "El lote recuperado no trae su alcance.".to_string()))
                 .collect()
         };
-        Ok(Self { tribunales: lista("tribunals")?, modalidades: lista("modalities")?, pestanas: lista("tabs")? })
+        let fechas = if s["dates"].is_null() { None } else {
+            let d = s["dates"].as_object().ok_or("El lote recuperado tiene un filtro de fechas inválido.")?;
+            let parse = |k: &str| d.get(k).and_then(Value::as_str)
+                .and_then(|s| chrono::NaiveDate::parse_from_str(s, "%d/%m/%Y").ok());
+            let (desde, hasta) = parse("start").zip(parse("end"))
+                .ok_or("El lote recuperado tiene un filtro de fechas incompleto o inválido.")?;
+            if desde > hasta { return Err("El lote recuperado tiene un rango de fechas invertido.".into()); }
+            Some((desde, hasta))
+        };
+        Ok(Self { tribunales: lista("tribunals")?, modalidades: lista("modalities")?, pestanas: lista("tabs")?, fechas })
     }
 
     /// `asdict(batch)`.
     fn seleccion(&self) -> Value {
         json!({"tribunals": self.tribunales, "modalities": self.modalidades, "tabs": self.pestanas, "report": "1",
-            "dates": null, "keep_filters": false, "screen": "seguimiento", "state": "1", "month": null, "year": null})
+            "dates": self.fechas.map(|(a,b)| json!({"start": a.format("%d/%m/%Y").to_string(), "end": b.format("%d/%m/%Y").to_string()})), "keep_filters": false, "screen": "seguimiento", "state": "1", "month": null, "year": null})
     }
 
     /// `Batch.plan`: tribunal × pestaña × modalidad, con informe solo en Informes.
@@ -138,6 +148,7 @@ impl From<String> for Detencion {
 struct Sesion<'a> {
     conexion: &'a dyn Conexion,
     carpeta: PathBuf,
+    fechas: Option<(chrono::NaiveDate, chrono::NaiveDate)>,
     estado: Value,
     pendiente: usize,
     aperturas: usize,
@@ -310,6 +321,7 @@ pub fn ejecutar_con_avance(
     let mut s = Sesion {
         conexion,
         carpeta: carpeta.clone(),
+        fechas: lote_bitacoras.fechas,
         estado: json!({
             "version": 1, "tipo": "BITACORAS_LECTURA", "estado": "EN_CURSO", "seleccion": lote_bitacoras.seleccion(),
             "fecha": inicio.format("%Y-%m-%dT%H:%M:%S%.6f%:z").to_string(), "consultas": [], "registros": [],
@@ -470,7 +482,7 @@ fn enumerar(s: &mut Sesion<'_>, catalogo: &Catalogo, perfil: &Perfil) -> Result<
         let consulta = Consulta::desde(perfil)?;
         let preparado = s.pedir(
             "prepare",
-            json!({"selection": lote::seleccion_edicion(perfil, Edicion::Integral), "dates": null, "keep_filters": false}),
+            json!({"selection": lote::seleccion_edicion(perfil, Edicion::Integral), "dates": s.fechas.map(|(a,b)| json!({"start": a.format("%d/%m/%Y").to_string(), "end": b.format("%d/%m/%Y").to_string()})), "keep_filters": false}),
         )?;
         let pares: Pares = preparado["pairs"]
             .as_array()
@@ -485,8 +497,13 @@ fn enumerar(s: &mut Sesion<'_>, catalogo: &Catalogo, perfil: &Perfil) -> Result<
             })
             .ok_or("El formulario no entregó parámetros válidos.".to_string())?;
         consulta.validar_consulta(&pares)?;
-        if pares.iter().find(|(k, _)| k == "FLG_Consulta").map(|(_, v)| v.as_str()) != Some("0") {
+        let fechas = s.fechas;
+        if pares.iter().find(|(k, _)| k == "FLG_Consulta").map(|(_, v)| v.as_str()) != Some(if fechas.is_some() { "1" } else { "0" }) {
             return Err(Detencion::Consulta("El filtro de fechas no coincide.".into()));
+        }
+        if let Some((a,b)) = fechas {
+            let expected = [("FEC_Desde", a.format("%d/%m/%Y").to_string()), ("FEC_Hasta", b.format("%d/%m/%Y").to_string())];
+            if expected.iter().any(|(k,v)| !pares.iter().any(|(pk,pv)| pk == k && pv == v)) { return Err(Detencion::Consulta("El filtro de fechas no coincide.".into())); }
         }
         let html = lote::cuerpo(&s.pedir("search", json!({"pairs": pares, "timeout": ESPERA_MS}))?, false)?;
         let primera = match sitfa::validar_respuesta(&html, &pares, &consulta, None)? {
@@ -1444,7 +1461,7 @@ mod tests {
         for e in escenarios {
             let nombre = e["escenario"].as_str().unwrap();
             let lista = |k: &str| -> Vec<String> { serde_json::from_value(e["lote"][k].clone()).unwrap() };
-            let lote = LoteBitacoras { tribunales: lista("tribunales"), modalidades: lista("modalidades"), pestanas: lista("pestanas") };
+            let lote = LoteBitacoras { tribunales: lista("tribunales"), modalidades: lista("modalidades"), pestanas: lista("pestanas"), fechas: None };
             let guion = Guion { pasos: e["guion"].as_array().unwrap().clone(), pedidos: RefCell::default() };
             let destino = std::env::temp_dir().join(format!("flow-eq4-{}-{nombre}", std::process::id()));
             let _ = std::fs::remove_dir_all(&destino);
