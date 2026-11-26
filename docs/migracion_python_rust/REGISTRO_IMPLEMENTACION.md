@@ -16,6 +16,12 @@ Una entrada por encargo, de diez líneas como máximo, la más reciente arriba:
 
 No se copian salidas completas ni listas de mutaciones: la prueba afirma sus conteos y la CI del commit es la evidencia.
 
+## 2026-11-26 · Lectura de bitácoras de Seguimiento con filtro de ingresos
+
+- Cambió la validación de las bitácoras para leer los campos Desde y Hasta de Seguimiento que devuelve Chrome. El descargador muestra cuántas consultas de listado fallaron antes de abrir las bitácoras.
+- La prueba `bitacoras_validan_el_rango_de_seguimiento_antes_de_buscar` exige dos páginas y dos lecturas con el rango elegido. Si cambia un extremo o la activación del filtro, exige cero búsquedas y una consulta fallida.
+- Pendiente la comprobación con la sesión SITFA del usuario.
+
 ## 2026-11-26 · Destinatarios y firma de Outlook, período de Meta 4
 
 - Cambió: migración de destinatarios y alias de Flow Python, resolución al volver a preparar y edición de borradores en Outlook clásico sin reemplazar la firma.

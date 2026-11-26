@@ -863,6 +863,11 @@ impl Contexto {
         if let Some(b) = &self.bitacoras {
             let n = |k: &str| b[k].as_u64().unwrap_or(0);
             let mut texto = format!("Bitácoras: {} leídas · {} fallidas", n("leidas"), n("fallidas"));
+            match n("consultas_fallidas") {
+                0 => {}
+                1 => texto.push_str(" · 1 consulta de listado fallida"),
+                total => texto.push_str(&format!(" · {total} consultas de listado fallidas")),
+            }
             if self.calendarios {
                 texto.push_str(&format!(" · calendarios {} leídos, {} fallidos", n("calendarios_leidos"), n("calendarios_fallidos")));
             }

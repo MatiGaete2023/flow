@@ -155,6 +155,23 @@ fn fecha_sitfa(d: NaiveDate) -> String {
     d.format("%d/%m/%Y").to_string()
 }
 
+/// Seguimiento y Litigantes usan la misma bandera y los mismos extremos al preparar el formulario.
+pub(super) fn validar_filtro_fecha(pares: &Pares, fechas: Option<(NaiveDate, NaiveDate)>) -> Result<(), String> {
+    let campo = |nombre: &str| pares.iter().find(|(k, _)| k == nombre).map(|(_, v)| v.as_str());
+    if campo("FLG_Consulta") != Some(if fechas.is_some() { "1" } else { "0" }) {
+        return Err("La activación del filtro de fechas en SITFA no coincide con la selección del lote.".into());
+    }
+    if let Some((desde, hasta)) = fechas {
+        if campo("FEC_Inicio") != Some(fecha_sitfa(desde).as_str()) {
+            return Err("La fecha inicial que preparó SITFA no coincide con el Desde del lote.".into());
+        }
+        if campo("FEC_Fin") != Some(fecha_sitfa(hasta).as_str()) {
+            return Err("La fecha final que preparó SITFA no coincide con el Hasta del lote.".into());
+        }
+    }
+    Ok(())
+}
+
 fn etiqueta_fechas(fechas: (NaiveDate, NaiveDate)) -> String {
     format!("{} al {}", fechas.0.format("%d-%m-%Y"), fechas.1.format("%d-%m-%Y"))
 }
@@ -917,19 +934,12 @@ pub fn ejecutar(
                 })
                 .ok_or("El formulario no entregó parámetros válidos.")?;
             consulta.validar_consulta(&pares)?;
-            let campo = |k: &str| pares.iter().find(|(c, _)| c == k).map(|(_, v)| v.as_str());
             // `descargador/lotes.py`: Carga no usa FLG_Consulta ni FEC_Inicio/FEC_Fin; su período va en el objetivo.
             if !calendario(perfil.pantalla) && perfil.pantalla != Pantalla::Carga {
-                if campo("FLG_Consulta") != Some(if fechas.is_some() { "1" } else { "0" }) {
-                    return Err("No se pudo activar correctamente el filtro de fecha.".into());
-                }
-                if let Some((a, b)) = fechas {
-                    if campo("FEC_Inicio") != Some(fecha_sitfa(a).as_str())
-                        || campo("FEC_Fin") != Some(fecha_sitfa(b).as_str())
-                        || campo("CHK_Consulta") != Some("on")
-                    {
-                        return Err("Las fechas enviadas no coinciden con la selección.".into());
-                    }
+                validar_filtro_fecha(&pares, fechas)?;
+                let casilla = pares.iter().find(|(k, _)| k == "CHK_Consulta").map(|(_, v)| v.as_str());
+                if fechas.is_some() && casilla != Some("on") {
+                    return Err("Las fechas enviadas no coinciden con la selección.".into());
                 }
             }
             let html = cuerpo(&lote.pedir("search", json!({"pairs": pares, "timeout": ESPERA_SITFA_MS}))?, false)?;

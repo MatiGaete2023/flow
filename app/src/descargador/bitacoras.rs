@@ -55,7 +55,7 @@ const PESTANAS_CALENDARIO: [&str; 2] = ["Cumplimiento", "Informes"];
 const REUTILIZAR_HORAS: i64 = 12;
 const REUTILIZAR_CARPETAS: usize = 10;
 
-/// `lotes.Batch` de Seguimiento para bitácoras (informe por omisión «1», sin fechas ni filtros conservados).
+/// `lotes.Batch` de Seguimiento para bitácoras, con el rango de ingresos elegido para el lote.
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct LoteBitacoras {
     pub tribunales: Vec<String>,
@@ -497,14 +497,7 @@ fn enumerar(s: &mut Sesion<'_>, catalogo: &Catalogo, perfil: &Perfil) -> Result<
             })
             .ok_or("El formulario no entregó parámetros válidos.".to_string())?;
         consulta.validar_consulta(&pares)?;
-        let fechas = s.fechas;
-        if pares.iter().find(|(k, _)| k == "FLG_Consulta").map(|(_, v)| v.as_str()) != Some(if fechas.is_some() { "1" } else { "0" }) {
-            return Err(Detencion::Consulta("El filtro de fechas no coincide.".into()));
-        }
-        if let Some((a,b)) = fechas {
-            let expected = [("FEC_Desde", a.format("%d/%m/%Y").to_string()), ("FEC_Hasta", b.format("%d/%m/%Y").to_string())];
-            if expected.iter().any(|(k,v)| !pares.iter().any(|(pk,pv)| pk == k && pv == v)) { return Err(Detencion::Consulta("El filtro de fechas no coincide.".into())); }
-        }
+        lote::validar_filtro_fecha(&pares, s.fechas)?;
         let html = lote::cuerpo(&s.pedir("search", json!({"pairs": pares, "timeout": ESPERA_MS}))?, false)?;
         let primera = match sitfa::validar_respuesta(&html, &pares, &consulta, None)? {
             Respuesta::SinRegistros => {
@@ -1310,6 +1303,70 @@ mod tests {
             Value::Null
         } else {
             v.clone()
+        }
+    }
+
+    #[test]
+    fn bitacoras_validan_el_rango_de_seguimiento_antes_de_buscar() {
+        let datos: Value = serde_json::from_str(include_str!("../../tests/datos/bitacoras.json")).unwrap();
+        let caso = datos["escenarios"].as_array().unwrap().iter()
+            .find(|e| e["escenario"] == "basico").unwrap();
+        let catalogo: Catalogo = serde_json::from_value(datos["catalogo"].clone()).unwrap();
+        let dia = |n| chrono::NaiveDate::from_ymd_opt(2026, 11, n).unwrap();
+        let lote = LoteBitacoras {
+            tribunales: serde_json::from_value(caso["lote"]["tribunales"].clone()).unwrap(),
+            modalidades: serde_json::from_value(caso["lote"]["modalidades"].clone()).unwrap(),
+            pestanas: serde_json::from_value(caso["lote"]["pestanas"].clone()).unwrap(),
+            fechas: Some((dia(1), dia(26))),
+        };
+        let opciones = Opciones {
+            ahora: Some(chrono::DateTime::parse_from_rfc3339(caso["ahora"].as_str().unwrap()).unwrap()),
+            ..Default::default()
+        };
+        for (bandera, inicio, fin, error) in [
+            ("1", "01/11/2026", "26/11/2026", None),
+            ("1", "02/11/2026", "26/11/2026", Some("fecha inicial")),
+            ("1", "01/11/2026", "25/11/2026", Some("fecha final")),
+            ("0", "01/11/2026", "26/11/2026", Some("activación")),
+        ] {
+            let mut pasos = caso["guion"].as_array().unwrap().clone();
+            let preparar = pasos.iter_mut().find(|p| p["comando"] == "prepare").unwrap();
+            let pares = preparar["respuesta"]["pairs"].as_array_mut().unwrap();
+            for (clave, valor) in [("FLG_Consulta", bandera), ("FEC_Inicio", inicio), ("FEC_Fin", fin)] {
+                let par = pares.iter_mut().find(|p| p[0] == clave).unwrap();
+                par[1] = json!(valor);
+            }
+            if bandera == "1" {
+                pares.push(json!(["CHK_Consulta", "on"]));
+            }
+            if error.is_some() {
+                pasos.retain(|p| p["comando"] != "search" && p["comando"] != "diary_open");
+            }
+            let puente = Guion { pasos, pedidos: RefCell::default() };
+            let carpeta = std::env::temp_dir().join(format!("flow-rango-bitacora-{}-{}",
+                std::process::id(), chrono::Utc::now().timestamp_nanos_opt().unwrap()));
+            let resultado = ejecutar(&puente, &catalogo, &lote, &carpeta, &opciones, &AtomicBool::new(false)).unwrap();
+            let pedidos = puente.pedidos.borrow();
+            let payload = &pedidos.iter().find(|p| p["comando"] == "prepare").unwrap()["payload"];
+            assert_eq!(payload["dates"], json!({"start": "01/11/2026", "end": "26/11/2026"}));
+            let busquedas: Vec<_> = pedidos.iter().filter(|p| p["comando"] == "search").collect();
+            let aperturas = pedidos.iter().filter(|p| p["comando"] == "diary_open").count();
+            if let Some(motivo) = error {
+                assert_eq!(resultado["estado"], "INCOMPLETA");
+                assert_eq!(resultado["consultas_fallidas"], 1);
+                assert!(resultado["detalle"].as_str().unwrap().contains(motivo));
+                assert_eq!((busquedas.len(), aperturas), (0, 0));
+            } else {
+                assert_eq!(resultado["estado"], "COMPLETA", "{resultado}");
+                assert_eq!((resultado["leidas"].as_u64(), aperturas, busquedas.len()), (Some(2), 2, 2));
+                for busqueda in busquedas {
+                    let pares = busqueda["payload"]["pairs"].as_array().unwrap();
+                    assert!(pares.contains(&json!(["FEC_Inicio", inicio])) && pares.contains(&json!(["FEC_Fin", fin])));
+                }
+                let guardado = LoteBitacoras::guardado(Path::new(resultado["folder"].as_str().unwrap())).unwrap();
+                assert_eq!(guardado, lote);
+            }
+            std::fs::remove_dir_all(carpeta).unwrap();
         }
     }
 
