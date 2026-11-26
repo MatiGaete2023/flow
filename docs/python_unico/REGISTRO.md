@@ -30,6 +30,12 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 Comprobar la corrida de CI rápida de la rama y hacer la prueba de P3c con un lote chico en Windows y SITFA. Sigue
 pendiente la revisión E3 específica de la extensión.
 
+## 26-nov-2026 · Perfil de Tomé para otros tribunales
+
+- El Asistente usa las reglas y umbrales de Tomé en Espera, Cumplimiento e Informes para los demás tribunales identificados. El análisis inicial y el recálculo conservan el tribunal original para los cruces y productos.
+- Las pruebas comprobaron cinco escenarios de análisis, el recálculo de Espera tras una edición, la revisión cuando falta el tribunal y el conteo de avisos en la interfaz.
+- Siguiente paso de este cambio: comprobar en Trabajo un Excel o paquete de otro tribunal y revisar las observaciones con sus datos de origen.
+
 ## Revisión de código del 26-nov-2026
 
 - [Informe y pasos de verificación](REVISION_CODIGO_20261126.md) sobre la punta `afc4d12`.
