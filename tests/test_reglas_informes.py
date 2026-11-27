@@ -118,6 +118,22 @@ def test_rt28_recalcular_otro_tribunal_aplica_umbral_de_proyecto_tome(tmp_path):
     assert trabajo.rows[0].values['TRIBUNAL'] == 'TRIBUNAL FICTICIO'
 
 
+def test_rt28_proyecto_de_otro_tribunal_informa_que_falta_su_matriz(tmp_path):
+    from nurus.personal.resolutions import prepare_projects
+
+    trabajo = analizar(
+        tmp_path, 'ESPERA', BASE[:-1] + ['T ESPERA'], [persona(1, tribunal='TRIBUNAL FICTICIO') + [90]]
+    )
+    fila = trabajo.rows[0]
+    selecciones = automatic_project_selections(trabajo)
+    assert selecciones == [(fila.id, 'PC_IE')]
+
+    proyectos, errores = prepare_projects(trabajo, selecciones, tmp_path)
+    assert proyectos == []
+    assert len(errores) == 1
+    assert all(fragmento in errores[0] for fragmento in ('TRIBUNAL FICTICIO', 'PC_IE', 'matriz'))
+
+
 ESPERA = ['RIT', 'TRIBUNAL', 'NOMBRE', 'RUT', 'NOMBRE CENTRO', 'T ESPERA', 'CURADOR']
 
 

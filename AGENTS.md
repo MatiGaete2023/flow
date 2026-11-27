@@ -37,6 +37,13 @@ Trabajo en curso (plan de integración 18-nov-2026: otro programa vigente, infor
 
 ## Verificación
 
-`python tools/verificar_wp.py --lista-eliminadas docs/implementacion/verificacion/integracion-20261021-eliminadas.txt`
-decide PASA/FALLA contra `docs/implementacion/linea_base.json` y valida las bajas históricas ya documentadas.
+`python tools/verificar_wp.py` decide PASA/FALLA contra `docs/implementacion/linea_base.json`.
+Para `flow-python`, pasa ambas listas documentadas:
+
+```bash
+python tools/verificar_wp.py \
+  --lista-eliminadas docs/implementacion/verificacion/integracion-20261021-eliminadas.txt \
+  --lista-eliminadas docs/implementacion/verificacion/flow-python-20261127-eliminadas.txt
+```
+
 Desde WP-11, el hook y la CI controlan identidades tras la limpieza de WP-10.

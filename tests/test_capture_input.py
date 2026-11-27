@@ -91,6 +91,45 @@ def test_old_rules_version_is_not_reused_from_session_cache(tmp_path):
     )
 
 
+def test_reimport_applies_tome_profile_to_an_existing_other_court(tmp_path, monkeypatch):
+    import nurus.personal.work as modulo
+    from nurus.personal.outputs import Draft
+    from nurus.personal.product_state import stamp, stale
+    from nurus.rus.util import tribunal
+    from nurus.capture import temporal
+    from nurus.personal import capture_input
+
+    m, t = fixture(count=1, partial=True)
+    record = t['registros'][0]
+    raw = json.loads(record['normalized_json'])
+    raw.update({'TRIBUNAL': 'Tribunal ficticio de prueba', 'T ESPERA': '90'})
+    record.update(court_name=raw['TRIBUNAL'], raw_json=json.dumps(raw), normalized_json=json.dumps(raw))
+    t['consultas'][0]['court_name'] = raw['TRIBUNAL']
+    path = write_capture(tmp_path / 'otro_tribunal.zip', m, t)
+    config, cut = defaults(), date(2026, 10, 8)
+
+    version_anterior = 'baseline-20261008+context-preview-2+historia-8+integracion-1'
+    with monkeypatch.context() as anterior:
+        anterior.setattr(modulo, 'tribunal_para_reglas', tribunal)
+        anterior.setattr(capture_input, 'RULESET_VERSION', version_anterior)
+        anterior.setattr(temporal, 'RULESET_VERSION', version_anterior)
+        previo = import_capture(path, config, as_of=cut)
+        fila = previo.rows[0]
+        assert not fila.rules
+        fila.review['OBSERVACION'] = 'Edición ficticia que se conserva'
+        producto = Draft('Ficticio', 'Texto ficticio', record_ids=[fila.id], kind='programa_espera')
+        stamp(previo, producto)
+        assert not stale(previo, producto)
+
+    previo.save(tmp_path / 'sesion')
+    recuperado = Work.load(tmp_path / 'sesion')
+    nuevo = import_capture(path, config, as_of=cut, previous=recuperado)
+    assert nuevo.rows[0].values['TRIBUNAL'] == raw['TRIBUNAL']
+    assert 'ESPERA.E05_PROYECTO_Y_CORREO' in nuevo.rows[0].rules
+    assert nuevo.rows[0].review['OBSERVACION'] == fila.review['OBSERVACION']
+    assert stale(recuperado, producto) and stale(nuevo, producto)
+
+
 def test_mixed_modes_export_refresh_and_individual_recalculation(tmp_path):
     m, t = fixture()
     for index, mode in enumerate(('ESPERA', 'CUMPLIMIENTO', 'INFORMES', 'ESPERA')):

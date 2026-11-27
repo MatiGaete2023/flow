@@ -3,7 +3,7 @@
 **Actualizar al terminar CADA turno** (antes de quedarse sin tokens): qué se hizo, verificación, siguiente paso exacto.
 Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 
-## Estado al 26-nov-2026
+## Estado al 27-nov-2026
 
 | Paquete | Estado | Último commit / nota |
 |---|---|---|
@@ -29,6 +29,16 @@ Commit y push a `flow-python` en el mismo turno. Plan: [`PLAN.md`](PLAN.md).
 
 Comprobar la corrida de CI rápida de la rama y hacer la prueba de P3c con un lote chico en Windows y SITFA. Sigue
 pendiente la revisión E3 específica de la extensión.
+
+## Revisión de código del 27-nov-2026
+
+- [Informe y pruebas](REVISION_CODIGO_20261127.md) sobre la punta `9988d61`.
+- La nueva versión de reglas fuerza el recálculo con el perfil de Tomé al reimportar una captura hecha con la versión
+  anterior. Se conservan las ediciones humanas y se advierte la obsolescencia de productos preparados.
+- La preparación Word informa el tribunal, caso y tipo si la matriz no está configurada.
+- El verificador incorpora la baja exacta de la prueba reemplazada en `fc6fe25`. Las pruebas dirigidas reproducen
+  ambos fallos y el golden de 17 productos mantiene la paridad. Sigue pendiente comprobar el flujo con un paquete
+  de otro tribunal en Windows.
 
 ## 26-nov-2026 · Perfil de Tomé para otros tribunales
 

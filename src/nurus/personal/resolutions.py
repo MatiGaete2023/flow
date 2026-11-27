@@ -547,23 +547,29 @@ def prepare_projects(work, selections, template_dir, fallback_kind='PC_IE'):
     for row in work.rows:
         if row.excluded:
             continue
-        if tribunal(value(work, row, 'tribunal')) is None:
+        court = tribunal(value(work, row, 'tribunal'))
+        if court is None:
             continue
-        court = tribunal(value(work, row, 'tribunal')) or value(work, row, 'tribunal')
         rit = value(work, row, 'rit').strip()
         case_rows.setdefault((court, normalize(rit)), []).append(row)
     con_evidencia = _casos_con_evidencia(work)
     rits = {}
+    matrices_pendientes = {}
     for rid, kind in selections:
         if rid not in by_id or kind not in KINDS:
             continue
         row = by_id[rid]
         if row.excluded:
             continue
-        if tribunal(value(work, row, 'tribunal')) is None:
-            continue
-        court = tribunal(value(work, row, 'tribunal')) or value(work, row, 'tribunal')
+        nombre_tribunal = value(work, row, 'tribunal').strip()
+        court = tribunal(nombre_tribunal)
         rit = value(work, row, 'rit').strip()
+        if court is None:
+            clave = (normalize(nombre_tribunal), normalize(rit), kind)
+            if clave not in matrices_pendientes:
+                tribunal_visible = nombre_tribunal or 'tribunal sin identificar'
+                matrices_pendientes[clave] = f'{rit} · {tribunal_visible}: falta una matriz {kind} configurada.'
+            continue
         key = (court, normalize(rit), kind)
         rits.setdefault(key, rit)
         group = groups.setdefault(key, [])
@@ -575,7 +581,7 @@ def prepare_projects(work, selections, template_dir, fallback_kind='PC_IE'):
                 group.append(candidate)
                 existing.add(candidate.id)
     projects = []
-    errors = []
+    errors = list(matrices_pendientes.values())
     with TemporaryDirectory() as directory:
         for (court, rit_normalizado, kind), rows in groups.items():
             if not rows:

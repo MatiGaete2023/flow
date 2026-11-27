@@ -34,6 +34,8 @@ extensión ni Descargador para importar y producir archivos de un paquete local.
    y luego repara el acceso al archivo o muévelo fuera de la carpeta de la sesión.
 6. Resoluciones: revisar plantilla y variables, elegir proyectos y guardar Word
    editable. Correo libre, Word manual y edición libre siguen disponibles.
+   Si falta una matriz para el tribunal y tipo de proyecto elegidos, el Asistente
+   identifica la causa y la matriz pendiente.
 7. Resultados: consultar productos, incidencias, hechos y fuentes. Para una
    captura nueva, elegir el alcance manualmente en el Descargador y volver a importar.
    El Asistente no inicia el Descargador ni genera solicitudes de antecedentes (D9).
@@ -46,6 +48,11 @@ guardar un nuevo borrador. El Asistente no reescribe silenciosamente esa plantil
 Los productos preparados se marcan obsoletos si cambian fuentes, corte, reglas
 o decisiones. Revisarlos y regenerarlos antes de utilizarlos. Los documentos
 exportados previamente permanecen como archivos independientes.
+
+Desde el 26 de noviembre de 2026, otros tribunales identificados usan el perfil de
+Tomé para el análisis. Reimportar el ZIP al mismo corte actualiza propuestas de
+sesiones anteriores y conserva las ediciones humanas. Los cruces y productos
+mantienen la identidad original del tribunal.
 
 Ante error de importación conservar ZIP y sesión. Comunicar SHA, mensaje y etapa
 sin datos institucionales. Excel 2010, Outlook 365 y políticas de instalación

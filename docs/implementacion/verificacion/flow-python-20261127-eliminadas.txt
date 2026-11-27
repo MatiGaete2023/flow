@@ -1,0 +1,3 @@
+# Reemplazo incorporado en fc6fe25. El criterio anterior exigía omitir el análisis de otros tribunales.
+# La prueba parametrizada test_rt28_otro_tribunal_aplica_reglas_de_tome verifica la nueva regla en los tres modos.
+tests/test_reglas_informes.py::test_rt28_tribunal_no_soportado_sin_textos_inventados
